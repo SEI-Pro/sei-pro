@@ -279,6 +279,31 @@ const RG = /\b\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]\b/g;
  */
 const CEP_COM_HIFEN = /\b\d{5}-\d{3}\b/;
 
+/**
+ * O mínimo de que os detectores precisam: o texto, a projeção só com letras e
+ * dígitos e o caminho de volta. `TextoPagina` (PDF) satisfaz isto, e
+ * `baseDeTexto` monta o mesmo para texto puro (o agente de IA do SEI Pro usa
+ * esta detecção para anonimizar o que envia ao modelo).
+ */
+export interface BaseTexto {
+  texto: string;
+  compacto: string;
+  indiceCompacto: ArrayLike<number>;
+}
+
+/** Projeção compacta de um texto puro (sem geometria). */
+export function baseDeTexto(texto: string): BaseTexto {
+  let compacto = "";
+  const indice: number[] = [];
+  for (let i = 0; i < texto.length; i += 1) {
+    if (/[0-9\p{L}]/u.test(texto[i])) {
+      compacto += texto[i];
+      indice.push(i);
+    }
+  }
+  return { texto, compacto, indiceCompacto: indice };
+}
+
 /** Detector numérico: roda sobre a projeção compacta. */
 interface DetectorNumerico {
   tipo: TipoDado;
@@ -341,7 +366,7 @@ const DETECTORES_NUMERICOS: DetectorNumerico[] = [
 
 /** Corridas de dígitos na projeção compacta. */
 function corridasDeDigitos(
-  tp: TextoPagina,
+  tp: BaseTexto,
   quebrarNoEspaco: boolean,
 ): Array<[number, number]> {
   const corridas: Array<[number, number]> = [];
@@ -376,7 +401,7 @@ function corridasDeDigitos(
   return corridas;
 }
 
-function sobrepoe(a: Deteccao, inicio: number, fim: number): boolean {
+function sobrepoe(a: { inicio: number; fim: number }, inicio: number, fim: number): boolean {
   return a.inicio < fim && inicio < a.fim;
 }
 
@@ -410,8 +435,37 @@ export function detectarNaPagina(
   tp: TextoPagina,
   opcoes: OpcoesDeteccao = {},
 ): Deteccao[] {
+  return detectarIntervalos(tp, opcoes, (inicio, fim) => {
+    const caixas = caixasDoIntervalo(tp, inicio, fim);
+    // Sem caixa não há o que tarjar: o trecho veio inteiro de caracteres
+    // sintéticos, ou de item degenerado. Registrar seria prometer uma tarja
+    // que não seria desenhada.
+    return caixas.length === 0 ? null : { pagina: tp.pagina, caixas };
+  });
+}
+
+/** Achado em texto puro (sem página nem caixas). */
+export type DeteccaoTexto = Omit<Deteccao, "pagina" | "caixas">;
+
+/** Detecta os dados sensíveis de um texto puro. Mesmos detectores e mesma precisão da página. */
+export function detectarNoTexto(texto: string, opcoes: OpcoesDeteccao = {}): DeteccaoTexto[] {
+  return detectarIntervalos(baseDeTexto(texto), opcoes, () => ({}));
+}
+
+/**
+ * Núcleo da detecção, sem geometria.
+ *
+ * `anexar` decide se um intervalo vira achado (devolvendo os campos extras) ou
+ * não (`null`) — e, quando não vira, a faixa continua livre para os detectores
+ * seguintes, exatamente como antes da extração deste núcleo.
+ */
+export function detectarIntervalos<E extends object>(
+  tp: BaseTexto,
+  opcoes: OpcoesDeteccao,
+  anexar: (inicio: number, fim: number) => E | null,
+): Array<Omit<Deteccao, "pagina" | "caixas"> & E> {
   const ativos = new Set(opcoes.tipos ?? TIPOS_PADRAO);
-  const achados: Deteccao[] = [];
+  const achados: Array<Omit<Deteccao, "pagina" | "caixas"> & E> = [];
 
   const registrar = (
     tipo: TipoDado,
@@ -421,21 +475,17 @@ export function detectarNaPagina(
   ): boolean => {
     if (fim <= inicio) return false;
     if (achados.some((a) => sobrepoe(a, inicio, fim))) return false;
-    const caixas = caixasDoIntervalo(tp, inicio, fim);
-    // Sem caixa não há o que tarjar: o trecho veio inteiro de caracteres
-    // sintéticos, ou de item degenerado. Registrar seria prometer uma tarja
-    // que não seria desenhada.
-    if (caixas.length === 0) return false;
+    const extra = anexar(inicio, fim);
+    if (extra === null) return false;
     const bruto = tp.texto.slice(inicio, fim);
     achados.push({
       tipo,
-      pagina: tp.pagina,
       inicio,
       fim,
       bruto,
       amostra: mascarar(bruto, tipo),
       confianca: confianca ?? TIPOS[tipo].confianca,
-      caixas,
+      ...extra,
     });
     return true;
   };
@@ -541,7 +591,7 @@ export function normalizarParaBusca(texto: string): string {
  * a ferramenta acha as outras ocorrências com precisão total.
  */
 export function ocorrenciasDoTermo(
-  tp: TextoPagina,
+  tp: BaseTexto,
   termo: string,
 ): Array<{ inicio: number; fim: number }> {
   const alvo = normalizarParaBusca(termo).trim();

@@ -1,0 +1,1084 @@
+<!-- url: https://treinamento.sei.sp.gov.br/sei/controlador.php?acao=procedimento_controlar&acao_origem=principal&acao_retorno=principal&inicializando=1&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000 -->
+<html lang="pt-br"><head><script src="/Saine-to-know-I-waitor-there-Fleaue-mood-be-plac" async=""></script>
+
+<link rel="shortcut icon" sizes="any" href="favicon/favicon.ico">         
+<link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">         
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+<link rel="manifest" href="favicon/site.webmanifest">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta property="og:title" content="treinamento.sei.sp.gov.br">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://treinamento.sei.sp.gov.br/sei/imagens/logo-sp-gov-br.png">
+<meta property="og:url" content="https://treinamento.sei.sp.gov.br">
+<meta property="og:site_name" content="treinamento.sei.sp.gov.br">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+<title>SEI - Controle de Processos</title>
+<link href="/infra_css/infra-tooltip.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/infra-barra-progresso.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/infra-impressao-global.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="print">
+<link href="/infra_css/infra-ajax.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/calendario/v2/infra-calendario.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/arvore/infra-arvore.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/mapa/infra-mapa.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.css?1.13.2" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.structure.min.css?1.13.2" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.theme.min.css?1.13.2" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/multiple-select/multiple-select.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_js/modal/jquery.modalLink-1.0.0.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/bootstrap/bootstrap-4.6.2.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/bootstrap/menu-bootstrap.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/infra-global-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<link href="/infra_css/esquemas/azul_celeste/infra-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">      
+<link href="css/infra-local-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all">
+<style></style><style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+@media only print {
+
+  #divInfraAreaTelaD,
+  #divTabelaProcesso,
+  #divTabelaProcesso div{
+    display:block;
+    min-height:100%;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #divInfraAreaTelaE,
+  #divBotoesControleProcessos,
+  #divFiltro,
+  div.infraAreaPaginacao{
+    display:none !important;
+  }
+
+  a {
+    text-decoration:none !important;
+  }
+}
+
+#divFiltro{
+  margin: 15px 0 2px 0;
+}
+
+
+div.caixaFiltroControle{
+  background-color:#fff;
+  color:#7F7F7F;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, .3), 0 0.0625rem 0.125rem rgba(0, 0, 0, .2);
+  z-index:101;
+}
+
+div.caixaFiltroControle p{
+  display:inline;
+  vertical-align:top;
+  font-size:0.875rem;
+  line-height:24px;
+}
+
+div.caixaFiltroControle img{
+  vertical-align:bottom;
+}
+
+div.caixaFiltroControle a:focus{
+  outline:1px dotted black;
+}
+
+div.caixaFiltroControle a:hover{
+  text-decoration:none;
+}
+
+a.botaoFecharFiltro{
+  float:right;
+  cursor:pointer;
+  color: #fff;
+  border-radius: 10px;
+  background: #605F61;
+  font-size: 16px;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1px;
+  padding: 9px 5px;
+  margin-top:-9px;
+  margin-right:-15px;
+}
+
+.botaoFecharFiltro:before {
+    content: "×";
+}
+
+table.tabelaControle,
+  tr.infraTrClara td  {
+  border:0;
+}
+
+table.tabelaControle td {
+  text-align:center;
+}
+
+a.ancMarcador{
+  font-size: 0.875rem;
+  text-decoration:none !important;
+  border:1px solid #d0d0d0;
+  padding:4px;
+  margin:2px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  float:left;
+  background-color:#f5f5f5;
+}
+
+a.ancMarcador img{
+  padding: 0 4px 0 0;
+}
+
+a.ancMarcador div{
+  display:table-cell;
+}
+
+.divLink .ancoraPadraoPreta{
+  padding: 0px;
+}
+
+.divLink:not(:first-child){
+  margin-left:2.5em !important;
+}
+
+.divLink:last-child{
+  margin-right:15px;
+}
+
+#divInfraBtnTopo{
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+
+/*]]>*/-->
+</style>
+<script type="text/javascript">var INFRA_PATH_CSS="/infra_css",INFRA_PATH_IMAGENS="/infra_css/imagens",INFRA_PATH_JS="/infra_js",INFRA_PATH_SVG="/infra_css/svg",INFRA_LUPA_TIPO_JANELA=2,INFRA_BARRA_TIPO_JANELA=2,INFRA_TIPO_ALERTA=1;</script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-3.7.0.min.js?3.7.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.js?1.13.2"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/multiple-select/multiple-select.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/ddslick/jquery.ddslick.min.js?4.1.5-2.29.0"></script><style id="css-ddslick" type="text/css">.dd-select{ border-radius:2px; border:solid 1px #ccc; position:relative; cursor:pointer;}.dd-desc { color:#aaa; display:block; overflow: hidden; font-weight:normal; line-height: 1.4em; }.dd-selected{ overflow:hidden; display:block; padding:10px; font-weight:bold;}.dd-pointer{ width:0; height:0; position:absolute; right:10px; top:50%; margin-top:-3px;}.dd-pointer-down{ border:solid 5px transparent; border-top:solid 5px #000; }.dd-pointer-up{border:solid 5px transparent !important; border-bottom:solid 5px #000 !important; margin-top:-8px;}.dd-options{ border:solid 1px #ccc; border-top:none; list-style:none; box-shadow:0px 1px 5px #ddd; display:none; position:absolute; z-index:2000; margin:0; padding:0;background:#fff; overflow:auto;}.dd-option{ padding:10px; display:block; border-bottom:solid 1px #ddd; overflow:hidden; text-decoration:none; color:#333; cursor:pointer;-webkit-transition: all 0.25s ease-in-out; -moz-transition: all 0.25s ease-in-out;-o-transition: all 0.25s ease-in-out;-ms-transition: all 0.25s ease-in-out; }.dd-options > li:last-child > .dd-option{ border-bottom:none;}.dd-option:hover{ background:#f3f3f3; color:#000;}.dd-selected-description-truncated { text-overflow: ellipsis; white-space:nowrap; }.dd-option-selected { background:#f6f6f6; }.dd-option-image, .dd-selected-image { vertical-align:middle; float:left; margin-right:5px; max-width:64px;}.dd-image-right { float:right; margin-right:15px; margin-left:5px;}.dd-container{ position:relative;}​ .dd-selected-text { font-weight:bold}​</style>
+<script type="text/javascript" charset="utf-8" src="/infra_js/modal/jquery.modalLink-1.0.0.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraPaginaEsquema3.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraBotaoMenu.js?4.1.5-2.29.0"></script>    
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUtil.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraCookie.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUpload.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTabelaDinamica.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraLupas.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraSelectEditavel.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraAjax.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTooltip.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/calendario/v2/InfraCalendario.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/arvore/InfraArvore.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/maskedpwd/MaskedPassword.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/bootstrap-4.6.2.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/infra-menu-bootstrap.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/touch/jquery.ui.touch-punch.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/hotkeys/jquery.hotkeys.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="js/sei.js?4.1.5-2.29.0"></script>
+
+<script type="text/javascript" charset="iso-8859-1">
+<!--//--><![CDATA[//><!--
+
+//<script>
+
+
+  $( document ).ready(function() {
+
+    $('#ancLiberarMeusProcessos').click(function(){
+      verMeusProcessos('T')
+    });
+
+    $('#ancLiberarMarcador').click(function(){
+      filtrarMarcador(null);
+    });
+
+    $('#ancLiberarTipoProcedimento').click(function(){
+      filtrarTipoProcedimento(null);
+    });
+
+    $('#ancLiberarTipoPrioridade').click(function(){
+      filtrarTipoPrioridade(null);
+    });
+
+  });
+
+
+  var objLupaBlocoPesquisa = null;
+  var bolCarregando = true;
+
+  function inicializar(){
+
+    $('#divInfraBarraLocalizacao').prependTo( $('#divControleProcessosConteudo') );
+
+    if($('#divInfraBarraAcesso').length){
+      $('#divInfraBarraAcesso').prependTo( $('#divControleProcessosConteudo') );
+    }
+
+    //$('.tabelaControle tr td:nth-child(2) > *').attr('tabindex',1009);
+
+        seiConfigurarTabIndexSinalizacoes('tblProcessosRecebidos','1001');
+    seiConfigurarTabIndexSinalizacoes('tblProcessosGerados','1002');
+    
+
+    if (infraIsBreakpointBootstrap("lg")){
+      infraExibirMenuSistemaEsquema();
+      }
+
+    
+    objLupaBlocoPesquisa = new infraLupaText('txtBloco','hdnIdBloco','controlador.php?acao=bloco_selecionar_processo&tipo_selecao=1&id_object=objLupaBlocoPesquisa&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+    objLupaBlocoPesquisa.finalizarSelecao = function(){
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=rel_bloco_protocolo_cadastrar&acao_origem=procedimento_controlar&acao_retorno=procedimento_controlar&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+      document.getElementById('frmProcedimentoControlar').submit();
+    };
+
+    if (infraGetAnchor()==null && !infraDispositivoMovel()){
+            if (document.getElementById('tblProcessosRecebidos')!=null){
+        document.getElementById('tblProcessosRecebidos').focus();
+      }else if (document.getElementById('tblProcessosGerados')!=null) {
+        document.getElementById('tblProcessosGerados').focus();
+      }
+          }
+
+    infraEfeitoTabelas();
+
+  }
+
+  function acaoPendenciaMultipla(bolMsg){
+    if ('R' == 'R'){
+      if (document.getElementById('hdnGeradosItensSelecionados').value=='' && document.getElementById('hdnRecebidosItensSelecionados').value==''){
+        if (bolMsg){
+          alert('Nenhum processo selecionado.');
+        }
+        return false;
+      }
+      document.getElementById('hdnGeradosItemId').value = '';
+      document.getElementById('hdnRecebidosItemId').value = '';
+    }else{
+      if (document.getElementById('hdnDetalhadoItensSelecionados').value==''){
+        if (bolMsg){
+          alert('Nenhum processo selecionado.');
+        }
+        return false;
+      }
+      document.getElementById('hdnDetalhadoItemId').value = '';
+    }
+
+    return true;
+  }
+
+  function acaoControleProcessos(link, requerSelecionado, aceitaSigiloso){
+    if ((!requerSelecionado || acaoPendenciaMultipla(true)) && (aceitaSigiloso || !bloquearSigilosoSelecionado())){
+      document.getElementById('frmProcedimentoControlar').action = link;
+      document.getElementById('frmProcedimentoControlar').submit();
+    }
+  }
+
+  function acaoBlocoProcessar(){
+    if (acaoPendenciaMultipla(true) && !bloquearSigilosoSelecionado()){
+      document.getElementById('txtBloco').value = '';
+      document.getElementById('hdnIdBloco').value = '';
+      objLupaBlocoPesquisa.selecionar(700,500,true);
+    }
+  }
+
+  function acaoRemoverMarcadorProcessar(link, requerSelecionado, aceitaSigiloso){
+    if (!bloquearNenhumComMarcadorSelecionado()) {
+      acaoControleProcessos(link, requerSelecionado, aceitaSigiloso);
+    }
+  }
+
+  function bloquearSigilosoSelecionado(){
+
+    var sigilosos = document.getElementById('hdnIdSigilosos').value;
+
+    if (sigilosos!='') {
+
+      selecionados = '';
+
+      if ('R' == 'R') {
+
+        if (document.getElementById('hdnGeradosItensSelecionados').value!='') {
+          selecionados = document.getElementById('hdnGeradosItensSelecionados').value;
+        }
+
+        if (document.getElementById('hdnRecebidosItensSelecionados').value!='') {
+          if (selecionados!='') {
+            selecionados += ',';
+          }
+          selecionados += document.getElementById('hdnRecebidosItensSelecionados').value;
+        }
+
+      } else {
+        selecionados = document.getElementById('hdnDetalhadoItensSelecionados').value;
+      }
+
+      if (selecionados!='') {
+
+        sigilosos = sigilosos.split(',');
+        selecionados = selecionados.split(',');
+
+        for (var i = 0; i<sigilosos.length; i++) {
+          for (var j = 0; j<selecionados.length; j++) {
+            if (sigilosos[i]==selecionados[j]) {
+              alert('Operação não aplicável em processo sigiloso.');
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function bloquearNenhumComMarcadorSelecionado(){
+
+    var commarcador = document.getElementById('hdnIdComMarcador').value;
+
+    if (commarcador!='') {
+
+      selecionados = '';
+
+      if ('R' == 'R') {
+
+        if (document.getElementById('hdnGeradosItensSelecionados').value!='') {
+          selecionados = document.getElementById('hdnGeradosItensSelecionados').value;
+        }
+
+        if (document.getElementById('hdnRecebidosItensSelecionados').value!='') {
+          if (selecionados!='') {
+            selecionados += ',';
+          }
+          selecionados += document.getElementById('hdnRecebidosItensSelecionados').value;
+        }
+
+      } else {
+        selecionados = document.getElementById('hdnDetalhadoItensSelecionados').value;
+      }
+
+      if (selecionados!='') {
+
+        commarcador = commarcador.split(',');
+        selecionados = selecionados.split(',');
+
+        for (var i = 0; i<commarcador.length; i++) {
+          for (var j = 0; j<selecionados.length; j++) {
+            if (commarcador[i]==selecionados[j]) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    alert('Nenhum processo com marcador selecionado.');
+    return true;
+  }
+
+
+  function listarCredenciais(){
+    infraAbrirJanelaModal('controlador.php?acao=usuario_validar_acesso&acao_origem=procedimento_controlar&acao_destino=procedimento_credencial_listar&acao_negado=procedimento_controlar&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000',500,300);
+  }
+
+  function trocarVisualizacao(valor){
+    document.getElementById('hdnTipoVisualizacao').value = valor;
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+  function verMeusProcessos(valor){
+    document.getElementById('hdnMeusProcessos').value = valor;
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+  function filtrarMarcador(idMarcador){
+    document.getElementById('hdnIdMarcador110000001').value = idMarcador;
+    if (idMarcador==null){
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&tipo_filtro=M&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }else{
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }
+
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+  function filtrarTipoProcedimento(idTipoProcedimento){
+    document.getElementById('hdnIdTipoProcedimento110000001').value = idTipoProcedimento;
+
+    if (idTipoProcedimento == null){
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&tipo_filtro=P&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }else{
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }
+
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+  function filtrarTipoPrioridade(idTipoPrioridade){
+    document.getElementById('hdnIdTipoPrioridade110000001').value = idTipoPrioridade;
+
+    if (idTipoPrioridade == null){
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&tipo_filtro=R&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }else{
+      document.getElementById('frmProcedimentoControlar').action = 'controlador.php?acao=procedimento_controlar&acao_origem=procedimento_controlar&tipo_visualizacao=R&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000';
+    }
+
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+  function alterarVisualizacaoTabela(campo, valor, campoEsconder){
+    document.getElementById(campo).value = valor;
+    document.getElementById(campoEsconder).value = "false";
+    document.getElementById('frmProcedimentoControlar').submit();
+  }
+
+
+  //</script>
+
+//--><!]]>
+</script>
+</head>
+<body onload="inicializar();">
+<button onclick="infraMoverParaTopo()" id="btnInfraTopo" class="infraButton infraCorBarraSistema" style="display: inline-block;"><img src="/infra_css/svg/topo.svg?2.29.0" title="Voltar ao Topo" alt="Voltar ao Topo" tabindex="32767"></button>
+<div id="divInfraAreaGlobal" class="vh-100 vw-100 d-flex flex-column m-0 border-0">
+
+      <nav id="navInfraBarraNavegacao" class="  navbar navbar-expand-md infraBarraNavegacao infraCorBarraSistema p-0">
+      
+        <div id="divInfraBarraSistema" class="flex-column w-100 h-100 infraBarraSistema">
+           <div id="divInfraBarraSistemaLinha"></div>
+           <h6 class="pl-3 mb-0 mx-0 d-none d-md-block infraCorBarraSuperior">GOVERNO DO ESTADO DE SÃO PAULO</h6>
+           <h6 class="pl-3 mb-0 mx-0 d-md-none infraCorBarraSuperior">GESP-TREINAMENTO</h6>
+
+          <div id="divInfraBarraSistemaMovel" class="flex-row d-flex pb-0  pl-3 d-md-none media infraBarraSistemaMovel">
+            <div class="d-flex flex-grow-1 infraBarraSistemaMovelE">
+               
+               <div class="align-self-center mt-1">
+                   <span id="spnInfraIdentificacaoSistema"><img src="svg/sei_barra.svg?4.1.5-2.29.0" title="Sistema Eletrônico de Informações - Versão 4.1.5"><span class="infraTituloLogoSistema">Ambiente de Treinamento</span></span>
+               </div>
+            </div>
+            <div class="infraBarraSistemaMovelD d-flex flex-shrink-0">
+              <div class="nav-item d-flex d-md-flex py-md-0 py-2"><a id="lnkInfraMenuSistema" onclick="infraClicarMenuBootstrap()" href="#" target="_self" title="Exibir/Ocultar Menu do Sistema" tabindex="65" class="nav-link align-self-center"><span class="font-weight-bold" style="padding:.1rem .5rem;">Menu</span></a></div><div class=" nav-item px-1 d-flex d-md-flex  py-md-0 py-2"> 
+                  <div class="input-group align-self-center ">
+                  <a id="lnkInfraUnidade" href="#" onclick="window.location.href='controlador.php?acao=infra_trocar_unidade&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000';" class="form-control infraAcaoBarraConjugada" title="Unidade de Teste 1" tabindex="66">TESTE</a>
+                  
+             </div>           
+          </div>
+              
+        <a class="navbar-toggler px-1 border-0 flex-grow-0 mr-2 align-self-center media" data-toggle="collapse" data-target="#divInfraBarraSistemaPadrao" aria-controls="divInfraBarraSistemaPadrao" aria-expanded="false">
+              <img id="imgInfraMenuPontosTopo" class=" align-self-center infraImg" width="24" height="24" src="/infra_css/svg/menu_pontos_topo.svg?2.29.0" tabindex="100" title="Exibir/Ocultar Ações">
+            </a>
+        
+            </div>
+          </div>
+          
+          <div id="divInfraBarraSistemaPadrao" class="navbar p-0 infraCorBarraSistema  collapse navbar-collapse align-self-center infraBarraSistemaPadrao">
+            <div id="divInfraBarraSistemaPadraoE" class="nav-link p-0 pl-3 d-none d-md-flex infraBarraSistemaPadraoE">
+               
+              <div class="align-self-center"><img src="svg/sei_barra.svg?4.1.5-2.29.0" title="Sistema Eletrônico de Informações - Versão 4.1.5"><span class="infraTituloLogoSistema">Ambiente de Treinamento</span></div>
+            </div>
+            <div id="divInfraBarraSistemaPadraoD" class="navbar-nav  flex-grow-1 justify-content-end infraBarraSistemaPadraoD">
+                 <div class="nav-item d-none d-md-flex py-md-0 py-2"><a id="lnkInfraMenuSistema" onclick="infraClicarMenuBootstrap()" href="#" target="_self" title="Exibir/Ocultar Menu do Sistema" tabindex="51" class="nav-link align-self-center"><span class="font-weight-bold" style="padding:.1rem .5rem;">Menu</span></a></div> <div class="nav-item px-1 media d-flex py-md-0 ">
+                 <form class="form-inline align-self-center w-100" id="frmProtocoloPesquisaRapida" method="post" action="controlador.php?acao=protocolo_pesquisa_rapida&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000">
+                  <div class="input-group">
+                    <input type="text" id="txtPesquisaRapida" name="txtPesquisaRapida" class="form-control" placeholder="Pesquisar..." maxlength="200" onkeypress="return infraLimitarTexto(this,event,200);" style="font-size:.8rem;height:24px;width:190px;border:0;" tabindex="52">
+                    <span class="input-group-btn">
+                      <span id="spnInfraUnidade" class="btn infraAcaoBarraConjugada">
+                      <img src="svg/pesquisa_rapida.svg?4.1.5-2.29.0" width="20" height="20" onclick="document.getElementById('frmProtocoloPesquisaRapida').submit();" title="Pesquisa Rápida" alt="Pesquisa Rápida" tabindex="53" class="infraImg">
+                      </span>
+                    </span>
+                  </div>
+                 </form>
+             </div>           
+          <div class=" nav-item px-1 d-none d-md-flex  py-md-0 py-2"> 
+                  <div class="input-group align-self-center ">
+                  <a id="lnkInfraUnidade" href="#" onclick="window.location.href='controlador.php?acao=infra_trocar_unidade&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000';" class="form-control infraAcaoBarraConjugada" title="Unidade de Teste 1" tabindex="54">TESTE</a>
+                  
+             </div>           
+          </div>
+          <div class="nav-item d-flex infraAcaoBarraSistema">
+            <a class="align-self-center  d-none d-md-block" id="lnkControleProcessos" href="#" onclick="window.location.href='controlador.php?acao=procedimento_controlar&amp;reset=1&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000'" title="Controle de Processos" tabindex="55">
+              <img src="svg/controle_processos_barra.svg?4.1.5-2.29.0" class="infraImg" title="Controle de Processos">
+            </a>
+            
+            <span title="Controle de Processos" class=" nav-link d-flex d-md-none">
+               <img src="svg/controle_processos_barra.svg?4.1.5-2.29.0" class="infraImg" title="Controle de Processos">
+               <a class="align-self-center text-white pl-1" href="controlador.php?acao=procedimento_controlar&amp;reset=1&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Controle de Processos" tabindex="56">
+                Controle de Processos
+               </a>
+            </span>
+          </div>
+          <div class="nav-item d-flex infraAcaoBarraSistema">
+            <a class="align-self-center  d-none d-md-block" id="lnkPainelControle" href="#" onclick="window.location.href='controlador.php?acao=painel_controle_visualizar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000'" title="Painel de Controle" tabindex="57">
+              <img src="svg/painel_controle_barra.svg?4.1.5-2.29.0" class="infraImg" title="Painel de Controle">
+            </a>
+            
+            <span title="Painel de Controle" class=" nav-link d-flex d-md-none">
+               <img src="svg/painel_controle_barra.svg?4.1.5-2.29.0" class="infraImg" title="Painel de Controle">
+               <a class="align-self-center text-white pl-1" href="controlador.php?acao=painel_controle_visualizar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Painel de Controle" tabindex="58">Painel de Controle</a>
+            </span>
+          </div>
+          <div class="nav-item d-flex infraAcaoBarraSistema">
+            
+            <a class="align-self-center  d-none d-md-block" target="_blank" href="controlador.php?acao=novidade_mostrar&amp;mostrar_todas=1&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Novidades" tabindex="59">
+              <img src="svg/novidades.svg?4.1.5-2.29.0" class="infraImg" title="Novidades">
+            </a>
+            
+            <span title="Novidades" class=" nav-link   d-flex d-md-none">
+               <img src="svg/novidades.svg?4.1.5-2.29.0" class="infraImg" title="Novidades">
+               <a class="align-self-center text-white pl-1" target="_blank" href="controlador.php?acao=novidade_mostrar&amp;mostrar_todas=1&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Novidades" tabindex="60">
+                Novidades
+               </a>
+            </span>
+         </div>
+    <div class="nav-item d-md-flex infraAcaoBarraSistema">
+      <a class="align-self-center  d-none d-md-block" id="lnkInfraAcessibilidadeSistema" href="#" onclick="window.location.href='controlador.php?acao=infra_acessibilidade_exibir&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000';" title="Acessibilidade" tabindex="61">
+        <img src="/infra_css/svg/acessibilidade_topo.svg?2.29.0" height="24" width="24" class="infraImg" title="Acessibilidade">
+      </a>
+      <span class=" nav-link   d-flex d-md-none">
+         <img src="/infra_css/svg/acessibilidade_topo.svg?2.29.0" height="24" width="24" class="infraImg" title="Acessibilidade">
+         <a class="align-self-center text-white pl-1" id="lnkInfraAcessibilidadeSistema" href="#" onclick="window.location.href='controlador.php?acao=infra_acessibilidade_exibir&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000';" title="Acessibilidade">Acessibilidade</a>
+      </span>
+     </div>
+      
+    <div class="nav-item d-md-flex infraAcaoBarraSistema">
+      <a class="align-self-center  d-none d-md-block" id="lnkInfraConfiguracaoSistema" href="controlador.php?acao=infra_configurar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Configurações do Sistema" tabindex="62">
+        <img src="/infra_css/svg/configuracao.svg?2.29.0" height="24" width="24" class="infraImg" title="Configurações do Sistema">
+      </a>
+      <span class=" nav-link   d-flex d-md-none">
+         <img src="/infra_css/svg/configuracao.svg?2.29.0" height="24" width="24" class="infraImg" title="Configurações do Sistema">
+         <a class="align-self-center text-white pl-1" id="lnkInfraConfiguracaoSistema" href="controlador.php?acao=infra_configurar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Configurações do Sistema">
+          Configurações
+         </a>
+      </span>
+     </div>
+      
+      <div class="nav-item d-md-flex infraAcaoBarraSistema">  
+      <a class="align-self-center  d-none d-md-block" id="lnkUsuarioSistema" href="controlador.php?acao=infra_acesso_usuario_listar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Pedro Soares (pedro.soares/GESP-TREINAMENTO)" tabindex="63">
+        <img src="/infra_css/svg/usuario_topo.svg?2.29.0" height="24" width="24" class="infraImg" title="Pedro Soares (pedro.soares/GESP-TREINAMENTO)">
+      </a>
+      <span title="Pedro Soares (pedro.soares/GESP-TREINAMENTO)" class=" nav-link   d-flex d-md-none">
+         <img src="/infra_css/svg/usuario_topo.svg?2.29.0" height="24" width="24" class="infraImg" title="Pedro Soares (pedro.soares/GESP-TREINAMENTO)">
+         <a class="align-self-center text-white pl-1" id="lnkUsuarioSistema" href="controlador.php?acao=infra_acesso_usuario_listar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Pedro Soares (pedro.soares/GESP-TREINAMENTO)">
+          Pedro Soares (pedro.soares/GESP-TREINAMENTO)
+         </a>
+      </span>
+      </div>
+      
+    <div class="nav-item pr-2 media infraAcaoBarraSistema">
+    <a class="align-self-center d-none d-md-block" id="lnkInfraSairSistema" href="controlador.php?acao=sair&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Sair do Sistema" tabindex="64">
+      <img src="/infra_css/svg/sair.svg?2.29.0" height="24" width="24" class="infraImg">
+    </a>
+    <span class=" nav-link d-flex d-md-none">
+      <img src="/infra_css/svg/sair.svg?2.29.0" height="24" width="24" class="infraImg">
+       <a id="lnkInfraSairSistema" class="align-self-center text-white pl-1" href="controlador.php?acao=sair&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Sair do Sistema">
+        Sair
+      </a>
+    </span>
+    </div>
+ 
+    
+            </div>
+          </div>
+        </div>
+      </nav>
+     <div id="divInfraAreaTela" style="min-height:0;" class="w-100  flex-grow-1 d-flex flex-row  divInfraAreaTela">
+<div id="divInfraAreaTelaE" class="divInfraAreaTelaE d-flex flex-column infraAreaTelaEExibeGrande infraMenuAnimacao infraAreaTelaEExibePequeno">
+<div id="divInfraSidebarMenu" class="infraSidebarMenu flex-grow-1"><div id="divInfraPesquisarMenu"><input type="text" autocomplete="off" id="txtInfraPesquisarMenu" class="infraPesquisarMenu infraText" onkeyup="infraFiltrarMenuBootstrap()" placeholder="Pesquisar no Menu" title="Pesquisar no Menu"></div><ul id="infraMenu">
+<li><a id="linkMenu0" style="padding-left:5px" link="acompanhamento_listar" href="controlador.php?acao=acompanhamento_listar&amp;infra_item_menu=0&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/acompanhamento_especial.svg?4.1.5-2.29.0" width="24" height="24"><span>Acompanhamento Especial</span></a></li>
+<li><a id="linkMenu1" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu1" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/administracao.svg?4.1.5-2.29.0" width="24" height="24"><span>Administração</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu1">
+<li><a id="linkMenu2" style="padding-left:35px" link="procedimento_acervo_sigilosos_global" href="controlador.php?acao=procedimento_acervo_sigilosos_global&amp;infra_item_menu=2&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Acervo Global de Sigilosos</span></a></li>
+<li><a id="linkMenu3" style="padding-left:35px" link="assinante_listar" href="controlador.php?acao=assinante_listar&amp;infra_item_menu=3&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Assinaturas das Unidades</span></a></li>
+<li><a id="linkMenu4" style="padding-left:35px" link="aviso_listar" href="controlador.php?acao=aviso_listar&amp;infra_item_menu=4&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Avisos</span></a></li>
+<li><a id="linkMenu5" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu5" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>CPAD</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu5">
+<li><a id="linkMenu6" style="padding-left:50px" link="cpad_cadastrar" href="controlador.php?acao=cpad_cadastrar&amp;infra_item_menu=6&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Nova</span></a></li>
+<li><a id="linkMenu7" style="padding-left:50px" link="cpad_listar" href="controlador.php?acao=cpad_listar&amp;infra_item_menu=7&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu8" style="padding-left:50px" link="cpad_reativar" href="controlador.php?acao=cpad_reativar&amp;infra_item_menu=8&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu9" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu9" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Contatos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu9">
+<li><a id="linkMenu10" style="padding-left:50px" link="contato_cadastrar" href="controlador.php?acao=contato_cadastrar&amp;sin_contexto=N&amp;infra_item_menu=10&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu11" style="padding-left:50px" link="contato_listar" href="controlador.php?acao=contato_listar&amp;infra_item_menu=11&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu12" style="padding-left:50px" link="contato_reativar" href="controlador.php?acao=contato_reativar&amp;infra_item_menu=12&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu13" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu13" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu13">
+<li><a id="linkMenu14" style="padding-left:75px" link="tipo_contato_cadastrar" href="controlador.php?acao=tipo_contato_cadastrar&amp;infra_item_menu=14&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu15" style="padding-left:75px" link="tipo_contato_listar" href="controlador.php?acao=tipo_contato_listar&amp;infra_item_menu=15&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu16" style="padding-left:75px" link="tipo_contato_reativar" href="controlador.php?acao=tipo_contato_reativar&amp;infra_item_menu=16&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu17" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu17" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Cargos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu17">
+<li><a id="linkMenu18" style="padding-left:75px" link="cargo_cadastrar" href="controlador.php?acao=cargo_cadastrar&amp;infra_item_menu=18&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu19" style="padding-left:75px" link="cargo_listar" href="controlador.php?acao=cargo_listar&amp;infra_item_menu=19&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu20" style="padding-left:75px" link="cargo_reativar" href="controlador.php?acao=cargo_reativar&amp;infra_item_menu=20&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu21" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu21" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tratamentos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu21">
+<li><a id="linkMenu22" style="padding-left:75px" link="tratamento_cadastrar" href="controlador.php?acao=tratamento_cadastrar&amp;infra_item_menu=22&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu23" style="padding-left:75px" link="tratamento_listar" href="controlador.php?acao=tratamento_listar&amp;infra_item_menu=23&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu24" style="padding-left:75px" link="tratamento_reativar" href="controlador.php?acao=tratamento_reativar&amp;infra_item_menu=24&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu25" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu25" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Títulos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu25">
+<li><a id="linkMenu26" style="padding-left:75px" link="titulo_cadastrar" href="controlador.php?acao=titulo_cadastrar&amp;infra_item_menu=26&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu27" style="padding-left:75px" link="titulo_listar" href="controlador.php?acao=titulo_listar&amp;infra_item_menu=27&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu28" style="padding-left:75px" link="titulo_reativar" href="controlador.php?acao=titulo_reativar&amp;infra_item_menu=28&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu29" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu29" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Categorias</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu29">
+<li><a id="linkMenu30" style="padding-left:75px" link="categoria_cadastrar" href="controlador.php?acao=categoria_cadastrar&amp;infra_item_menu=30&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Nova</span></a></li>
+<li><a id="linkMenu31" style="padding-left:75px" link="categoria_listar" href="controlador.php?acao=categoria_listar&amp;infra_item_menu=31&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu32" style="padding-left:75px" link="categoria_reativar" href="controlador.php?acao=categoria_reativar&amp;infra_item_menu=32&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a id="linkMenu33" style="padding-left:35px" link="controle_interno_listar" href="controlador.php?acao=controle_interno_listar&amp;infra_item_menu=33&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Critérios de Controle Interno</span></a></li>
+<li><a id="linkMenu34" style="padding-left:35px" link="email_sistema_listar" href="controlador.php?acao=email_sistema_listar&amp;infra_item_menu=34&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>E-mails do Sistema</span></a></li>
+<li><a id="linkMenu35" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu35" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Editor</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu35">
+<li><a id="linkMenu36" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu36" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Modelos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu36">
+<li><a id="linkMenu37" style="padding-left:75px" link="modelo_cadastrar" href="controlador.php?acao=modelo_cadastrar&amp;infra_item_menu=37&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu38" style="padding-left:75px" link="modelo_listar" href="controlador.php?acao=modelo_listar&amp;infra_item_menu=38&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu39" style="padding-left:75px" link="modelo_reativar" href="controlador.php?acao=modelo_reativar&amp;infra_item_menu=39&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu40" style="padding-left:75px" link="modelo_clonar" href="controlador.php?acao=modelo_clonar&amp;infra_item_menu=40&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Clonar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu41" style="padding-left:50px" link="estilo_listar" href="controlador.php?acao=estilo_listar&amp;infra_item_menu=41&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Estilos</span></a></li>
+<li><a id="linkMenu42" style="padding-left:50px" link="tarja_assinatura_listar" href="controlador.php?acao=tarja_assinatura_listar&amp;infra_item_menu=42&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Tarjas</span></a></li>
+<li><a id="linkMenu43" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu43" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Formatos de Imagem Permitidos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu43">
+<li><a id="linkMenu44" style="padding-left:75px" link="imagem_formato_cadastrar" href="controlador.php?acao=imagem_formato_cadastrar&amp;infra_item_menu=44&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu45" style="padding-left:75px" link="imagem_formato_listar" href="controlador.php?acao=imagem_formato_listar&amp;infra_item_menu=45&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu46" style="padding-left:75px" link="imagem_formato_reativar" href="controlador.php?acao=imagem_formato_reativar&amp;infra_item_menu=46&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a id="linkMenu47" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu47" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Extensões de Arquivos Permitidas</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu47">
+<li><a id="linkMenu48" style="padding-left:50px" link="arquivo_extensao_cadastrar" href="controlador.php?acao=arquivo_extensao_cadastrar&amp;infra_item_menu=48&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Nova</span></a></li>
+<li><a id="linkMenu49" style="padding-left:50px" link="arquivo_extensao_listar" href="controlador.php?acao=arquivo_extensao_listar&amp;infra_item_menu=49&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu50" style="padding-left:50px" link="arquivo_extensao_reativar" href="controlador.php?acao=arquivo_extensao_reativar&amp;infra_item_menu=50&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu51" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu51" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Federação</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu51">
+<li><a id="linkMenu52" style="padding-left:50px" link="instalacao_federacao_listar" href="controlador.php?acao=instalacao_federacao_listar&amp;infra_item_menu=52&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Instalações</span></a></li>
+<li><a id="linkMenu53" style="padding-left:50px" link="relatorio_federacao_gerar" href="controlador.php?acao=relatorio_federacao_gerar&amp;infra_item_menu=53&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Processos</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu54" style="padding-left:35px" link="feriado_listar" href="controlador.php?acao=feriado_listar&amp;infra_item_menu=54&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Feriados</span></a></li>
+<li><a id="linkMenu55" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu55" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Grupos Institucionais</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu55">
+<li><a id="linkMenu56" style="padding-left:50px" link="grupo_contato_listar" data-toggle="collapse" class="infraAnchorMenu" href="#submenu56" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Contatos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu56">
+<li><a id="linkMenu57" style="padding-left:75px" link="grupo_contato_institucional_cadastrar" href="controlador.php?acao=grupo_contato_institucional_cadastrar&amp;infra_item_menu=57&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu58" style="padding-left:75px" link="grupo_contato_institucional_listar" href="controlador.php?acao=grupo_contato_institucional_listar&amp;infra_item_menu=58&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu59" style="padding-left:75px" link="grupo_contato_institucional_reativar" href="controlador.php?acao=grupo_contato_institucional_reativar&amp;infra_item_menu=59&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu60" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu60" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>E-Mail</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu60">
+<li><a id="linkMenu61" style="padding-left:75px" link="grupo_email_institucional_cadastrar" href="controlador.php?acao=grupo_email_institucional_cadastrar&amp;infra_item_menu=61&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu62" style="padding-left:75px" link="grupo_email_institucional_listar" href="controlador.php?acao=grupo_email_institucional_listar&amp;infra_item_menu=62&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu63" style="padding-left:75px" link="grupo_email_institucional_reativar" href="controlador.php?acao=grupo_email_institucional_reativar&amp;infra_item_menu=63&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu64" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu64" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Envio</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu64">
+<li><a id="linkMenu65" style="padding-left:75px" link="grupo_unidade_institucional_cadastrar" href="controlador.php?acao=grupo_unidade_institucional_cadastrar&amp;infra_item_menu=65&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu66" style="padding-left:75px" link="grupo_unidade_institucional_listar" href="controlador.php?acao=grupo_unidade_institucional_listar&amp;infra_item_menu=66&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu67" style="padding-left:75px" link="grupo_unidade_institucional_reativar" href="controlador.php?acao=grupo_unidade_institucional_reativar&amp;infra_item_menu=67&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu68" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu68" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Federação</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu68">
+<li><a id="linkMenu69" style="padding-left:75px" link="grupo_federacao_institucional_cadastrar" href="controlador.php?acao=grupo_federacao_institucional_cadastrar&amp;infra_item_menu=69&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu70" style="padding-left:75px" link="grupo_federacao_institucional_listar" href="controlador.php?acao=grupo_federacao_institucional_listar&amp;infra_item_menu=70&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu71" style="padding-left:75px" link="grupo_federacao_institucional_reativar" href="controlador.php?acao=grupo_federacao_institucional_reativar&amp;infra_item_menu=71&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a id="linkMenu72" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu72" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Hipóteses Legais</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu72">
+<li><a id="linkMenu73" style="padding-left:50px" link="hipotese_legal_cadastrar" href="controlador.php?acao=hipotese_legal_cadastrar&amp;infra_item_menu=73&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Nova</span></a></li>
+<li><a id="linkMenu74" style="padding-left:50px" link="hipotese_legal_listar" href="controlador.php?acao=hipotese_legal_listar&amp;infra_item_menu=74&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu75" style="padding-left:50px" link="hipotese_legal_reativar" href="controlador.php?acao=hipotese_legal_reativar&amp;infra_item_menu=75&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu76" style="padding-left:35px" link="tarefa_listar" href="controlador.php?acao=tarefa_listar&amp;infra_item_menu=76&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Histórico</span></a></li>
+<li><a id="linkMenu77" style="padding-left:35px" link="novidade_listar" href="controlador.php?acao=novidade_listar&amp;infra_item_menu=77&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novidades</span></a></li>
+<li><a id="linkMenu78" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu78" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Países, Estados e Cidades</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu78">
+<li><a id="linkMenu79" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu79" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Países</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu79">
+<li><a id="linkMenu80" style="padding-left:75px" link="pais_cadastrar" href="controlador.php?acao=pais_cadastrar&amp;infra_item_menu=80&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu81" style="padding-left:75px" link="pais_listar" href="controlador.php?acao=pais_listar&amp;infra_item_menu=81&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu82" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu82" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Estados</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu82">
+<li><a id="linkMenu83" style="padding-left:75px" link="uf_cadastrar" href="controlador.php?acao=uf_cadastrar&amp;infra_item_menu=83&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu84" style="padding-left:75px" link="uf_listar" href="controlador.php?acao=uf_listar&amp;infra_item_menu=84&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu85" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu85" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Cidades</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu85">
+<li><a id="linkMenu86" style="padding-left:75px" link="cidade_cadastrar" href="controlador.php?acao=cidade_cadastrar&amp;infra_item_menu=86&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Nova</span></a></li>
+<li><a id="linkMenu87" style="padding-left:75px" link="cidade_listar" href="controlador.php?acao=cidade_listar&amp;infra_item_menu=87&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a id="linkMenu88" style="padding-left:35px" link="plano_trabalho_listar" href="controlador.php?acao=plano_trabalho_listar&amp;infra_item_menu=88&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Planos de Trabalho</span></a></li>
+<li><a id="linkMenu89" style="padding-left:35px" link="situacao_listar" href="controlador.php?acao=situacao_listar&amp;infra_item_menu=89&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Pontos de Controle</span></a></li>
+<li><a id="linkMenu90" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu90" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Sistemas</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu90">
+<li><a id="linkMenu91" style="padding-left:50px" link="usuario_sistema_cadastrar" href="controlador.php?acao=usuario_sistema_cadastrar&amp;infra_item_menu=91&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu92" style="padding-left:50px" link="usuario_sistema_listar" href="controlador.php?acao=usuario_sistema_listar&amp;infra_item_menu=92&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu93" style="padding-left:50px" link="usuario_sistema_reativar" href="controlador.php?acao=usuario_sistema_reativar&amp;infra_item_menu=93&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu94" style="padding-left:50px" link="monitoramento_servico_listar" href="controlador.php?acao=monitoramento_servico_listar&amp;infra_item_menu=94&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Monitoramento de Serviços</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu95" style="padding-left:35px" link="tabela_assuntos_listar" href="controlador.php?acao=tabela_assuntos_listar&amp;infra_item_menu=95&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Tabela de Assuntos</span></a></li>
+<li><a id="linkMenu96" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu96" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos de Conferência</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu96">
+<li><a id="linkMenu97" style="padding-left:50px" link="tipo_conferencia_cadastrar" href="controlador.php?acao=tipo_conferencia_cadastrar&amp;infra_item_menu=97&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu98" style="padding-left:50px" link="tipo_conferencia_listar" href="controlador.php?acao=tipo_conferencia_listar&amp;infra_item_menu=98&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu99" style="padding-left:50px" link="tipo_conferencia_reativar" href="controlador.php?acao=tipo_conferencia_reativar&amp;infra_item_menu=99&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu100" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu100" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos de Documento</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu100">
+<li><a id="linkMenu101" style="padding-left:50px" link="serie_cadastrar" href="controlador.php?acao=serie_cadastrar&amp;infra_item_menu=101&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu102" style="padding-left:50px" link="serie_listar" href="controlador.php?acao=serie_listar&amp;infra_item_menu=102&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu103" style="padding-left:50px" link="serie_reativar" href="controlador.php?acao=serie_reativar&amp;infra_item_menu=103&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu104" style="padding-left:50px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu104" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Grupos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu104">
+<li><a id="linkMenu105" style="padding-left:75px" link="grupo_serie_listar" href="controlador.php?acao=grupo_serie_listar&amp;infra_item_menu=105&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu106" style="padding-left:75px" link="grupo_serie_reativar" href="controlador.php?acao=grupo_serie_reativar&amp;infra_item_menu=106&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu107" style="padding-left:50px" link="numeracao_listar" href="controlador.php?acao=numeracao_listar&amp;infra_item_menu=107&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Numeração</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu108" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu108" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos de Formulários</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu108">
+<li><a id="linkMenu109" style="padding-left:50px" link="tipo_formulario_listar" href="controlador.php?acao=tipo_formulario_listar&amp;infra_item_menu=109&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu110" style="padding-left:50px" link="tipo_formulario_cadastrar" href="controlador.php?acao=tipo_formulario_cadastrar&amp;infra_item_menu=110&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu111" style="padding-left:50px" link="tipo_formulario_reativar" href="controlador.php?acao=tipo_formulario_reativar&amp;infra_item_menu=111&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu112" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu112" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos de Prioridade</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu112">
+<li><a id="linkMenu113" style="padding-left:50px" link="tipo_prioridade_cadastrar" href="controlador.php?acao=tipo_prioridade_cadastrar&amp;infra_item_menu=113&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu114" style="padding-left:50px" link="tipo_prioridade_listar" href="controlador.php?acao=tipo_prioridade_listar&amp;infra_item_menu=114&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu115" style="padding-left:50px" link="tipo_prioridade_reativar" href="controlador.php?acao=tipo_prioridade_reativar&amp;infra_item_menu=115&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu116" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu116" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Tipos de Processo</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu116">
+<li><a id="linkMenu117" style="padding-left:50px" link="tipo_procedimento_cadastrar" href="controlador.php?acao=tipo_procedimento_cadastrar&amp;infra_item_menu=117&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu118" style="padding-left:50px" link="tipo_procedimento_listar" href="controlador.php?acao=tipo_procedimento_listar&amp;infra_item_menu=118&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu119" style="padding-left:50px" link="tipo_procedimento_reativar" href="controlador.php?acao=tipo_procedimento_reativar&amp;infra_item_menu=119&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu120" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu120" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Unidades</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu120">
+<li><a id="linkMenu121" style="padding-left:50px" link="unidade_listar" href="controlador.php?acao=unidade_listar&amp;infra_item_menu=121&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu122" style="padding-left:50px" link="unidade_reativar" href="controlador.php?acao=unidade_reativar&amp;infra_item_menu=122&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu123" style="padding-left:50px" link="unidade_migrar" href="controlador.php?acao=unidade_migrar&amp;infra_item_menu=123&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Migrar Dados</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu124" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu124" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Usuários</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu124">
+<li><a id="linkMenu125" style="padding-left:50px" link="usuario_listar" href="controlador.php?acao=usuario_listar&amp;infra_item_menu=125&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu126" style="padding-left:50px" link="usuario_reativar" href="controlador.php?acao=usuario_reativar&amp;infra_item_menu=126&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu127" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu127" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Usuários Externos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu127">
+<li><a id="linkMenu128" style="padding-left:50px" link="usuario_externo_listar" href="controlador.php?acao=usuario_externo_listar&amp;infra_item_menu=128&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu129" style="padding-left:50px" link="usuario_externo_reativar" href="controlador.php?acao=usuario_externo_reativar&amp;infra_item_menu=129&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu130" style="padding-left:35px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu130" role="button" aria-expanded="false" aria-controls="collapseMenu"><span>Veículos de Publicação</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu130">
+<li><a id="linkMenu131" style="padding-left:50px" link="veiculo_publicacao_cadastrar" href="controlador.php?acao=veiculo_publicacao_cadastrar&amp;infra_item_menu=131&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Novo</span></a></li>
+<li><a id="linkMenu132" style="padding-left:50px" link="veiculo_publicacao_listar" href="controlador.php?acao=veiculo_publicacao_listar&amp;infra_item_menu=132&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Listar</span></a></li>
+<li><a id="linkMenu133" style="padding-left:50px" link="veiculo_publicacao_reativar" href="controlador.php?acao=veiculo_publicacao_reativar&amp;infra_item_menu=133&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reativar</span></a></li>
+<li><a id="linkMenu134" style="padding-left:50px" link="veiculo_imprensa_nacional_listar" href="controlador.php?acao=veiculo_imprensa_nacional_listar&amp;infra_item_menu=134&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Imprensa Nacional</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu135" style="padding-left:35px" link="orgao_listar" href="controlador.php?acao=orgao_listar&amp;infra_item_menu=135&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Órgãos</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu136" style="padding-left:5px" link="base_conhecimento_pesquisar" href="controlador.php?acao=base_conhecimento_pesquisar&amp;infra_item_menu=136&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/base_conhecimento.svg?4.1.5-2.29.0" width="24" height="24"><span>Base de Conhecimento</span></a></li>
+<li><a id="linkMenu137" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu137" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/blocos.svg?4.1.5-2.29.0" width="24" height="24"><span>Blocos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu137">
+<li><a id="linkMenu138" style="padding-left:35px" link="bloco_assinatura_listar" href="controlador.php?acao=bloco_assinatura_listar&amp;infra_item_menu=138&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Assinatura</span></a></li>
+<li><a id="linkMenu139" style="padding-left:35px" link="bloco_interno_listar" href="controlador.php?acao=bloco_interno_listar&amp;infra_item_menu=139&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Internos</span></a></li>
+<li><a id="linkMenu140" style="padding-left:35px" link="bloco_reuniao_listar" href="controlador.php?acao=bloco_reuniao_listar&amp;infra_item_menu=140&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Reunião</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu141" style="padding-left:5px" link="contato_listar" href="controlador.php?acao=contato_listar&amp;infra_item_menu=141&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/contatos.svg?4.1.5-2.29.0" width="24" height="24"><span>Contatos</span></a></li>
+<li><a id="linkMenu142" style="padding-left:5px" link="controle_prazo_listar" href="controlador.php?acao=controle_prazo_listar&amp;infra_item_menu=142&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/controle_prazo.svg?4.1.5-2.29.0" width="24" height="24"><span>Controle de Prazos</span></a></li>
+<li><a id="linkMenu143" style="padding-left:5px" link="procedimento_controlar" href="controlador.php?acao=procedimento_controlar&amp;reset=1&amp;infra_item_menu=143&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/controle_processos.svg?4.1.5-2.29.0" width="24" height="24"><span>Controle de Processos</span></a></li>
+<li><a id="linkMenu144" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu144" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/estatisticas.svg?4.1.5-2.29.0" width="24" height="24"><span>Estatísticas</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu144">
+<li><a id="linkMenu145" style="padding-left:35px" link="gerar_estatisticas_unidade" href="controlador.php?acao=gerar_estatisticas_unidade&amp;infra_item_menu=145&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Unidade</span></a></li>
+<li><a id="linkMenu146" style="padding-left:35px" link="gerar_estatisticas_desempenho_processos" href="controlador.php?acao=gerar_estatisticas_desempenho_processos&amp;infra_item_menu=146&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Desempenho de Processos</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu147" style="padding-left:5px" link="protocolo_modelo_listar" href="controlador.php?acao=protocolo_modelo_listar&amp;infra_item_menu=147&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/favoritos.svg?4.1.5-2.29.0" width="24" height="24"><span>Favoritos</span></a></li>
+<li><a id="linkMenu148" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu148" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/grupos.svg?4.1.5-2.29.0" width="24" height="24"><span>Grupos</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu148">
+<li><a id="linkMenu149" style="padding-left:35px" link="grupo_contato_listar" href="controlador.php?acao=grupo_contato_listar&amp;infra_item_menu=149&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Contatos</span></a></li>
+<li><a id="linkMenu150" style="padding-left:35px" link="grupo_email_listar" href="controlador.php?acao=grupo_email_listar&amp;infra_item_menu=150&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>E-Mail</span></a></li>
+<li><a id="linkMenu151" style="padding-left:35px" link="grupo_unidade_listar" href="controlador.php?acao=grupo_unidade_listar&amp;infra_item_menu=151&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Envio</span></a></li>
+<li><a id="linkMenu152" style="padding-left:35px" link="grupo_federacao_listar" href="controlador.php?acao=grupo_federacao_listar&amp;infra_item_menu=152&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Federação</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu153" style="padding-left:5px" link="procedimento_escolher_tipo" href="controlador.php?acao=procedimento_escolher_tipo&amp;infra_item_menu=153&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/iniciar_processo.svg?4.1.5-2.29.0" width="24" height="24"><span>Iniciar Processo</span></a></li>
+<li><a id="linkMenu154" style="padding-left:5px" link="inspecao_administrativa_gerar" href="controlador.php?acao=inspecao_administrativa_gerar&amp;infra_item_menu=154&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/inspecao_administrativa.svg?4.1.5-2.29.0" width="24" height="24"><span>Inspeção Administrativa</span></a></li>
+<li><a id="linkMenu155" style="padding-left:5px" link="marcador_listar" href="controlador.php?acao=marcador_listar&amp;infra_item_menu=155&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/marcadores.svg?4.1.5-2.29.0" width="24" height="24"><span>Marcadores</span></a></li>
+<li><a id="linkMenu156" style="padding-left:5px" link="painel_controle_visualizar" href="controlador.php?acao=painel_controle_visualizar&amp;infra_item_menu=156&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/painel_controle.svg?4.1.5-2.29.0" width="24" height="24"><span>Painel de Controle</span></a></li>
+<li><a id="linkMenu157" style="padding-left:5px" link="protocolo_pesquisar" href="controlador.php?acao=protocolo_pesquisar&amp;infra_item_menu=157&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/pesquisa.svg?4.1.5-2.29.0" width="24" height="24"><span>Pesquisa</span></a></li>
+<li><a id="linkMenu158" style="padding-left:5px" link="controle_unidade_gerar" href="controlador.php?acao=controle_unidade_gerar&amp;infra_item_menu=158&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/pontos_controle.svg?4.1.5-2.29.0" width="24" height="24"><span>Pontos de Controle</span></a></li>
+<li><a id="linkMenu159" style="padding-left:5px" link="procedimento_sobrestado_listar" href="controlador.php?acao=procedimento_sobrestado_listar&amp;infra_item_menu=159&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/processos_sobrestados.svg?4.1.5-2.29.0" width="24" height="24"><span>Processos Sobrestados</span></a></li>
+<li><a id="linkMenu160" style="padding-left:5px" link="reabertura_programada_listar" href="controlador.php?acao=reabertura_programada_listar&amp;infra_item_menu=160&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/reabertura_programada.svg?4.1.5-2.29.0" width="24" height="24"><span>Reabertura Programada</span></a></li>
+<li><a id="linkMenu161" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu161" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/relatorios.svg?4.1.5-2.29.0" width="24" height="24"><span>Relatórios</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu161">
+<li><a id="linkMenu162" style="padding-left:35px" link="atividade_unidade_pesquisar" href="controlador.php?acao=atividade_unidade_pesquisar&amp;infra_item_menu=162&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Atividade na Unidade</span></a></li>
+<li><a id="linkMenu163" style="padding-left:35px" link="contato_relatorio_temporarios" href="controlador.php?acao=contato_relatorio_temporarios&amp;infra_item_menu=163&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Contatos Temporários</span></a></li>
+</ul>
+</li>
+<li><a id="linkMenu164" style="padding-left:5px" link="retorno_programado_listar" href="controlador.php?acao=retorno_programado_listar&amp;infra_item_menu=164&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/retorno_programado.svg?4.1.5-2.29.0" width="24" height="24"><span>Retorno Programado</span></a></li>
+<li><a id="linkMenu165" style="padding-left:5px" link="texto_padrao_interno_listar" href="controlador.php?acao=texto_padrao_interno_listar&amp;infra_item_menu=165&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><img src="menu/texto_padrao.svg?4.1.5-2.29.0" width="24" height="24"><span>Textos Padrão</span></a></li>
+<li><a id="linkMenu166" style="padding-left:5px" data-toggle="collapse" class="infraAnchorMenu" href="#submenu166" role="button" aria-expanded="false" aria-controls="collapseMenu"><img src="menu/infra.svg?4.1.5-2.29.0" width="24" height="24"><span>Infra</span><img src="/infra_css/imagens/menu_seta.png" class="infraImgSetaMenu" style="width:12px;"></a>
+<ul class="collapse" id="submenu166">
+<li><a id="linkMenu167" style="padding-left:35px" link="infra_agendamento_tarefa_listar" href="controlador.php?acao=infra_agendamento_tarefa_listar&amp;infra_item_menu=167&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Agendamentos</span></a></li>
+<li><a id="linkMenu168" style="padding-left:35px" link="infra_auditoria_listar" href="controlador.php?acao=infra_auditoria_listar&amp;infra_item_menu=168&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Auditoria</span></a></li>
+<li><a id="linkMenu169" style="padding-left:35px" link="infra_atributo_cache_listar" href="controlador.php?acao=infra_atributo_cache_listar&amp;infra_item_menu=169&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Cache em Memória</span></a></li>
+<li><a id="linkMenu170" style="padding-left:35px" link="infra_captcha_listar" href="controlador.php?acao=infra_captcha_listar&amp;infra_item_menu=170&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Captcha</span></a></li>
+<li><a id="linkMenu171" style="padding-left:35px" link="infra_banco_comparar" href="controlador.php?acao=infra_banco_comparar&amp;infra_item_menu=171&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Comparação de Bancos</span></a></li>
+<li><a id="linkMenu172" style="padding-left:35px" link="sistema_configurar" href="controlador.php?acao=sistema_configurar&amp;infra_item_menu=172&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Configuração do Sistema</span></a></li>
+<li><a id="linkMenu173" style="padding-left:35px" link="indexar" href="controlador.php?acao=indexar&amp;infra_item_menu=173&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Indexação</span></a></li>
+<li><a id="linkMenu174" style="padding-left:35px" link="infra_log_listar" href="controlador.php?acao=infra_log_listar&amp;infra_item_menu=174&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Log</span></a></li>
+<li><a id="linkMenu175" style="padding-left:35px" link="modulo_listar" href="controlador.php?acao=modulo_listar&amp;infra_item_menu=175&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Módulos</span></a></li>
+<li><a id="linkMenu176" style="padding-left:35px" link="infra_navegador_listar" href="controlador.php?acao=infra_navegador_listar&amp;infra_item_menu=176&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Navegadores</span></a></li>
+<li><a id="linkMenu177" style="padding-left:35px" link="infra_parametro_listar" href="controlador.php?acao=infra_parametro_listar&amp;infra_item_menu=177&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Parâmetros</span></a></li>
+<li><a id="linkMenu178" style="padding-left:35px" link="replicacao_federacao_listar" href="controlador.php?acao=replicacao_federacao_listar&amp;infra_item_menu=178&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Replicações Federação</span></a></li>
+<li><a id="linkMenu179" style="padding-left:35px" link="infra_sequencia_listar" href="controlador.php?acao=infra_sequencia_listar&amp;infra_item_menu=179&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000"><span>Sequências</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<script type="text/javascript">infraSetarMenuBootstrap("procedimento_controlar")</script><!--LOGO--><!--MODULOS--></div>
+<div id="divInfraAreaTelaD" class=" flex-grow-1 px-3">
+
+
+
+
+<form id="frmProcedimentoControlar" class="h-100" method="post" action="controlador.php?acao=procedimento_controlar&amp;acao_origem=procedimento_controlar&amp;tipo_filtro=&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000">
+  <div id="divControleProcessosConteudo" class="h-100  d-flex flex-column"><div id="divInfraBarraAcesso" class="infraBarraAcesso"><span><a title="Ver últimos acessos" href="controlador.php?acao=infra_acesso_usuario_listar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000">Último acesso na segunda-feira, 21 de setembro às 23:35.</a></span></div><div id="divInfraBarraLocalizacao" class="infraBarraLocalizacao" tabindex="450">Controle de Processos</div>
+    
+    <div class="barraBotoesSEIMovel">
+        <a class="btn d-md-none" data-toggle="collapse" href="#collapseControle" role="button" aria-expanded="true" aria-controls="collapseControle" title="Exibir/Ocultar Ícones" tabindex="451">
+          <img src="/infra_css/svg/menu_pontos.svg" width="32" height="32">
+        </a>
+    </div>
+
+    <div class="collapse d-md-block" id="collapseControle">
+        <div id="divBotoesControleProcessos" class="barraBotoesSEI">
+          <a href="#" onclick="return acaoControleProcessos('controlador.php?acao=procedimento_enviar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, false);" tabindex="452"><img src="svg/processo_enviar.svg?18" alt="Enviar Processo" title="Enviar Processo"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=procedimento_atualizar_andamento&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/processo_atualizar_andamento.svg?18" alt="Atualizar Andamento" title="Atualizar Andamento"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=procedimento_atribuicao_cadastrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, false);" tabindex="452"><img src="svg/processo_atribuir.svg?18" alt="Atribuição de Processos" title="Atribuição de Processos"></a>
+<a href="#" onclick="return acaoBlocoProcessar();" tabindex="452"><img src="svg/bloco_incluir_protocolo.svg?18" alt="Incluir em Bloco" title="Incluir em Bloco"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=procedimento_sobrestar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, false);" tabindex="452"><img src="svg/processo_sobrestar.svg?18" alt="Sobrestar Processo" title="Sobrestar Processo"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=procedimento_concluir&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/processo_concluir.svg?18" alt="Concluir Processo nesta Unidade" title="Concluir Processo nesta Unidade"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=anotacao_registrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/anotacao_cadastro.svg?18" alt="Anotações" title="Anotações"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=acompanhamento_cadastrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/acompanhamento_especial_cadastro.svg?18" alt="Acompanhamento Especial" title="Acompanhamento Especial"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=documento_gerar_multiplo&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/documento_incluir.svg?18" alt="Incluir Documento" title="Incluir Documento"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=andamento_marcador_cadastrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/marcador_adicionar.svg?18" alt="Adicionar Marcador" title="Adicionar Marcador"></a>
+<a href="#" onclick="return acaoRemoverMarcadorProcessar('controlador.php?acao=andamento_marcador_remover&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/marcador_remover.svg?18" alt="Remover Marcador" title="Remover Marcador"></a>
+<a href="#" onclick="return acaoControleProcessos('controlador.php?acao=controle_prazo_definir&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000', true, true);" tabindex="452"><img src="svg/controle_prazo_gerenciar.svg?18" alt="Controle de Prazos" title="Controle de Prazos"></a>
+<a href="#" onclick="return listarCredenciais();" tabindex="452"><img src="svg/credencial_consultar.svg?18" alt="Processos com Credencial de Acesso nesta Unidade" title="Processos com Credencial de Acesso nesta Unidade"></a>
+        </div>
+    </div>
+
+    <div id="divFiltro" class="row justify-content-center justify-content-md-start">
+        
+<div class=" col-6 p-1 col-md-auto mr-md-3 "><a id="lnkVisualizacaoDetalhada" href="javascript:void(0);" onclick="trocarVisualizacao('D');" class="ancoraPadraoPreta p-0" tabindex="453">Visualização detalhada</a></div>
+                
+<div class=" col-6 p-1 col-md-auto mr-md-3  "><a id="lnkAtribuidosMim" href="javascript:void(0);" onclick="verMeusProcessos('M');" class="ancoraPadraoPreta p-0" tabindex="454">Ver atribuídos a mim</a></div>
+        
+<div class=" col-6 p-1 col-md-auto mr-md-3 "><a href="controlador.php?acao=procedimento_controlar&amp;acao_origem=procedimento_controlar&amp;tipo_filtro=M&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" class="ancoraPadraoPreta p-0" tabindex="455">Ver por marcadores</a></div>
+        
+<div class=" col-6 p-1 col-md-auto mr-md-3  "><a href="controlador.php?acao=procedimento_controlar&amp;acao_origem=procedimento_controlar&amp;tipo_filtro=P&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" class="ancoraPadraoPreta p-0" tabindex="456">Ver por tipo</a></div>
+        
+<div class=" col-6 p-1 col-md-auto mr-md-3  "><a href="controlador.php?acao=procedimento_controlar&amp;acao_origem=procedimento_controlar&amp;tipo_filtro=R&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" class="ancoraPadraoPreta p-0" tabindex="457">Ver por prioridade</a></div>
+    </div>
+    <div style="overflow-y: auto;min-height: 200px;margin-top:5px;" class="flex-grow-1 row mx-0 mb-0  d-flex divTabelaProcesso" id="divTabelaProcesso">
+        <div class="d-flex justify-content-center w-100 d-md-none" style="height: 25px;">
+                <a class="ml-0 mt-1 pl-0 ancoraPadraoAzul   d-md-none mx-auto" href="#" onclick="alterarVisualizacaoTabela('hdnExibirRecebidos','true','hdnExibirGerados')" tabindex="1003"> 
+                  Processos Recebidos
+                </a>
+                 <a class="ml-0 mt-1 pl-0 ancoraPadraoAzul  d-md-none mx-auto" href="#" onclick="alterarVisualizacaoTabela('hdnExibirGerados','true','hdnExibirRecebidos')" tabindex="1004">
+                    Processos Gerados
+                </a>
+        </div>     <div id="divRecebidos" class="ml-0  pl-0 d-none  d-md-block  col-12 col-md-6">
+<div id="divRecebidosAreaPaginacaoSuperior" class="infraAreaPaginacao">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="selRecebidosPaginacaoSuperior" name="selRecebidosPaginacaoSuperior" onchange="infraAcaoPaginar('=',this.value,'Recebidos', null);" class="infraSelect" tabindex="1001" aria-label="Escolher Página" style="display:inline;">
+<option value="0" selected="selected">1</option>
+<option value="1">2</option>
+<option value="2">3</option>
+</select>&nbsp;&nbsp;
+<a id="lnkRecebidosProximaPaginaSuperior" href="javascript:void(0);" onclick="infraAcaoPaginar('+',0,'Recebidos', null);" title="Próxima Página" tabindex="1001"><img src="/infra_css/svg/paginacao_proxima.svg" title="Próxima Página" alt="Próxima Página" class="infraImg"></a>&nbsp;&nbsp;
+
+&nbsp;<a id="lnkRecebidosUltimaPaginaSuperior" href="javascript:void(0);" onclick="infraAcaoPaginar('=',2,'Recebidos', null);" title="Última Página" tabindex="1001"><img src="/infra_css/svg/paginacao_ultima.svg" title="Última Página" alt="Última Página" class="infraImg"></a></div>
+<div id="divRecebidosAreaTabela" class="infraAreaTabela">
+<table id="tblProcessosRecebidos" width="100%" border="0" cellspacing="0" cellpadding="1" class="infraTable tabelaControle" summary="Tabela de Processos Recebidos." tabindex="1001">
+<caption class="infraCaption">Processos recebidos (300 registros - 1 a 100):</caption><tbody><tr><th class="infraTh" width="5%"><a href="javascript:void(0);" id="lnkInfraCheck" onclick="infraSelecaoMultipla('Recebidos');" tabindex="1001"><img src="/infra_css/svg/check.svg" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>
+<th class="infraTh" colspan="3">Recebidos</th>
+</tr>
+<tr id="P157584" class="infraTrClara">
+<td><a id="lnkRecebidosID-157584" name="ID-157584"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkRecebidosItem0" name="chkRecebidosItem0" tabindex="1001" title="034.00000265/2026-31" type="checkbox" value="157584" aria-label="Sigiloso / Tipo Expediente de atendimento de requisições, ordens judiciais ou administrativas" onclick="infraSelecionarItens(this,'Recebidos');"><label class="infraCheckboxLabel" for="chkRecebidosItem0" title="034.00000265/2026-31"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizadoSigiloso" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=157584&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Expediente de atendimento de requisições, ordens judiciais ou administrativas" onmouseover="return infraTooltipMostrar('','Expediente de atendimento de requisições, ordens judiciais ou administrativas');" onmouseout="return infraTooltipOcultar();" tabindex="1001">034.<wbr>00000265/2026-31</a></td>
+<td width="10%">(<a href="controlador.php?acao=procedimento_atribuicao_listar&amp;acao_retorno=procedimento_controlar&amp;id_usuario_atribuicao=100001473&amp;id_procedimento=157584&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Atribuído para Pedro Soares" class="ancoraSigla" tabindex="1001">pedro.soares</a>)</td>
+</tr><tr id="P150098" class="infraTrClara">
+<td><a id="lnkRecebidosID-150098" name="ID-150098"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkRecebidosItem1" name="chkRecebidosItem1" tabindex="1001" title="012.00000178/2025-23" type="checkbox" value="150098" aria-label="Tipo Expediente de atendimento de requisições, ordens judiciais ou administrativas / Especificação Dilação de prazo - BO 0001/2025, Laudo 124563/2025" onclick="infraSelecionarItens(this,'Recebidos');"><label class="infraCheckboxLabel" for="chkRecebidosItem1" title="012.00000178/2025-23"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=150098&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Expediente de atendimento de requisições, ordens judiciais ou administrativas / Dilação de prazo - BO 0001/2025, Laudo 124563/2025" onmouseover="return infraTooltipMostrar('Dilação de prazo - BO 0001/2025, Laudo 124563/2025','Expediente de atendimento de requisições, ordens judiciais ou administrativas');" onmouseout="return infraTooltipOcultar();" tabindex="1001">012.<wbr>00000178/2025-23</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P112825" class="infraTrClara">
+<td><a id="lnkRecebidosID-112825" name="ID-112825"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkRecebidosItem2" name="chkRecebidosItem2" tabindex="1001" title="99991.000052/2023-22" type="checkbox" value="112825" aria-label="Não recebido / Tipo Ofício / Especificação Teste Bruno" onclick="infraSelecionarItens(this,'Recebidos');"><label class="infraCheckboxLabel" for="chkRecebidosItem2" title="99991.000052/2023-22"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoNaoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=112825&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Ofício / Teste Bruno" onmouseover="return infraTooltipMostrar('Teste Bruno','Ofício');" onmouseout="return infraTooltipOcultar();" tabindex="1001">99991.<wbr>000052/2023-22</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P154676" class="infraTrClara">
+<td><a id="lnkRecebidosID-154676" name="ID-154676"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkRecebidosItem3" name="chkRecebidosItem3" tabindex="1001" title="001.00000003/2026-62" type="checkbox" value="154676" aria-label="Tipo Ofício" onclick="infraSelecionarItens(this,'Recebidos');"><label class="infraCheckboxLabel" for="chkRecebidosItem3" title="001.00000003/2026-62"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=154676&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Ofício" onmouseover="return infraTooltipMostrar('','Ofício');" onmouseout="return infraTooltipOcultar();" tabindex="1001">001.<wbr>00000003/2026-62</a></td>
+<td width="10%">(<a href="controlador.php?acao=procedimento_atribuicao_listar&amp;acao_retorno=procedimento_controlar&amp;id_usuario_atribuicao=100001557&amp;id_procedimento=154676&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" title="Atribuído para Regis Vieira de Araujo Junior" class="ancoraSigla" tabindex="1001">00000000000</a>)</td>
+</tr><tr id="P148265" class="infraTrClara">
+<td><a id="lnkRecebidosID-148265" name="ID-148265"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkRecebidosItem4" name="chkRecebidosItem4" tabindex="1001" title="99906.713-630.000032/2025-82" type="checkbox" value="148265" aria-label="Tipo Processo de contratação de serviços de informática e automação / Especificação CAU contrato" onclick="infraSelecionarItens(this,'Recebidos');"><label class="infraCheckboxLabel" for="chkRecebidosItem4" title="99906.713-630.000032/2025-82"></label></div></td>
+<td width="20%"><a href="controlador.php?acao=anotacao_registrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_protocolo=148265&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Anotação / teste / usuario01 em 10/07/2025 16:04" onmouseover="return infraTooltipMostrar('texto','usuario em 10/07/2025 16:04');" onmouseout="return infraTooltipOcultar();" tabindex="1001"><img src="svg/anotacao1.svg?18" class="imagemStatus"></a><a href="controlador.php?acao=andamento_marcador_gerenciar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=148265&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Marcador / Para Bruna assinar" onmouseover="return infraTooltipMostrar('','Para Bruna assinar');" onmouseout="return infraTooltipOcultar();" tabindex="1001"><img src="svg/marcador_azul_marinho.svg?18" class="imagemStatus"></a><a href="controlador.php?acao=andamento_marcador_gerenciar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=148265&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Marcador / teste" onmouseover="return infraTooltipMostrar('','teste');" onmouseout="return infraTooltipOcultar();" tabindex="1001"><img src="svg/marcador_preto.svg?18" class="imagemStatus"></a></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=148265&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Processo de contratação de serviços de informática e automação / CAU contrato" onmouseover="return infraTooltipMostrar('CAU contrato','Processo de contratação de serviços de informática e automação');" onmouseout="return infraTooltipOcultar();" tabindex="1001">99906.<wbr>713-630.<wbr>000032/2025-82</a></td>
+<td width="10%">&nbsp;</td>
+</tr>
+</tbody></table>
+</div>
+
+<input type="hidden" id="hdnRecebidosNroItens" name="hdnRecebidosNroItens" value="100">
+<input type="hidden" id="hdnRecebidosItemId" name="hdnRecebidosItemId" value="">
+<input type="hidden" id="hdnRecebidosItens" name="hdnRecebidosItens" value="157584,150098,112825,154676,148265,152486,24524,110895,151752,150183,147983,147616,146155,146770,143296,21831,145001,143709,85248,143293,145018,144986,143321,143320,143298,143299,143098,143078,143075,143071,143067,143063,142670,143084,143080,143069,143068,143066,143065,142636,142225,142222,142164,142145,142103,142120,142116,142105,142046,142033,142030,141522,141520,140661,140025,139758,139001,139000,138867,137763,136789,136326,134490,134568,134494,134440,134279,134277,134088,134035,32189,132870,132780,132404,132390,132412,132410,132385,132343,131200,107217,130048,120955,120928,118138,115176,115175,115177,115185,114227,114108,111443,77669,77857,99744,82158,111171,101944,109538,109629">
+<input type="hidden" id="hdnRecebidosItensHash" name="hdnRecebidosItensHash" value="4fb2b46a002e293ef08d757bb104dee3a7526dd23a323cd7d84aad88a256a90b">
+<input type="hidden" id="hdnRecebidosItensSelecionados" name="hdnRecebidosItensSelecionados" value="">
+
+<input type="hidden" id="hdnGeradosNroItens" name="hdnGeradosNroItens" value="99">
+<input type="hidden" id="hdnGeradosItemId" name="hdnGeradosItemId" value="">
+<input type="hidden" id="hdnGeradosItens" name="hdnGeradosItens" value="160259,160210,160205,160196,160187,160161,160160,160159,160158,160156,160149,160217,160214,160208,160188,160186,160157,160150,157137,153199,152529,151786,151739,151286,145440,142167,148267,146337,146340,145663,145829,145726,145706,145697,145718,145700,145664,145395,145396,145420,145421,145432,145482,145481,145439,145435,145423,145411,145397,142160,142170,142166,142139,140029,139495,136055,116313,132453,131094,132515,124859,131092,131090,131083,116960,117017,116957,116593,116565,116522,111451,82776,2248,1919,431,432,62429,60821,73496,25205,232,71176,16902,1698,7318,6925,1740,6681,3396,1724,3198,1905,4597,2871,2703,2734,1736,1804,1886">
+<input type="hidden" id="hdnGeradosItensHash" name="hdnGeradosItensHash" value="a42fe6983eed3e4efce79b5e238cba2580e2e26e53e25f9eb2e591893347e6ae">
+<input type="hidden" id="hdnGeradosItensSelecionados" name="hdnGeradosItensSelecionados" value="">
+
+<input type="hidden" id="hdnInfraSelecoes" name="hdnInfraSelecoes" value="Recebidos,Gerados">
+<div id="divRecebidosAreaPaginacaoInferior" class="infraAreaPaginacao">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="selRecebidosPaginacaoInferior" name="selRecebidosPaginacaoInferior" onchange="infraAcaoPaginar('=',this.value,'Recebidos', null);" class="infraSelect" tabindex="1001" aria-label="Escolher Página" style="display:inline;">
+<option value="0" selected="selected">1</option>
+<option value="1">2</option>
+<option value="2">3</option>
+</select>&nbsp;&nbsp;
+<a id="lnkRecebidosProximaPaginaInferior" href="javascript:void(0);" onclick="infraAcaoPaginar('+',0,'Recebidos', null);" title="Próxima Página" tabindex="1001"><img src="/infra_css/svg/paginacao_proxima.svg" title="Próxima Página" alt="Próxima Página" class="infraImg"></a>&nbsp;&nbsp;
+
+&nbsp;<a id="lnkRecebidosUltimaPaginaInferior" href="javascript:void(0);" onclick="infraAcaoPaginar('=',2,'Recebidos', null);" title="Última Página" tabindex="1001"><img src="/infra_css/svg/paginacao_ultima.svg" title="Última Página" alt="Última Página" class="infraImg"></a></div>
+
+<input type="hidden" id="hdnRecebidosPaginaAtual" name="hdnRecebidosPaginaAtual" value="0">
+<input type="hidden" id="hdnRecebidosHashCriterios" name="hdnRecebidosHashCriterios" value="da46ded368b1e5ff600b3b810fc0be80">
+  </div>
+  <div id="divGerados" class=" ml-0 pl-0  d-none d-md-block col-12 col-md-6">
+<div id="divGeradosAreaPaginacaoSuperior" class="infraAreaPaginacao">
+</div>
+<div id="divGeradosAreaTabela" class="infraAreaTabela">
+<table id="tblProcessosGerados" width="100%" border="0" cellspacing="0" cellpadding="1" class="infraTable tabelaControle" summary="Tabela de Processos Gerados." tabindex="1002">
+<caption class="infraCaption">Processos gerados (99 registros):</caption><tbody><tr><th class="infraTh" width="5%"><a href="javascript:void(0);" id="lnkInfraCheck" onclick="infraSelecaoMultipla('Gerados');" tabindex="1002"><img src="/infra_css/svg/check.svg" id="imgGeradosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>
+<th class="infraTh" colspan="3">Gerados</th>
+</tr>
+<tr id="P160259" class="infraTrClara">
+<td><a id="lnkGeradosID-160259" name="ID-160259"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkGeradosItem0" name="chkGeradosItem0" tabindex="1002" title="99906.713-630.000022/2026-28" type="checkbox" value="160259" aria-label="Tipo Ofício" onclick="infraSelecionarItens(this,'Gerados');"><label class="infraCheckboxLabel" for="chkGeradosItem0" title="99906.713-630.000022/2026-28"></label></div></td>
+<td width="20%"><a href="controlador.php?acao=anotacao_registrar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_protocolo=160259&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Anotação / texto / usuario em 18/09/2026 11:35" onmouseover="return infraTooltipMostrar('texto','usuario em 18/09/2026 11:35');" onmouseout="return infraTooltipOcultar();" tabindex="1002"><img src="svg/anotacao2.svg?18" class="imagemStatus"></a></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=160259&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Ofício" onmouseover="return infraTooltipMostrar('','Ofício');" onmouseout="return infraTooltipOcultar();" tabindex="1002">99906.<wbr>713-630.<wbr>000022/2026-28</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P160210" class="infraTrClara">
+<td><a id="lnkGeradosID-160210" name="ID-160210"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkGeradosItem1" name="chkGeradosItem1" tabindex="1002" title="99906.713-630.000019/2026-12" type="checkbox" value="160210" aria-label="Tipo Abaixo-assinado / Especificação G0 smoke G0 Smoke Rodada Tres" onclick="infraSelecionarItens(this,'Gerados');"><label class="infraCheckboxLabel" for="chkGeradosItem1" title="99906.713-630.000019/2026-12"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=160210&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Abaixo-assinado / G0 smoke G0 Smoke Rodada Tres" onmouseover="return infraTooltipMostrar('G0 smoke G0 Smoke Rodada Tres','Abaixo-assinado');" onmouseout="return infraTooltipOcultar();" tabindex="1002">99906.<wbr>713-630.<wbr>000019/2026-12</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P160205" class="infraTrClara">
+<td><a id="lnkGeradosID-160205" name="ID-160205"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkGeradosItem2" name="chkGeradosItem2" tabindex="1002" title="99906.713-630.000017/2026-15" type="checkbox" value="160205" aria-label="Tipo Abaixo-assinado / Especificação D2.1 D2 Integração - &quot;especificação&quot;" onclick="infraSelecionarItens(this,'Gerados');"><label class="infraCheckboxLabel" for="chkGeradosItem2" title="99906.713-630.000017/2026-15"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=160205&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Abaixo-assinado / D2.1 D2 Integração - &quot;especificação&quot;" onmouseover="return infraTooltipMostrar('D2.1 D2 Integração - \&amp;quot;especificação\&amp;quot;','Abaixo-assinado');" onmouseout="return infraTooltipOcultar();" tabindex="1002">99906.<wbr>713-630.<wbr>000017/2026-15</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P160196" class="infraTrClara">
+<td><a id="lnkGeradosID-160196" name="ID-160196"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkGeradosItem3" name="chkGeradosItem3" tabindex="1002" title="99906.713-630.000016/2026-71" type="checkbox" value="160196" aria-label="Tipo Abaixo-assinado / Especificação D2.1 D2 Novo Proc Depois depois" onclick="infraSelecionarItens(this,'Gerados');"><label class="infraCheckboxLabel" for="chkGeradosItem3" title="99906.713-630.000016/2026-71"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=160196&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Abaixo-assinado / D2.1 D2 Novo Proc Depois depois" onmouseover="return infraTooltipMostrar('D2.1 D2 Novo Proc Depois depois','Abaixo-assinado');" onmouseout="return infraTooltipOcultar();" tabindex="1002">99906.<wbr>713-630.<wbr>000016/2026-71</a></td>
+<td width="10%">&nbsp;</td>
+</tr><tr id="P160187" class="infraTrClara">
+<td><a id="lnkGeradosID-160187" name="ID-160187"></a><div class="infraCheckboxDiv"><input class="infraCheckboxInput" id="chkGeradosItem4" name="chkGeradosItem4" tabindex="1002" title="99906.713-630.000014/2026-81" type="checkbox" value="160187" aria-label="Tipo Abaixo-assinado / Especificação A3 docslote antes %u201Caspas curvas%u201D %u2014 travessao" onclick="infraSelecionarItens(this,'Gerados');"><label class="infraCheckboxLabel" for="chkGeradosItem4" title="99906.713-630.000014/2026-81"></label></div></td>
+<td width="20%"></td>
+<td><a class="processoVisualizado" href="controlador.php?acao=procedimento_trabalhar&amp;acao_origem=procedimento_controlar&amp;acao_retorno=procedimento_controlar&amp;id_procedimento=160187&amp;infra_sistema=100000100&amp;infra_unidade_atual=110000001&amp;infra_hash=0000000000000000000000000000000000000000000000000000000000000000" aria-label="Abaixo-assinado / A3 docslote antes %u201Caspas curvas%u201D %u2014 travessao" onmouseover="return infraTooltipMostrar('A3 docslote antes %u201Caspas curvas%u201D %u2014 travessao','Abaixo-assinado');" onmouseout="return infraTooltipOcultar();" tabindex="1002">99906.<wbr>713-630.<wbr>000014/2026-81</a></td>
+<td width="10%">&nbsp;</td>
+</tr>
+</tbody></table>
+</div>
+<div id="divGeradosAreaPaginacaoInferior" class="infraAreaPaginacao">
+</div>
+
+<input type="hidden" id="hdnGeradosPaginaAtual" name="hdnGeradosPaginaAtual" value="0">
+<input type="hidden" id="hdnGeradosHashCriterios" name="hdnGeradosHashCriterios" value="830ca63586f83bcf14b6dde3a15e4dd4">
+  </div>
+<div id="divInfraBtnTopo" style="height: 60px;"></div></div>
+    <input type="hidden" id="hdnTipoVisualizacao" name="hdnTipoVisualizacao" value="R">
+    <input type="hidden" id="hdnExibirRecebidos" name="hdnExibirRecebidos" value="false">
+    <input type="hidden" id="hdnExibirGerados" name="hdnExibirGerados" value="false">
+    <input type="hidden" id="hdnMeusProcessos" name="hdnMeusProcessos" value="T">
+    <input type="hidden" id="hdnIdBloco" name="hdnIdBloco" value="">
+    <input type="text" id="txtBloco" name="txtBloco" value="" style="display:none">
+    <input type="hidden" id="hdnIdSigilosos" value="157584,131200">
+    <input type="hidden" id="hdnIdComMarcador" value="148265,110895,146340,145663,145664,145396,145432,25205,1724">
+    <input type="hidden" id="hdnIdMarcador110000001" name="hdnIdMarcador110000001" value="">
+    <input type="hidden" id="hdnIdTipoProcedimento110000001" name="hdnIdTipoProcedimento110000001" value="">
+    <input type="hidden" id="hdnIdTipoPrioridade110000001" name="hdnIdTipoPrioridade110000001" value="">
+    <input type="hidden" id="hdnFlagControleProcessos" name="hdnFlagControleProcessos" value="1">
+  </div>
+</form>
+
+  <script>    divInfraMoverTopo = document.getElementById("divTabelaProcesso");</script>
+</div>
+</div>
+</div>
+<input type="hidden" id="hdnInfraPrefixoCookie" name="hdnInfraPrefixoCookie" value="GESP-TREINAMENTO_SEI_pedro_soares">
+<div id="infraDivImpressao" class="infraImpressao"></div>
+<div id="infraBs-xs" class="d-none d-xs-block"></div>
+<div id="infraBs-sm" class="d-none d-sm-block"></div>
+<div id="infraBs-md" class="d-none d-md-block"></div>
+<div id="infraBs-lg" class="d-none d-lg-block"></div>
+
+
+</body></html>

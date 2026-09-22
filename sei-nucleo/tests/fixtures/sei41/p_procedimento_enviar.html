@@ -1,0 +1,477 @@
+<!-- url: https://treinamento.sei.sp.gov.br/sei/controlador.php?acao=procedimento_enviar&acao_origem=arvore_visualizar&acao_retorno=arvore_visualizar&id_procedimento=148265&arvore=1&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="pt-br" >
+<head ><script src="/Saine-to-know-I-waitor-there-Fleaue-mood-be-plac" async></script>
+
+<link rel="shortcut icon" sizes="any" href="favicon/favicon.ico" />         
+<link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />         
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png" />
+<link rel="manifest" href="favicon/site.webmanifest" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta property="og:title" content="treinamento.sei.sp.gov.br" />
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://treinamento.sei.sp.gov.br/sei/imagens/logo-sp-gov-br.png"/>
+<meta property="og:url" content="https://treinamento.sei.sp.gov.br" />
+<meta property="og:site_name" content="treinamento.sei.sp.gov.br" />
+<meta name="robots" content="noindex"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+<title>SEI - Enviar Processo</title>
+<link href="/infra_css/infra-tooltip.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-barra-progresso.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-impressao-global.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="print"/>
+<link href="/infra_css/infra-ajax.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/calendario/v2/infra-calendario.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/arvore/infra-arvore.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/mapa/infra-mapa.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.structure.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.theme.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/multiple-select/multiple-select.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/modal/jquery.modalLink-1.0.0.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/bootstrap/bootstrap-4.6.2.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/bootstrap/menu-bootstrap.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-global-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/esquemas/azul_celeste/infra-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>      
+<link href="css/infra-local-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<style></style><style type="text/css" >
+<!--/*--><![CDATA[/*><!--*/
+
+#lblProcedimentos {position:absolute;left:0%;top:0%;}
+#selProcedimentos {position:absolute;left:0%;top:22%;width:86%;height:65%;}
+
+#divOrgao {}
+#lblOrgao {position:absolute;left:0%;top:0%;}
+#selOrgao {position:absolute;left:0%;top:40%;width:50%;}
+
+#lblUnidades {position:absolute;left:0%;top:0%;}
+#txtUnidade {position:absolute;left:0%;top:17%;width:50%;}
+#ancUnidadesTramitacao {position:absolute;left:51%;top:19%;}
+#selUnidades {position:absolute;left:0%;top:40%;width:86%;height:60%;}
+#divOpcoesUnidades {position:absolute;left:87%;top:40%;}
+
+#divSinManterAberto {position:absolute;left:0%;top:15%;}
+#divSinRemoverAnotacoes {position:absolute;left:0%;top:40%;}
+#divSinEnviarEmailNotificacao {position:absolute;left:0%;top:65%;}
+
+
+#fldPrazoRetornoProgramado {position:absolute;height:80%;left:0;top:0%;width:45%;min-width:275px;max-width:400px;}
+#divOptDataCertaRetornoProgramado {position:absolute;left:5%;top:15%;}
+#divOptDiasRetornoProgramado {position:absolute;left:5%;top:55%;}
+
+#txtPrazoRetornoProgramado {position:absolute;left:50%;top:15%;width:30%;visibility:hidden;}
+#imgCalDataRetornoProgramado {position:absolute;left:82%;top:18%;visibility:hidden;}
+
+#txtDiasRetornoProgramado {position:absolute;left:50%;top:50%;width:15%;visibility:hidden;}
+#divSinDiasUteisRetornoProgramado {position:absolute;left:67%;top:55%;width:25%;visibility:hidden;}
+
+#fldPrazoReaberturaProgramada {position:absolute;height:80%;left:0;top:0%;width:45%;min-width:275px;max-width:400px;}
+#divOptDataCertaReaberturaProgramada {position:absolute;left:5%;top:15%;}
+#divOptDiasReaberturaProgramada {position:absolute;left:5%;top:55%;}
+
+#txtPrazoReaberturaProgramada {position:absolute;left:50%;top:15%;width:30%;visibility:hidden;}
+#imgCalDataReaberturaProgramada {position:absolute;left:82%;top:18%;visibility:hidden;}
+
+#txtDiasReaberturaProgramada {position:absolute;left:50%;top:50%;width:15%;visibility:hidden;}
+#divSinDiasUteisReaberturaProgramada {position:absolute;left:67%;top:55%;width:25%;visibility:hidden;}
+
+/*]]>*/-->
+</style>
+<script type="text/javascript">var INFRA_PATH_CSS="/infra_css",INFRA_PATH_IMAGENS="/infra_css/imagens",INFRA_PATH_JS="/infra_js",INFRA_PATH_SVG="/infra_css/svg",INFRA_LUPA_TIPO_JANELA=2,INFRA_BARRA_TIPO_JANELA=2,INFRA_TIPO_ALERTA=1;</script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-3.7.0.min.js?3.7.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.js?1.13.2"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/multiple-select/multiple-select.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/ddslick/jquery.ddslick.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/modal/jquery.modalLink-1.0.0.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraPaginaEsquema3.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraBotaoMenu.js?4.1.5-2.29.0"></script>    
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUtil.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraCookie.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUpload.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTabelaDinamica.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraLupas.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraSelectEditavel.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraAjax.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTooltip.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/calendario/v2/InfraCalendario.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/arvore/InfraArvore.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/maskedpwd/MaskedPassword.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/bootstrap-4.6.2.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/infra-menu-bootstrap.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/touch/jquery.ui.touch-punch.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/hotkeys/jquery.hotkeys.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="js/sei.js?4.1.5-2.29.0"></script>
+
+<script type="text/javascript" charset="iso-8859-1" >
+<!--//--><![CDATA[//><!--
+
+//<script>
+
+var objLupaUnidades = null;
+var objAutoCompletarUnidade = null;
+var objLupaGrupo = null;
+var objLupaTramitacao = null;
+var objAjaxVerificacaoAssinatura = null;
+
+function inicializar(){
+
+  parent.parent.parent.infraOcultarAviso(false)
+
+    objLupaUnidades = new infraLupaSelect('selUnidades','hdnUnidades','controlador.php?acao=unidade_selecionar_envio_processo&tipo_selecao=2&id_object=objLupaUnidades&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+	  
+  objAutoCompletarUnidade = new infraAjaxAutoCompletar('hdnIdUnidade','txtUnidade','controlador_ajax.php?acao_ajax=unidade_auto_completar_envio_processo&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+  //objAutoCompletarUnidade.maiusculas = true;
+  //objAutoCompletarUnidade.mostrarAviso = true;
+  //objAutoCompletarUnidade.tempoAviso = 1000;
+  //objAutoCompletarUnidade.tamanhoMinimo = 3;
+  objAutoCompletarUnidade.limparCampo = true;
+  //objAutoCompletarUnidade.bolExecucaoAutomatica = false;
+  objAutoCompletarUnidade.prepararExecucao = function(){
+    return 'palavras_pesquisa='+document.getElementById('txtUnidade').value+'&id_orgao='+document.getElementById('selOrgao').value+'&unidade_atual=0';
+  };
+
+  objAutoCompletarUnidade.processarResultado = function(id,descricao,complemento){
+    if (id!=''){
+      objLupaUnidades.adicionar(id,descricao,document.getElementById('txtUnidade'));
+    }
+  };
+
+  objLupaGrupo = new infraLupaSelect('selUnidades','hdnUnidades','controlador.php?acao=grupo_unidade_selecionar&tipo_selecao=2&id_object=objLupaGrupo&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+  objLupaGrupo.finalizarSelecao = function(){
+    var arrUnidades=[];
+    $('#selUnidades option').each(function(){
+      var unidade=$(this).val();
+      if (unidade!="") arrUnidades.push(unidade);
+    });
+    //$('#hdnDestinatario').val(arrUnidades.join(';'));
+  };
+  infraRemoverEvento(objLupaGrupo.sel, "keydown", objLupaGrupo.deleteTeclado);
+
+  objLupaTramitacao = new infraLupaSelect('selUnidades','hdnUnidades','controlador.php?acao=unidade_tramitacao_selecionar&tipo_selecao=2&id_object=objLupaGrupo&id_procedimento=148265&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+  infraRemoverEvento(objLupaTramitacao.sel, "keydown", objLupaTramitacao.deleteTeclado);
+
+  document.getElementById('txtUnidade').focus();
+  
+  configurarRetornoProgramado();
+  configurarReaberturaProgramada();
+
+  
+}
+
+function selecionarGrupo(){
+  objLupaGrupo.selecionar(700,500);
+}
+
+function selecionarTramitacao(){
+  objLupaTramitacao.selecionar(700,500);
+}
+
+function validarCadastroAbrirRI0825(){
+    if (!infraSelectSelecionado('selOrgao')) {
+    alert('Informe o Órgão das unidades.');
+    document.getElementById('selOrgao').focus();
+    return false;
+  }
+
+	if (document.getElementById('hdnUnidades').value=='') {
+	  alert('Informe as Unidades de Destino.');
+	  document.getElementById('selUnidades').focus();
+	  return false;
+	}
+	
+
+  parent.parent.parent.infraExibirAviso();
+
+	return true;
+}
+
+function OnSubmitForm() {
+	return validarCadastroAbrirRI0825();
+}
+
+
+function configurarRetornoProgramado(){
+  if (document.getElementById('optDataCertaRetornoProgramado').checked){
+    document.getElementById('txtPrazoRetornoProgramado').style.visibility = 'visible';
+    document.getElementById('imgCalDataRetornoProgramado').style.visibility = 'visible';
+    document.getElementById('txtDiasRetornoProgramado').value = '';
+    document.getElementById('txtDiasRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('divSinDiasUteisRetornoProgramado').style.visibility = 'hidden';
+  }else if (document.getElementById('optDiasRetornoProgramado').checked){
+    document.getElementById('txtPrazoRetornoProgramado').value = '';
+    document.getElementById('txtPrazoRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('imgCalDataRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('txtDiasRetornoProgramado').style.visibility = 'visible';
+    document.getElementById('divSinDiasUteisRetornoProgramado').style.visibility = 'visible';
+  }else{
+    document.getElementById('txtPrazoRetornoProgramado').value = '';
+    document.getElementById('txtPrazoRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('imgCalDataRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('txtDiasRetornoProgramado').value = '';
+    document.getElementById('txtDiasRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('divSinDiasUteisRetornoProgramado').style.visibility = 'hidden';
+    document.getElementById('chkSinDiasUteisRetornoProgramado').checked = false;
+  }
+}
+  
+  
+function configurarReaberturaProgramada(){
+  if (document.getElementById('optDataCertaReaberturaProgramada').checked){
+    document.getElementById('txtPrazoReaberturaProgramada').style.visibility = 'visible';
+    document.getElementById('imgCalDataReaberturaProgramada').style.visibility = 'visible';
+    document.getElementById('txtDiasReaberturaProgramada').value = '';
+    document.getElementById('txtDiasReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('divSinDiasUteisReaberturaProgramada').style.visibility = 'hidden';
+  }else if (document.getElementById('optDiasReaberturaProgramada').checked){
+    document.getElementById('txtPrazoReaberturaProgramada').value = '';
+    document.getElementById('txtPrazoReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('imgCalDataReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('txtDiasReaberturaProgramada').style.visibility = 'visible';
+    document.getElementById('divSinDiasUteisReaberturaProgramada').style.visibility = 'visible';
+  }else{
+    document.getElementById('txtPrazoReaberturaProgramada').value = '';
+    document.getElementById('txtPrazoReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('imgCalDataReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('txtDiasReaberturaProgramada').value = '';
+    document.getElementById('txtDiasReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('divSinDiasUteisReaberturaProgramada').style.visibility = 'hidden';
+    document.getElementById('chkSinDiasUteisReaberturaProgramada').checked = false;
+  }
+}
+  
+  
+function manterAberto(){
+  if (document.getElementById('chkSinManterAberto').checked){
+    document.getElementById('divReaberturaProgramada').style.display='none';
+  }else{
+    document.getElementById('divReaberturaProgramada').style.display='block';
+  }
+}
+
+//</script>
+
+//--><!]]>
+</script>
+</head>
+<body onload="inicializar();"  >
+<button onclick="infraMoverParaTopo()" id="btnInfraTopo" class="infraButton infraCorBarraSistema" ><img src="/infra_css/svg/topo.svg?2.29.0" title="Voltar ao Topo" alt="Voltar ao Topo" tabindex="32767"></button>
+<div id="divInfraAreaGlobal" class="vh-100 vw-100 d-flex flex-column m-0 border-0" >
+<div id="divInfraAreaTela" style="min-height:0;"  class="w-100  flex-grow-1 d-flex flex-row  divInfraAreaTelaSimples">
+<div id="divInfraAreaTelaD"  class=" flex-grow-1 px-3" >
+<div id="divInfraBarraLocalizacao" class="infraBarraLocalizacao" tabindex="450">Enviar Processo</div>
+<form id="frmAtividadeListar" method="post" onsubmit="return OnSubmitForm();" action="controlador.php?acao=procedimento_enviar&acao_origem=procedimento_enviar&arvore=1&id_procedimento=148265&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000">
+<input type="hidden" id="hdnInfraTipoPagina" name="hdnInfraTipoPagina" value="2"/>
+<div id="divInfraBarraComandosSuperior" class="infraBarraComandos">
+<a id="ancVoltarArvoreSuperior" href="javascript:seiVoltarArvoreProcesso()" class="btn" style="display:none;" title="Voltar para a Árvore do Processo" tabindex="451">
+          <img src="/infra_css/svg/voltar.svg?4.1.5-2.29.0">
+        </a>
+<button tabindex="451" type="submit" accesskey="E" name="sbmEnviar" id="sbmEnviar" value="Enviar" class="infraButton"><span class="infraTeclaAtalho">E</span>nviar</button>
+</div>
+  <div id="divProcedimentos" class="infraAreaDados" style="height:7.5em;">
+	 	<label id="lblProcedimentos" for="selProcedimentos" class="infraLabelObrigatorio">Processos:</label>
+	  <select id="selProcedimentos" name="selProcedimentos" multiple="multiple" class="infraSelect" tabindex="501">
+	  <option value="148265">99906.713-630.000032/2025-82 - Processo de contratação de serviços de informática e automação</option>
+	  </select>
+  </div>
+
+  
+  <div id="divOrgao" class="infraAreaDados" style="height:5em;">
+    <label id="lblOrgao" for="selOrgao" class="infraLabelObrigatorio">Órgão das Unidades:</label>
+    <select id="selOrgao" name="selOrgao" class="infraSelect" tabindex="502">
+      <option value="null" selected="selected">&nbsp;</option>
+<option value="" selected="selected">Todos</option>
+<option value="35">AGEM</option>
+<option value="36">AGEMCAMP</option>
+<option value="37">AGEMSOR</option>
+<option value="38">AGEMVALE</option>
+<option value="76">ARSESP</option>
+<option value="39">ARTESP</option>
+<option value="92">BUTANTA</option>
+<option value="80">CBPM</option>
+<option value="1">CC</option>
+<option value="53">CDHU</option>
+<option value="60">CDSS</option>
+<option value="44">CEETEPS</option>
+<option value="56">CETESB</option>
+<option value="26">CGE</option>
+<option value="3">CM</option>
+<option value="47">CPP</option>
+<option value="48">CPSEC</option>
+<option value="50">CPTM</option>
+<option value="43">DAEE</option>
+<option value="57">DAESP</option>
+<option value="45">DERSP</option>
+<option value="31">DETRAN</option>
+<option value="81">DSP</option>
+<option value="88">EMAE</option>
+<option value="54">EMTU</option>
+<option value="89">FAMAR</option>
+<option value="78">FAMEMA</option>
+<option value="79">FAMERP</option>
+<option value="55">FAPESP</option>
+<option value="8">FDE</option>
+<option value="51">FF</option>
+<option value="93">FFM</option>
+<option value="66">FMAL</option>
+<option value="58">FOSP</option>
+<option value="72">FPA</option>
+<option value="64">FPZSP</option>
+<option value="52">FUNAP</option>
+<option value="65">FUNDCASASP</option>
+<option value="82">FUNDHERP</option>
+<option value="70">FURP</option>
+<option value="0">GESP-TREINAMENTO</option>
+<option value="77">HCFAMEMA</option>
+<option value="73">HCFMB</option>
+<option value="75">HCFMRP</option>
+<option value="74">HCFMUSP</option>
+<option value="49">IAMSPE</option>
+<option value="46">IMESC</option>
+<option value="67">IPEM</option>
+<option value="59">IPT</option>
+<option value="69">ITESP</option>
+<option value="42">JUCESP</option>
+<option value="40">METRO</option>
+<option value="34">PCSP</option>
+<option value="11">PGE</option>
+<option value="33">PMSP</option>
+<option value="71">PREVCOM</option>
+<option value="62">PROCONSP</option>
+<option value="90">PRODESP</option>
+<option value="68">PROSANGUE</option>
+<option value="21">SAA</option>
+<option value="41">SABESP</option>
+<option value="83">SANTOS</option>
+<option value="17">SAP</option>
+<option value="9">SCEC</option>
+<option value="13">SCTI</option>
+<option value="29">SDE</option>
+<option value="25">SDUH</option>
+<option value="27">SE</option>
+<option value="63">SEADE</option>
+<option value="5">SECOM</option>
+<option value="14">SEDPCD</option>
+<option value="10">SEDS</option>
+<option value="18">SEDUC</option>
+<option value="22">SEMIL</option>
+<option value="4">SENI</option>
+<option value="15">SES</option>
+<option value="23">SFP</option>
+<option value="6">SGGD</option>
+<option value="2">SGRI</option>
+<option value="24">SJC</option>
+<option value="20">SPI</option>
+<option value="7">SPM</option>
+<option value="32">SPPREV</option>
+<option value="12">SPTC</option>
+<option value="19">SSP</option>
+<option value="16">ST</option>
+<option value="28">STM</option>
+<option value="84">SV</option>
+<option value="91">UNICAMP</option>
+<option value="61">UNIVESP</option>
+    </select>
+  </div>
+
+  <div id="divUnidades" class="infraAreaDados" style="height:11em;">
+	 	<label id="lblUnidades" for="selUnidades" class="infraLabelObrigatorio">Unidades:</label>
+	  <input type="text" id="txtUnidade" name="txtUnidade" class="infraText" tabindex="503" />
+    <a id="ancUnidadesTramitacao" href="javascript:void(0);" onclick="selecionarTramitacao();" class="ancoraPadraoPreta" tabindex="504">Mostrar unidades por onde tramitou</a>
+	  <input type="hidden" id="hdnIdUnidade" name="hdnIdUnidade" class="infraText" value="" />
+	  <select id="selUnidades" name="selUnidades" multiple="multiple" class="infraSelect" tabindex="505">
+	  </select>
+    <div id="divOpcoesUnidades">
+      <img id="imgLupaUnidades" onclick="objLupaUnidades.selecionar(700,500);" src="/infra_css/svg/pesquisar.svg" alt="Selecionar Unidades" title="Selecionar Unidades" class="infraImg" tabindex="506" />
+      <img id="imgSelecionarGrupo" onclick="selecionarGrupo();" src="/infra_css/svg/grupo.svg" title="Selecionar Grupos de Envio" alt="Selecionar Grupos de Envio" class="infraImg" tabindex="507" />
+      <br />
+      <img id="imgExcluirUnidades" onclick="objLupaUnidades.remover();" src="/infra_css/svg/remover.svg" alt="Remover Unidades Selecionadas" title="Remover Unidades Selecionadas" class="infraImg" tabindex="508" />
+    </div>
+  </div>
+  
+  <div id="divGeral" class="infraAreaDados" style="height:9em;">
+  
+    <div id="divSinManterAberto" class="infraDivCheckbox">
+      <input type="checkbox" id="chkSinManterAberto" name="chkSinManterAberto" class="infraCheckbox" onchange="manterAberto()"  tabindex="509" />
+  	  <label id="lblSinManterAberto" for="chkSinManterAberto" accesskey="" class="infraLabelCheckbox" >Manter processo aberto na unidade atual</label>
+  	</div>      
+	
+	  <div id="divSinRemoverAnotacoes" class="infraDivCheckbox">
+      <input type="checkbox" id="chkSinRemoverAnotacoes" name="chkSinRemoverAnotacoes" class="infraCheckbox"  tabindex="510" />	  
+	    <label id="lblSinRemoverAnotacoes" for="chkSinRemoverAnotacoes" accesskey="" class="infraLabelCheckbox" >Remover anotação</label>
+	  </div>      
+	
+	  <div id="divSinEnviarEmailNotificacao" class="infraDivCheckbox">
+	    <input type="checkbox" id="chkSinEnviarEmailNotificacao" name="chkSinEnviarEmailNotificacao" class="infraCheckbox"  tabindex="511" />
+	    <label id="lblSinEnviarEmailNotificacao" for="chkSinEnviarEmailNotificacao" accesskey="" class="infraLabelCheckbox" >Enviar e-mail de notificação</label>
+	  </div>
+
+  </div>
+
+  
+    <div id="divRetornoProgramado" class="infraAreaDados" style="height:11em;">
+      <fieldset id="fldPrazoRetornoProgramado" class="infraFieldset">
+        <legend class="infraLegend">Retorno Programado</legend>
+  
+        <div id="divOptDataCertaRetornoProgramado" class="infraDivRadio">
+          <input type="radio" name="rdoPrazoRetornoProgramado" id="optDataCertaRetornoProgramado" onclick="configurarRetornoProgramado();"  value="1" class="infraRadio"/>
+          <span id="spnDataCertaRetornoProgramado"><label id="lblDataCertaRetornoProgramado" for="optDataCertaRetornoProgramado" class="infraLabelRadio" tabindex="512">Data certa</label></span>
+        </div>
+  
+        <input type="text" id="txtPrazoRetornoProgramado" name="txtPrazoRetornoProgramado" onkeypress="return infraMascaraData(this, event)" class="infraText" value="" tabindex="513" />
+        <img src="/infra_css/svg/calendario.svg" id="imgCalDataRetornoProgramado" title="Selecionar Prazo" alt="Selecionar Prazo"  class="infraImg" onclick="infraCalendario('txtPrazoRetornoProgramado',this);" tabindex="514" />
+  
+        <div id="divOptDiasRetornoProgramado" class="infraDivRadio">
+          <input type="radio" name="rdoPrazoRetornoProgramado" id="optDiasRetornoProgramado" onclick="configurarRetornoProgramado();"  value="2" class="infraRadio"/>
+          <span id="spnDiasRetornoProgramado"><label id="lblDiasRetornoProgramado" for="optDiasRetornoProgramado" class="infraLabelRadio" tabindex="515">Prazo em dias</label></span>
+        </div>
+  
+        <input type="text" id="txtDiasRetornoProgramado" name="txtDiasRetornoProgramado" class="infraText" value="" onkeypress="return infraMascaraNumero(this,event);" maxlength="3" tabindex="516" />
+  
+        <div id="divSinDiasUteisRetornoProgramado" class="infraDivCheckbox">
+          <input type="checkbox" id="chkSinDiasUteisRetornoProgramado" name="chkSinDiasUteisRetornoProgramado" class="infraCheckbox"  tabindex="517" />
+          <label id="lblSinDiasUteisRetornoProgramado" for="chkSinDiasUteisRetornoProgramado" accesskey="" class="infraLabelCheckbox" >Úteis</label>
+        </div>
+      </fieldset>
+    </div>
+      
+    <div id="divReaberturaProgramada" class="infraAreaDados" style="height:11em;">
+      <fieldset id="fldPrazoReaberturaProgramada" class="infraFieldset">
+        <legend class="infraLegend">Reabertura Programada</legend>
+  
+        <div id="divOptDataCertaReaberturaProgramada" class="infraDivRadio">
+          <input type="radio" name="rdoPrazoReaberturaProgramada" id="optDataCertaReaberturaProgramada" onclick="configurarReaberturaProgramada();"  value="1" class="infraRadio"/>
+          <span id="spnDataCertaReaberturaProgramada"><label id="lblDataCertaReaberturaProgramada" for="optDataCertaReaberturaProgramada" class="infraLabelRadio" tabindex="518">Data certa</label></span>
+        </div>
+  
+        <input type="text" id="txtPrazoReaberturaProgramada" name="txtPrazoReaberturaProgramada" onkeypress="return infraMascaraData(this, event)" class="infraText" value="" tabindex="519" />
+        <img src="/infra_css/svg/calendario.svg" id="imgCalDataReaberturaProgramada" title="Selecionar Prazo" alt="Selecionar Prazo"  class="infraImg" onclick="infraCalendario('txtPrazoReaberturaProgramada',this);" tabindex="520" />
+  
+        <div id="divOptDiasReaberturaProgramada" class="infraDivRadio">
+          <input type="radio" name="rdoPrazoReaberturaProgramada" id="optDiasReaberturaProgramada" onclick="configurarReaberturaProgramada();"  value="2" class="infraRadio"/>
+          <span id="spnDiasReaberturaProgramada"><label id="lblDiasReaberturaProgramada" for="optDiasReaberturaProgramada" class="infraLabelRadio" tabindex="521">Prazo em dias</label></span>
+        </div>
+  
+        <input type="text" id="txtDiasReaberturaProgramada" name="txtDiasReaberturaProgramada" class="infraText" value="" onkeypress="return infraMascaraNumero(this,event);" maxlength="3" tabindex="522" />
+  
+        <div id="divSinDiasUteisReaberturaProgramada" class="infraDivCheckbox">
+          <input type="checkbox" id="chkSinDiasUteisReaberturaProgramada" name="chkSinDiasUteisReaberturaProgramada" class="infraCheckbox"  tabindex="523" />
+          <label id="lblSinDiasUteisReaberturaProgramada" for="chkSinDiasUteisReaberturaProgramada" accesskey="" class="infraLabelCheckbox" >Úteis</label>
+        </div>
+      </fieldset>
+    </div>
+    
+  <input type="hidden" id="hdnIdProtocolos" name="hdnIdProtocolos" value="148265" />
+  <input type="hidden" id="hdnIdAtividades" name="hdnIdAtividades" value="868771" />
+  <input type="hidden" id="hdnUnidades" name="hdnUnidades" value="" />
+  
+  </form>
+</div>
+</div>
+</div>
+<input type="hidden" id="hdnInfraPrefixoCookie" name="hdnInfraPrefixoCookie" value="GESP-TREINAMENTO_SEI_pedro_soares"/>
+<div id="infraDivImpressao" class="infraImpressao"></div>
+<div id="infraBs-xs" class="d-none d-xs-block"></div>
+<div id="infraBs-sm" class="d-none d-sm-block"></div>
+<div id="infraBs-md" class="d-none d-md-block"></div>
+<div id="infraBs-lg" class="d-none d-lg-block"></div>
+</body>
+</html>

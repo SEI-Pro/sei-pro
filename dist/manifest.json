@@ -18,10 +18,14 @@
     "open_in_tab": true
   },
   "permissions": [
-    "storage"
+    "storage",
+    "sidePanel"
   ],
   "background": {
     "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "html/agente.html"
   },
   "content_scripts": [
     {
@@ -311,6 +315,38 @@
       "exclude_matches": [
         "*://sei.antaq1.gov.br/*"
       ]
+    },
+    {
+      "js": [
+        "js/init_agente.js"
+      ],
+      "matches": [
+        "*://*.br/sei/*",
+        "*://*.br/sip/*",
+        "*://*.br/*/sei/*",
+        "*://*.br/*/sip/*",
+        "*://*.br/*controlador*.php?acao=*",
+        "*://*.org/sei/*",
+        "*://*.org/sip/*",
+        "*://*.org/*controlador*.php?acao=*",
+        "*://sip-sei.ans.gov.br/*"
+      ],
+      "exclude_matches": [
+        "*://sei.antaq1.gov.br/*",
+        "*://*.br/*login.php*",
+        "*://*.br/sip/*controlador.php*",
+        "*://*.br/sei/*controlador_externo.php*",
+        "*://*.br/*/sip/*controlador.php*",
+        "*://*.br/*/sei/*controlador_externo.php*",
+        "*://*.org/*login.php*",
+        "*://*.org/sip/*controlador.php*",
+        "*://*.org/sei/*controlador_externo.php*",
+        "*://sip-sei.ans.gov.br/login.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador_externo.php*",
+        "*://sistemas.unir.br/sip/*"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "action": {

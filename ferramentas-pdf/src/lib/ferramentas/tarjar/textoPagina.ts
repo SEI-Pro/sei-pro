@@ -273,7 +273,7 @@ function fracoesDoRecorte(
 
 /** Converte um intervalo da projeção compacta para o intervalo em `texto`. */
 export function intervaloDoCompacto(
-  tp: TextoPagina,
+  tp: Pick<TextoPagina, "indiceCompacto"> | { indiceCompacto: ArrayLike<number> },
   inicioCompacto: number,
   fimCompacto: number,
 ): { inicio: number; fim: number } | null {

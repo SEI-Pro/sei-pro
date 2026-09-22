@@ -1,0 +1,22 @@
+{
+  "name": "sei-pro-agente-ia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agente de IA do SEI Pro: motor com tools no navegador, painel lateral e ponte com a aba do SEI",
+  "scripts": {
+    "build": "npm run verificar && node build.mjs",
+    "build:rapido": "node build.mjs",
+    "tipos": "tsc --noEmit",
+    "verificar": "tsx tests/verificar.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.2",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "pdfjs-dist": "6.3.289",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

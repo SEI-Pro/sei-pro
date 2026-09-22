@@ -52,3 +52,17 @@ if(!isChrome && typeof browser.runtime.getBrowserInfo === "function") {
     browser.storage.local.set({version: info.version}).then(null, null);
   });
 }
+
+/******************************************************************************
+ * Agente de IA: o item "Agente de IA" no menu do SEI (js/init_agente.js) pede
+ * para abrir o painel lateral. O clique do usuario e o gesto que o Chrome
+ * exige para sidePanel.open; por isso a chamada e feita direto no listener.
+ ******************************************************************************/
+browser.runtime.onMessage.addListener(function (msg, sender) {
+  if (!msg || msg.tipo !== "abrirAgente" || !sender || !sender.tab) return;
+  if (typeof chrome !== "undefined" && chrome.sidePanel && chrome.sidePanel.open) {
+    chrome.sidePanel.open({ tabId: sender.tab.id }).catch(function (e) { console.log(e); });
+  } else if (browser.sidebarAction && browser.sidebarAction.open) {
+    browser.sidebarAction.open();
+  }
+});

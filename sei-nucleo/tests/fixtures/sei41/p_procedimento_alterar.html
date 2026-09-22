@@ -1,0 +1,1285 @@
+<!-- url: https://treinamento.sei.sp.gov.br/sei/controlador.php?acao=procedimento_alterar&acao_origem=arvore_visualizar&acao_retorno=arvore_visualizar&id_procedimento=148265&arvore=1&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="pt-br" >
+<head ><script src="/Saine-to-know-I-waitor-there-Fleaue-mood-be-plac" async></script>
+
+<link rel="shortcut icon" sizes="any" href="favicon/favicon.ico" />         
+<link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />         
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png" />
+<link rel="manifest" href="favicon/site.webmanifest" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta property="og:title" content="treinamento.sei.sp.gov.br" />
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://treinamento.sei.sp.gov.br/sei/imagens/logo-sp-gov-br.png"/>
+<meta property="og:url" content="https://treinamento.sei.sp.gov.br" />
+<meta property="og:site_name" content="treinamento.sei.sp.gov.br" />
+<meta name="robots" content="noindex"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+<title>SEI - Alterar Processo</title>
+<link href="/infra_css/infra-tooltip.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-barra-progresso.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-impressao-global.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="print"/>
+<link href="/infra_css/infra-ajax.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/calendario/v2/infra-calendario.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/arvore/infra-arvore.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/mapa/infra-mapa.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.structure.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.theme.min.css?1.13.2" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/multiple-select/multiple-select.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_js/modal/jquery.modalLink-1.0.0.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/bootstrap/bootstrap-4.6.2.min.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/bootstrap/menu-bootstrap.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/infra-global-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<link href="/infra_css/esquemas/azul_celeste/infra-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>      
+<link href="css/infra-local-esquema-3.css?4.1.5-2.29.0" rel="stylesheet" type="text/css" media="all"/>
+<style></style><style type="text/css" >
+<!--/*--><![CDATA[/*><!--*/
+
+    #divTipoProcedimentoTitulo {display:none;}
+    #divTipoProcedimento {display:block;}
+    #lblTipoProcedimento {position:absolute;left:0%;top:0%;}
+    #selTipoProcedimento {position:absolute;left:0%;top:38%;width:85%;}
+
+    #lblTipoPrioridade {position:absolute;left:0%;top:0%;}
+    #selTipoPrioridade {position:absolute;left:0%;top:38%;width:85%;}
+
+
+
+
+    #lblDescricao {position:absolute;left:0%;top:0%;}
+    #txtDescricao {position:absolute;left:0%;top:38%;width:85%;}
+
+    #lblAssuntos {position:absolute;left:0%;top:0%;}
+    #txtAssunto {position:absolute;left:0%;top:18%;width:50%;}
+    #selAssuntos {position:absolute;left:0%;top:43%;width:85%;height:50%;}
+    #divOpcoesAssuntos {position:absolute;left:86%;top:43%;}
+
+    #divInteressados {display:block;}
+    #lblInteressadosProcedimento {position:absolute;left:0%;top:0%;width:90%;}
+    #txtInteressadoProcedimento {position:absolute;left:0%;top:18%;width:50%;}
+    #selInteressadosProcedimento {position:absolute;left:0%;top:43%;width:85%;height:50%;}
+    #divOpcoesInteressados {position:absolute;left:86%;top:43%;}
+
+    #divInteressadoUsuario {display:none;}
+    #lblInteressadoUsuario {position:absolute;left:0%;top:0%;}
+    #txtInteressadoUsuario {position:absolute;left:0%;top:40%;width:85%;}
+
+    #lblObservacoes {position:absolute;left:0%;top:0%;width:50%;}
+    #txaObservacoes {position:absolute;left:0%;top:27%;width:85%;}
+
+#divNivelAcesso {height:13em;}
+#fldNivelAcesso {position:absolute;left:0%;top:0%;height:80%;width:85%;}
+#divOptSigiloso  {position:absolute;left:13%;top:14%;}
+#selGrauSigilo {position:absolute;left:25%;top:0%;display:none}
+#divOptRestrito {position:absolute;left:43%;top:14%;}
+#divOptPublico   {position:absolute;left:73%;top:14%;}
+#lblHipoteseLegal {position:absolute;left:5%;width:90%;top:40%;}
+#selHipoteseLegal {position:absolute;left:5%;width:90%;top:60%;}    #divOptProtocoloAutomatico {top:15%;}
+    #divOptProtocoloManual {top:50%}
+
+    #lblProtocoloInformar {top:23%;}
+    #txtProtocoloInformar {top:50%;}
+
+    #lblDtaGeracaoInformar {top:23%;}
+    #txtDtaGeracaoInformar {top:50%;}
+    #imgCalDtaGeracaoInformar {top:50%;}
+    /*]]>*/-->
+</style>
+<script type="text/javascript">var INFRA_PATH_CSS="/infra_css",INFRA_PATH_IMAGENS="/infra_css/imagens",INFRA_PATH_JS="/infra_js",INFRA_PATH_SVG="/infra_css/svg",INFRA_LUPA_TIPO_JANELA=2,INFRA_BARRA_TIPO_JANELA=2,INFRA_TIPO_ALERTA=1;</script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-3.7.0.min.js?3.7.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/jquery/jquery-ui-1.13.2/jquery-ui.min.js?1.13.2"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/multiple-select/multiple-select.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/ddslick/jquery.ddslick.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/modal/jquery.modalLink-1.0.0.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraPaginaEsquema3.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraBotaoMenu.js?4.1.5-2.29.0"></script>    
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUtil.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraCookie.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraUpload.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTabelaDinamica.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraLupas.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraSelectEditavel.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraAjax.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/InfraTooltip.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/calendario/v2/InfraCalendario.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/arvore/InfraArvore.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="/infra_js/maskedpwd/MaskedPassword.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/bootstrap-4.6.2.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/bootstrap/infra-menu-bootstrap.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/touch/jquery.ui.touch-punch.min.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="utf-8" src="/infra_js/hotkeys/jquery.hotkeys.js?4.1.5-2.29.0"></script>
+<script type="text/javascript" charset="iso-8859-1" src="js/sei.js?4.1.5-2.29.0"></script>
+
+<script type="text/javascript" charset="iso-8859-1" >
+<!--//--><![CDATA[//><!--
+
+    //<script>
+    var objAutoCompletarAssuntoRI1223 = null;
+    var objLupaAssuntos = null;
+    var objAutoCompletarInteressadoRI1225 = null;
+    var objLupaInteressados = null;
+    var objAutoCompletarInteressadoUsuario = null;
+    var objContatoCadastroAutomatico = null;
+
+    var objAjaxHipoteseLegal = null;
+var objAjaxTipoProcedimentoSugestoes = null;
+
+function alterarNivelAcesso(){
+  infraSelectSelecionarItem('selGrauSigilo','null');
+  infraSelectSelecionarItem('selHipoteseLegal','null');
+
+  if (document.getElementById('optPublico').checked){
+    document.getElementById('divNivelAcesso').style.height = '8em';
+    document.getElementById('divOptSigiloso').style.top = '25%';
+    document.getElementById('divOptRestrito').style.top = '25%';
+    document.getElementById('divOptPublico').style.top = '25%';
+    document.getElementById('lblHipoteseLegal').style.display = 'none';
+    document.getElementById('selHipoteseLegal').style.display = 'none';
+    document.getElementById('selGrauSigilo').style.display = 'none';
+  }else if (document.getElementById('optRestrito').checked || document.getElementById('optSigiloso').checked){
+    document.getElementById('divNivelAcesso').style.height = '13em';
+    document.getElementById('divOptSigiloso').style.top = '14%';
+    document.getElementById('divOptRestrito').style.top = '14%';
+    document.getElementById('divOptPublico').style.top = '14%';
+    document.getElementById('lblHipoteseLegal').style.top = '40%';
+    document.getElementById('selHipoteseLegal').style.top = '60%';
+    document.getElementById('lblHipoteseLegal').style.display = 'block';
+    document.getElementById('selHipoteseLegal').style.display = 'block';
+
+    objAjaxTipoProcedimentoSugestoes.executar();
+  }
+}
+
+
+    var arrAssuntosNegados = Array();
+
+    var arrInteressadosNegados = Array();
+
+    function inicializar(){
+
+        if ('procedimento_alterar'=='procedimento_gerar' || 'procedimento_alterar'=='procedimento_gerar_relacionado'){
+            document.getElementById('txtDescricao').focus();
+        }else  if ('procedimento_alterar'=='procedimento_alterar'){
+            document.getElementById('txtDescricao').focus();
+        }
+
+        /* *********************************************************************************************** */
+
+        objAutoCompletarInteressadoUsuario = new infraAjaxAutoCompletar('hdnIdInteressadoUsuario','txtInteressadoUsuario','controlador_ajax.php?acao_ajax=usuario_auto_completar_contato&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        //objAutoCompletarInteressadoUsuario.maiusculas = true;
+        //objAutoCompletarInteressadoUsuario.mostrarAviso = true;
+        //objAutoCompletarInteressadoUsuario.tempoAviso = 1000;
+        //objAutoCompletarInteressadoUsuario.tamanhoMinimo = 3;
+        objAutoCompletarInteressadoUsuario.limparCampo = false;
+        //objAutoCompletarInteressadoUsuario.bolExecucaoAutomatica = false;
+
+        objAutoCompletarInteressadoUsuario.prepararExecucao = function(){
+            return 'palavras_pesquisa='+document.getElementById('txtInteressadoUsuario').value;
+        };
+
+        objAutoCompletarInteressadoUsuario.processarResultado = function(id,descricao,complemento){
+            if (id!=''){
+                document.getElementById('hdnIdInteressadoUsuario').value = id;
+                document.getElementById('txtInteressadoUsuario').value = descricao;
+            }
+        }
+        objAutoCompletarInteressadoUsuario.selecionar('','');
+
+        /* *********************************************************************************************** */
+
+        if ('procedimento_alterar'=='procedimento_consultar'){
+            infraDesabilitarCamposDiv(document.getElementById('divTipoProcedimento'));
+            infraDesabilitarCamposDiv(document.getElementById('divTipoPrioridade'));
+            infraDesabilitarCamposDiv(document.getElementById('divDescricao'));
+            infraDesabilitarCamposDiv(document.getElementById('divAssuntos'));
+
+            document.getElementById('selAssuntos').ondblclick = function(e){
+                if (this.selectedIndex!=-1) {
+                    seiCadastroAssunto(this.options[this.selectedIndex].value, 'selAssuntos', 'frmProcedimentoCadastro', 'controlador.php?acao=assunto_consultar&acao_origem=procedimento_alterar&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+                }
+            };
+
+            infraDesabilitarCamposDiv(document.getElementById('divInteressados'));
+            document.getElementById('selInteressadosProcedimento').ondblclick = function(e){
+                if (this.selectedIndex!=-1) {
+                    seiCadastroContato(this.options[this.selectedIndex].value, 'selInteressadosProcedimento', 'frmProcedimentoCadastro','controlador.php?acao=contato_consultar&acao_origem=procedimento_alterar&arvore=1&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+                }
+            };
+
+
+
+            infraDesabilitarCamposDiv(document.getElementById('divInteressadoUsuario'));
+            infraDesabilitarCamposDiv(document.getElementById('divObservacoes'));
+            if (document.getElementById('divObservacoesOutras')!=null) {
+                infraDesabilitarCamposDiv(document.getElementById('divObservacoesOutras'));
+            }
+            infraDesabilitarCamposDiv(document.getElementById('divNivelAcesso'));
+            return;
+        }
+
+
+        objAutoCompletarAssuntoRI1223 = new infraAjaxAutoCompletar('hdnIdAssunto','txtAssunto','controlador_ajax.php?acao_ajax=assunto_auto_completar_RI1223&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        //objAutoCompletarAssuntoRI1223.maiusculas = true;
+        //objAutoCompletarAssuntoRI1223.mostrarAviso = true;
+        //objAutoCompletarAssuntoRI1223.tempoAviso = 1000;
+        //objAutoCompletarAssuntoRI1223.tamanhoMinimo = 3;
+        objAutoCompletarAssuntoRI1223.limparCampo = true;
+        //objAutoCompletarAssuntoRI1223.bolExecucaoAutomatica = false;
+
+        objAutoCompletarAssuntoRI1223.prepararExecucao = function(){
+            return 'palavras_pesquisa='+document.getElementById('txtAssunto').value;
+        };
+
+        objAutoCompletarAssuntoRI1223.processarResultado = function(id,descricao,complemento){
+            if (id!=''){
+                objLupaAssuntos.adicionar(id,descricao,document.getElementById('txtAssunto'));
+            }
+        };
+
+
+        //Inicializa campos hidden com valores das listas
+        objLupaAssuntos = new infraLupaSelect('selAssuntos','hdnAssuntos','controlador.php?acao=assunto_selecionar&tipo_selecao=2&id_object=objLupaAssuntos&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+
+                objLupaAssuntos.processarRemocao = function(itens){
+            for(var i=0;i < itens.length;i++){
+                for(var j=0;j < arrAssuntosNegados.length; j++){
+                    if (itens[i].value == arrAssuntosNegados[j].id_assunto){
+                        alert('Assunto \"' + itens[i].text + '\" não pode ser removido porque foi adicionado pela unidade ' + arrAssuntosNegados[j].sigla_unidade + '.');
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        objLupaAssuntos.processarAlteracao = function (pos, texto, valor){
+            seiCadastroAssunto(valor, 'selAssuntos','frmProcedimentoCadastro','controlador.php?acao=assunto_consultar&acao_origem=procedimento_alterar&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        }
+
+        document.getElementById('selAssuntos').ondblclick = function(e){
+            objLupaAssuntos.alterar();
+        };
+
+
+        objAutoCompletarInteressadoRI1225 = new infraAjaxAutoCompletar('hdnIdInteressadoProcedimento','txtInteressadoProcedimento','controlador_ajax.php?acao_ajax=contato_auto_completar_contexto_RI1225&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        //objAutoCompletarInteressadoRI1225.maiusculas = true;
+        //objAutoCompletarInteressadoRI1225.mostrarAviso = true;
+        //objAutoCompletarInteressadoRI1225.tempoAviso = 1000;
+        //objAutoCompletarInteressadoRI1225.tamanhoMinimo = 3;
+        objAutoCompletarInteressadoRI1225.limparCampo = false;
+        //objAutoCompletarInteressadoRI1225.bolExecucaoAutomatica = false;
+
+        objAutoCompletarInteressadoRI1225.prepararExecucao = function(){
+            return 'palavras_pesquisa='+encodeURIComponent(document.getElementById('txtInteressadoProcedimento').value);
+        };
+
+        objAutoCompletarInteressadoRI1225.processarResultado = function(id,descricao,complemento){
+            if (id!=''){
+                objLupaInteressados.adicionar(id,descricao,document.getElementById('txtInteressadoProcedimento'));
+            }
+        };
+
+        infraAdicionarEvento(document.getElementById('txtInteressadoProcedimento'),'keyup',tratarEnterInteressado);
+
+        objLupaInteressados = new infraLupaSelect('selInteressadosProcedimento','hdnInteressadosProcedimento','controlador.php?acao=contato_selecionar&tipo_selecao=2&id_object=objLupaInteressados&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+
+        objLupaInteressados.processarAlteracao = function (pos, texto, valor){
+            seiCadastroContato(valor, 'selInteressadosProcedimento', 'frmProcedimentoCadastro','controlador.php?acao=contato_alterar&acao_origem=procedimento_alterar&arvore=1&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        }
+
+        objLupaInteressados.processarRemocao = function(itens){
+            for(var i=0;i < itens.length;i++){
+                for(var j=0;j < arrInteressadosNegados.length; j++){
+                    if (itens[i].value == arrInteressadosNegados[j].id_contato) {
+                        alert('Interessado \"' + itens[i].text + '\" não pode ser removido porque foi adicionado pela unidade ' + arrInteressadosNegados[j].sigla_unidade + '.');
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        document.getElementById('selInteressadosProcedimento').ondblclick = function(e){
+            objLupaInteressados.alterar();
+        };
+
+        objContatoCadastroAutomatico = new infraAjaxComplementar(null,'controlador_ajax.php?acao_ajax=contato_cadastro_contexto_temporario&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+        //objContatoCadastroAutomatico.mostrarAviso = false;
+        //objContatoCadastroAutomatico.tempoAviso = 3000;
+        //objContatoCadastroAutomatico.limparCampo = false;
+
+        objContatoCadastroAutomatico.prepararExecucao = function(){
+            return 'nome='+encodeURIComponent(document.getElementById('txtInteressadoProcedimento').value);
+        };
+
+        objContatoCadastroAutomatico.processarResultado = function(arr){
+            if (arr!=null){
+                objAutoCompletarInteressadoRI1225.processarResultado(arr['IdContato'], document.getElementById('txtInteressadoProcedimento').value, null);
+                //alert('Interessado cadastrado com sucesso.');
+            }
+        };
+
+        objAjaxHipoteseLegal = new infraAjaxMontarSelect('selHipoteseLegal','controlador_ajax.php?acao_ajax=hipotese_legal_select_nome_base_legal&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+objAjaxHipoteseLegal.prepararExecucao = function(){
+  if (document.getElementById('optSigiloso').checked){
+    staNivelAcesso = '2';
+  }else if (document.getElementById('optRestrito').checked){
+    staNivelAcesso = '1';
+  }else if (document.getElementById('optPublico').checked){
+    staNivelAcesso = '0';
+  }
+  return infraAjaxMontarPostPadraoSelect('null','',document.getElementById('hdnIdHipoteseLegalSugestao').value) + '&staNivelAcesso=' + staNivelAcesso;
+};
+
+objAjaxTipoProcedimentoSugestoes = new infraAjaxComplementar(null,'controlador_ajax.php?acao_ajax=tipo_procedimento_obter_sugestoes&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000');
+objAjaxTipoProcedimentoSugestoes.prepararExecucao = function(){
+  return 'idTipoProcedimento='+document.getElementById('hdnIdTipoProcedimento').value;
+}
+objAjaxTipoProcedimentoSugestoes.processarResultado = function(arr){
+  if(arr!=null){
+    if (document.getElementById('optSigiloso').checked){
+      for(var i=0; i < document.getElementById('selGrauSigilo').options.length;i++){
+        if (document.getElementById('selGrauSigilo').options[i].value == arr['StaGrauSigiloSugestao']){
+          document.getElementById('selGrauSigilo').options[i].selected = true;
+          break;
+        }
+      }
+    }
+    if (arr['IdHipoteseLegalSugestao']!=undefined){
+      document.getElementById('hdnIdHipoteseLegalSugestao').value = arr['IdHipoteseLegalSugestao'];
+    }
+  }
+  objAjaxHipoteseLegal.executar();
+}
+
+
+        infraEfeitoTabelas();
+    }
+
+    function tratarEnterInteressado(ev){
+
+        var key = infraGetCodigoTecla(ev);
+
+        if (key == 13 && document.getElementById('hdnIdInteressadoProcedimento').value==''){
+            if (confirm('Nome inexistente. Deseja incluir?')){
+                objContatoCadastroAutomatico.executar();
+            }
+        }
+    }
+
+    function confirmarDados(){
+        if (OnSubmitForm()){
+            var arrBotoesSalvar = document.getElementsByName('btnSalvar');
+            for(var i=0; i < arrBotoesSalvar.length; i++){
+                arrBotoesSalvar[i].disabled = true;
+            }
+            document.getElementById('hdnFlagProcedimentoCadastro').value = '2';
+            document.getElementById('frmProcedimentoCadastro').submit();
+        }
+    }
+
+    function OnSubmitForm() {
+        return validarCadastroRI0152();
+    }
+
+    function validarCadastroRI0152() {
+
+        
+        
+        if (document.getElementById('hdnIdTipoProcedimento').value=='null') {
+            alert('Informe o Tipo do Processo.');
+            return false;
+        }
+
+        if (document.getElementById('hdnAssuntos').value=='') {
+            alert('Informe os Assuntos.');
+            document.getElementById('txtAssunto').focus();
+            return false;
+        }
+
+        if (document.getElementById('hdnSinIndividual').value=='S' && infraTrim(document.getElementById('hdnIdInteressadoUsuario').value)==''){
+            alert('Informe o Interessado.');
+            document.getElementById('txtInteressadoUsuario').focus();
+            return false;
+        }
+
+        if (!document.getElementById('optSigiloso').checked && !document.getElementById('optRestrito').checked && !document.getElementById('optPublico').checked) {
+  alert('Informe o nível de acesso.');
+  return false;
+}
+
+if (document.getElementById('optSigiloso').checked || document.getElementById('optRestrito').checked){
+  if (!infraSelectSelecionado('selHipoteseLegal')){
+    alert('Informe a Hipótese Legal.');
+    document.getElementById('selHipoteseLegal').focus();
+    return false;
+  }
+}
+
+
+        return true;
+    }
+
+    function trocarTipoProcedimento(){
+
+        document.getElementById('hdnIdTipoProcedimento').value = document.getElementById('selTipoProcedimento').value;
+
+        if (document.getElementById('hdnIdTipoProcedimento').value!='null') {
+            document.getElementById('frmProcedimentoCadastro').submit();
+        }
+    }
+
+    function alterarProtocolo(){
+        if (document.getElementById('optProtocoloAutomatico').checked){
+            document.getElementById('lblProtocoloInformar').style.visibility = 'hidden';
+            document.getElementById('txtProtocoloInformar').style.visibility = 'hidden';
+            document.getElementById('txtProtocoloInformar').value = '';
+
+            document.getElementById('lblDtaGeracaoInformar').style.visibility = 'hidden';
+            document.getElementById('txtDtaGeracaoInformar').style.visibility = 'hidden';
+            document.getElementById('txtDtaGeracaoInformar').value = '';
+            document.getElementById('imgCalDtaGeracaoInformar').style.visibility = 'hidden';
+
+        }else if (document.getElementById('optProtocoloManual').checked){
+            document.getElementById('lblProtocoloInformar').style.visibility = 'visible';
+            document.getElementById('txtProtocoloInformar').style.visibility = 'visible';
+
+            document.getElementById('lblDtaGeracaoInformar').style.visibility = 'visible';
+            document.getElementById('txtDtaGeracaoInformar').style.visibility = 'visible';
+            document.getElementById('imgCalDtaGeracaoInformar').style.visibility = 'visible';
+
+            document.getElementById('txtProtocoloInformar').focus();
+        }
+    }
+    //</script>
+
+//--><!]]>
+</script>
+</head>
+<body onload="inicializar();"  >
+<button onclick="infraMoverParaTopo()" id="btnInfraTopo" class="infraButton infraCorBarraSistema" ><img src="/infra_css/svg/topo.svg?2.29.0" title="Voltar ao Topo" alt="Voltar ao Topo" tabindex="32767"></button>
+<div id="divInfraAreaGlobal" class="vh-100 vw-100 d-flex flex-column m-0 border-0" >
+<div id="divInfraAreaTela" style="min-height:0;"  class="w-100  flex-grow-1 d-flex flex-row  divInfraAreaTelaSimples">
+<div id="divInfraAreaTelaD"  class=" flex-grow-1 px-3" >
+<div id="divInfraBarraLocalizacao" class="infraBarraLocalizacao" tabindex="450">Alterar Processo</div>
+    <form id="frmProcedimentoCadastro" method="post" onsubmit="return OnSubmitForm();"
+          action="controlador.php?acao=procedimento_alterar&acao_origem=procedimento_alterar&arvore=1&id_procedimento=148265&infra_sistema=100000100&infra_unidade_atual=110000001&infra_hash=0000000000000000000000000000000000000000000000000000000000000000" style="display:inline;">
+        <input type="hidden" id="hdnInfraTipoPagina" name="hdnInfraTipoPagina" value="2"/>
+<div id="divInfraBarraComandosSuperior" class="infraBarraComandos">
+<a id="ancVoltarArvoreSuperior" href="javascript:seiVoltarArvoreProcesso()" class="btn" style="display:none;" title="Voltar para a Árvore do Processo" tabindex="451">
+          <img src="/infra_css/svg/voltar.svg?4.1.5-2.29.0">
+        </a>
+<button tabindex="451" type="button" onclick="confirmarDados()" accesskey="S" name="btnSalvar" id="btnSalvar" value="Salvar" class="infraButton" style="width:10em;"><span class="infraTeclaAtalho">S</span>alvar</button>
+</div>
+        
+        
+        
+        <div id="divTipoProcedimento" class="infraAreaDados" style="height:5em;">
+            <label id="lblTipoProcedimento" for="selTipoProcedimento" accesskey="" class="infraLabelObrigatorio">Tipo do
+                Processo:</label>
+            <select id="selTipoProcedimento" name="selTipoProcedimento" onchange="trocarTipoProcedimento();"
+                    class="infraSelect" tabindex="501">
+                <option value="null">&nbsp;</option>
+<option value="100000425">Abaixo-assinado</option>
+<option value="100000980">Apostila de avaliação de desempenho</option>
+<option value="100000426">Ata de reunião</option>
+<option value="100000981">Ata de reunião dos responsáveis pela avaliação</option>
+<option value="100000428">Atestado de frequência</option>
+<option value="100000796">Atestado de frequência em curso</option>
+<option value="100000870">Atestado de origem</option>
+<option value="100000430">Atestado de realização de serviços</option>
+<option value="100000431">Atestado de recebimento de material</option>
+<option value="100000778">Autorização para descontos não previstos em lei</option>
+<option value="100000434">Autorização para execução de serviços</option>
+<option value="100000437">Aviso</option>
+<option value="100000446">Aviso de férias</option>
+<option value="100000908">Aviso prévio</option>
+<option value="100000449">Balancete de despesas com adiantamento</option>
+<option value="100001006">Banco de horas</option>
+<option value="100000982">Boletim de desempenho para readaptação funcional</option>
+<option value="100001007">Boletim de frequência</option>
+<option value="100000779">Boletim informativo para elaboração da Folha de pagamento</option>
+<option value="100000451">Cadastro de certidões expedidas</option>
+<option value="100000919">Cadastro de crianças matriculadas e inscritas</option>
+<option value="100000910">Cadastro de funcionários e familiares atendidos</option>
+<option value="100000797">Cadastro de instrutores e instituições especializadas em ensino e treinamento</option>
+<option value="100000800">Calendário de Cursos e Estágios - CCE</option>
+<option value="100000932">Cardápio semanal</option>
+<option value="100000453">Carta</option>
+<option value="100000455">Carta de representação</option>
+<option value="100000457">Certidão</option>
+<option value="100000871">Certificado de Aprovação de Instalações - CAI</option>
+<option value="100000872">Certificado de Aprovação do Equipamento de Proteção Individual - CAEPI</option>
+<option value="100000887">Certificado de registro no Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalh</option>
+<option value="100000459">Circular</option>
+<option value="100000470">Comunicado</option>
+<option value="100000873">Comunicado de Acidente de Trabalho - CAT</option>
+<option value="100000911">Comunicado de dispensa ou desligamento</option>
+<option value="100000915">Comunicado de exclusão de pessoal da Frente de Trabalho</option>
+<option value="100000843">Comunicado de falecimento</option>
+<option value="100000740">Comunicado de ocorrências</option>
+<option value="100000467">Comunicação interna</option>
+<option value="100000473">Contrato</option>
+<option value="100000917">Contrato individual de trabalho</option>
+<option value="100000476">Cronograma de atividades</option>
+<option value="100000802">Cronograma de cursos</option>
+<option value="100000756">Currículo de candidato a emprego público</option>
+<option value="100000464">Código</option>
+<option value="100000874">Dados Informativos de Acidentes - DIA</option>
+<option value="100000479">Declaração</option>
+<option value="100000875">Declaração das instalações</option>
+<option value="100000906">Declaração de bens de agente público</option>
+<option value="100000828">Declaração de encargos de dependentes para fins de Imposto de Renda</option>
+<option value="100000847">Declaração negativa de admissão de pessoal</option>
+<option value="100000483">Decreto</option>
+<option value="100000737">Decreto de fixação, extinção ou relotação de postos de trabalho</option>
+<option value="100000487">Deliberação</option>
+<option value="100000490">Despacho de devolução à origem</option>
+<option value="100000494">Despacho normativo</option>
+<option value="100000888">Dossiê da CIPA por mandato</option>
+<option value="100000983">Dossiê de avaliação de funcionários demitidos</option>
+<option value="100000876">Dossiê de campanha de prevenção</option>
+<option value="100000806">Dossiê de curso</option>
+<option value="100000497">Dossiê de elaboração e execução de plano, programa ou projeto</option>
+<option value="100000501">Dossiê de evento</option>
+<option value="100000503">Dossiê de orientação técnica</option>
+<option value="100000905">Dossiê por programa social de qualidade de vida</option>
+<option value="100000505">Edital de ciência de eliminação de documentos</option>
+<option value="100000507">Escala de férias</option>
+<option value="100000949">Escala de licenças-prêmio</option>
+<option value="100000509">Escala de serviço</option>
+<option value="100000512">Estatuto</option>
+<option value="100000516">Expediente de acompanhamento da reclamação ou sugestão</option>
+<option value="100000525">Expediente de acompanhamento de acordo judicial ou extrajudicial</option>
+<option value="100000521">Expediente de acompanhamento de ação judicial</option>
+<option value="100000528">Expediente de atendimento</option>
+<option value="100000531">Expediente de atendimento de pedido de informações</option>
+<option value="100000535">Expediente de atendimento de requisições, ordens judiciais ou administrativas</option>
+<option value="100000540">Expediente de auditoria e prestação de contas</option>
+<option value="100000973">Expediente de emissão de certidão negativa de débitos ou declaração remuneratória ¿ CND/DR</option>
+<option value="100000542">Expediente de emissão e homologação de Certidão de Tempo de Contribuição - CTC</option>
+<option value="100000546">Expediente de indicações políticas</option>
+<option value="100000823">Expediente de recadastramento de inativos e pensionistas</option>
+<option value="100000550">Expediente de requisição de materiais e serviços</option>
+<option value="100000552">Expediente de requisição de materiais e serviços por adiantamento</option>
+<option value="100000556">Expediente de solicitação de orientação técnica</option>
+<option value="100000830">Extrato do INSS para fins de complementação de aposentadoria</option>
+<option value="100000557">Ficha de acompanhamento de ação judicial</option>
+<option value="100000912">Ficha de avaliação socioeconômica</option>
+<option value="100000738">Ficha de cadastro de cargos e funções</option>
+<option value="100000934">Ficha de controle de estoque de alimentos e medicamentos</option>
+<option value="100000889">Ficha de controle de inspeção de extintores</option>
+<option value="100000942">Ficha de controle mensal de peso e altura</option>
+<option value="100000890">Ficha de informação para o Ministério do Trabalho - SSMT</option>
+<option value="100000921">Ficha de inscrição da criança</option>
+<option value="100000759">Ficha de inscrição de candidato a emprego público</option>
+<option value="100000922">Ficha de matrícula da criança</option>
+<option value="100000741">Ficha de registro de frequência (modelo 100)</option>
+<option value="100000924">Ficha de registro mensal de frequência</option>
+<option value="100000831">Ficha financeira de pagamento de servidores, inativos ou pensionistas</option>
+<option value="100000742">Ficha individual de alterações</option>
+<option value="100000935">Ficha individual de vacinação</option>
+<option value="100000832">Folha de pagamento (via arquivada na Secretaria da Fazenda)</option>
+<option value="100000833">Folha de pagamento (via arquivada nas Unidades de Recursos Humanos)</option>
+<option value="100000913">Formulário agendando consulta</option>
+<option value="100000784">Formulário de atualização de dados pessoais e funcionais para a elaboração da Folha de pagamento (v</option>
+<option value="100000781">Formulário de atualização de dados pessoais e funcionais para a elaboração da Folha de pagamento (vi</option>
+<option value="100000984">Formulário de avaliação de cursos de formação e aperfeiçoamento funcional</option>
+<option value="100000985">Formulário de avaliação de desempenho</option>
+<option value="100000914">Formulário de encaminhamento ao IAMSPE</option>
+<option value="100000743">Formulário de justificativa de falta</option>
+<option value="100000986">Formulário de manifestação sobre o cumprimento de metas</option>
+<option value="100000824">Formulário para o Cadastro Geral de Empregados e Desempregados - CAGED</option>
+<option value="100001008">Gestão da Informação: Recebimento de Processo Externo</option>
+<option value="100000785">Guia de autorização para consignação em Folha de pagamento</option>
+<option value="100000560">Guia de saída e de entrada de material</option>
+<option value="100000562">Informação judicial</option>
+<option value="100000877">Inquérito sanitário de origem</option>
+<option value="100000564">Instrução normativa</option>
+<option value="100000878">Laudo Técnico das Condições Ambientais de Trabalho - LTCAT</option>
+<option value="100000879">Laudo técnico pericial de riscos ambientais</option>
+<option value="100000928">Lista de frequência em passeios ou viagens</option>
+<option value="100000891">Lista de presença em reuniões da CIPA</option>
+<option value="100000943">Lista de presença em reuniões de pais</option>
+<option value="100000892">Livro de atas da CIPA</option>
+<option value="100000893">Livro de inspeção do trabalho</option>
+<option value="100000925">Livro de matrícula de crianças</option>
+<option value="100000944">Livro de ocorrências com as crianças</option>
+<option value="100000850">Livro de posse de servidores</option>
+<option value="100000762">Livro de registro de concurso público</option>
+<option value="100000920">Livro de registro de empregados</option>
+<option value="100000894">Mapa anual de acidentes de trabalho</option>
+<option value="100000745">Mapa de frequência</option>
+<option value="100000747">Mapa de horas-extras</option>
+<option value="100000895">Mapa de riscos</option>
+<option value="100000936">Mapa mensal de refeições</option>
+<option value="100000566">Memorando</option>
+<option value="100000568">Moção</option>
+<option value="100000570">Norma</option>
+<option value="100000572">Ofício</option>
+<option value="100000834">Ordem de crédito complementar individual</option>
+<option value="100000835">Ordem de crédito das folhas de pagamento</option>
+<option value="100000574">Ordem de serviço</option>
+<option value="100000739">Organograma funcional</option>
+<option value="100000576">Parecer jurídico</option>
+<option value="100000578">Parecer técnico</option>
+<option value="100000748">Pedido de abono de faltas</option>
+<option value="100000579">Pedido de aquisição de material</option>
+<option value="100000923">Pedido de demissão</option>
+<option value="100000855">Pedido de prorrogação de prazo para o exercício do cargo</option>
+<option value="100000858">Pedido de prorrogação de prazo para posse</option>
+<option value="100000993">Pedido de reconsideração de decisão em processo administrativo</option>
+<option value="100000950">Pedido de retenção ou suplementação do auxílio-alimentação</option>
+<option value="100000880">Perfil Profissiográfico Previdenciário - PPP</option>
+<option value="100000945">Planilha anual de controle de pesos e medidas</option>
+<option value="100000765">Planilha de anomalias referentes à frequência</option>
+<option value="100000836">Planilha de concessão de décimos incorporados</option>
+<option value="100000837">Planilha de concessão de incorporação de gratificação de representação</option>
+<option value="100000750">Planilha de controle de horas-extras</option>
+<option value="100000938">Planilha de controle de vacinação</option>
+<option value="100000825">Planilha de progressão funcional</option>
+<option value="100000581">Plano de atividades de desenvolvimento e capacitação</option>
+<option value="100000987">Plano de desempenho do órgão ou unidade</option>
+<option value="100000584">Plano, programa ou projeto</option>
+<option value="100000896">Planta de ambientes de trabalho e localização de extintores</option>
+<option value="100000586">Portaria</option>
+<option value="100000729">Proc. de estudo para definição das exig, req, interstícios e demais proced.aplicáveis ao acesso</option>
+<option value="100000988">Processo administrativo de avaliação de desempenho e estágio probatório</option>
+<option value="100000999">Processo administrativo disciplinar</option>
+<option value="100000997">Processo administrativo para apuração de abandono de cargo/função ou inassiduidade</option>
+<option value="100000992">Processo avaliatório para concessão do Abono por Satisfação do Usuário - ASU</option>
+<option value="100000989">Processo avaliatório para concessão do Prêmio de Incentivo à Produtividade e Qualidade - PIPQ</option>
+<option value="100000764">Processo de abertura de concurso público para provimento de cargo mediante nomeação</option>
+<option value="100000766">Processo de abertura de processo seletivo especial ou concurso interno</option>
+<option value="100000767">Processo de abertura de processo seletivo para preenchimento de função-atividade mediante admissão</option>
+<option value="100000768">Processo de abertura de processo seletivo para prestação voluntária de serviços</option>
+<option value="100000826">Processo de acumulação de cargo ou função-atividade</option>
+<option value="100000588">Processo de adiantamento para despesas com aquisição de combustível - álcool</option>
+<option value="100000590">Processo de adiantamento para despesas com aquisição de gasolina</option>
+<option value="100000592">Processo de adiantamento para despesas com aquisição de medicamentos e insumos farmacêuticos.</option>
+<option value="100000600">Processo de adiantamento para despesas com aquisição de outros combustíveis e lubrificantes</option>
+<option value="100000602">Processo de adiantamento para despesas com aquisição de outros materiais de consumo</option>
+<option value="100000606">Processo de adiantamento para despesas com aquisição de peças para veículos</option>
+<option value="100000594">Processo de adiantamento para despesas com aquisição de óleo diesel</option>
+<option value="100000609">Processo de adiantamento para despesas com assinatura de jornais, revistas e serviços de clipagem</option>
+<option value="100000611">Processo de adiantamento para despesas com conservação e manutenção de bens móveis e imóveis.</option>
+<option value="100000613">Processo de adiantamento para despesas com diárias e ajuda de custo</option>
+<option value="100000615">Processo de adiantamento para despesas com diárias militar em serviço de segurança pessoal</option>
+<option value="100000618">Processo de adiantamento para despesas com diárias pessoal civil</option>
+<option value="100000621">Processo de adiantamento para despesas com diárias pessoal militar</option>
+<option value="100000626">Processo de adiantamento para despesas com gêneros alimentícios</option>
+<option value="100000630">Processo de adiantamento para despesas com insumos farmacêuticos</option>
+<option value="100000635">Processo de adiantamento para despesas com locação de equipamento para informática.</option>
+<option value="100000639">Processo de adiantamento para despesas com locação de veículos aeronaves e outros</option>
+<option value="100000643">Processo de adiantamento para despesas com locação de veículos e outros</option>
+<option value="100000646">Processo de adiantamento para despesas com locação de veículos, aeronaves e outros</option>
+<option value="100000649">Processo de adiantamento para despesas com locação de veículos.</option>
+<option value="100000653">Processo de adiantamento para despesas com materiais de almoxarifado</option>
+<option value="100000656">Processo de adiantamento para despesas com materiais de construção</option>
+<option value="100000659">Processo de adiantamento para despesas com materiais de hidráulica</option>
+<option value="100000663">Processo de adiantamento para despesas com materiais de pintura</option>
+<option value="100000667">Processo de adiantamento para despesas com materiais elétricos</option>
+<option value="100000670">Processo de adiantamento para despesas com materiais peças e acessórios de informática</option>
+<option value="100000672">Processo de adiantamento para despesas com materiais peças e acessórios de veículos</option>
+<option value="100000675">Processo de adiantamento para despesas com material educativo, esportivo e cultural</option>
+<option value="100000678">Processo de adiantamento para despesas com outras despesas com transporte e locomoção</option>
+<option value="100000681">Processo de adiantamento para despesas com outros serviços e encargos-pessoa física</option>
+<option value="100000684">Processo de adiantamento para despesas com outros serviços e encargos-pessoa jurídica.</option>
+<option value="100000686">Processo de adiantamento para despesas com passagens aéreas</option>
+<option value="100000688">Processo de adiantamento para despesas com peças de reposição e acessórios</option>
+<option value="100000690">Processo de adiantamento para despesas com serviços de reformas e de conservação de móveis em geral</option>
+<option value="100000692">Processo de adiantamento para despesas com serviços e instalações de informática</option>
+<option value="100000694">Processo de adiantamento para despesas com serviços e instalações elétricas</option>
+<option value="100000696">Processo de adiantamento para despesas com serviços e instalações em geral</option>
+<option value="100000698">Processo de adiantamento para despesas com serviços e instalações hidráulicas</option>
+<option value="100000701">Processo de adiantamento para despesas com serviços gráficos</option>
+<option value="100000705">Processo de adiantamento para despesas com suprimento de informática</option>
+<option value="100000707">Processo de adiantamento para despesas com transporte e locomoção</option>
+<option value="100000427">Processo de adiantamento para despesas com verba de representação</option>
+<option value="100000429">Processo de adiantamento único para despesas com aquisições diversas</option>
+<option value="100000432">Processo de adiantamento único para despesas com serviços diversos</option>
+<option value="100000926">Processo de admissão para prestação voluntária de serviços</option>
+<option value="100000435">Processo de afastamentos ou licenças</option>
+<option value="100000436">Processo de alienação de bens patrimoniais</option>
+<option value="100000439">Processo de alienação de imóvel</option>
+<option value="100000441">Processo de alteração de grade</option>
+<option value="100000443">Processo de alteração orçamentária</option>
+<option value="100000444">Processo de aposentadoria</option>
+<option value="100000951">Processo de aposentadoria e pensão de advogados, economistas e serventuários</option>
+<option value="100000771">Processo de aproveitamento de remanescentes de concurso público</option>
+<option value="100000448">Processo de apuração para aplicação de sanções administrativas a licitantes e contratados</option>
+<option value="100000998">Processo de apuração preliminar de falta disciplinar</option>
+<option value="100000450">Processo de aquisição de acervos arquivístico, bibliográfico, museológico ou artístico</option>
+<option value="100000452">Processo de aquisição de alimentos para animais</option>
+<option value="100000454">Processo de aquisição de animais para abate, experimento</option>
+<option value="100000456">Processo de aquisição de armamentos</option>
+<option value="100000458">Processo de aquisição de artigos de higiene pessoal</option>
+<option value="100000460">Processo de aquisição de bandeiras, flamulas, insígnias</option>
+<option value="100000463">Processo de aquisição de bens de informática e automação</option>
+<option value="100000466">Processo de aquisição de cestas básicas</option>
+<option value="100000468">Processo de aquisição de diesel automotivo</option>
+<option value="100000471">Processo de aquisição de equipamentos de tecnologia da informação</option>
+<option value="100000474">Processo de aquisição de equipamentos e mobiliário médico-hospitalar e odontológico</option>
+<option value="100000478">Processo de aquisição de equipamentos para data center</option>
+<option value="100000481">Processo de aquisição de etanol automotivo</option>
+<option value="100000484">Processo de aquisição de fardamento, vestuário, uniforme, tecido, aviamento</option>
+<option value="100000486">Processo de aquisição de ferramentas avulsas não acionadas para forca motriz</option>
+<option value="100000493">Processo de aquisição de gasolina automotiva</option>
+<option value="100000489">Processo de aquisição de gás automotivo</option>
+<option value="100000496">Processo de aquisição de gêneros alimentícios</option>
+<option value="100000499">Processo de aquisição de gêneros alimentícios PPAIS - Lei 14.591/11</option>
+<option value="100000502">Processo de aquisição de imóvel</option>
+<option value="100000504">Processo de aquisição de livros para bibliotecas, publicações, mapas e outras publicações</option>
+<option value="100000506">Processo de aquisição de lubrificante automotivo</option>
+<option value="100000510">Processo de aquisição de materiais e suprimentos de informática</option>
+<option value="100000513">Processo de aquisição de material de acondicionamento e embalagem</option>
+<option value="100000515">Processo de aquisição de material de cama, mesa e banho</option>
+<option value="100000518">Processo de aquisição de material de escritório, papelaria e impressos</option>
+<option value="100000520">Processo de aquisição de material de limpeza</option>
+<option value="100000523">Processo de aquisição de material de uso laboratorial</option>
+<option value="100000526">Processo de aquisição de material de uso veterinário</option>
+<option value="100000530">Processo de aquisição de material e utensílios para refeitório, copa e cozinha</option>
+<option value="100000533">Processo de aquisição de material educativo e cultural</option>
+<option value="100000536">Processo de aquisição de material educativo, cultural e recreativo</option>
+<option value="100000539">Processo de aquisição de material esportivo e de lazer</option>
+<option value="100000544">Processo de aquisição de material instalação elétrica e eletrônica</option>
+<option value="100000547">Processo de aquisição de material médico, hospitalar e odontológico</option>
+<option value="100000548">Processo de aquisição de material para conservação e manutenção de imóveis</option>
+<option value="100000549">Processo de aquisição de material para fotografia e filmagem</option>
+<option value="100000551">Processo de aquisição de material para telecomunicações</option>
+<option value="100000554">Processo de aquisição de material proteção, segurança, socorro e sobrevivência</option>
+<option value="100000555">Processo de aquisição de medicamentos fornecidos por decisão judicial</option>
+<option value="100000558">Processo de aquisição de mobiliário em geral</option>
+<option value="100000559">Processo de aquisição de munições e explosivos</option>
+<option value="100000508">Processo de aquisição de máquinas e motores</option>
+<option value="100000561">Processo de aquisição de outros combustíveis e lubrificantes</option>
+<option value="100000563">Processo de aquisição de outros equipamentos e material permanente</option>
+<option value="100000565">Processo de aquisição de outros materiais de consumo</option>
+<option value="100000567">Processo de aquisição de peças de reposição e acessórios</option>
+<option value="100000569">Processo de aquisição de peças e acessórios e componentes de informática</option>
+<option value="100000571">Processo de aquisição de peças e acessórios para viaturas escolta/custodiados</option>
+<option value="100000573">Processo de aquisição de peças e acessórios para viaturas policiais</option>
+<option value="100000575">Processo de aquisição de peças para viaturas pelo regime de adiantamento</option>
+<option value="100000577">Processo de aquisição de sementes e mudas de plantas</option>
+<option value="100000580">Processo de aquisição de software pronto</option>
+<option value="100000582">Processo de aquisição de trens</option>
+<option value="100000583">Processo de aquisição de veículo</option>
+<option value="100000585">Processo de aquisição de veículos diversos</option>
+<option value="100000587">Processo de aquisição ou contratação de serviços de programas e aplicativos de informática</option>
+<option value="100000589">Processo de arrolamento de bens excedentes, inservíveis ou em desuso</option>
+<option value="100000591">Processo de arrolamento de materiais excedentes, inservíveis ou em desuso</option>
+<option value="100000593">Processo de assinatura de jornais, periódicos e clipagem</option>
+<option value="100000786">Processo de auditoria de contratos de consignatárias</option>
+<option value="100000595">Processo de autorização de curso</option>
+<option value="100000596">Processo de autorização para execução de serviços de telecomunicações</option>
+<option value="100000974">Processo de carteira do lazer</option>
+<option value="100000598">Processo de cessão de uso de imóvel</option>
+<option value="100000788">Processo de compensação previdenciária</option>
+<option value="100000952">Processo de complementação de proventos de aposentadoria</option>
+<option value="100000953">Processo de complementação do valor da pensão</option>
+<option value="100000599">Processo de concessão de aposentadoria especial</option>
+<option value="100000809">Processo de concessão de bolsa de estudo</option>
+<option value="100000975">Processo de concessão de bolsa de estudos reembolsável</option>
+<option value="100000954">Processo de concessão de direitos e benefícios</option>
+<option value="100000601">Processo de concessão de horário de estudante</option>
+<option value="100000757">Processo de concessão de horário especial</option>
+<option value="100000603">Processo de concessão de uso de imóvel</option>
+<option value="100000604">Processo de concessão e incorporação de vantagens pecuniárias</option>
+<option value="100000812">Processo de concurso para admissão em cursos da Academia da Polícia Militar</option>
+<option value="100000789">Processo de consolidação de decisões judiciais</option>
+<option value="100000898">Processo de constituição de Comissão Interna de Prevenção de Acidentes - CIPA</option>
+<option value="100000899">Processo de constituição de Comissão Permanente de Segurança - COPESE</option>
+<option value="100000605">Processo de constituição de comissão, conselho ou grupo de trabalho</option>
+<option value="100000607">Processo de contratação de auditoria externa</option>
+<option value="100000608">Processo de contratação de construção de instalações</option>
+<option value="100000610">Processo de contratação de empresa para emissão de passagens aéreas ou rodoviárias</option>
+<option value="100000612">Processo de contratação de estagiário</option>
+<option value="100000614">Processo de contratação de seguro para bens patrimoniais</option>
+<option value="100000616">Processo de contratação de seguro para veículo oficial</option>
+<option value="100000619">Processo de contratação de serviço de portarias</option>
+<option value="100000623">Processo de contratação de serviços de abastecimento de veículos</option>
+<option value="100000625">Processo de contratação de serviços de alimentação - Fundação CASA</option>
+<option value="100000628">Processo de contratação de serviços de alimentação - SSP ou SAP</option>
+<option value="100000631">Processo de contratação de serviços de alimentação de empregados</option>
+<option value="100000634">Processo de contratação de serviços de alimentação hospitalar</option>
+<option value="100000637">Processo de contratação de serviços de bombeiro civil</option>
+<option value="100000641">Processo de contratação de serviços de comunicação de dados</option>
+<option value="100000644">Processo de contratação de serviços de conservação e manutenção</option>
+<option value="100000647">Processo de contratação de serviços de consultoria</option>
+<option value="100000651">Processo de contratação de serviços de copa e copeiragem</option>
+<option value="100000654">Processo de contratação de serviços de correios</option>
+<option value="100000658">Processo de contratação de serviços de dedetização, desinsetização e desratização</option>
+<option value="100000661">Processo de contratação de serviços de estudos e projetos</option>
+<option value="100000665">Processo de contratação de serviços de execução de obras e instalações</option>
+<option value="100000668">Processo de contratação de serviços de gerenciamento de abastecimento de combustível</option>
+<option value="100000433">Processo de contratação de serviços de gerenciamento de obras</option>
+<option value="100000440">Processo de contratação de serviços de impressão corporativa</option>
+<option value="100000438">Processo de contratação de serviços de imóveis, inclusive instalação hidráulica e elétrica</option>
+<option value="100000442" selected="selected">Processo de contratação de serviços de informática e automação</option>
+<option value="100000445">Processo de contratação de serviços de instal., repar., manut. divisória, portas, cortinas e afins</option>
+<option value="100000447">Processo de contratação de serviços de instalação e manutenção de equipamentos de informática</option>
+<option value="100000461">Processo de contratação de serviços de lavanderia hospitalar</option>
+<option value="100000462">Processo de contratação de serviços de limpeza escolar</option>
+<option value="100000465">Processo de contratação de serviços de limpeza hospitalar</option>
+<option value="100000469">Processo de contratação de serviços de limpeza predial</option>
+<option value="100000472">Processo de contratação de serviços de locação de máquinas e equipamentos diversos</option>
+<option value="100000475">Processo de contratação de serviços de locação de veículos</option>
+<option value="100000477">Processo de contratação de serviços de manutenção de bens móveis e equipamentos</option>
+<option value="100000480">Processo de contratação de serviços de manutenção e conservação de elevadores</option>
+<option value="100000482">Processo de contratação de serviços de manutenção e conservação de equip. de processamento de dados</option>
+<option value="100000485">Processo de contratação de serviços de manutenção e conservação de imóveis</option>
+<option value="100000488">Processo de contratação de serviços de manutenção e conservação de jardins</option>
+<option value="100000491">Processo de contratação de serviços de motofrete</option>
+<option value="100000492">Processo de contratação de serviços de recepção</option>
+<option value="100000495">Processo de contratação de serviços de reparos de equipamentos</option>
+<option value="100000498">Processo de contratação de serviços de transporte de servidores</option>
+<option value="100000500">Processo de contratação de serviços de transporte escolar</option>
+<option value="100000511">Processo de contratação de serviços de vigilância e segurança patrimonial</option>
+<option value="100000514">Processo de contratação de serviços de vigilância eletrônica</option>
+<option value="100000517">Processo de contratação de serviços gráficos</option>
+<option value="100000519">Processo de contratação de serviços técnicos de profissionais de TI</option>
+<option value="100000758">Processo de convocação de prestação de serviço extraordinário e horas-extras</option>
+<option value="100000522">Processo de correição</option>
+<option value="100000524">Processo de credenciamento de pessoal</option>
+<option value="100000744">Processo de criação de cargo</option>
+<option value="100000597">Processo de cálculo de incorporação de vantagens pecuniárias</option>
+<option value="100000787">Processo de cálculo para pagamento de precatório</option>
+<option value="100000790">Processo de desconto de honorário advocatício em Folha de pagamento</option>
+<option value="100000791">Processo de diferença de vencimentos</option>
+<option value="100000861">Processo de dispensa de função-atividade</option>
+<option value="100000792">Processo de dispensa de reposição de vencimentos</option>
+<option value="100000527">Processo de elaboração de ato normativo</option>
+<option value="100000529">Processo de elaboração e execução de plano, programa ou projeto</option>
+<option value="100000901">Processo de eleição da CIPA</option>
+<option value="100000532">Processo de eliminação de documentos</option>
+<option value="100000534">Processo de empréstimo de acervos arquivístico, bibliográfico, museológico ou artístico</option>
+<option value="100000793">Processo de estorno ou reposição</option>
+<option value="100000726">Processo de estudo de política salarial</option>
+<option value="100000727">Processo de estudo para aperfeiçoamento de métodos e técnicas de recrutamento e seleção</option>
+<option value="100000728">Processo de estudo para classificação de cargos e funções</option>
+<option value="100000730">Processo de estudo para subsidiar as políticas de recrutamento e seleção</option>
+<option value="100000731">Processo de estudo sobre a necessidade de cursos</option>
+<option value="100000863">Processo de exoneração do cargo</option>
+<option value="100000746">Processo de extinção de cargo</option>
+<option value="100000976">Processo de financiamento habitacional</option>
+<option value="100000537">Processo de fixação da frota</option>
+<option value="100000538">Processo de formalização e execução de acordo bilateral</option>
+<option value="100000794">Processo de guias de recolhimento de PIS/PASEP</option>
+<option value="100000749">Processo de identificação e classificação de função</option>
+<option value="100000541">Processo de incorporação de décimos</option>
+<option value="100000955">Processo de indeferimento de férias por absoluta necessidade do serviço</option>
+<option value="100000795">Processo de inscrição para consignação em Folha de pagamento</option>
+<option value="100000543">Processo de locação de imóveis</option>
+<option value="100000545">Processo de locação de máquinas e equipamentos</option>
+<option value="100000553">Processo de locação de máquinas reprográficas sem mão de obra</option>
+<option value="100000617">Processo de locação de veículo</option>
+<option value="100000620">Processo de locação de veículos, aeronaves e outros</option>
+<option value="100000622">Processo de locomoção de servidores por meio de aplicativo de transporte</option>
+<option value="100000624">Processo de mobilidade funcional</option>
+<option value="100000627">Processo de outros materiais de consumo decorrente de decisão judicial</option>
+<option value="100000629">Processo de pagamento a quem de direito</option>
+<option value="100000632">Processo de pagamento de anuidade de órgãos ou entidades de classe</option>
+<option value="100000633">Processo de pagamento de contas de utilidade pública</option>
+<option value="100000636">Processo de pagamento de diárias e ajuda de custo</option>
+<option value="100000798">Processo de pagamento de férias e licença-prêmio em pecúnia</option>
+<option value="100000638">Processo de pagamento de impostos e taxas</option>
+<option value="100000640">Processo de pagamento de indenização</option>
+<option value="100000642">Processo de pagamento de multa sobre terrenos e imóveis próprios do Estado</option>
+<option value="100000645">Processo de pagamento de restituição</option>
+<option value="100000799">Processo de pagamento de salário-maternidade</option>
+<option value="100000994">Processo de pedido de justificação para apuração de irregularidades na conduta de oficiais</option>
+<option value="100000801">Processo de pedido de ressarcimento do PIS/PASEP</option>
+<option value="100000956">Processo de pensão mensal ao beneficiário do servidor público estadual</option>
+<option value="100000957">Processo de pensão mensal ao beneficiário do servidor público municipal - CASEM</option>
+<option value="100000995">Processo de perda do posto, da patente e de graduação de praças</option>
+<option value="100000648">Processo de permissão de uso de imóvel</option>
+<option value="100000650">Processo de permuta de bens patrimoniais</option>
+<option value="100000652">Processo de permuta de imóvel</option>
+<option value="100000732">Processo de planejamento anual de concursos públicos e seleção</option>
+<option value="100000655">Processo de prestação de contas de adiantamento</option>
+<option value="100000827">Processo de promoção por bravura</option>
+<option value="100000657">Processo de promoção por merecimento ou antiguidade</option>
+<option value="100000733">Processo de proposta de contratação e qualificação de recursos humanos</option>
+<option value="100000734">Processo de proposta de padrão de lotação</option>
+<option value="100001000">Processo de recolhimento de contribuição para o Plano da Seguridade Social</option>
+<option value="100001001">Processo de recolhimento de contribuição sindical</option>
+<option value="100000660">Processo de recolhimento de documentos</option>
+<option value="100001002">Processo de recolhimento do FGTS</option>
+<option value="100001003">Processo de recolhimento do PIS/PASEP</option>
+<option value="100000662">Processo de recurso relativo ao indeferimento de pedido de informações</option>
+<option value="100000958">Processo de reforma ou transferência para a reserva</option>
+<option value="100000664">Processo de registro cadastral</option>
+<option value="100000666">Processo de registro de preços</option>
+<option value="100000669">Processo de relatório de auditoria do Tribunal de Contas do Estado de São Paulo</option>
+<option value="100000803">Processo de renúncia de proventos</option>
+<option value="100000977">Processo de repasse de pagam. seguro hab. e Fundo de Compensação e Variação Salarial - FCVS</option>
+<option value="100000978">Processo de repasse de pagamento do Fundo de Compensação e Variação Salarial - FCVS</option>
+<option value="100000933">Processo de rescisão de contrato individual de trabalho</option>
+<option value="100000671">Processo de ressarcimento de valores ao Estado</option>
+<option value="100000996">Processo de revisão de Processo administrativo ou de Processo de sindicância</option>
+<option value="100000673">Processo de serviços de fornecimento de gases medicinais</option>
+<option value="100000881">Processo de sindicância de acidente de trabalho</option>
+<option value="100000674">Processo de sindicância disciplinar</option>
+<option value="100000676">Processo de solicitação de instalação de dispositivo eletrônico em veículo oficial</option>
+<option value="100000897">Processo de substituição de ocupante de cargo ou função-atividade</option>
+<option value="100000677">Processo de transferência de acervos arquivístico, bibliográfico, museológico ou artístico</option>
+<option value="100000679">Processo de transferência de documentos</option>
+<option value="100000680">Processo de transferência de imóvel</option>
+<option value="100000751">Processo de transformação de cargo</option>
+<option value="100000804">Processo de unificação de critérios de pagamento</option>
+<option value="100000682">Processo para apuração de denúncias</option>
+<option value="100000805">Processo para cancelamento de inscrição no IAMSPE</option>
+<option value="100000807">Processo para pagamento de benefício da Lei de Guerra</option>
+<option value="100000808">Processo para pagamento de pensão - Segurança Pública</option>
+<option value="100000810">Processo para pagamento de pensão alimentícia</option>
+<option value="100000811">Processo para pagamento de pensão auxílio-acidente</option>
+<option value="100000813">Processo para pagamento de pensão especial</option>
+<option value="100000814">Processo para pagamento de pensão especial aos participantes da Revolução Constitucionalista de 1932</option>
+<option value="100000816">Processo para pagamento de pensão parlamentar</option>
+<option value="100000900">Processo para preenchimento de função-atividade</option>
+<option value="100000903">Processo para provimento de cargo</option>
+<option value="100000774">Processo referente aos programas de recrutamento e seleção</option>
+<option value="100000683">Processo relativo ao programa social de qualidade de vida</option>
+<option value="100000818">Processo relatório de gratificação de Gestão e Controle do Erário Estadual - GECE de Autarquia</option>
+<option value="100000819">Processo relatório de gratificação de representação de Autarquia</option>
+<option value="100000685">Processo Único de Contagem de Tempo - PUCT</option>
+<option value="100000902">Programa bienal de segurança e medicina do trabalho</option>
+<option value="100000882">Programa de Controle Médico de Saúde Ocupacional - PCMSO</option>
+<option value="100000883">Programa de Prevenção de Riscos Ambientais - PPRA</option>
+<option value="100000929">Programa de atividades recreativas e pedagógicas</option>
+<option value="100000927">Prontuário da criança</option>
+<option value="100000829">Prontuário do estagiário</option>
+<option value="100000725">Prontuário funcional</option>
+<option value="100000884">Prontuário médico do funcionário ou servidor público</option>
+<option value="100000916">Prontuário social</option>
+<option value="100000689">Proposta Orçamentária Setorial - POS</option>
+<option value="100000907">Proposta anual de trabalho</option>
+<option value="100000687">Proposta orçamentária das empresas</option>
+<option value="100000691">Proposta técnica</option>
+<option value="100000777">Provas e gabaritos de concurso público ou processo seletivo</option>
+<option value="100000752">Quadro anual de pessoal, de cargos criados, providos e vagos</option>
+<option value="100000753">Quadro de cargos e funções</option>
+<option value="100000754">Quadro de classificação de cargos e funções</option>
+<option value="100000838">Quadro demonstrativo da Folha de pagamento de Autarquias e Fundações</option>
+<option value="100000959">Quadro demonstrativo de pagamento de férias</option>
+<option value="100000760">Quadro demonstrativo de registro de frequência</option>
+<option value="100000960">Recibo de 13o salário</option>
+<option value="100000961">Recibo de abono de férias</option>
+<option value="100000962">Recibo de adiantamento de 13º salário</option>
+<option value="100000963">Recibo de entrega de auxílio-alimentação</option>
+<option value="100000937">Recibo de entrega de comunicado de dispensa</option>
+<option value="100000940">Recibo de entrega de requerimento do seguro-desemprego</option>
+<option value="100000964">Recibo de entrega de vale-transporte</option>
+<option value="100000990">Recibo de entrega do demonstrativo da avaliação de desempenho</option>
+<option value="100000965">Recibo de gozo de férias</option>
+<option value="100000966">Recibo de pagamento de férias</option>
+<option value="100000967">Recibo de pagamento de salário-educação</option>
+<option value="100000693">Regimento</option>
+<option value="100000761">Registro de ponto</option>
+<option value="100000930">Registro fotográfico de evento infantil</option>
+<option value="100000695">Regulamento</option>
+<option value="100000841">Relatório anual da Folha de pagamento</option>
+<option value="100000703">Relatório anual de atividades do órgão, entidade ou empresa</option>
+<option value="100000909">Relatório anual de avaliação das atividades de serviço social</option>
+<option value="100000842">Relatório com o total de consignação por entidade</option>
+<option value="100000844">Relatório com quantidade de holleriths</option>
+<option value="100000845">Relatório comparativo da Folha de pagamento</option>
+<option value="100000704">Relatório contábil</option>
+<option value="100000904">Relatório da Comissão Permanente de Segurança</option>
+<option value="100000846">Relatório de 1/3 de férias por Secretaria</option>
+<option value="100000706">Relatório de acompanhamento - acordo</option>
+<option value="100000708">Relatório de acompanhamento - convênio</option>
+<option value="100000709">Relatório de acompanhamento - protocolo intenções</option>
+<option value="100000710">Relatório de acompanhamento - termo cooperação</option>
+<option value="100000711">Relatório de acompanhamento - termo parceria</option>
+<option value="100000712">Relatório de atividades</option>
+<option value="100000848">Relatório de auditoria da Folha de pagamento</option>
+<option value="100000849">Relatório de auditoria do Sistema de Despesa de Pessoal do Estado - ACCA</option>
+<option value="100000969">Relatório de auxílio-alimentação</option>
+<option value="100000815">Relatório de avaliação de curso de capacitação ou qualificação técnica</option>
+<option value="100000851">Relatório de consolidação de despesa da Folha de pagamento - CLD-045</option>
+<option value="100000852">Relatório de custeio por entidade consignatória</option>
+<option value="100000817">Relatório de desempenho de participantes de cursos</option>
+<option value="100000946">Relatório de débito</option>
+<option value="100000939">Relatório de enfermagem</option>
+<option value="100000853">Relatório de histórico funcional</option>
+<option value="100000854">Relatório de liberação financeira às Autarquias e Tribunais</option>
+<option value="100000839">Relatório de movimentação de funcionários</option>
+<option value="100000856">Relatório de ordens de crédito complementar emitidas mensalmente</option>
+<option value="100000857">Relatório de pagamento de pró-labore</option>
+<option value="100000859">Relatório de pagamento de substituição de função</option>
+<option value="100000860">Relatório de pagamentos não efetuados</option>
+<option value="100000735">Relatório de pesquisa sobre mercado de trabalho</option>
+<option value="100000862">Relatório de recolhimento de encargos sociais</option>
+<option value="100000864">Relatório de retribuição de função de ensino</option>
+<option value="100000713">Relatório de reunião</option>
+<option value="100000865">Relatório de vencimentos e descontos</option>
+<option value="100000918">Relatório de visita domiciliar</option>
+<option value="100000866">Relatório diário de operações realizadas</option>
+<option value="100000979">Relatório do Fundo de Compensação e Variação Salarial - FCVS</option>
+<option value="100000885">Relatório do Programa de Controle Médico de Saúde Ocupacional - PCMSO</option>
+<option value="100000886">Relatório do Programa de Prevenção de Riscos Ambientais - PPRA</option>
+<option value="100000991">Relatório dos processos avaliatórios</option>
+<option value="100000867">Relatório mensal de 13º salário</option>
+<option value="100000755">Relatório mensal de cargos e funções</option>
+<option value="100000821">Relatório mensal de custos com cursos</option>
+<option value="100000941">Relatório mensal de saúde da criança</option>
+<option value="100000714">Relatório para consulta das prestações de contas</option>
+<option value="100000868">Relatório resumido de consolidação de despesa da Folha de pagamento - CLD-060</option>
+<option value="100000736">Relatório técnico de dimensionamento do quadro de pessoal</option>
+<option value="100001004">Relação Anual de Informações Sociais - RAIS</option>
+<option value="100000780">Relação das admissões por concurso público ou processo seletivo</option>
+<option value="100000782">Relação das contratações por tempo determinado</option>
+<option value="100000769">Relação de apostilas retificatórias de vantagens decorrentes de decisão judicial</option>
+<option value="100000770">Relação de atos concessórios de aposentadoria</option>
+<option value="100000772">Relação de atos concessórios de complementação de proventos de aposentadoria</option>
+<option value="100000773">Relação de atos concessórios de complementação do valor da pensão</option>
+<option value="100000775">Relação de atos concessórios de pensão dos servidores civis e militares</option>
+<option value="100000776">Relação de atos concessórios de reforma ou transferência para a reserva</option>
+<option value="100001005">Relação de contribuição sindical, assistencial e confederativa</option>
+<option value="100000840">Relação de crédito bancário</option>
+<option value="100000697">Relação de eliminação de documentos</option>
+<option value="100000968">Relação de funcionários afastados</option>
+<option value="100000699">Relação de recolhimento de documentos</option>
+<option value="100000763">Relação de servidores com ocorrências</option>
+<option value="100000783">Relação de servidores e funcionários cedidos à Organização Social</option>
+<option value="100000700">Relação de substituições remuneradas</option>
+<option value="100000702">Relação de transferência de documentos</option>
+<option value="100000715">Requerimento</option>
+<option value="100000717">Requerimento RH</option>
+<option value="100000716">Requerimento de concessão de horário-estudante</option>
+<option value="100000869">Requerimento de isenção de contribuição previdenciária</option>
+<option value="100000820">Requerimento de revisão de pagamento</option>
+<option value="100000970">Requerimento para gozo de férias indeferidas</option>
+<option value="100000822">Requerimento para pagamento de auxílio-funeral</option>
+<option value="100000718">Requisição de serviços técnicos</option>
+<option value="100000719">Resolução</option>
+<option value="100000971">Solicitação da 1ª parcela do 13º salário</option>
+<option value="100000972">Solicitação de abono de férias</option>
+<option value="100000947">Termo aditivo ao contrato individual de trabalho</option>
+<option value="100000720">Termo de autorização de uso de imagem</option>
+<option value="100000721">Termo de recolhimento de documentos</option>
+<option value="100000948">Termo de rescisão de contrato individual de trabalho</option>
+<option value="100000722">Termo de responsabilidade pelo uso de bens patrimoniais</option>
+<option value="100000723">Termo de transferência de documentos</option>
+<option value="100000724">Voto</option>
+<option value="100000931">Vídeo de evento infantil</option>
+            </select>
+        </div>
+
+        <div id="divDescricao" class="infraAreaDados" style="height:5em;">
+            <label id="lblDescricao" for="txtDescricao" accesskey="" class="infraLabelOpcional">Especificação:</label>
+            <input type="text" id="txtDescricao" name="txtDescricao"
+                   onkeypress="return infraMascaraTexto(this,event,100);" maxlength="100" class="infraText"
+                   value="CAU contrato"
+                   tabindex="502"/>
+        </div>
+
+        <div id="divTipoPrioridade" class="infraAreaDados" style="height:5em;">
+            <label id="lblTipoPrioridade" for="selTipoPrioridade" accesskey="" class="infraLabelOpcional">Prioridade:</label>
+            <select id="selTipoPrioridade" name="selTipoPrioridade"
+                    class="infraSelect" tabindex="503">
+                <option value="null" selected="selected">&nbsp;</option>
+<option value="1">Atendimento TEA</option>
+<option value="2">URGENTE</option>
+<option value="3">MÉDIO</option>
+<option value="4">BAIXA</option>
+<option value="5">IMETIADA</option>
+<option value="6">PRONTO SOCORRROOOO</option>
+            </select>
+        </div>
+
+        <div id="divAssuntos" class="infraAreaDados" style="height:10em;">
+            <label id="lblAssuntos" for="txtAssunto" accesskey="u" class="infraLabelObrigatorio">Classificação por
+                Ass<span class="infraTeclaAtalho">u</span>ntos:</label>
+            <input type="text" id="txtAssunto" name="txtAssunto" class="infraText"
+                   tabindex="504"/>
+            <input type="hidden" id="hdnIdAssunto" name="hdnIdAssunto" class="infraText" value=""/>
+            <select id="selAssuntos" name="selAssuntos" class="infraSelect" multiple="multiple"
+                    tabindex="505">
+                <option value="1287">004.01.05.002 - Processo de contratação de serviço de informática e automação</option>
+            </select>
+            <div id="divOpcoesAssuntos">
+                <img id="imgPesquisarAssuntos" onclick="objLupaAssuntos.selecionar(700,500);"
+                     src="/infra_css/svg/pesquisar.svg" alt="Pesquisa de Assuntos"
+                     title="Pesquisa de Assuntos" class="infraImg"
+                     tabindex="506"/>
+                <img id="imgRemoverAssuntos" onclick="objLupaAssuntos.remover();"
+                     src="/infra_css/svg/remover.svg" alt="Remover Assuntos Selecionados"
+                     title="Remover Assuntos Selecionados" class="infraImg"
+                     tabindex="507"/>
+                <br/>
+                <img id="imgAssuntosAcima" onclick="objLupaAssuntos.moverAcima();"
+                     src="/infra_css/svg/mover_acima.svg" alt="Mover Acima Assunto Selecionado"
+                     title="Mover Acima Assunto Selecionado" class="infraImg"
+                     tabindex="508"/>
+                <img id="imgAssuntosAbaixo" onclick="objLupaAssuntos.moverAbaixo();"
+                     src="/infra_css/svg/mover_abaixo.svg" alt="Mover Abaixo Assunto Selecionado"
+                     title="Mover Abaixo Assunto Selecionado" class="infraImg"
+                     tabindex="509"/>
+            </div>
+        </div>
+
+        <div id="divInteressados" class="infraAreaDados" style="height:10em;">
+            <label id="lblInteressadosProcedimento" for="txtInteressadoProcedimento" accesskey="I"
+                   class="infraLabelOpcional"><span class="infraTeclaAtalho">I</span>nteressados:</label>
+            <input type="text" id="txtInteressadoProcedimento" name="txtInteressadoProcedimento" class="infraText"
+                   tabindex="510"/>
+            <input type="hidden" id="hdnIdInteressadoProcedimento" name="hdnIdInteressadoProcedimento" class="infraText"
+                   value=""/>
+            <select id="selInteressadosProcedimento" name="selInteressadosProcedimento" class="infraSelect"
+                    multiple="multiple" tabindex="511">
+                <option value="100013362">CGE-CAUD</option>
+<option value="100014318">Cliente 1</option>
+            </select>
+            <div id="divOpcoesInteressados">
+                <img id="imgSelecionarGrupo" onclick="objLupaInteressados.selecionar(700,500);"
+                     src="/infra_css/svg/pesquisar.svg"
+                     title="Selecionar Contatos para Interessados" alt="Selecionar Contatos para Interessados"
+                     class="infraImg" tabindex="512"/>
+                <img id="imgAlterarInteressado" onclick="objLupaInteressados.alterar();"
+                     src="/infra_css/svg/alterar.svg"
+                     alt="Consultar/Alterar Dados do Interessado Selecionado"
+                     title="Consultar/Alterar Dados do Interessado Selecionado" class="infraImg"
+                     tabindex="513"/>
+                <img id="imgRemoverInteressados" onclick="objLupaInteressados.remover();"
+                     src="/infra_css/svg/remover.svg" alt="Remover Interessados Selecionados"
+                     title="Remover Interessados Selecionados" class="infraImg"
+                     tabindex="514"/>
+                <br/>
+                <img id="imgInteressadosAcima" onclick="objLupaInteressados.moverAcima();"
+                     src="/infra_css/svg/mover_acima.svg"
+                     alt="Mover Acima Interessado Selecionado" title="Mover Acima Interessado Selecionado"
+                     class="infraImg" tabindex="515"/>
+                <img id="imgInteressadosAbaixo" onclick="objLupaInteressados.moverAbaixo();"
+                     src="/infra_css/svg/mover_abaixo.svg"
+                     alt="Mover Abaixo Interessado Selecionado" title="Mover Abaixo Interessado Selecionado"
+                     class="infraImg" tabindex="516"/>
+            </div>
+        </div>
+
+        <div id="divInteressadoUsuario" class="infraAreaDados" style="height:5em;">
+            <label id="lblInteressadoUsuario" for="txtInteressadoUsuario" accesskey="I"
+                   class="infraLabelObrigatorio"><span class="infraTeclaAtalho">I</span>nteressado:</label>
+            <input type="text" id="txtInteressadoUsuario" name="txtInteressadoUsuario" class="infraText"
+                   tabindex="517"/>
+            <input type="hidden" id="hdnIdInteressadoUsuario" name="hdnIdInteressadoUsuario" class="infraText"
+                   value=""/>
+        </div>
+
+        <div id="divObservacoes" class="infraAreaDados" style="height:7em;">
+            <label id="lblObservacoes" for="txaObservacoes" accesskey="O" class="infraLabelOpcional"><span
+                    class="infraTeclaAtalho">O</span>bservações desta unidade:</label>
+            <textarea id="txaObservacoes" name="txaObservacoes" class="infraTextarea" rows="2"
+                      onkeypress="return infraLimitarTexto(this,event,1000);"
+                      tabindex="518"></textarea>
+        </div>
+
+        
+        <div id="divNivelAcesso" class="infraAreaDados">
+<fieldset id="fldNivelAcesso" class="infraFieldset">
+<legend class="infraLegend">Nível de Acesso</legend>
+
+<div id="divOptSigiloso" class="infraDivRadio">
+  <input disabled="disabled" type="radio" name="rdoNivelAcesso" id="optSigiloso" onchange="alterarNivelAcesso()" value="2"  class="infraRadio" tabindex="1000" />
+  <span disabled="disabled" id="spnSigiloso"><label id="lblSigiloso" for="optSigiloso" class="infraLabelRadio">Sigiloso</label><label>&nbsp;</label></span>
+</div>
+
+  <select id="selGrauSigilo" name="selGrauSigilo" class="infraSelect">
+<option value="null" selected="selected">&nbsp;</option>
+<option value="U">Ultrassecreto</option>
+<option value="S">Secreto</option>
+<option value="R">Reservado</option>
+  </select>
+<div id="divOptRestrito" class="infraDivRadio">
+  <input  type="radio" name="rdoNivelAcesso" id="optRestrito" onchange="alterarNivelAcesso()" value="1" checked="checked" class="infraRadio" tabindex="1000" />
+  <span  id="spnRestrito"><label id="lblRestrito" for="optRestrito" class="infraLabelRadio">Restrito</label></span>
+</div>
+
+<div id="divOptPublico" class="infraDivRadio">
+  <input  type="radio" name="rdoNivelAcesso" id="optPublico" onchange="alterarNivelAcesso()" value="0"  class="infraRadio" tabindex="1000" />
+  <span  id="spnPublico"><label id="lblPublico" for="optPublico" class="infraLabelRadio">Público</label></span>
+</div>
+
+<label id="lblHipoteseLegal" for="selHipoteseLegal" accesskey="" class="infraLabelObrigatorio">Hipótese Legal:</label>
+<select id="selHipoteseLegal" name="selHipoteseLegal" class="infraSelect">
+<option value="null">&nbsp;</option>
+<option value="25">Apuração preliminar (Artigo 265 da Lei Estadual nº 10.261/1968)</option>
+<option value="43">Atividade empresarial (Artigo 5º, § 2º, do Decreto Federal nº 7.724/2012)</option>
+<option value="26">Controle interno (Artigo 26, § 3º, da Lei Federal nº 10.180/2001)</option>
+<option value="27">Direito autoral (Artigo 24, III, da Lei Federal nº 9.610/1998)</option>
+<option value="28">Documento preparatório (Artigo 7º, § 3º, da Lei Federal nº 12.527/2011)</option>
+<option value="29">Informação pessoal (Artigo 31 da Lei Federal nº 12.527/2011)</option>
+<option value="30">Interceptação de comunicações telefônicas (Artigo 8º da Lei Federal nº 9.296/1996)</option>
+<option value="32">Investigação e prevenção de acidentes aeronáuticos (Artigo 88-J da Lei Federal nº 7.565/1986)</option>
+<option value="31">Investigação preliminar sobre mercado mobiliário (Artigo 9º, § 2º, da Lei Federal nº 6.385/1976)</option>
+<option value="33">Materiais e sistemas sigiloso (Artigo 45 do Decreto Federal nº 7845/2012)</option>
+<option value="34">Necessidade de conhecer (Artigo 36, § 1º, do Decreto Estadual nº 58.052/201)</option>
+<option value="36">Processo administrativo (Artigo 266 da Lei Estadual nº 10.261/1968)</option>
+<option value="35">Propriedade intelectual de programa de computador (Artigo 2º da Lei Federal nº 9.609/1998)</option>
+<option value="38">Segredo de justiça no processo civil (Artigo 189 da Lei Federal nº 13.105/2015)</option>
+<option value="39">Segredo de justiça no processo penal (Artigo 201, § 6º, do Decreto-Lei Federal nº 3.689/)</option>
+<option value="37">Segredo industrial (Artigo 195, XIV, Lei Federal nº 9.279/1996)</option>
+<option value="44">Sigilo bancário (Artigo 1º da Lei Complementar nº 105/2001)</option>
+<option value="45" selected="selected">Sigilo comercial (Artigo 155, § 2º, da Lei nº 6.404/1976)</option>
+<option value="46">Sigilo contábil (Artigo 1.190 da Lei Federal nº 10.406/2002)</option>
+<option value="47">Sigilo das comunicações (Artigo 3º, V, da Lei Federal nº 9.472/1997)</option>
+<option value="41">Sigilo do inquérito policial (Artigo 20 do Decreto-Lei Federal n° 3.689/1941)</option>
+<option value="42">Sigilo do procedimento administrativo disciplinar (Artigo 150 da Lei Federal nº 8.112/1990)</option>
+<option value="48">Sigilo empresarial (Artigo 169 da Lei Federal nº 11.101/2005)</option>
+<option value="40">Sigilo estratégico, comercial ou industrial de emp (Artigo 86, § 4º, da Lei Federal nº 13.303/2016)</option>
+<option value="49">Sigilo fiscal (Artigo 198, caput, da Lei Federal nº 5.172/1966)</option>
+<option value="50">Sigilo médico (Artigos 73 a 79 da Resolução CFM nº 2.217/2018)</option>
+<option value="51">Sindicância (Artigo 266 da Lei Estadual nº 10.261/1968)</option>
+<option value="52">Tratados, acordos e atos internacionais (Artigo 36 da Lei Federal nº 12.527/2011)</option>
+</select>
+
+
+
+</fieldset>
+</div>
+
+
+        <input type="hidden" id="hdnFlagProcedimentoCadastro" name="hdnFlagProcedimentoCadastro" value="1"/>
+        <input type="hidden" id="hdnIdTipoProcedimento" name="hdnIdTipoProcedimento"
+               value="100000442"/>
+        <input type="hidden" id="hdnNomeTipoProcedimento" name="hdnNomeTipoProcedimento"
+               value=""/>
+        <input type="hidden" id="hdnAssuntos" name="hdnAssuntos" value=""/>
+        <input type="hidden" id="hdnInteressadosProcedimento" name="hdnInteressadosProcedimento"
+               value=""/>
+        <input type="hidden" id="hdnIdProcedimento" name="hdnIdProcedimento"
+               value="148265"/>
+        <input type="hidden" id="hdnProtocoloFormatado" name="hdnProtocoloFormatado"
+               value="99906.713-630.000032/2025-82"/>
+        <input type="hidden" id="hdnStaNivelAcessoGlobal" name="hdnStaNivelAcessoGlobal"
+               value="1"/>
+        <input type="hidden" id="hdnSinIndividual" name="hdnSinIndividual" value="N"/>
+        <input type="hidden" id="hdnIdHipoteseLegalSugestao" name="hdnIdHipoteseLegalSugestao" value=""/>
+        <input type="hidden" id="hdnDtaGeracao" name="hdnDtaGeracao" value="10/07/2025"/>
+
+        <input type="hidden" id="hdnContatoObject" name="hdnContatoObject" value=""/>
+        <input type="hidden" id="hdnContatoIdentificador" name="hdnContatoIdentificador" value=""/>
+
+        <input type="hidden" id="hdnAssuntoIdentificador" name="hdnAssuntoIdentificador" value=""/>
+
+    </form>
+    <br/>
+<div id="divInfraBarraComandosInferior" class="infraBarraComandos">
+<br /><a id="ancVoltarArvoreInferior" href="javascript:seiVoltarArvoreProcesso()" class="btn" style="display:none;" title="Voltar para a Árvore do Processo" tabindex="451">
+          <img src="/infra_css/svg/voltar.svg?4.1.5-2.29.0">
+        </a>
+<button tabindex="32701" type="button" onclick="confirmarDados()" accesskey="S" name="btnSalvar" id="btnSalvar" value="Salvar" class="infraButton" style="width:10em;"><span class="infraTeclaAtalho">S</span>alvar</button>
+</div>
+</div>
+</div>
+</div>
+<input type="hidden" id="hdnInfraPrefixoCookie" name="hdnInfraPrefixoCookie" value="GESP-TREINAMENTO_SEI_pedro_soares"/>
+<div id="infraDivImpressao" class="infraImpressao"></div>
+<div id="infraBs-xs" class="d-none d-xs-block"></div>
+<div id="infraBs-sm" class="d-none d-sm-block"></div>
+<div id="infraBs-md" class="d-none d-md-block"></div>
+<div id="infraBs-lg" class="d-none d-lg-block"></div>
+</body>
+</html>

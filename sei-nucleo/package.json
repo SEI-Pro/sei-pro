@@ -1,0 +1,20 @@
+{
+  "name": "sei-nucleo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Biblioteca do SEI para o SEI Pro: sessao, formularios, links assinados e operacoes de dominio, sem UI e sem jQuery",
+  "scripts": {
+    "build": "npm run verificar && node build.mjs",
+    "tipos": "tsc --noEmit",
+    "verificar": "tsx tests/verificar.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}
