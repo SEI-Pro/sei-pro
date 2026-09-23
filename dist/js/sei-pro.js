@@ -1169,6 +1169,25 @@ function getNewTabProcesso() {
                             '</a>'
                             : '';
 
+        // O Estudio de Fluxo e uma PAGINA em tela cheia, nao um painel lateral: o
+        // Chrome mostra um painel por vez, e abrir o estudio na sidebar fecharia o
+        // agente. Por isso aqui vale o link fixo das Ferramentas de PDF, e nao o
+        // postMessage do botao do agente.
+        //
+        // Icone SVG proprio pelo mesmo motivo do agente e das Ferramentas de PDF:
+        // os botoes vizinhos usam GIF 1x1 + <i> do Font Awesome com `color: #fff`
+        // em estilo inline, que vence a regra do tema. No SEI 4.1+/5, cuja barra
+        // de acoes tem fundo BRANCO, esse icone fica branco sobre branco e some --
+        // sem erro nenhum, so um espaco vazio com tooltip.
+        var htmlBtnEstudioFluxo = (restrictConfigValue('estudiofluxo')) ?
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_estudiofluxo" href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Est\u00FAdio de Fluxo\')"')+' style="position: relative; margin-left: -3px;">'+
+                            '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="Est\u00FAdio de Fluxo" title="Est\u00FAdio de Fluxo">'+
+                            (iconLabel ?
+                            '    <span class="newIconTitle">Est\u00FAdio de Fluxo</span>'+
+                            '' : '')+
+                            '</a>'
+                            : '';
+
         var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
@@ -1202,7 +1221,7 @@ function getNewTabProcesso() {
                     '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
                     '' : '')+
 
-                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnFerramentasPdf+htmlBtnAgenteIA+htmlBtnNaoLido;
+                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnFerramentasPdf+htmlBtnAgenteIA+htmlBtnEstudioFluxo+htmlBtnNaoLido;
                     
         $(`${divComandos}${infraBarraComandos}`).each(function(){
             var _this = $(this);
@@ -1212,6 +1231,7 @@ function getNewTabProcesso() {
                 // remove -- senao duplica a cada reexecucao desta funcao.
                 _this.find('.iconPro_ferramentaspdf').remove();
                 _this.find('.iconPro_agenteia').remove();
+                _this.find('.iconPro_estudiofluxo').remove();
                 _this.append(htmlBtn);            
         });
     }, 500);
