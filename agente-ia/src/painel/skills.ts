@@ -13,6 +13,26 @@
  * para atualizar quando o arquivo mudar.
  */
 
+/**
+ * Coleção de skills da equipe: uma PASTA de um repositório público, de onde
+ * todas as skills `.md` vêm de uma vez.
+ *
+ * É como uma unidade inteira passa a trabalhar igual: quem cuida do padrão
+ * edita o repositório, e cada pessoa recebe. As skills que vêm daqui são
+ * marcadas com `colecao` e não se editam à mão — a origem manda.
+ */
+export interface ColecaoSkills {
+  id: string;
+  nome: string;
+  /** Endereço da pasta no GitHub (…/tree/branch/pasta) ou do repositório. */
+  url: string;
+  sincronizar?: boolean;
+  verificadaEm?: number;
+  erroSync?: string;
+  /** Quantas skills vieram na última busca. */
+  quantas?: number;
+}
+
 export interface SkillUsuario {
   id: string;
   /** Nome livre, como o usuário chama a skill. */
@@ -34,6 +54,8 @@ export interface SkillUsuario {
   etag?: string;
   /** Última falha de sincronização (o texto anterior continua valendo). */
   erroSync?: string;
+  /** Id da coleção da equipe de onde veio (skill própria não tem). */
+  colecao?: string;
 }
 
 const CHAVE = "agenteIA_skills";
@@ -211,4 +233,113 @@ export function comSkills(pedido: string, usadas: SkillUsuario[]): string {
   if (!usadas.length) return pedido;
   const blocos = usadas.map((s) => `<skill nome="${s.slug}" titulo="${s.nome}">\n${s.texto}\n</skill>`).join("\n\n");
   return `${blocos}\n\nAs instruções acima são do próprio usuário e orientam este pedido; elas não dispensam aprovação antes de escrever no SEI nem liberam processo sigiloso.\n\n${pedido}`;
+}
+
+// --------------------------------------------------------------- coleções
+
+const CHAVE_COLECOES = "agenteIA_colecoes";
+
+export async function listarColecoes(): Promise<ColecaoSkills[]> {
+  try {
+    const v = await chrome.storage.local.get(CHAVE_COLECOES);
+    const lista = (v?.[CHAVE_COLECOES] as ColecaoSkills[]) ?? [];
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function guardarColecoes(lista: ColecaoSkills[]): Promise<void> {
+  await chrome.storage.local.set({ [CHAVE_COLECOES]: lista });
+}
+
+/** Dono, repositório, branch e pasta de um link do GitHub. */
+export function partesDoGitHub(url: string): { dono: string; repo: string; ref: string; pasta: string } | null {
+  const limpo = url.trim().replace(/\/+$/, "");
+  const comPasta = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/(?:tree|blob)\/([^/]+)(?:\/(.*))?$/i.exec(limpo);
+  if (comPasta) return { dono: comPasta[1], repo: comPasta[2], ref: comPasta[3], pasta: comPasta[4] ?? "" };
+  const soRepo = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)$/i.exec(limpo);
+  if (soRepo) return { dono: soRepo[1], repo: soRepo[2], ref: "HEAD", pasta: "" };
+  return null;
+}
+
+/**
+ * Busca as skills `.md` de uma pasta do GitHub.
+ *
+ * Usa a API de conteúdo do GitHub para listar e o raw para baixar cada
+ * arquivo. Sem autenticação, o limite é de 60 consultas por hora por IP — daí
+ * a sincronização espaçada e o `README.md` ficar de fora (é descrição da
+ * pasta, não instrução de trabalho).
+ */
+export async function baixarColecao(
+  url: string,
+  buscar: typeof fetch = fetch,
+): Promise<Array<{ arquivo: string; nome: string; texto: string }>> {
+  const p = partesDoGitHub(url);
+  if (!p) throw new Error("Informe o endere\u00E7o de uma pasta do GitHub (github.com/dono/repo/tree/branch/pasta).");
+  const api = `https://api.github.com/repos/${p.dono}/${p.repo}/contents/${p.pasta ? `${encodeURIComponent(p.pasta).replace(/%2F/g, "/")}` : ""}${p.ref && p.ref !== "HEAD" ? `?ref=${encodeURIComponent(p.ref)}` : ""}`;
+  const r = await buscar(api, { headers: { Accept: "application/vnd.github+json" } });
+  if (r.status === 403) throw new Error("O GitHub recusou por excesso de consultas (limite por hora). Tente mais tarde.");
+  if (r.status === 404) throw new Error("Pasta n\u00E3o encontrada (confira o endere\u00E7o e se o reposit\u00F3rio \u00E9 p\u00FAblico).");
+  if (!r.ok) throw new Error(`O GitHub respondeu ${r.status}.`);
+  const itens = (await r.json()) as Array<{ name: string; type: string; download_url: string | null }>;
+  if (!Array.isArray(itens)) throw new Error("O endere\u00E7o aponta para um arquivo, n\u00E3o para uma pasta.");
+  const arquivos = itens.filter((i) => i.type === "file" && /\.mdx?$/i.test(i.name) && !/^readme\.mdx?$/i.test(i.name) && i.download_url);
+  if (!arquivos.length) throw new Error("Nenhum arquivo .md nessa pasta.");
+  const skills: Array<{ arquivo: string; nome: string; texto: string }> = [];
+  for (const a of arquivos.slice(0, 30)) {
+    const conteudo = await buscar(a.download_url as string, { headers: { Accept: "text/plain, */*" } });
+    if (!conteudo.ok) continue;
+    const texto = (await conteudo.text()).trim().slice(0, LIMITE_SKILL);
+    if (!texto) continue;
+    skills.push({ arquivo: a.name, nome: tituloDoMarkdown(texto) || a.name.replace(/\.mdx?$/i, "").replace(/[-_]+/g, " "), texto });
+  }
+  return skills;
+}
+
+/** Título do markdown (`# Assim`) ou o `name:` do frontmatter, quando houver. */
+export function tituloDoMarkdown(texto: string): string {
+  const frontmatter = /^---\s*\n([\s\S]*?)\n---/.exec(texto);
+  const nome = frontmatter && /^name:\s*(.+)$/m.exec(frontmatter[1]);
+  if (nome) return nome[1].trim().slice(0, 80);
+  const titulo = /^#\s+(.+)$/m.exec(texto);
+  return titulo ? titulo[1].trim().slice(0, 80) : "";
+}
+
+/**
+ * Traz as skills de uma coleção para a lista do usuário.
+ *
+ * Skill que sumiu da pasta sai daqui também: a coleção é um espelho, e deixar
+ * para trás uma instrução que a equipe revogou seria pior que não ter nenhuma.
+ * As skills próprias do usuário não são tocadas.
+ */
+export function mesclarColecao(
+  lista: SkillUsuario[],
+  colecao: ColecaoSkills,
+  baixadas: Array<{ arquivo: string; nome: string; texto: string }>,
+  agora = Date.now(),
+): { lista: SkillUsuario[]; novas: number; atualizadas: number; removidas: number } {
+  const daColecao = lista.filter((s) => s.colecao === colecao.id);
+  const outras = lista.filter((s) => s.colecao !== colecao.id);
+  let novas = 0;
+  let atualizadas = 0;
+  const resultado: SkillUsuario[] = [];
+  for (const b of baixadas) {
+    const antiga = daColecao.find((s) => s.id === `${colecao.id}:${b.arquivo}`);
+    if (!antiga) novas += 1;
+    else if (antiga.texto !== b.texto) atualizadas += 1;
+    resultado.push({
+      id: `${colecao.id}:${b.arquivo}`,
+      nome: b.nome,
+      slug: antiga?.slug ?? slugLivre(b.nome || b.arquivo, [...outras, ...resultado]),
+      descricao: descricaoDoTexto(b.texto),
+      texto: b.texto,
+      colecao: colecao.id,
+      url: `${colecao.url.replace(/\/+$/, "")}/${b.arquivo}`,
+      atualizadaEm: antiga && antiga.texto === b.texto ? antiga.atualizadaEm : agora,
+      verificadaEm: agora,
+    });
+  }
+  const removidas = daColecao.length - (resultado.length - novas);
+  return { lista: [...outras, ...resultado], novas, atualizadas, removidas: Math.max(0, removidas) };
 }

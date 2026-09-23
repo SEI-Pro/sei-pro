@@ -518,3 +518,6 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .menu button.focado { background: var(--superficie-2); }
 
 .skill-texto small.falha { color: var(--atencao); white-space: normal; }
+
+.skill.colecao { border-left: 3px solid var(--acento); }
+.etiqueta { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); background: var(--superficie-2); border-radius: 999px; padding: 2px 7px; }

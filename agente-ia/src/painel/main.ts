@@ -23,7 +23,25 @@ import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
-import { baixarSkillSeMudou, comSkills, descricaoDoTexto, guardarSkills, listarSkills, LIMITE_SKILL, sincronizarSkills, skillsCitadas, slugLivre, urlCrua, type SkillUsuario } from "./skills";
+import {
+  baixarColecao,
+  baixarSkillSeMudou,
+  comSkills,
+  descricaoDoTexto,
+  guardarColecoes,
+  guardarSkills,
+  listarColecoes,
+  listarSkills,
+  LIMITE_SKILL,
+  mesclarColecao,
+  partesDoGitHub,
+  sincronizarSkills,
+  skillsCitadas,
+  slugLivre,
+  urlCrua,
+  type ColecaoSkills,
+  type SkillUsuario,
+} from "./skills";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
@@ -90,6 +108,9 @@ function carimboDeTempo(ms: number): HTMLElement {
 }
 
 
+/** A pasta da equipe é conferida com menos frequência: a API do GitHub limita por hora. */
+const INTERVALO_COLECAO = 12 * 60 * 60 * 1000;
+
 /** "agora", "há 3 h", "ontem": quando a skill foi conferida pela última vez. */
 function quando(ms?: number): string {
   if (!ms) return "ainda n\u00E3o conferida";
@@ -129,6 +150,9 @@ class App {
   /** Skills do usuário (configurações), disponíveis por `/slug` e por `skill_ler`. */
   private skills: SkillUsuario[] = [];
 
+  /** Pastas do GitHub que trazem as skills da equipe. */
+  private colecoes: ColecaoSkills[] = [];
+
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
   private chaveTela = "";
@@ -159,7 +183,9 @@ class App {
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<Config> | undefined;
     this.config = { ...this.config, ...salvo };
     this.skills = await listarSkills();
+    this.colecoes = await listarColecoes();
     void this.sincronizarSkills();
+    void this.sincronizarColecoes();
     this.ponte.aoMudar(() => this.atualizarAba());
     await this.telaConversa();
     void this.atualizarCambio();
@@ -736,8 +762,44 @@ class App {
     // ------------------------------------------------- skills do usuário
     const listaSkills = h("div", { class: "skills" });
     const novaSkill = h("button", {}, "Nova skill");
+    const novaColecao = h("button", { title: "Trazer as skills de uma pasta do GitHub" }, "Skills da equipe");
     const sincronizarAgora = h("button", { title: "Conferir agora os arquivos no GitHub" }, "Sincronizar agora");
+    const listaColecoes = h("div", { class: "skills" });
     const desenharSkills = () => {
+      listaColecoes.replaceChildren(
+        ...this.colecoes.map((col) =>
+          h(
+            "div",
+            { class: "skill colecao" },
+            h(
+              "div",
+              { class: "skill-texto" },
+              h("strong", {}, col.nome),
+              h("code", {}, `${col.quantas ?? 0} skill(s)`),
+              h("small", { class: "origem" }, `${col.sincronizar ? "\u21BB " : ""}${col.url.replace(/^https?:\/\//, "")}${col.sincronizar ? ` \u00B7 ${quando(col.verificadaEm)}` : ""}`),
+              col.erroSync ? h("small", { class: "falha" }, col.erroSync) : null,
+            ),
+            h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${col.nome}`, onclick: () => this.editarColecao(col, desenharSkills) }, icone("lapis", 15)),
+            h(
+              "button",
+              {
+                class: "icone",
+                title: "Remover a cole\u00E7\u00E3o e as skills dela",
+                "aria-label": `Remover ${col.nome}`,
+                onclick: async () => {
+                  this.colecoes = this.colecoes.filter((c) => c.id !== col.id);
+                  this.skills = this.skills.filter((sk) => sk.colecao !== col.id);
+                  await guardarColecoes(this.colecoes);
+                  await guardarSkills(this.skills);
+                  await this.aplicarConfig(this.config);
+                  desenharSkills();
+                },
+              },
+              icone("lixeira", 15),
+            ),
+          ),
+        ),
+      );
       listaSkills.replaceChildren(
         ...(this.skills.length
           ? this.skills.map((sk) =>
@@ -753,21 +815,24 @@ class App {
                   sk.url ? h("small", { class: "origem" }, `${sk.sincronizar ? "\u21BB " : ""}${sk.url.replace(/^https?:\/\//, "")}${sk.sincronizar ? ` \u00B7 ${quando(sk.verificadaEm)}` : ""}`) : null,
                   sk.erroSync ? h("small", { class: "falha" }, `N\u00E3o deu para sincronizar: ${sk.erroSync}`) : null,
                 ),
-                h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${sk.nome}`, onclick: () => this.editarSkill(sk, desenharSkills) }, icone("lapis", 15)),
-                h(
-                  "button",
-                  {
-                    class: "icone",
-                    title: "Remover",
-                    "aria-label": `Remover ${sk.nome}`,
-                    onclick: async () => {
-                      this.skills = this.skills.filter((x) => x.id !== sk.id);
-                      await guardarSkills(this.skills);
-                      desenharSkills();
-                    },
-                  },
-                  icone("lixeira", 15),
-                ),
+                sk.colecao ? null : h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${sk.nome}`, onclick: () => this.editarSkill(sk, desenharSkills) }, icone("lapis", 15)),
+                sk.colecao
+                  ? h("span", { class: "etiqueta", title: "Vem da pasta da equipe; para mudar, mude o arquivo no reposit\u00F3rio" }, "equipe")
+                  : h(
+                      "button",
+                      {
+                        class: "icone",
+                        title: "Remover",
+                        "aria-label": `Remover ${sk.nome}`,
+                        onclick: async () => {
+                          this.skills = this.skills.filter((x) => x.id !== sk.id);
+                          await guardarSkills(this.skills);
+                          await this.aplicarConfig(this.config);
+                          desenharSkills();
+                        },
+                      },
+                      icone("lixeira", 15),
+                    ),
               ),
             )
           : [h("div", { class: "ajuda" }, "Nenhuma skill ainda. Uma skill \u00E9 um texto com as regras da sua unidade \u2014 como \u00E9 um despacho de encaminhamento, o que a nota t\u00E9cnica precisa ter \u2014 que o agente carrega s\u00F3 quando o pedido \u00E9 daquele assunto.")]),
@@ -775,6 +840,7 @@ class App {
     };
     desenharSkills();
     novaSkill.addEventListener("click", () => this.editarSkill(null, desenharSkills));
+    novaColecao.addEventListener("click", () => this.editarColecao(null, desenharSkills));
     sincronizarAgora.addEventListener("click", async () => {
       sincronizarAgora.disabled = true;
       status.className = "status";
@@ -788,9 +854,11 @@ class App {
           .catch(() => false);
       }
       const mudaram = await this.sincronizarSkills(true);
+      const decolecao = await this.sincronizarColecoes(true);
       desenharSkills();
       status.className = "status ok";
-      status.textContent = mudaram.length ? `Atualizada(s): ${mudaram.join(", ")}.` : "Nenhuma mudan\u00E7a no GitHub.";
+      const partes = [mudaram.length ? `Atualizada(s): ${mudaram.join(", ")}` : "", decolecao].filter(Boolean);
+      status.textContent = partes.length ? `${partes.join(" \u00B7 ")}.` : "Nenhuma mudan\u00E7a no GitHub.";
       sincronizarAgora.disabled = false;
     });
     const secaoSkills = h(
@@ -798,7 +866,8 @@ class App {
       { class: "campo" },
       h("label", {}, "Skills (instru\u00E7\u00F5es da sua unidade)"),
       listaSkills,
-      h("div", { class: "com-botao" }, novaSkill, this.skills.some((x) => x.url && x.sincronizar) ? sincronizarAgora : null),
+      listaColecoes,
+      h("div", { class: "com-botao" }, novaSkill, novaColecao, this.skills.some((x) => x.url && x.sincronizar) || this.colecoes.length ? sincronizarAgora : null),
       h(
         "div",
         { class: "ajuda" },
@@ -1020,6 +1089,136 @@ class App {
     // O motor em curso carrega as skills no prompt e no skill_ler: precisa ser refeito.
     if (mudaram.length) await this.aplicarConfig(this.config);
     return mudaram;
+  }
+
+  /**
+   * Atualiza as coleções da equipe (pastas do GitHub).
+   *
+   * Espaçada como a das skills e pelo mesmo motivo: a API do GitHub sem
+   * autenticação dá 60 consultas por hora, e uma coleção gasta uma por
+   * verificação mais uma por arquivo novo.
+   */
+  private async sincronizarColecoes(forcar = false): Promise<string> {
+    const alvos = this.colecoes.filter((c) => c.sincronizar || forcar);
+    if (!alvos.length) return "";
+    const agora = Date.now();
+    const partes: string[] = [];
+    let mexeu = false;
+    for (const col of alvos) {
+      if (!forcar && col.verificadaEm && agora - col.verificadaEm < INTERVALO_COLECAO) continue;
+      const origens = ["https://api.github.com/*", "https://raw.githubusercontent.com/*"];
+      const autorizado = await chrome.permissions
+        .contains({ origins: origens })
+        .then((tem) => tem || (forcar ? chrome.permissions.request({ origins: origens }) : false))
+        .catch(() => false);
+      if (!autorizado) continue;
+      try {
+        const baixadas = await baixarColecao(col.url);
+        const r = mesclarColecao(this.skills, col, baixadas, agora);
+        this.skills = r.lista;
+        this.colecoes = this.colecoes.map((c) => (c.id === col.id ? { ...c, verificadaEm: agora, quantas: baixadas.length, erroSync: undefined } : c));
+        mexeu = true;
+        if (r.novas || r.atualizadas || r.removidas) {
+          partes.push(`${col.nome}: ${[r.novas && `${r.novas} nova(s)`, r.atualizadas && `${r.atualizadas} atualizada(s)`, r.removidas && `${r.removidas} removida(s)`].filter(Boolean).join(", ")}`);
+        }
+      } catch (e) {
+        this.colecoes = this.colecoes.map((c) => (c.id === col.id ? { ...c, verificadaEm: agora, erroSync: (e as Error).message } : c));
+        mexeu = true;
+        partes.push(`${col.nome}: ${(e as Error).message}`);
+      }
+    }
+    if (mexeu) {
+      await guardarSkills(this.skills);
+      await guardarColecoes(this.colecoes);
+      await this.aplicarConfig(this.config);
+    }
+    return partes.join(" \u00B7 ");
+  }
+
+  /** Cadastro de uma coleção da equipe: nome e a pasta do GitHub. */
+  private editarColecao(colecao: ColecaoSkills | null, aoFechar: () => void): void {
+    const nome = h("input", { type: "text", value: colecao?.nome ?? "", placeholder: "Skills da minha unidade", "aria-label": "Nome da cole\u00E7\u00E3o" });
+    const url = h("input", {
+      type: "url",
+      value: colecao?.url ?? "",
+      placeholder: "https://github.com/orgao/skills-sei/tree/main/skills",
+      spellcheck: "false",
+      "aria-label": "Pasta no GitHub",
+    });
+    const sincronizar = h("input", { type: "checkbox", class: "switch", ...(colecao?.sincronizar ? { checked: true } : {}) });
+    const status = h("div", { class: "status" });
+    const salvar = h("button", { class: "primario" }, colecao ? "Salvar" : "Adicionar");
+    const dlg = this.abrirModal({
+      titulo: colecao ? "Editar cole\u00E7\u00E3o" : "Skills da equipe",
+      corpo: [
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Nome"),
+          nome,
+          h("div", { class: "ajuda" }, "Como a sua unidade chama esse conjunto de instru\u00E7\u00F5es."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Pasta no GitHub"),
+          url,
+          h(
+            "div",
+            { class: "ajuda" },
+            "Cada arquivo .md da pasta vira uma skill (o README fica de fora). Quem cuida do padr\u00E3o edita o reposit\u00F3rio; todo mundo recebe.",
+          ),
+        ),
+        h(
+          "label",
+          { class: "linha-switch" },
+          sincronizar,
+          h("span", {}, "Manter sincronizada", h("small", {}, "Confere a pasta a cada 12 horas. Skill que sai da pasta sai daqui tamb\u00E9m.")),
+        ),
+        h(
+          "div",
+          { class: "nota" },
+          icone("escudo", 15),
+          h("span", {}, "As skills da equipe n\u00E3o se editam aqui: elas s\u00E3o um espelho do reposit\u00F3rio. Para mudar, mude o arquivo l\u00E1."),
+        ),
+      ],
+      acoes: [status, h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
+    });
+
+    salvar.addEventListener("click", async () => {
+      const erro = (t: string) => {
+        status.className = "status erro";
+        status.textContent = t;
+        salvar.disabled = false;
+      };
+      const n = nome.value.trim();
+      const u = url.value.trim();
+      if (!n) return erro("Informe o nome da cole\u00E7\u00E3o.");
+      if (!partesDoGitHub(u)) return erro("Informe a pasta no GitHub (github.com/dono/repo/tree/branch/pasta).");
+      salvar.disabled = true;
+      status.className = "status";
+      status.textContent = "Buscando as skills...";
+      const origens = ["https://api.github.com/*", "https://raw.githubusercontent.com/*"];
+      const ok = await chrome.permissions
+        .contains({ origins: origens })
+        .then((tem) => tem || chrome.permissions.request({ origins: origens }))
+        .catch(() => false);
+      if (!ok) return erro("O navegador n\u00E3o autorizou o agente a falar com o GitHub.");
+      const nova: ColecaoSkills = { id: colecao?.id ?? crypto.randomUUID(), nome: n, url: u, sincronizar: sincronizar.checked };
+      try {
+        const baixadas = await baixarColecao(u);
+        const r = mesclarColecao(this.skills, nova, baixadas);
+        this.skills = r.lista;
+        this.colecoes = colecao ? this.colecoes.map((c) => (c.id === colecao.id ? { ...nova, verificadaEm: Date.now(), quantas: baixadas.length } : c)) : [...this.colecoes, { ...nova, verificadaEm: Date.now(), quantas: baixadas.length }];
+        await guardarSkills(this.skills);
+        await guardarColecoes(this.colecoes);
+        await this.aplicarConfig(this.config);
+        aoFechar();
+        dlg.close();
+      } catch (e) {
+        return erro((e as Error).message);
+      }
+    });
   }
 
   /**
