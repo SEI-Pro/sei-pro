@@ -8,7 +8,7 @@
  * ao cartão prometendo um botão que não faz nada.
  */
 
-import { comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "../src/estudio/campos";
+import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "../src/estudio/campos";
 import { etapaNova, fluxoNovo, type Fluxo } from "../src/fluxos/modelo";
 import { checar, secao } from "./util";
 
@@ -77,4 +77,26 @@ export function verificarMetadadosDoModelo(): void {
   checar("mantem a ordem cronologica", m[0].titulo === "Nota Técnica 55" && m[1].titulo === "Ofício 12");
   checar("renumera a ordem depois do descarte", m[0].ordem === 1 && m[1].ordem === 2, m.map((d) => d.ordem));
   checar("leva unidade, assinatura e anexo", m[0].unidade === "GESP" && m[0].assinado === true && m[1].externo === true);
+}
+
+/**
+ * O histórico, como a ponte o devolve.
+ *
+ * `processo.historico` NÃO devolve um array: devolve
+ * `{ protocolo, total, andamentos }`. Tratá-lo como array estourava
+ * "a.map is not a function" no meio da leitura do processo modelo — e o erro
+ * só aparecia contra um SEI de verdade, porque nenhum teste tocava esse caminho.
+ */
+export function verificarHistoricoDoModelo(): void {
+  secao("estudio: historico do processo modelo");
+  const dois = [
+    { data: "10/03/2026", unidade: "GPF", descricao: "Processo remetido" },
+    { data: "11/03/2026", unidade: "GPF", descricao: "Documento assinado" },
+  ];
+  checar("le a forma que a ponte devolve", andamentosDoHistorico({ protocolo: "x", total: 2, andamentos: dois }).length === 2);
+  checar("preserva data, unidade e descricao", andamentosDoHistorico({ andamentos: dois })[0].data === "10/03/2026");
+  checar("aceita array puro, se vier assim", andamentosDoHistorico(dois).length === 2);
+  checar("resposta vazia nao quebra", andamentosDoHistorico(undefined).length === 0 && andamentosDoHistorico(null).length === 0);
+  checar("resposta inesperada nao quebra", andamentosDoHistorico({ erro: "x" }).length === 0 && andamentosDoHistorico("nada").length === 0);
+  checar("item torto e descartado", andamentosDoHistorico({ andamentos: [null, 3, { data: "1", descricao: "ok" }] }).length === 1);
 }

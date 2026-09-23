@@ -15,7 +15,7 @@ import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
 import { avaliarNaTela, executarOperacao, lerTela, marcarAvisoDeFluxo } from "./operacoes";
-import { CANAL, CHAVE_ABERTURA, ehDoCanal, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
+import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
   interface Window {
@@ -123,23 +123,38 @@ function abrirCanal(
     }
   }
 
-  const painelAberto = async () => {
+  /** Páginas da extensão já servidas por uma conexão desta aba. */
+  const servidos = new Set<string>();
+  const marcarServido = (valor: unknown) => {
+    const quem = abridorDe(valor);
+    if (quem) servidos.add(quem);
+  };
+  const avisoAberto = async () => {
     try {
-      const v = await chrome.storage.local.get(CHAVE_ABERTURA);
-      return Boolean(v?.[CHAVE_ABERTURA]);
+      return (await chrome.storage.local.get(CHAVE_ABERTURA))?.[CHAVE_ABERTURA];
     } catch {
-      return false;
+      return undefined;
     }
   };
+  const atenderAviso = (valor: unknown) => {
+    if (!precisaConectar(valor, Boolean(porta), servidos)) return;
+    // Trocar a porta no meio de uma operação a mataria com "a aba foi
+    // recarregada": quem chegou agora espera o fim do que está em curso.
+    if (porta && emCurso.size) return;
+    conectar(Boolean(porta));
+    marcarServido(valor);
+  };
 
-  // O painel reescreve a chave de tempos em tempos para alcançar abas que
-  // carregaram depois dele. Quem já tem porta viva NÃO reconecta: trocar a
-  // porta no meio de uma operação a mataria com "a aba foi recarregada".
+  // O painel e o Estúdio reescrevem a chave de tempos em tempos, para alcançar
+  // abas que carregaram depois deles.
   chrome.storage.onChanged.addListener((mud, area) => {
-    if (area === "local" && mud[CHAVE_ABERTURA]?.newValue && !porta) conectar();
+    if (area === "local" && mud[CHAVE_ABERTURA]) atenderAviso(mud[CHAVE_ABERTURA].newValue);
   });
-  void painelAberto().then((sim) => sim && conectar());
-  setInterval(() => (porta ? apresentar() : void painelAberto().then((sim) => sim && conectar())), 5000);
+  void avisoAberto().then(atenderAviso);
+  setInterval(() => {
+    if (porta) apresentar();
+    void avisoAberto().then(atenderAviso);
+  }, 5000);
 
   const marcarFoco = () => {
     ultimoFoco = Date.now();

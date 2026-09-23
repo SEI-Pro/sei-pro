@@ -8,7 +8,7 @@
  */
 
 import type { Etapa, Fluxo } from "../fluxos/modelo";
-import type { DocumentoModelo } from "../fluxos/inferir";
+import type { AndamentoModelo, DocumentoModelo } from "../fluxos/inferir";
 
 /** Lista de textos num campo só: uma por linha lê melhor que separada por vírgula. */
 export const paraLinhas = (lista: string[] | undefined): string => (lista ?? []).join("\n");
@@ -77,4 +77,21 @@ export function metadadosDaArvore(
   return documentos
     .filter((d) => d.nivel !== "sigiloso" && d.cancelado !== true)
     .map((d, i) => ({ ordem: i + 1, titulo: d.titulo ?? "", unidade: d.unidade, assinado: d.assinado === true, externo: d.externo === true }));
+}
+
+/**
+ * Andamentos, como a operação `processo.historico` da ponte os devolve.
+ *
+ * ARMADILHA: ela NÃO devolve um array. Devolve
+ * `{ protocolo, total, andamentos }`. Tratar a resposta como array estoura
+ * "a.map is not a function" no meio da leitura do processo modelo — e só
+ * contra um SEI de verdade, porque o formato certo está no `sei-nucleo`, não
+ * aqui. O array puro também é aceito, para a função não depender dessa escolha.
+ */
+export function andamentosDoHistorico(resposta: unknown): AndamentoModelo[] {
+  const lista = Array.isArray(resposta) ? resposta : (resposta as { andamentos?: unknown } | null)?.andamentos;
+  if (!Array.isArray(lista)) return [];
+  return lista
+    .filter((a): a is { data?: unknown; unidade?: unknown; descricao?: unknown } => Boolean(a) && typeof a === "object")
+    .map((a) => ({ data: String(a.data ?? ""), unidade: typeof a.unidade === "string" ? a.unidade : undefined, descricao: String(a.descricao ?? "") }));
 }

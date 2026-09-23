@@ -18,7 +18,7 @@ import { h, icone } from "../painel/dom";
 import { PontePainel } from "../ponte/cliente";
 import { criarProvedor, MODELO_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
 import { inferirFluxo, type ProcessoModelo } from "../fluxos/inferir";
-import { comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "./campos";
+import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "./campos";
 import {
   etapaNova,
   fluxoNovo,
@@ -226,7 +226,10 @@ class Estudio {
     // O título da tela e o rótulo de cada etapa espelham campos que NÃO
     // redesenham ao digitar (o cursor se perderia). Eles são atualizados à mão,
     // ou ficariam mostrando o nome antigo até a próxima mudança estrutural.
-    const titulo = h("h2", {}, this.novo ? "Novo fluxo" : r.nome || "(sem nome)");
+    // O nome, e não "Novo fluxo", mesmo em rascunho: uma proposta aprendida de
+    // processo modelo JÁ vem nomeada pelo modelo, e chamá-la de "Novo fluxo"
+    // escondia esse nome do usuário.
+    const titulo = h("h2", {}, r.nome || "Novo fluxo");
     this.elObra.replaceChildren(
       h(
         "div",
@@ -583,14 +586,12 @@ class Estudio {
       tipo?: string;
       documentos: Array<{ numero: string; titulo?: string; assinado?: boolean; externo?: boolean; unidade?: string; nivel?: string; cancelado?: boolean }>;
     };
-    const historico = (await this.ponte
-      .executar("processo.historico", { processo: numero, tipo: "resumido", limite: 200 })
-      .catch(() => [])) as Array<{ data: string; unidade?: string; descricao: string }>;
+    const historico = await this.ponte.executar("processo.historico", { processo: numero, tipo: "resumido", limite: 200 }).catch(() => null);
     return {
       protocolo: arv.protocolo || numero,
       tipo: arv.tipo,
       documentos: metadadosDaArvore(arv.documentos),
-      historico: historico.map((a) => ({ data: a.data, unidade: a.unidade, descricao: a.descricao })),
+      historico: andamentosDoHistorico(historico),
     };
   }
 }

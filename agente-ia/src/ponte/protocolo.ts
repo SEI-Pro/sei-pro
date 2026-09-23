@@ -14,6 +14,42 @@
 export const CANAL = "seipro-agente";
 export const CHAVE_ABERTURA = "agenteIA_aberto";
 
+/**
+ * O que cada página da extensão grava em `CHAVE_ABERTURA` ao abrir, e renova de
+ * tempos em tempos. O `id` é da INSTÂNCIA da página, não do tipo: é ele que
+ * deixa a aba do SEI distinguir "outra página abriu" de "a mesma página está
+ * renovando o aviso".
+ */
+export interface Abertura {
+  id: string;
+  quando: number;
+}
+
+/**
+ * Quem gravou o aviso. Versões anteriores gravavam só o `Date.now()`; durante
+ * uma atualização, uma aba com o content script novo pode ver o formato velho.
+ */
+export function abridorDe(valor: unknown): string | null {
+  if (typeof valor === "number" && valor) return String(valor);
+  const id = (valor as Abertura | undefined)?.id;
+  return typeof id === "string" && id ? id : null;
+}
+
+/**
+ * A aba do SEI precisa (re)conectar?
+ *
+ * `chrome.runtime.onConnect` só dispara no MOMENTO do `connect`: uma página da
+ * extensão aberta DEPOIS de a aba já ter conectado não recebe porta nenhuma.
+ * Por isso a aba refaz a conexão quando vê um abridor que ainda não serviu —
+ * e SÓ nesse caso. O painel reescreve o aviso a cada 60 s, e reconectar nessa
+ * cadência mataria operação em curso e encheria o SEI de churn.
+ */
+export function precisaConectar(valor: unknown, temPorta: boolean, servidos: Set<string>): boolean {
+  const quem = abridorDe(valor);
+  if (!quem) return false;
+  return !temPorta || !servidos.has(quem);
+}
+
 export interface Pedido {
   canal: typeof CANAL;
   tipo: "pedido";
