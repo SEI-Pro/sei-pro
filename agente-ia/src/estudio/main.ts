@@ -206,11 +206,15 @@ class Estudio {
     const campo = (rotulo: string, ajuda: string | null, ...filhos: Array<Node | string | null>) =>
       h("div", { class: "campo" }, h("label", {}, rotulo), ...filhos, ajuda ? h("div", { class: "ajuda" }, ajuda) : null);
 
+    // O título da tela e o rótulo de cada etapa espelham campos que NÃO
+    // redesenham ao digitar (o cursor se perderia). Eles são atualizados à mão,
+    // ou ficariam mostrando o nome antigo até a próxima mudança estrutural.
+    const titulo = h("h2", {}, this.novo ? "Novo fluxo" : r.nome || "(sem nome)");
     this.elObra.replaceChildren(
       h(
         "div",
         { class: "obra-caixa" },
-        h("h2", {}, this.novo ? "Novo fluxo" : r.nome || "(sem nome)"),
+        titulo,
         h("div", { class: "ajuda" }, `Origem: ${ORIGEM[r.origem]}.`, r.modelos?.length ? ` Processos modelo: ${r.modelos.map((m) => m.protocolo).join(", ")}.` : ""),
 
         ...this.notasDaProposta(),
@@ -218,7 +222,16 @@ class Estudio {
         campo(
           "Nome do fluxo",
           "Como a sua unidade chama esse rito.",
-          h("input", { type: "text", value: r.nome, placeholder: "Contrato de transição", input: (ev: Event) => this.mudarSemRedesenhar(() => (r.nome = (ev.target as HTMLInputElement).value)) }),
+          h("input", {
+            type: "text",
+            value: r.nome,
+            placeholder: "Contrato de transição",
+            input: (ev: Event) =>
+              this.mudarSemRedesenhar(() => {
+                r.nome = (ev.target as HTMLInputElement).value;
+                titulo.textContent = r.nome || "(sem nome)";
+              }),
+          }),
         ),
         campo(
           "Descrição (opcional)",
@@ -291,6 +304,7 @@ class Estudio {
         x.etapas.splice(para, 0, e);
       });
     const destinos = r.etapas.filter((e) => e.id !== etapa.id);
+    const rotulo = h("span", { class: "nome" }, etapa.nome || "(sem nome)");
     return h(
       "details",
       { class: "etapa-cartao" },
@@ -298,7 +312,7 @@ class Estudio {
         "summary",
         { class: "etapa-topo" },
         h("span", { class: "ordem" }, String(i + 1)),
-        h("span", { class: "nome" }, etapa.nome || "(sem nome)"),
+        rotulo,
         etapa.obrigatoria ? null : h("span", { class: "etiqueta" }, "opcional"),
         h("button", { class: "icone pequeno", title: "Subir", "aria-label": `Subir a etapa ${etapa.nome}`, disabled: i === 0, click: (ev: Event) => (ev.preventDefault(), mover(i, i - 1)) }, icone("setaCima", 14)),
         h("button", { class: "icone pequeno", title: "Descer", "aria-label": `Descer a etapa ${etapa.nome}`, disabled: i === r.etapas.length - 1, click: (ev: Event) => (ev.preventDefault(), mover(i, i + 1)) }, icone("setaBaixo", 14)),
@@ -311,7 +325,15 @@ class Estudio {
           "div",
           { class: "campo" },
           h("label", {}, "Nome da etapa"),
-          h("input", { type: "text", value: etapa.nome, input: (ev: Event) => this.mudarSemRedesenhar(() => (etapa.nome = (ev.target as HTMLInputElement).value)) }),
+          h("input", {
+            type: "text",
+            value: etapa.nome,
+            input: (ev: Event) =>
+              this.mudarSemRedesenhar(() => {
+                etapa.nome = (ev.target as HTMLInputElement).value;
+                rotulo.textContent = etapa.nome || "(sem nome)";
+              }),
+          }),
         ),
         h(
           "div",

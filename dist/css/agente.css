@@ -572,7 +572,9 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .item-fluxo { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; text-align: left; width: 100%; }
 .item-fluxo:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
 .item-fluxo.atual { border-color: var(--acento); background: var(--acento-suave); }
-.item-fluxo .corpo { flex: 1; min-width: 0; }
+/* `display: block`: o botao herda `inline-flex` da regra base, e ai o nome e o
+   resumo ficariam lado a lado, cada um espremido na metade da largura. */
+.item-fluxo .corpo { flex: 1; min-width: 0; display: block; padding: 2px 4px; text-align: left; }
 .item-fluxo b { display: block; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-fluxo small { display: block; font-size: 11px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-fluxo.desligado b, .item-fluxo.desligado small { color: var(--ink-3); }
