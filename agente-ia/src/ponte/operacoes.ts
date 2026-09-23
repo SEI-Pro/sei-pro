@@ -40,6 +40,8 @@ import { ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
 import type { TelaAtual } from "../motor/motor";
+import { escolherSugestao, type ProcessoNaTela } from "../fluxos/avaliar";
+import type { Fluxo, Ignorados } from "../fluxos/modelo";
 
 type Op = (sei: Sei, a: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>;
 
@@ -90,13 +92,11 @@ export function lerTela(doc: Document, url: string): TelaAtual {
   // Qual tela do SEI está aberta (`acao` do controlador): é o que deixa o painel
   // sugerir o que faz sentido ali — na caixa da unidade, num processo, na pesquisa.
   tela.acao = parametros(url).get("acao") ?? undefined;
-  const ifr = doc.querySelector<HTMLIFrameElement>("#ifrArvore");
-  const docArvore = ifr?.contentDocument;
-  if (docArvore?.documentElement) {
+  const arv = arvoreNaTela(doc);
+  if (arv) {
+    tela.processo = { protocolo: arv.protocolo, tipo: arv.tipo, nivel: arv.nivel };
+    tela.sigiloso = arv.nivel === "sigiloso";
     try {
-      const arv = lerArvore({ url: docArvore.URL, status: 200, html: docArvore.documentElement.outerHTML, doc: docArvore });
-      tela.processo = { protocolo: arv.protocolo, tipo: arv.tipo, nivel: arv.nivel };
-      tela.sigiloso = arv.nivel === "sigiloso";
       // Qual documento está aberto à direita. No SEI 5 o visualizador é um
       // iframe só; no SEI 4.1 o `ifrVisualizacao` fica ANINHADO dentro do
       // `ifrConteudoVisualizacao`, e só o de dentro carrega o id_documento.
@@ -116,7 +116,7 @@ export function lerTela(doc: Document, url: string): TelaAtual {
       const d = idDoc ? arv.documentos.find((x) => x.id === idDoc) : undefined;
       if (d && !tela.sigiloso && d.nivel !== "sigiloso") tela.documento = { numero: d.numero, titulo: d.titulo };
     } catch {
-      /* árvore ainda carregando */
+      /* visualizador ainda carregando */
     }
   }
   const marcados = [...doc.querySelectorAll<HTMLInputElement>("#tblProcessosRecebidos input:checked, #tblProcessosGerados input:checked, #tblProcessosDetalhado input:checked")]
@@ -124,6 +124,82 @@ export function lerTela(doc: Document, url: string): TelaAtual {
     .filter(Boolean);
   if (marcados.length) tela.selecionados = marcados;
   return tela;
+}
+
+/**
+ * A árvore que JÁ está na tela, lida do iframe vivo.
+ *
+ * Sem requisição ao SEI: com 220 mil instalações, buscar a árvore de novo a
+ * cada processo aberto seria carga desnecessária no SEI do órgão.
+ */
+export function arvoreNaTela(doc: Document): Arvore | null {
+  const docArvore = doc.querySelector<HTMLIFrameElement>("#ifrArvore")?.contentDocument;
+  if (!docArvore?.documentElement) return null;
+  try {
+    return lerArvore({ url: docArvore.URL, status: 200, html: docArvore.documentElement.outerHTML, doc: docArvore });
+  } catch {
+    return null; // árvore ainda carregando
+  }
+}
+
+/**
+ * Árvore do núcleo → o processo que o Estúdio de Fluxo avalia.
+ *
+ * `unidade` é a da TELA (a unidade em que o usuário está), não a do documento:
+ * é ela que a etapa com `daMinhaUnidade` compara.
+ *
+ * Documento sigiloso NÃO sai da lista: sumir deslocaria a cronologia, e uma
+ * etapa passaria a casar com documento que veio antes dele. Ele fica sem
+ * título, guardando o lugar — e sem título nunca cumpre etapa nenhuma.
+ */
+export function processoParaFluxo(arv: Arvore, unidade?: string): ProcessoNaTela {
+  return {
+    protocolo: arv.protocolo,
+    tipo: arv.tipo,
+    marcadores: arv.marcadores,
+    unidade,
+    ...(arv.nivel === "sigiloso" ? { sigiloso: true } : {}),
+    documentos: arv.documentos.map((d) =>
+      d.nivel === "sigiloso"
+        ? { numero: d.numero, titulo: "", assinado: false, nivel: "sigiloso" }
+        : { numero: d.numero, titulo: d.titulo, assinado: d.assinado, unidade: d.unidadeGeradora, cancelado: d.cancelado, externo: d.externo, nivel: d.nivel },
+    ),
+  };
+}
+
+/** O que o painel recebe quando há sugestão: ids e texto, nada do SEI. */
+export interface SugestaoDeFluxo {
+  protocolo: string;
+  fluxoId: string;
+  /** Etapa que falta. */
+  etapaId: string;
+  etapaAnteriorId: string;
+  /** Documento que cumpriu a etapa anterior: o "o que foi encontrado" do cartão. */
+  anterior: { numero: string; titulo: string; assinado: boolean };
+  cumpridas: Array<{ etapaId: string; numero: string; titulo: string }>;
+}
+
+/**
+ * Avalia os fluxos do usuário contra o processo aberto na tela.
+ *
+ * Só o painel chama isto, e o painel só existe aberto: quem não usa o agente
+ * não paga nada por esta funcionalidade. A saída é REDUZIDA a ids e texto —
+ * nenhum link assinado nem `infra_hash` atravessa a ponte.
+ */
+export function avaliarNaTela(doc: Document, args: Record<string, unknown>): SugestaoDeFluxo | null {
+  const arv = arvoreNaTela(doc);
+  if (!arv) return null;
+  const fluxos = (args.fluxos as Fluxo[]) ?? [];
+  const sugestao = escolherSugestao(fluxos, processoParaFluxo(arv, txt(args.unidade)), (args.ignorados as Ignorados) ?? {});
+  if (!sugestao) return null;
+  return {
+    protocolo: arv.protocolo,
+    fluxoId: sugestao.fluxo.id,
+    etapaId: sugestao.lacuna.etapa.id,
+    etapaAnteriorId: sugestao.lacuna.etapaAnterior.id,
+    anterior: { numero: sugestao.lacuna.anterior.numero, titulo: sugestao.lacuna.anterior.titulo, assinado: sugestao.lacuna.anterior.assinado },
+    cumpridas: sugestao.avaliacao.cumpridas.map((c) => ({ etapaId: c.etapa.id, numero: c.documento.numero, titulo: c.documento.titulo })),
+  };
 }
 
 function bytesParaBase64(b: Uint8Array): string {

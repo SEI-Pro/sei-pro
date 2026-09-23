@@ -14,7 +14,7 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { executarOperacao, lerTela } from "./operacoes";
+import { avaliarNaTela, executarOperacao, lerTela } from "./operacoes";
 import { CANAL, CHAVE_ABERTURA, ehDoCanal, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
@@ -183,7 +183,13 @@ function iniciar(): void {
     return cache.pagina;
   };
   const sei = new Sei(location.href, paginaViva);
-  abrirCanal("sei", undefined, (op, args, sinal) => (op === "tela" ? Promise.resolve(lerTela(document, location.href)) : executarOperacao(sei, op, args, sinal)));
+  // `tela` e `fluxo.avaliar` leem o DOM vivo: nenhuma requisição ao SEI nasce
+  // delas, e por isso ficam fora do despacho de operações do núcleo.
+  abrirCanal("sei", undefined, (op, args, sinal) => {
+    if (op === "tela") return Promise.resolve(lerTela(document, location.href));
+    if (op === "fluxo.avaliar") return Promise.resolve(avaliarNaTela(document, args));
+    return executarOperacao(sei, op, args, sinal);
+  });
   instalarEntradaNoMenu();
 }
 

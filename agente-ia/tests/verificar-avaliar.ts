@@ -8,6 +8,8 @@
  */
 
 import { avaliarFluxo, escolherSugestao, type DocumentoNaArvore, type ProcessoNaTela } from "../src/fluxos/avaliar";
+import { processoParaFluxo } from "../src/ponte/operacoes";
+import type { Arvore, DocumentoArvore } from "@nucleo/dominio/arvore";
 import { etapaNova, fluxoNovo, type Etapa, type Fluxo } from "../src/fluxos/modelo";
 import { checar, secao } from "./util";
 
@@ -126,4 +128,65 @@ export function verificarAvaliarFluxo(): void {
   checar("processo sigiloso nunca sugere", escolherSugestao([ativo], { ...aberto, sigiloso: true }, {}) === null);
   const escolhida = escolherSugestao([ativo], aberto, {});
   checar("a sugestão vem com a avaliação inteira", escolhida?.avaliacao.cumpridas.length === 1 && escolhida?.avaliacao.lacuna?.etapa.id === DESPACHO.id);
+}
+
+/**
+ * A árvore do `sei-nucleo` vira o processo que a avaliação entende.
+ *
+ * Roda no content script, sobre a árvore que já está na tela: é a conversão que
+ * decide o que a avaliação enxerga, então é aqui que um documento sigiloso pode
+ * vazar título por engano — e é aqui que a ordem da árvore se preserva.
+ */
+export function verificarProcessoDaArvore(): void {
+  const doc = (d: Partial<DocumentoArvore>): DocumentoArvore => ({
+    id: "1",
+    numero: "0100001",
+    titulo: "Nota Técnica 55",
+    pasta: null,
+    externo: false,
+    formato: "interno",
+    nivel: "publico",
+    assinado: true,
+    assinaturas: [],
+    cancelado: false,
+    link: "",
+    src: "",
+    acoes: [],
+    botoes: [],
+    ...d,
+  });
+  const arvore = (docs: DocumentoArvore[], a: Partial<Arvore> = {}): Arvore =>
+    ({
+      idProcedimento: "9",
+      protocolo: "12345.000001/2026-11",
+      tipo: "Contratação Direta",
+      nivel: "publico",
+      marcadores: ["Urgente"],
+      documentos: docs,
+      acoesProcesso: [],
+      botoesProcesso: [],
+      linkProcesso: "",
+      sinais: [],
+      links: [],
+      pagina: { url: "", status: 200, html: "", doc: null as unknown as Document },
+      ...a,
+    }) as Arvore;
+
+  secao("avaliar: a arvore do nucleo vira processo avaliavel");
+  const p = processoParaFluxo(arvore([doc({ numero: "0100001", unidadeGeradora: "GESP" })]), "GESP-TESTE");
+  checar("leva protocolo, tipo e marcadores", p.protocolo === "12345.000001/2026-11" && p.tipo === "Contratação Direta" && p.marcadores?.[0] === "Urgente");
+  checar("a unidade é a da TELA, não a do documento", p.unidade === "GESP-TESTE");
+  checar("o documento leva a unidade geradora", p.documentos[0].unidade === "GESP");
+  checar("processo público não vem marcado como sigiloso", p.sigiloso !== true);
+  checar("processo sigiloso vem marcado", processoParaFluxo(arvore([], { nivel: "sigiloso" })).sigiloso === true);
+
+  // O documento sigiloso não some da lista: sumir deslocaria a cronologia e uma
+  // etapa passaria a casar com documento que veio antes dele.
+  const comSigiloso = processoParaFluxo(arvore([doc({ numero: "0100001", nivel: "sigiloso" }), doc({ numero: "0100002", titulo: "Despacho" })]));
+  checar("documento sigiloso guarda o lugar na ordem", comSigiloso.documentos.length === 2);
+  checar("mas nao entrega o titulo", comSigiloso.documentos[0].titulo === "");
+  checar("e nunca cumpre etapa nenhuma", avaliarFluxo(fluxo({ etapas: [NT] }), comSigiloso).cumpridas.length === 0);
+
+  const links = processoParaFluxo(arvore([doc({})]));
+  checar("nada de link assinado do SEI atravessa", !JSON.stringify(links).includes("infra_hash") && !("link" in links.documentos[0]));
 }
