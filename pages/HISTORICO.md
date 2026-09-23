@@ -2,6 +2,15 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.0.1
+23/09/2026
+
+Versão de correção.
+
+- [Enviar documentos em processos](../pages/BARRAACOES.md): a ferramenta deixa de parar a lista inteira quando um processo não aceita o documento. Antes, bastava um tropeço — um processo que não está mais aberto na sua unidade, um formulário que não abre, o servidor sem responder — para a rodada morrer ali, sem aviso, e nenhum dos processos seguintes recebia nada. Agora o processo que falha é pulado, os demais seguem recebendo e, no fim, aparece a lista dos que ficaram de fora com o motivo de cada um. Eles continuam **marcados na tela**, para você conferir e tentar de novo
+- *Enviar documentos em processos*: corrigido o travamento em listas grandes. A cada processo, os arquivos eram enfileirados de novo sobre a fila anterior, que dobrava de tamanho a cada passo (1, 2, 4, 8, 16…). Em listas com algumas dezenas de processos o navegador afogava e a ferramenta parava no meio do caminho. Nenhum documento chegou a ser duplicado no SEI
+- *Enviar documentos em processos*: quando a árvore do processo demora a abrir, a ferramenta passa a esperar em vez de falhar calada
+
 ### Versão 2.0
 22/09/2026
 
