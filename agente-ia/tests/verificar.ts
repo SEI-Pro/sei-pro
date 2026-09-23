@@ -6,6 +6,7 @@ import { verificarRegras } from "./verificar-regras";
 import { verificarCusto } from "./verificar-custo";
 import { verificarRotinas } from "./verificar-rotinas";
 import { verificarCambio, verificarSugestoes } from "./verificar-sugestoes";
+import { verificarFluxosModelo } from "./verificar-fluxos";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -17,4 +18,5 @@ verificarCusto();
 verificarRotinas();
 verificarSugestoes();
 verificarCambio();
+verificarFluxosModelo();
 resumo();
