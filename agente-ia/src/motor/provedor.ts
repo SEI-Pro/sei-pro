@@ -32,7 +32,7 @@ export const MODELO_PADRAO = "anthropic/claude-sonnet-5";
 
 interface Delta {
   content?: string | null;
-  tool_calls?: Array<{ index: number; id?: string; type?: string; function?: { name?: string; arguments?: string } }>;
+  tool_calls?: Array<{ index?: number; id?: string; type?: string; function?: { name?: string; arguments?: string } }>;
 }
 
 interface Pedaco {
@@ -82,7 +82,11 @@ export class Acumulador {
       aoTexto?.(d.content);
     }
     for (const tc of d?.tool_calls ?? []) {
-      const c = (this.chamadas[tc.index] ??= { id: "", nome: "", args: "" });
+      // O Gemini manda a chamada inteira num pedaço só e SEM `index`; a OpenAI e
+      // o OpenRouter mandam em fragmentos numerados. Sem índice, um `id` novo
+      // abre outra chamada e o resto continua a última.
+      const i = typeof tc.index === "number" ? tc.index : tc.id && this.chamadas.length ? this.chamadas.length : Math.max(0, this.chamadas.length - 1);
+      const c = (this.chamadas[i] ??= { id: "", nome: "", args: "" });
       if (tc.id) c.id = tc.id;
       if (tc.function?.name) c.nome += tc.function.name;
       if (tc.function?.arguments) c.args += tc.function.arguments;
@@ -109,13 +113,20 @@ export interface ServicoInfo {
   url: string;
   /** Como a chave se parece, para o campo de senha. */
   exemploChave: string;
-  /** Onde criar a chave e o que o usuário precisa saber. */
+  /** O que o usuário precisa saber, sem endereços soltos no meio do texto. */
   ajuda: string;
+  /** Página do fabricante onde a chave é criada. */
+  painelChave?: { texto: string; url: string };
+  /** Âncora do passo a passo na documentação do SEI Pro. */
+  ancoraDoc?: string;
   /** Sugestão inicial de modelo (o painel confirma pela lista do serviço). */
   modeloPadrao?: string;
   /** Cabeçalhos que o serviço exige além do Authorization. */
   cabecalhos?: Record<string, string>;
 }
+
+/** Passo a passo de como conseguir a chave de cada serviço. */
+export const DOC_CHAVES = "https://sei-pro.github.io/sei-pro/pages/CHAVEIA.html";
 
 /**
  * Os serviços que o painel oferece prontos.
@@ -129,28 +140,36 @@ export const SERVICOS: Record<Servico, ServicoInfo> = {
     nome: "OpenRouter (recomendado)",
     url: URL_OPENROUTER,
     exemploChave: "sk-or-v1-...",
-    ajuda: "Cat\u00E1logo com pre\u00E7os de v\u00E1rios fabricantes e a \u00FAnica op\u00E7\u00E3o em que o agente exige provedor que n\u00E3o guarde os dados. Crie a chave em openrouter.ai/keys.",
+    ajuda: "Cat\u00E1logo com pre\u00E7os de v\u00E1rios fabricantes e a \u00FAnica op\u00E7\u00E3o em que o agente exige provedor que n\u00E3o guarde os dados.",
+    painelChave: { texto: "openrouter.ai/keys", url: "https://openrouter.ai/keys" },
+    ancoraDoc: "openrouter",
     modeloPadrao: MODELO_PADRAO,
   },
   openai: {
     nome: "OpenAI",
     url: "https://api.openai.com/v1",
     exemploChave: "sk-...",
-    ajuda: "Conta direto com a OpenAI. Crie a chave em platform.openai.com/api-keys.",
+    ajuda: "Conta direto com a OpenAI (ChatGPT). A cobran\u00E7a \u00E9 por uso da API, separada da assinatura do ChatGPT.",
+    painelChave: { texto: "platform.openai.com/api-keys", url: "https://platform.openai.com/api-keys" },
+    ancoraDoc: "openai",
     modeloPadrao: "gpt-5",
   },
   gemini: {
     nome: "Google Gemini",
     url: "https://generativelanguage.googleapis.com/v1beta/openai",
     exemploChave: "AIza...",
-    ajuda: "Conta direto com o Google, pela camada compat\u00EDvel com OpenAI do Gemini. Crie a chave em aistudio.google.com/apikey.",
+    ajuda: "Conta direto com o Google, pela camada compat\u00EDvel com OpenAI do Gemini.",
+    painelChave: { texto: "aistudio.google.com/apikey", url: "https://aistudio.google.com/apikey" },
+    ancoraDoc: "gemini",
     modeloPadrao: "gemini-2.5-flash",
   },
   anthropic: {
     nome: "Anthropic",
     url: "https://api.anthropic.com/v1",
     exemploChave: "sk-ant-...",
-    ajuda: "Conta direto com a Anthropic, pela camada compat\u00EDvel com OpenAI. Crie a chave em console.anthropic.com.",
+    ajuda: "Conta direto com a Anthropic (Claude), pela camada compat\u00EDvel com OpenAI.",
+    painelChave: { texto: "console.anthropic.com", url: "https://console.anthropic.com/settings/keys" },
+    ancoraDoc: "anthropic",
     modeloPadrao: "claude-sonnet-5",
     cabecalhos: { "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
   },
@@ -158,7 +177,8 @@ export const SERVICOS: Record<Servico, ServicoInfo> = {
     nome: "Outro servi\u00E7o compat\u00EDvel (avan\u00E7ado)",
     url: "",
     exemploChave: "chave do servi\u00E7o",
-    ajuda: "Endere\u00E7o que fala o protocolo da OpenAI, terminando em /v1. O navegador vai pedir sua autoriza\u00E7\u00E3o para falar com ele.",
+    ajuda: "Endere\u00E7o que fala o protocolo da OpenAI, terminando em /v1 \u2014 NVIDIA, Groq, Ollama ou um servidor do pr\u00F3prio \u00F3rg\u00E3o.",
+    ancoraDoc: "outro-servico-compativel",
   },
 };
 
@@ -237,7 +257,7 @@ function parametrosDoModelo(o: OpcoesProvedor): Record<string, number> {
  * que a mensagem citou.
  */
 export function parametroRecusado(corpo: string): string | null {
-  const nomes = ["temperature", "top_p", "max_tokens", "frequency_penalty", "presence_penalty"];
+  const nomes = ["temperature", "top_p", "max_tokens", "frequency_penalty", "presence_penalty", "stream_options"];
   const texto = corpo.toLowerCase();
   return nomes.find((n) => texto.includes(n)) ?? null;
 }
@@ -278,7 +298,13 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
   return {
     modelo,
     async conversar(pedido: PedidoLLM, sinal: AbortSignal, aoTexto: (t: string) => void): Promise<RespostaLLM> {
-      const parametros = parametrosDoModelo(o);
+      // `stream_options` é como a OpenAI e as camadas compatíveis mandam o
+      // consumo de tokens no streaming (sem ele, o painel fica sem contagem);
+      // o OpenRouter usa `usage: {include: true}`, que já vai abaixo.
+      const parametros: Record<string, unknown> = {
+        ...parametrosDoModelo(o),
+        ...(openrouter ? {} : { stream_options: { include_usage: true } }),
+      };
       const recusados = new Set<string>();
       const montar = () =>
         JSON.stringify({
@@ -306,8 +332,16 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
           continue;
         }
         if (r.status === 400) {
-          // Ajuste fino que este modelo não aceita: tira o campo citado e repete.
           const texto = await r.text();
+          // Caso conhecido da OpenAI: os modelos novos trocaram `max_tokens`
+          // por `max_completion_tokens`. Renomear preserva o teto que o usuário
+          // pediu; descartar o campo o perderia em silêncio.
+          if (/max_completion_tokens/.test(texto) && "max_tokens" in parametros && !("max_completion_tokens" in parametros)) {
+            parametros.max_completion_tokens = parametros.max_tokens;
+            recusados.add("max_tokens");
+            continue;
+          }
+          // Ajuste fino que este modelo não aceita: tira o campo citado e repete.
           const culpado = parametroRecusado(texto);
           if (culpado && !recusados.has(culpado) && culpado in parametros) {
             recusados.add(culpado);
@@ -322,6 +356,25 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
       }
     },
   };
+}
+
+/**
+ * O `/models` de cada fabricante devolve o catálogo INTEIRO — embedding,
+ * transcrição, voz, imagem, vídeo e modelos antigos sem ferramentas. Num
+ * seletor, isso é ruído: quem escolher um desses vê o agente falhar sem
+ * entender por quê. Aqui ficam só os que conversam.
+ */
+const SO_CONVERSA: Partial<Record<Servico, { serve: RegExp; fora: RegExp }>> = {
+  openai: { serve: /^(gpt|o\d|chatgpt)/i, fora: /embedding|tts|whisper|audio|realtime|image|dall|moderation|transcribe|search|instruct|babbage|davinci/i },
+  gemini: { serve: /^gemini/i, fora: /embedding|image|imagen|veo|tts|audio|live|vision|aqa/i },
+  anthropic: { serve: /^claude/i, fora: /^$/ },
+};
+
+/** Se o modelo daquele serviço serve para conversar com ferramentas. */
+export function serveParaConversar(servico: Servico, id: string): boolean {
+  const regra = SO_CONVERSA[servico];
+  if (!regra) return true; // serviço do próprio órgão: quem sabe o que tem lá é o usuário
+  return regra.serve.test(id) && !regra.fora.test(id);
 }
 
 export interface ModeloDisponivel {
@@ -351,6 +404,7 @@ export async function listarModelos(o: { servico?: Servico; url?: string; chave?
     return (j.data ?? [])
       // O Gemini devolve "models/gemini-2.5-flash"; o pedido quer o id sem o prefixo.
       .map((m) => ({ id: m.id.replace(/^models\//, ""), nome: m.display_name ?? m.id.replace(/^models\//, ""), contexto: 0, precoEntrada: 0, precoSaida: 0 }))
+      .filter((m) => serveParaConversar(servico, m.id))
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }
   const r = await f(endereco);

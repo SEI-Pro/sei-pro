@@ -56,7 +56,9 @@ A chave fica guardada **só neste navegador**. O SEI Pro não tem servidor: as m
 | **OpenAI**, **Google Gemini**, **Anthropic** | Para quem já tem conta direto com o fabricante: escolha o serviço, informe a chave e o modelo — o endereço já vem pronto |
 | **Outro serviço compatível** | NVIDIA, Groq, um modelo rodando na própria máquina (Ollama) ou **um servidor do próprio órgão** — nesse caso o conteúdo não sai da rede interna |
 
-Para o OpenRouter, crie a chave em [openrouter.ai/keys](https://openrouter.ai/keys) e adicione créditos. Nos demais, a chave é a do painel do próprio fabricante ([platform.openai.com](https://platform.openai.com/api-keys), [aistudio.google.com](https://aistudio.google.com/apikey) ou [console.anthropic.com](https://console.anthropic.com)); no serviço compatível, informe também o endereço da API (termina em `/v1`). Fora do OpenRouter, o navegador pede a sua autorização para o agente falar com aquele endereço, e o botão **Buscar modelos** preenche a lista do serviço.
+**[Como obter a chave de cada serviço, passo a passo](../pages/CHAVEIA.md)** — com o cadastro, onde criar a chave, quanto custa e o que fazer quando a chave não é aceita.
+
+Escolhido o serviço, o **modelo** é selecionado numa lista carregada do próprio fabricante; o botão **Atualizar**, ao lado, refaz a busca. Fora do OpenRouter, o navegador pede a sua autorização para o agente falar com aquele endereço — é esse clique que libera a lista.
 
 > **Nem todo modelo serve.** O agente trabalha chamando ferramentas, e só parte dos modelos sabe fazer isso. No OpenRouter a lista já vem filtrada. Fora dele, se o agente conversar mas não conseguir agir no SEI, troque de modelo.
 

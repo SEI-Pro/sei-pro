@@ -497,3 +497,8 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .campo-fino > label { font-size: 11.5px; font-weight: 500; color: var(--ink-2); }
 .campo-fino small { font-size: 10.5px; color: var(--ink-3); line-height: 1.35; }
 .avancado textarea { resize: vertical; min-height: 68px; font: inherit; }
+
+/* Links dentro das ajudas do modal: abrem em outra aba, então precisam parecer link. */
+.ajuda a { color: var(--acento); text-decoration: underline; text-underline-offset: 2px; }
+.ajuda a:hover { text-decoration-thickness: 2px; }
+.com-botao select { flex: 1; min-width: 0; }

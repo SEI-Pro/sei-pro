@@ -4,7 +4,7 @@
  * `fetch` é substituído por um que grava o que recebeu.
  */
 
-import { criarProvedor, enderecoDoServico, listarModelos, parametroRecusado, SERVICOS, TEMPERATURA_PADRAO } from "../src/motor/provedor";
+import { criarProvedor, enderecoDoServico, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO } from "../src/motor/provedor";
 import { promptSistema } from "../src/motor/prompt";
 import type { PedidoLLM } from "../src/motor/tipos";
 import { checar, secao } from "./util";
@@ -81,10 +81,24 @@ export async function verificarProvedor(): Promise<void> {
   checar("repete o pedido sem o campo recusado", recusa.chamadas.length === 2 && !("temperature" in recusa.chamadas[1].corpo) && recusa.chamadas[1].corpo.max_tokens === 500);
   checar("e a resposta chega normalmente", r.texto === "ok");
 
+  const renomeia = espiao([{ status: 400, corpo: '{"error":{"message":"Unsupported parameter: \'max_tokens\' is not supported with this model. Use \'max_completion_tokens\' instead."}}' }]);
+  await criarProvedor({ servico: "openai", chave: "k", modelo: "gpt-5", ajustes: { maxTokens: 700 }, fetch: renomeia.f }).conversar(PEDIDO, new AbortController().signal, () => {});
+  checar(
+    "max_tokens vira max_completion_tokens em vez de sumir",
+    renomeia.chamadas.length === 2 && !("max_tokens" in renomeia.chamadas[1].corpo) && renomeia.chamadas[1].corpo.max_completion_tokens === 700,
+    renomeia.chamadas[1]?.corpo,
+  );
+
   secao("provedor: catalogo de modelos");
   const modelos = espiao([{ status: 200, corpo: '{"data":[{"id":"models/gemini-2.5-flash"},{"id":"models/gemini-2.5-pro"}]}' }]);
   const lista = await listarModelos({ servico: "gemini", chave: "k", fetch: modelos.f });
   checar("gemini: tira o prefixo models/", lista.map((m) => m.id).join(",") === "gemini-2.5-flash,gemini-2.5-pro", lista);
+  const ruido = espiao([
+    { status: 200, corpo: '{"data":[{"id":"gpt-5"},{"id":"text-embedding-3-large"},{"id":"gpt-4o-realtime-preview"},{"id":"dall-e-3"},{"id":"whisper-1"}]}' },
+  ]);
+  const so = await listarModelos({ servico: "openai", chave: "k", fetch: ruido.f });
+  checar("openai: catalogo sem embedding, voz e imagem", so.map((m) => m.id).join(",") === "gpt-5", so);
+  checar("servico do orgao nao filtra nada", serveParaConversar("compativel", "qualquer-coisa-v1"));
 
   secao("prompt: instrucoes do usuario");
   const semInstrucao = promptSistema(null);

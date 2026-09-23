@@ -13,7 +13,7 @@
 import { Pseudonimos } from "@nucleo/privacidade/anonimizar";
 import { Motor, type TelaAtual } from "../motor/motor";
 import { promptSistema } from "../motor/prompt";
-import { COMPATIVEIS, conferirChave, criarProvedor, enderecoDoServico, listarModelos, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
+import { COMPATIVEIS, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServico, listarModelos, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
 import { RegistroTools } from "../motor/tools";
 import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
 import { PontePainel } from "../ponte/cliente";
@@ -86,6 +86,21 @@ const marca = (tamanho: number) =>
 /** Tempo da rodada, no rodapé da resposta. */
 function carimboDeTempo(ms: number): HTMLElement {
   return h("span", { class: "tempo-resposta", title: "Tempo entre o seu pedido e a resposta pronta" }, duracao(ms));
+}
+
+
+/** Texto do serviço + link do painel do fabricante + link do passo a passo. */
+function ajudaDoServico(svc: Servico): Node[] {
+  const info = SERVICOS[svc];
+  const fora = (texto: string, url: string) => h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, texto);
+  const partes: Node[] = [document.createTextNode(info.ajuda)];
+  if (info.painelChave) partes.push(document.createTextNode(" Crie a chave em "), fora(info.painelChave.texto, info.painelChave.url), document.createTextNode("."));
+  partes.push(
+    document.createTextNode(" "),
+    fora("Como obter a chave, passo a passo", info.ancoraDoc ? `${DOC_CHAVES}#${info.ancoraDoc}` : DOC_CHAVES),
+    document.createTextNode("."),
+  );
+  return partes;
 }
 
 class App {
@@ -458,6 +473,12 @@ class App {
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
+  /**
+   * Ajuda do serviço: o texto mais os dois links que o usuário precisa — o
+   * painel do fabricante, onde a chave nasce, e o passo a passo do SEI Pro.
+   * Endereço em texto puro obriga a copiar e colar; aqui abre em outra aba.
+   */
+
   /** Configuração em modal. `obrigatorio`: primeira vez, sem chave — não fecha sem salvar. */
   private abrirConfig(obrigatorio = false): void {
     const servico = h(
@@ -467,7 +488,7 @@ class App {
         h("option", { value: id, ...(this.config.servico === id ? { selected: true } : {}) }, info.nome),
       ),
     );
-    const ajudaServico = h("div", { class: "ajuda" }, SERVICOS[this.config.servico].ajuda);
+    const ajudaServico = h("div", { class: "ajuda" }, ...ajudaDoServico(this.config.servico));
     const url = h("input", { type: "url", placeholder: "https://.../v1", value: this.config.url, list: "urlsCompativeis", spellcheck: "false", "aria-label": "Endere\u00E7o do servi\u00E7o" });
     const ajudaUrl = h("div", { class: "ajuda" });
     const chave = h("input", { type: "password", placeholder: "sk-or-v1-...", value: this.config.chave, autocomplete: "off", autofocus: true, "aria-label": "Chave do servi\u00E7o" });
@@ -481,8 +502,8 @@ class App {
     const modelo = h("select", { "aria-label": "Modelo" }, h("option", { value: this.config.modelo }, this.config.modelo));
     const modeloLivre = h("input", { type: "text", placeholder: "nome do modelo no servi\u00E7o", value: this.config.modelo, list: "modelosCompativeis", spellcheck: "false", "aria-label": "Modelo" });
     const listaModelos = h("datalist", { id: "modelosCompativeis" });
-    const buscar = h("button", {}, "Buscar modelos");
-    const ajudaModelo = h("div", { class: "ajuda" }, "S\u00F3 modelos que usam ferramentas; pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda).");
+    const buscar = h("button", { title: "Buscar a lista de modelos do servi\u00E7o" }, "Atualizar");
+    const ajudaModelo = h("div", { class: "ajuda" });
     const status = h("div", { class: "status" });
     const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
     const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
@@ -495,20 +516,6 @@ class App {
         h("option", { value: String(v), ...(this.config.dias === v ? { selected: true } : {}) }, t),
       ),
     );
-    if (this.config.servico === "openrouter")
-      void listarModelos()
-      .then((lista) => {
-        modelo.replaceChildren(
-          ...lista.map((m) =>
-            h("option", { value: m.id, ...(m.id === this.config.modelo ? { selected: true } : {}) }, `${m.nome} \u2014 US$ ${m.precoEntrada.toFixed(2)} / ${m.precoSaida.toFixed(2)}`),
-          ),
-        );
-      })
-      .catch(() => {
-        status.className = "status";
-        status.textContent = "N\u00E3o foi poss\u00EDvel listar os modelos agora; o modelo atual ser\u00E1 mantido.";
-      });
-
     /** Permissão de host: só o OpenRouter responde com CORS liberado; os demais exigem autorização do navegador. */
     const autorizarEndereco = async (endereco: string): Promise<boolean> => {
       try {
@@ -539,51 +546,110 @@ class App {
     );
     const linhaBuscar = h("div", { class: "com-botao" }, modeloLivre, buscar);
 
-    const ajustarServico = () => {
+    /**
+     * Preenche o seletor de modelos com o catálogo do serviço.
+     *
+     * Fora do OpenRouter, listar exige a permissão de host — que o navegador só
+     * concede durante um gesto do usuário. Por isso, ao abrir a tela a lista só
+     * é buscada quando a permissão já existe; nos demais casos quem dá o gesto
+     * é o próprio usuário, trocando o serviço ou clicando em "Atualizar".
+     */
+    const carregarModelos = async (gesto: boolean): Promise<void> => {
+      const svc = servico.value as Servico;
+      const endereco = enderecoDoServico(svc, url.value);
+      // Ler `modelo.value` aqui não serve: o select é reescrito enquanto carrega
+      // (e chegou a gravar "Buscando modelos..." como se fosse o modelo).
+      const escolhido = (svc === "compativel" ? modeloLivre.value.trim() : modeloAtual) || SERVICOS[svc].modeloPadrao || "";
+      if (svc === "compativel" && !/^https?:\/\//.test(endereco)) return;
+      const origens = [`${new URL(endereco).origin}/*`];
+      const temPermissao = svc === "openrouter" || (await chrome.permissions.contains({ origins: origens }).catch(() => false));
+      if (!temPermissao && !gesto) {
+        modelo.replaceChildren(h("option", { value: escolhido, selected: true }, escolhido));
+        ajudaModelo.textContent = "Clique em Atualizar para ver os modelos do servi\u00E7o (o navegador vai pedir a sua autoriza\u00E7\u00E3o).";
+        return;
+      }
+      if (!temPermissao && !(await autorizarEndereco(endereco))) {
+        status.className = "status erro";
+        status.textContent = "O navegador n\u00E3o autorizou o agente a falar com esse endere\u00E7o.";
+        return;
+      }
+      modelo.disabled = true;
+      modelo.replaceChildren(h("option", { value: "" }, "Buscando modelos..."));
+      ajudaModelo.textContent = "";
+      try {
+        const lista = await listarModelos({ servico: svc, url: endereco, chave: chave.value.trim() });
+        if ((servico.value as Servico) !== svc) return; // trocou de serviço no meio do caminho
+        if (!lista.length) throw new Error("O servi\u00E7o n\u00E3o devolveu nenhum modelo.");
+        const comPreco = svc === "openrouter";
+        const temEscolhido = lista.some((m) => m.id === escolhido);
+        modelo.replaceChildren(
+          ...(temEscolhido || !escolhido ? [] : [h("option", { value: escolhido, selected: true }, `${escolhido} (atual)`)]),
+          ...lista.map((m) =>
+            h(
+              "option",
+              { value: m.id, ...(m.id === escolhido ? { selected: true } : {}) },
+              comPreco ? `${m.nome} \u2014 US$ ${m.precoEntrada.toFixed(2)} / ${m.precoSaida.toFixed(2)}` : m.nome,
+            ),
+          ),
+        );
+        listaModelos.replaceChildren(...lista.map((m) => h("option", { value: m.id })));
+        modeloAtual = modelo.value || escolhido;
+        ajudaModelo.textContent = comPreco
+          ? "S\u00F3 modelos que usam ferramentas; pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda)."
+          : `${lista.length} modelo(s) do servi\u00E7o. A lista vem do pr\u00F3prio fabricante.`;
+        status.textContent = "";
+        status.className = "status";
+      } catch (e) {
+        modelo.replaceChildren(h("option", { value: escolhido, selected: true }, escolhido || "(sem modelo)"));
+        ajudaModelo.textContent = "";
+        status.className = "status erro";
+        status.textContent = `N\u00E3o deu para listar os modelos: ${(e as Error).message}`;
+      } finally {
+        modelo.disabled = false;
+      }
+    };
+
+    const ajustarServico = (): Servico => {
       const svc = servico.value as Servico;
       const comp = svc === "compativel";
-      const catalogo = svc === "openrouter";
       campoUrl.hidden = !comp;
       // O aviso de política de dados vale para tudo que não é OpenRouter.
-      notaCompativel.hidden = catalogo;
-      modelo.hidden = !catalogo;
-      linhaBuscar.hidden = catalogo;
-      ajudaModelo.hidden = !catalogo;
+      notaCompativel.hidden = svc === "openrouter";
+      // O seletor vale para os serviços com catálogo; num servidor próprio, que
+      // pode nem ter /models, o nome do modelo continua sendo digitado.
+      modelo.hidden = comp;
+      linhaBuscar.hidden = !comp;
       chave.placeholder = SERVICOS[svc].exemploChave;
-      ajudaServico.textContent = SERVICOS[svc].ajuda;
+      ajudaServico.replaceChildren(...ajudaDoServico(svc));
       const preset = COMPATIVEIS.find((c) => c.url === normalizarUrl(url.value));
       ajudaUrl.textContent = preset ? preset.ajuda : SERVICOS.compativel.ajuda;
       // Ao trocar de fabricante, o modelo do anterior não serve: sugere o de casa
       // (e num serviço sem sugestão, limpa em vez de deixar o nome alheio).
       const sugestao = SERVICOS[svc].modeloPadrao ?? "";
-      if (!catalogo && (!modeloLivre.value.trim() || modeloLivre.value === modeloSugerido)) {
-        modeloLivre.value = sugestao;
+      if (comp && (!modeloLivre.value.trim() || modeloLivre.value === modeloSugerido)) modeloLivre.value = sugestao;
+      // Trocou de fabricante: o modelo do anterior não existe lá.
+      if (svc !== servicoAtual) {
+        modeloAtual = svc === this.config.servico ? this.config.modelo : sugestao;
+        servicoAtual = svc;
       }
       modeloSugerido = sugestao;
-      listaModelos.replaceChildren();
+      return svc;
     };
     let modeloSugerido = SERVICOS[this.config.servico].modeloPadrao ?? "";
-    servico.addEventListener("change", ajustarServico);
+    let modeloAtual = this.config.modelo;
+    let servicoAtual: Servico = this.config.servico;
+    modelo.addEventListener("change", () => {
+      if (modelo.value) modeloAtual = modelo.value;
+    });
+    servico.addEventListener("change", () => {
+      const svc = ajustarServico();
+      // O `change` É o gesto do usuário: dá para pedir a permissão e já listar.
+      if (svc !== "compativel") void carregarModelos(true);
+    });
     url.addEventListener("input", ajustarServico);
-    buscar.addEventListener("click", async () => {
-      const svc = servico.value as Servico;
-      const endereco = enderecoDoServico(svc, url.value);
-      status.className = "status";
-      status.textContent = "Buscando modelos...";
-      if (!(await autorizarEndereco(endereco))) {
-        status.className = "status erro";
-        status.textContent = "O navegador n\u00E3o autorizou o agente a falar com esse endere\u00E7o.";
-        return;
-      }
-      try {
-        const lista = await listarModelos({ servico: svc, url: endereco, chave: chave.value.trim() });
-        listaModelos.replaceChildren(...lista.map((m) => h("option", { value: m.id })));
-        status.className = "status ok";
-        status.textContent = `${lista.length} modelo(s) dispon\u00EDvel(is).`;
-      } catch (e) {
-        status.className = "status erro";
-        status.textContent = (e as Error).message;
-      }
+    buscar.addEventListener("click", () => void carregarModelos(true));
+    chave.addEventListener("change", () => {
+      if ((servico.value as Servico) !== "compativel") void carregarModelos(false);
     });
 
     // ------------------------------------------------- avançado (controle fino)
@@ -655,7 +721,7 @@ class App {
           "div",
           { class: "campo" },
           h("label", {}, "Modelo"),
-          modelo,
+          h("div", { class: "com-botao" }, modelo, buscar),
           linhaBuscar,
           listaModelos,
           ajudaModelo,
@@ -720,10 +786,10 @@ class App {
       const k = chave.value.trim();
       const enderecoLivre = comp ? normalizarUrl(url.value) : "";
       const endereco = enderecoDoServico(svc, enderecoLivre);
-      const m = catalogo ? modelo.value || MODELO_PADRAO : modeloLivre.value.trim();
+      const m = comp ? modeloLivre.value.trim() : modelo.value || modeloAtual || SERVICOS[svc].modeloPadrao || MODELO_PADRAO;
       if (!k) return erro("Informe a chave.");
       if (comp && !/^https?:\/\//.test(endereco)) return erro("Informe o endere\u00E7o do servi\u00E7o (come\u00E7ando com https://).");
-      if (!catalogo && !m) return erro("Informe o nome do modelo no servi\u00E7o.");
+      if (!m) return erro(comp ? "Informe o nome do modelo no servi\u00E7o." : "Escolha o modelo.");
       const numeroDe = (e: HTMLInputElement, nome: string, min: number, max: number): number | undefined | null => {
         const t = e.value.trim();
         if (!t) return undefined;
@@ -775,6 +841,7 @@ class App {
       dlg.close();
     });
     ajustarServico();
+    void carregarModelos(false);
   }
 
   /** Salva a configuração e refaz o motor mantendo a conversa e os pseudônimos. */
