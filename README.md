@@ -20,6 +20,8 @@ Instale a extensão para seu navegador preferido:
 
 > [https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/](https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/)
 
+Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo pacote publicado no GitHub](./pages/INSTALACAO.md), sem passar pela loja.
+
 ## Funcionalidades disponíveis
 
 ### Tela Controle de Processos
