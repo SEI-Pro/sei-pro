@@ -2,6 +2,23 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.1
+23/09/2026
+
+Versão que ensina o agente a trabalhar do jeito da sua unidade — e a custar menos.
+
+- [Skills](../pages/AGENTEIA.md): instruções próprias da unidade que o agente carrega **só quando o pedido é daquele assunto** — como é o despacho de encaminhamento daqui, o roteiro da nota técnica, o que o parecer precisa ter. Você escreve na configuração ou aponta um arquivo `.md` do GitHub; na conversa, digite `/` e escolha, ou deixe que o próprio agente reconheça o assunto e carregue
+- *Skills da equipe*: em vez de cada pessoa cadastrar as suas, a unidade mantém as skills numa pasta de repositório público e todo mundo aponta para ela. Quem cuida do padrão edita os arquivos; cada pessoa recebe a atualização. Há dois modelos prontos para copiar em [skills-exemplo](https://github.com/SEI-Pro/sei-pro/tree/master/skills-exemplo)
+- *Desfazer*: cada alteração feita pelo agente ganha um botão **Desfazer** quando existe volta possível — reabrir o que foi concluído, devolver o marcador anterior, retirar do bloco o que foi incluído. Onde não há volta honesta (enviar, assinar, excluir), a linha diz *sem desfazer* e explica por quê
+- *Regras da unidade*: escreva o que o agente **não** pode fazer aqui ("o envio de processo é feito por uma pessoa", "Portaria não é criada pelo agente") e quem aplica é a própria extensão, antes de qualquer alteração — não depende de o modelo lembrar
+- *Memória da unidade*: o agente anota o que você corrige sobre o jeito de trabalhar e leva para as próximas conversas. Tudo aparece na conversa e na configuração, com data, e se apaga num clique; dado de processo, número e nome de pessoa **não** entram
+- *Rotinas*: perguntas que o agente faz sozinho de tempos em tempos ("processos parados há mais de 30 dias"), sempre só de leitura, executadas quando você abre o agente depois do horário marcado
+- *Tarefas longas*: leituras pesadas (dezenas de documentos) passam a ser entregues a agentes auxiliares, que trabalham em paralelo com contexto próprio e devolvem só a resposta — e podem rodar num modelo mais barato, à sua escolha
+- *Gasto*: dá para definir um **teto por conversa e por dia**, em reais, com aviso antes de bater. O trecho que se repete a cada pergunta passa a ser marcado para o cache do serviço, e conversas muito longas têm o começo resumido automaticamente, em vez de simplesmente truncado
+- *Serviços de IA*: além do OpenRouter, agora há **OpenAI**, **Google Gemini** e **Anthropic** prontos no seletor, com o endereço já configurado; o modelo é escolhido numa lista carregada do próprio fabricante. O passo a passo para conseguir a chave de cada um está em [Como obter a chave](../pages/CHAVEIA.md)
+- *Avançado*: voltou o controle fino do chat antigo — temperatura, top P, máximo de tokens e penalidades — além de um campo de instruções que valem para toda conversa
+- Blocos de assinatura e blocos internos: o agente passa a **criar bloco, incluir e retirar documentos, disponibilizar, retornar, concluir e reabrir**, além de assinar o bloco inteiro
+
 ### Versão 2.0.1
 23/09/2026
 
