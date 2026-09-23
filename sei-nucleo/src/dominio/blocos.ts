@@ -656,7 +656,12 @@ export async function criarBloco(
   };
   if (!op.aplicar) return { ...base, resumo: `Vai criar um bloco ${tipo === "assinatura" ? "de assinatura" : "interno"}: "${descricao}".` };
 
-  form.definir({ txtDescricao: descricao, ...(grupo ? { selGrupoBloco: grupo.valor } : {}) });
+  // O campo da descrição muda de nome entre versões: `txtDescricao` no SEI 4.1
+  // e `txaDescricao` (textarea) no SEI 5. Mandar o nome errado cria o bloco SEM
+  // descrição, sem erro nenhum — `definir` aceita campo que a tela não tem.
+  const campoDescricao = ["txaDescricao", "txtDescricao"].find((n) => form.valor(n) !== undefined);
+  if (!campoDescricao) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A tela de cadastro de bloco n\u00E3o tem o campo de descri\u00E7\u00E3o esperado.");
+  form.definir({ [campoDescricao]: descricao, ...(grupo ? { selGrupoBloco: grupo.valor } : {}) });
   if (destinos.length) form.definirLupa("selUnidades", destinos);
   await form.enviar({ sinal: op.sinal, botao: "sbmCadastrarBloco", operacao: "a cria\u00E7\u00E3o do bloco" });
 

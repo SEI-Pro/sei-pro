@@ -41,7 +41,19 @@ export interface Envio {
 
 /** Resolve uma unidade pelo autocompletar da tela (envio, bloco); ambígua ou ausente é erro. */
 export async function resolverUnidade(sei: Sei, ajax: string, termo: string, sinal?: AbortSignal): Promise<ItemLupa> {
-  const itens = await sei.ajax(ajax, [["palavras_pesquisa", termo], ["id_orgao", ""], ["unidade_atual", "0"]], { sinal });
+  const buscar = (palavras: string) => sei.ajax(ajax, [["palavras_pesquisa", palavras], ["id_orgao", ""], ["unidade_atual", "0"]], { sinal });
+  let itens = await buscar(termo);
+  // O autocompletar do SEI procura por PALAVRAS: a sigla inteira com hífen
+  // ("AAA-SESGE") não acha nada, embora seja o nome certo da unidade. Nesse
+  // caso, busca-se pelo pedaço mais específico e o casamento exato abaixo
+  // continua sendo quem decide.
+  if (!itens.length) {
+    const partes = [...new Set(termo.split(/[^\p{L}\p{N}]+/u).filter((x) => x.length >= 2))].sort((a, b) => b.length - a.length);
+    for (const parte of partes) {
+      itens = await buscar(parte);
+      if (itens.length) break;
+    }
+  }
   const alvo = normalizar(termo);
   const sigla = (t: string) => normalizar(t.split(" - ")[0]);
   const exatos = itens.filter((i) => sigla(i.texto) === alvo || normalizar(i.texto) === alvo);
