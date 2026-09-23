@@ -1135,10 +1135,28 @@ function sortUploadArvore() {
         }
     }).after(htmlUpload);
 }
+// Devolve o preview do arquivo da vez -- o mesmo calculo repetido nos pontos de erro daqui.
+function getElemPreviewUploadPro(_containerUpload) {
+    var index = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
+    var elem = _containerUpload.find('.dz-preview').eq(index);
+    return (elem.length == 0) ? $('.dz-preview', parent.parent.document).eq(index) : elem;
+}
+// "Enviar documentos em processos" (Controle de Processos): o erro nao pode morrer no preview do
+// arquivo. Sem avisar a janela principal, a fila de processos parava no primeiro tropeco e os
+// processos seguintes nunca eram tentados. So vale para a fila -- no envio feito dentro da
+// propria arvore do processo nao ha proximo processo para seguir.
+function avisarFalhaUploadProcessoPro(motivo, arrayDropzone) {
+    if (typeof parent.parent.falhaUploadFilesInProcess !== 'function') return false;
+    if (typeof parent.parent.arvoreDropzone === 'undefined' || parent.parent.arvoreDropzone !== arrayDropzone) return false;
+    parent.parent.falhaUploadFilesInProcess(motivo);
+    return true;
+}
+function erroUploadArvorePro(elem, motivo, arrayDropzone) {
+    elem.addClass("dz-error").find('.dz-error-message span').text(motivo);
+    avisarFalhaUploadProcessoPro(motivo, arrayDropzone);
+}
 function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
-    var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
-    var elem = _containerUpload.find('.dz-preview').eq(indexUpload);
-        elem = (elem.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexUpload) : elem;
+    var elem = getElemPreviewUploadPro(_containerUpload);
     var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
 
     if (mode == 'upload' && queuedFiles.length > 0) {
@@ -1159,12 +1177,14 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
                     if (checkPost) {
                         ajaxPostUploadArvore($html, queuedFiles, mode, result, arrayDropzone, _containerUpload);
                     } else {
-                        elem.addClass("dz-error").find('.dz-error-message span').text('Link para upload n\u00E3o encontrado');
+                        erroUploadArvorePro(elem, 'Link para upload n\u00E3o encontrado', arrayDropzone);
                     }
                 }
+            }).fail(function () {
+                erroUploadArvorePro(elem, 'N\u00E3o foi poss\u00EDvel abrir a lista de tipos de documento', arrayDropzone);
             });
         } else {
-            elem.addClass("dz-error").find('.dz-error-message span').text('Link para incluir documento n\u00E3o encontrado. Processo est\u00E1 aberto na unidade?');
+            erroUploadArvorePro(elem, 'Link para incluir documento n\u00E3o encontrado. Processo est\u00E1 aberto na unidade?', arrayDropzone);
         }
     } else if (mode == 'save' && result) {
         var href = result.urlForm;
@@ -1185,8 +1205,10 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
                 getInfoArvoreLastDoc(htmlResult, xhr.responseURL, arrayDropzone, _containerUpload);
                 // console.log('status',status);
             } else {
-                elem.addClass("dz-error").find('.dz-error-message span').text('N\u00E3o foi poss\u00EDvel fazer o upload do arquivo');
+                erroUploadArvorePro(elem, 'N\u00E3o foi poss\u00EDvel fazer o upload do arquivo', arrayDropzone);
             }
+        }).fail(function () {
+            erroUploadArvorePro(elem, 'O SEI n\u00E3o respondeu ao gravar o documento', arrayDropzone);
         });
     }
 }
@@ -1205,11 +1227,15 @@ function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDro
         url: urlForm
     }).done(function (htmlAnexo) {
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    }).fail(function () {
+        erroUploadArvorePro(getElemPreviewUploadPro(_containerUpload), 'N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio de documento externo', arrayDropzone);
     });
 }
 function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
     $.ajax({ url: urlDocExterno }).done(function (htmlAnexo) {
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    }).fail(function () {
+        erroUploadArvorePro(getElemPreviewUploadPro(_containerUpload), 'N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio de documento externo', arrayDropzone);
     });
 }
 function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload, valueSerieEscolhido = false) {
@@ -1218,10 +1244,7 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
         var hrefForm = form.attr('action');
 
         if (form.length == 0) {
-            var indexErro = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
-            var elemErro = _containerUpload.find('.dz-preview').eq(indexErro);
-                elemErro = (elemErro.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexErro) : elemErro;
-            elemErro.addClass("dz-error").find('.dz-error-message span').text('N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio de documento externo');
+            erroUploadArvorePro(getElemPreviewUploadPro(_containerUpload), 'N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio de documento externo', arrayDropzone);
             return;
         }
 
@@ -1322,10 +1345,7 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
             } else {
                 // Sem como perguntar (formulario sem tipos): avisa no proprio arquivo, como os demais erros
                 // do envio, em vez de tira-lo da lista em silencio.
-                var indexSemTipo = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
-                var elemSemTipo = _containerUpload.find('.dz-preview').eq(indexSemTipo);
-                    elemSemTipo = (elemSemTipo.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexSemTipo) : elemSemTipo;
-                elemSemTipo.addClass("dz-error").find('.dz-error-message span').text('Tipo do documento n\u00E3o identificado pelo nome do arquivo');
+                erroUploadArvorePro(getElemPreviewUploadPro(_containerUpload), 'Tipo do documento n\u00E3o identificado pelo nome do arquivo', arrayDropzone);
             }
             return;
         }
@@ -1416,11 +1436,13 @@ function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropz
     var param = getParamsUrlPro(urlParent);
     var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
 
+    var achouArvore = false;
     $.each(dataResult.split('\n'), function(index, value) {
         if (
             value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento="+param.id_procedimento+"&id_documento="+param.id_documento) !== -1
             || value.indexOf("var linkMontarArvoreProcessoDocumento") !== -1
             ) {
+            achouArvore = true;
             urlArvore = value.split("'")[1];
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
                 var arrayArvore = [];
@@ -1445,10 +1467,22 @@ function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropz
                     setTimeout(function(){ window.location.reload(); }, 500);
                     if (typeof parent.parent.nextUploadFilesInProcess === 'function' && parent.parent.arvoreDropzone) parent.parent.nextUploadFilesInProcess();
                 }
+            }).fail(function () {
+                // O documento ja entrou no processo -- so a releitura da arvore, que serve para
+                // montar o link no preview, falhou. Nao e motivo para parar a fila de processos.
+                if (queuedFiles.length == 0 && typeof parent.parent.nextUploadFilesInProcess === 'function' && parent.parent.arvoreDropzone) {
+                    parent.parent.nextUploadFilesInProcess();
+                }
             });
             return false;
         }
     });
+
+    // Resposta do SEI sem o gancho de atualizacao da arvore: daqui nao da para confirmar que o
+    // documento entrou. Antes a funcao saia calada e a fila de processos ficava parada para sempre.
+    if (!achouArvore && queuedFiles.length == 0) {
+        avisarFalhaUploadProcessoPro('O SEI n\u00E3o confirmou a inclus\u00E3o do documento', arrayDropzone);
+    }
 }
 function dropzoneAlertBoxInfo() {
     if (typeof arvoreDropzone.getAcceptedFiles === 'function') {

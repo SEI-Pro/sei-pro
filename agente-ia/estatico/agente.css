@@ -502,3 +502,17 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .ajuda a { color: var(--acento); text-decoration: underline; text-underline-offset: 2px; }
 .ajuda a:hover { text-decoration-thickness: 2px; }
 .com-botao select { flex: 1; min-width: 0; }
+
+/* Skills do usuário: lista compacta nas configurações. */
+.skills { display: flex; flex-direction: column; gap: 6px; }
+.skill { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; }
+.skill-texto { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.skill-texto strong { font-size: 12.5px; }
+.skill-texto code { font-size: 11px; background: var(--superficie-2); border-radius: 4px; padding: 1px 5px; color: var(--ink-2); }
+.skill-texto small { flex-basis: 100%; font-size: 11px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-texto small.origem { color: var(--ink-3); }
+.campo > textarea { resize: vertical; min-height: 120px; font: inherit; }
+
+/* No menu de skills (digitando "/"), o atalho vem antes do nome. */
+.menu button code { font-size: 11px; background: var(--superficie-2); border-radius: 4px; padding: 1px 5px; margin-right: 6px; color: var(--ink-2); }
+.menu button.focado { background: var(--superficie-2); }

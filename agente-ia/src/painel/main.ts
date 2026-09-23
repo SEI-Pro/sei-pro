@@ -17,12 +17,13 @@ import { COMPATIVEIS, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServic
 import { RegistroTools } from "../motor/tools";
 import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
 import { PontePainel } from "../ponte/cliente";
-import { TOOLS_MOTOR } from "../tools/motor";
+import { toolsMotor } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
 import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
+import { baixarSkill, comSkills, descricaoDoTexto, guardarSkills, listarSkills, LIMITE_SKILL, skillsCitadas, slugLivre, urlCrua, type SkillUsuario } from "./skills";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
@@ -114,6 +115,9 @@ class App {
   private tarefas: Tarefa[] = [];
   private anexo: { nome: string; texto: string } | null = null;
   private idConversa = crypto.randomUUID();
+  /** Skills do usuário (configurações), disponíveis por `/slug` e por `skill_ler`. */
+  private skills: SkillUsuario[] = [];
+
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
   private chaveTela = "";
@@ -143,6 +147,7 @@ class App {
     await this.ponte.iniciar();
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<Config> | undefined;
     this.config = { ...this.config, ...salvo };
+    this.skills = await listarSkills();
     this.ponte.aoMudar(() => this.atualizarAba());
     await this.telaConversa();
     void this.atualizarCambio();
@@ -191,17 +196,32 @@ class App {
 
     sugerir.addEventListener("click", (ev) => {
       ev.stopPropagation();
-      if (this.elMenu.hidden) {
+      if (this.elMenu.hidden || this.elMenu.dataset.tipo === "skills") {
+        this.elMenu.dataset.tipo = "sugestoes";
         this.elMenu.replaceChildren(
           ...sugestoesPara(this.tela, 8).map((a) => h("button", { role: "menuitem", onclick: () => ((this.elMenu.hidden = true), void this.enviar(a.prompt)) }, a.rotulo)),
         );
       }
-      this.elMenu.hidden = !this.elMenu.hidden;
+      this.elMenu.hidden = this.elMenu.dataset.tipo === "sugestoes" ? !this.elMenu.hidden : false;
     });
     document.addEventListener("click", () => (this.elMenu.hidden = true));
     document.addEventListener("keydown", (ev) => ev.key === "Escape" && (this.elMenu.hidden = true));
 
     this.elEntrada.addEventListener("keydown", (ev) => {
+      // Com a lista de skills aberta, as setas e o Enter são dela.
+      const itens = this.elMenu.hidden ? [] : [...this.elMenu.querySelectorAll<HTMLButtonElement>("button")];
+      if (itens.length && ["ArrowDown", "ArrowUp", "Enter", "Tab"].includes(ev.key)) {
+        const atual = itens.findIndex((b) => b.classList.contains("focado"));
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+          ev.preventDefault();
+          const proximo = (atual + (ev.key === "ArrowDown" ? 1 : itens.length - 1) + itens.length) % itens.length;
+          itens.forEach((b, i) => b.classList.toggle("focado", i === proximo));
+          return;
+        }
+        ev.preventDefault();
+        (itens[Math.max(0, atual)] ?? itens[0]).click();
+        return;
+      }
       if (ev.key === "Enter" && !ev.shiftKey) {
         ev.preventDefault();
         this.elEnviar.click();
@@ -211,6 +231,7 @@ class App {
       this.elEntrada.style.height = "auto";
       this.elEntrada.style.height = `${Math.min(this.elEntrada.scrollHeight, 180)}px`;
       this.estadoEnvio();
+      this.menuDeSkills();
     });
     this.elEnviar.addEventListener("click", () => {
       if (this.motor?.ocupado) this.motor.parar();
@@ -254,6 +275,54 @@ class App {
     this.atualizarAba();
     this.redesenhar();
     this.elEntrada.focus();
+  }
+
+  /**
+   * Lista de skills enquanto o usuário digita `/`.
+   *
+   * Mesmo menu das sugestões (o da lâmpada), aberto pelo que está sendo
+   * escrito: `/desp` filtra pelo nome e pelo atalho. Escolher completa o texto.
+   */
+  private menuDeSkills(): void {
+    const campo = this.elEntrada;
+    const ate = campo.value.slice(0, campo.selectionStart ?? campo.value.length);
+    const m = /(?:^|\s)\/([a-z0-9-]*)$/i.exec(ate);
+    if (!m || !this.skills.length) {
+      if (this.elMenu.dataset.tipo === "skills") this.elMenu.hidden = true;
+      return;
+    }
+    const termo = m[1].toLowerCase();
+    const achadas = this.skills.filter((sk) => !termo || sk.slug.includes(termo) || sk.nome.toLowerCase().includes(termo)).slice(0, 8);
+    if (!achadas.length) {
+      this.elMenu.hidden = true;
+      return;
+    }
+    const inicio = (campo.selectionStart ?? 0) - m[1].length - 1;
+    this.elMenu.dataset.tipo = "skills";
+    this.elMenu.replaceChildren(
+      ...achadas.map((sk, i) =>
+        h(
+          "button",
+          {
+            role: "menuitem",
+            class: i === 0 ? "focado" : "",
+            onclick: () => {
+              const antes = campo.value.slice(0, inicio);
+              const depois = campo.value.slice(campo.selectionStart ?? 0);
+              campo.value = `${antes}/${sk.slug} ${depois}`;
+              const cursor = antes.length + sk.slug.length + 2;
+              campo.setSelectionRange(cursor, cursor);
+              this.elMenu.hidden = true;
+              campo.focus();
+              this.estadoEnvio();
+            },
+          },
+          h("code", {}, `/${sk.slug}`),
+          h("span", {}, sk.nome),
+        ),
+      ),
+    );
+    this.elMenu.hidden = false;
   }
 
   /**
@@ -652,6 +721,61 @@ class App {
       if ((servico.value as Servico) !== "compativel") void carregarModelos(false);
     });
 
+    // ------------------------------------------------- skills do usuário
+    const listaSkills = h("div", { class: "skills" });
+    const novaSkill = h("button", {}, "Nova skill");
+    const desenharSkills = () => {
+      listaSkills.replaceChildren(
+        ...(this.skills.length
+          ? this.skills.map((sk) =>
+              h(
+                "div",
+                { class: "skill" },
+                h(
+                  "div",
+                  { class: "skill-texto" },
+                  h("strong", {}, sk.nome),
+                  h("code", {}, `/${sk.slug}`),
+                  h("small", {}, sk.descricao || descricaoDoTexto(sk.texto) || `${sk.texto.length.toLocaleString("pt-BR")} caracteres`),
+                  sk.url ? h("small", { class: "origem" }, sk.url.replace(/^https?:\/\//, "")) : null,
+                ),
+                h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${sk.nome}`, onclick: () => this.editarSkill(sk, desenharSkills) }, icone("lapis", 15)),
+                h(
+                  "button",
+                  {
+                    class: "icone",
+                    title: "Remover",
+                    "aria-label": `Remover ${sk.nome}`,
+                    onclick: async () => {
+                      this.skills = this.skills.filter((x) => x.id !== sk.id);
+                      await guardarSkills(this.skills);
+                      desenharSkills();
+                    },
+                  },
+                  icone("lixeira", 15),
+                ),
+              ),
+            )
+          : [h("div", { class: "ajuda" }, "Nenhuma skill ainda. Uma skill \u00E9 um texto com as regras da sua unidade \u2014 como \u00E9 um despacho de encaminhamento, o que a nota t\u00E9cnica precisa ter \u2014 que o agente carrega s\u00F3 quando o pedido \u00E9 daquele assunto.")]),
+      );
+    };
+    desenharSkills();
+    novaSkill.addEventListener("click", () => this.editarSkill(null, desenharSkills));
+    const secaoSkills = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Skills (instru\u00E7\u00F5es da sua unidade)"),
+      listaSkills,
+      h("div", { class: "com-botao" }, novaSkill),
+      h(
+        "div",
+        { class: "ajuda" },
+        "Na conversa, digite ",
+        h("code", {}, "/"),
+        " para escolher uma skill; o agente tamb\u00E9m carrega sozinho quando o assunto bate. O conte\u00FAdo pode ser colado ou vir de um arquivo .md do GitHub.",
+      ),
+    );
+
     // ------------------------------------------------- avançado (controle fino)
     const numero = (rotulo: string, dica: string, min: number, max: number, passo: number, valor: number | undefined, vazio: string) => {
       const campo = h("input", {
@@ -763,6 +887,7 @@ class App {
             ),
           ),
         ),
+        secaoSkills,
         avancado,
         h(
           "div",
@@ -844,6 +969,113 @@ class App {
     void carregarModelos(false);
   }
 
+  /**
+   * Cadastro de uma skill, em modal por cima da configuração.
+   *
+   * O conteúdo pode ser colado ou vir de um `.md` do GitHub — e, vindo de lá,
+   * o texto é baixado e GUARDADO: a conversa não pode depender de a rede
+   * alcançar o GitHub no meio do pedido.
+   */
+  private editarSkill(skill: SkillUsuario | null, aoFechar: () => void): void {
+    const nome = h("input", { type: "text", value: skill?.nome ?? "", placeholder: "Despacho de encaminhamento", "aria-label": "Nome da skill" });
+    const slug = h("input", { type: "text", value: skill?.slug ?? "", placeholder: "despacho-encaminhamento", spellcheck: "false", "aria-label": "Atalho" });
+    const descricao = h("input", { type: "text", value: skill?.descricao ?? "", placeholder: "Quando usar: encaminhar processo a outra unidade", "aria-label": "Descri\u00E7\u00E3o" });
+    const url = h("input", { type: "url", value: skill?.url ?? "", placeholder: "https://github.com/orgao/repo/blob/main/despacho.md", spellcheck: "false", "aria-label": "Arquivo .md no GitHub" });
+    const texto = h("textarea", { rows: "8", spellcheck: "true", "aria-label": "Conte\u00FAdo da skill" }, skill?.texto ?? "");
+    const buscar = h("button", {}, "Buscar do GitHub");
+    const status = h("div", { class: "status" });
+    const salvar = h("button", { class: "primario" }, skill ? "Salvar" : "Adicionar");
+
+    // O slug acompanha o nome enquanto o usuário não o editar à mão.
+    let slugManual = Boolean(skill);
+    slug.addEventListener("input", () => (slugManual = true));
+    nome.addEventListener("input", () => {
+      if (!slugManual) slug.value = slugLivre(nome.value, this.skills, skill?.id);
+    });
+
+    buscar.addEventListener("click", async () => {
+      const endereco = url.value.trim();
+      if (!/^https?:\/\//.test(endereco)) {
+        status.className = "status erro";
+        status.textContent = "Informe o endere\u00E7o do arquivo .md.";
+        return;
+      }
+      status.className = "status";
+      status.textContent = "Buscando...";
+      const origem = new URL(urlCrua(endereco)).origin;
+      const origens = [`${origem}/*`];
+      const ok = await chrome.permissions
+        .contains({ origins: origens })
+        .then((tem) => tem || chrome.permissions.request({ origins: origens }))
+        .catch(() => false);
+      if (!ok) {
+        status.className = "status erro";
+        status.textContent = "O navegador n\u00E3o autorizou o agente a buscar nesse endere\u00E7o.";
+        return;
+      }
+      try {
+        const conteudo = await baixarSkill(endereco);
+        texto.value = conteudo;
+        if (!nome.value.trim()) {
+          nome.value = decodeURIComponent(endereco.split("/").pop() ?? "").replace(/\.mdx?$/i, "").replace(/[-_]+/g, " ");
+          if (!slugManual) slug.value = slugLivre(nome.value, this.skills, skill?.id);
+        }
+        if (!descricao.value.trim()) descricao.value = descricaoDoTexto(conteudo);
+        status.className = "status ok";
+        status.textContent = `${conteudo.length.toLocaleString("pt-BR")} caracteres carregados.`;
+      } catch (e) {
+        status.className = "status erro";
+        status.textContent = (e as Error).message;
+      }
+    });
+
+    const dlg = this.abrirModal({
+      titulo: skill ? "Editar skill" : "Nova skill",
+      corpo: [
+        h("div", { class: "campo" }, h("label", {}, "Nome"), nome),
+        h("div", { class: "campo" }, h("label", {}, "Atalho"), h("div", { class: "com-botao" }, h("span", { class: "ajuda" }, "/"), slug), h("div", { class: "ajuda" }, "\u00C9 assim que voc\u00EA chama a skill na conversa: digite / e escolha na lista.")),
+        h("div", { class: "campo" }, h("label", {}, "Quando usar"), descricao, h("div", { class: "ajuda" }, "Uma linha. O agente l\u00EA isto para decidir sozinho se a skill serve ao pedido.")),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Arquivo no GitHub (opcional)"),
+          h("div", { class: "com-botao" }, url, buscar),
+          h("div", { class: "ajuda" }, "Link do arquivo .md em reposit\u00F3rio p\u00FAblico. O conte\u00FAdo \u00E9 copiado para c\u00E1; clique em Buscar de novo quando o arquivo mudar."),
+        ),
+        h("div", { class: "campo" }, h("label", {}, "Conte\u00FAdo"), texto, h("div", { class: "ajuda" }, `Texto ou markdown, at\u00E9 ${LIMITE_SKILL.toLocaleString("pt-BR")} caracteres. Vale escrever como se fosse uma instru\u00E7\u00E3o para um colega novo.`)),
+      ],
+      acoes: [status, h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
+    });
+
+    salvar.addEventListener("click", async () => {
+      const erro = (t: string) => {
+        status.className = "status erro";
+        status.textContent = t;
+      };
+      const n = nome.value.trim();
+      const conteudo = texto.value.trim();
+      if (!n) return erro("Informe o nome da skill.");
+      if (!conteudo) return erro("Informe o conte\u00FAdo (cole o texto ou busque do GitHub).");
+      if (conteudo.length > LIMITE_SKILL) return erro(`O conte\u00FAdo passa de ${LIMITE_SKILL.toLocaleString("pt-BR")} caracteres.`);
+      const s = slugLivre(slug.value.trim() || n, this.skills, skill?.id);
+      const nova: SkillUsuario = {
+        id: skill?.id ?? crypto.randomUUID(),
+        nome: n,
+        slug: s,
+        descricao: descricao.value.trim() || descricaoDoTexto(conteudo),
+        texto: conteudo,
+        ...(url.value.trim() ? { url: url.value.trim() } : {}),
+        atualizadaEm: Date.now(),
+      };
+      this.skills = skill ? this.skills.map((x) => (x.id === skill.id ? nova : x)) : [...this.skills, nova];
+      await guardarSkills(this.skills);
+      // O motor já em curso precisa saber das skills novas (elas vão no prompt e no skill_ler).
+      await this.aplicarConfig(this.config);
+      aoFechar();
+      dlg.close();
+    });
+  }
+
   /** Salva a configuração e refaz o motor mantendo a conversa e os pseudônimos. */
   private async aplicarConfig(nova: Config): Promise<void> {
     this.config = nova;
@@ -864,11 +1096,11 @@ class App {
     this.privacidade = mapa ?? new Pseudonimos({ nomes: this.config.nomes, cnpj: this.config.cnpj });
     return new Motor({
       provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes }),
-      tools: new RegistroTools([...TOOLS_SEI, ...TOOLS_MOTOR]),
+      tools: new RegistroTools([...TOOLS_SEI, ...toolsMotor(this.skills)]),
       ui: this.interfaceMotor(),
       privacidade: this.privacidade,
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
-      sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes),
+      sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills),
       tela: async (sinal) => ({ ...((await this.ponte.executar("tela", {}, sinal)) as TelaAtual), editores: this.ponte.editores() }),
     });
   }
@@ -885,11 +1117,15 @@ class App {
     const comecou = Date.now();
     this.ultimaResposta = null;
     const comAnexo = this.anexo ? `${t}\n\n[Anexo: ${this.anexo.nome}]\n${this.anexo.texto}` : t;
+    // `/slug` na mensagem: o conteúdo da skill vai junto, como material de apoio.
+    const usadas = skillsCitadas(t, this.skills);
+    const comContexto = comSkills(comAnexo, usadas);
     this.adicionar({ tipo: "usuario", texto: this.anexo ? `${t}\n\u{1F4CE} ${this.anexo.nome}` : t });
+    for (const sk of usadas) this.adicionar({ tipo: "tool", rotulo: `Skill: ${sk.nome}`, estado: "ok" });
     this.anexo = null;
     this.elAnexo.hidden = true;
     try {
-      const promessa = this.motor.enviar(comAnexo);
+      const promessa = this.motor.enviar(comContexto);
       this.estadoEnvio();
       this.pensar(true);
       await promessa;

@@ -3171,7 +3171,22 @@ function initTrancadoPro() {
         .addClass('trancadoPro');
 }
 
+// "Enviar documentos em processos" percorre os processos marcados um a um, e ate aqui a fila so
+// avancava pelos dois caminhos de SUCESSO (nextUploadFilesInProcess): bastava um processo falhar
+// -- fechado na unidade, formulario que nao abre, 504 do servidor -- para a rodada inteira morrer
+// ali, sem aviso, com os processos seguintes ainda marcados. Agora cada falha e registrada, o
+// processo e pulado e a fila continua; no fim sai um resumo com os que ficaram de fora.
+var uploadProcessFalhas = [];
+var uploadProcessPulados = [];
+var uploadProcessArquivos = [];
+var uploadProcessTentativasArvore = 0;
+var uploadProcessCargaIniciada = 0;
+var uploadProcessCargaSeq = 0;
+
 function initUploadFilesInProcess() {
+    uploadProcessFalhas = [];
+    uploadProcessPulados = [];
+    uploadProcessArquivos = [];
     if (typeof Dropzone === 'function') {
         setUploadFilesInProcess();
     } else {
@@ -3182,9 +3197,27 @@ function getListIdProtocoloSelected() {
     var listId = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(getElemCheckboxPro()+':checked').map(function(){ return $(this).val() }).get();
     return (listId.length > 0) ? listId : false;
 }
-function setUploadFilesInProcess(load_upload = true) {
+// Os processos que falharam continuam marcados de proposito -- e assim que o usuario ve onde o
+// documento nao entrou --, entao a fila precisa ignora-los: sem isto ela repetiria para sempre o
+// mesmo processo, que e justamente o que nao aceita o documento.
+function getListIdProtocoloPendentePro() {
     var listId = getListIdProtocoloSelected();
-    if (listId.length > 0) {
+    if (!listId) return false;
+    var pendentes = $.grep(listId, function(id){ return $.inArray(id, uploadProcessPulados) === -1 });
+    return (pendentes.length > 0) ? pendentes : false;
+}
+function getCheckboxProtocoloPro(idProcedimento) {
+    return $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')
+            .find(getElemCheckboxPro()+'[value="'+idProcedimento+'"]');
+}
+function getNumProcessoUploadPro(idProcedimento) {
+    var chk = getCheckboxProtocoloPro(idProcedimento);
+    var num = chk.attr('title') || chk.closest('tr').find('a[href*="procedimento_trabalhar"]').first().text();
+    return $.trim(num || '') || idProcedimento;
+}
+function setUploadFilesInProcess(load_upload = true) {
+    var listId = getListIdProtocoloPendentePro();
+    if (listId) {
         $('#frmCheckerProcessoPro').remove();
         loadIframeProcessUpload(listId[0], load_upload);
     }
@@ -3195,33 +3228,106 @@ function loadIframeProcessUpload(idProcedimento, load_upload = true) {
     var url = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
     $(divComandos+' .iconUpload_new').addClass('iconLoading');
     
+    uploadProcessTentativasArvore = 0;
+    var seqCarga = ++uploadProcessCargaSeq;
     $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
-        var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore');
-            contentW = ifrArvore[0].contentWindow;
-            $(divComandos+' .iconUpload_new').removeClass('iconLoading');
-            if (load_upload) {
-                getUploadFilesInProcess();
-            } else {
-                contentW.sendUploadArvore('upload', false, arvoreDropzone, $(containerUpload));
-            }
+        iniciarUploadArvoreProcessoPro(load_upload, seqCarga);
     });
 }
+// O 'load' do iframe dispara antes de a arvore do processo existir em parte das cargas (e o
+// proprio SEI recarrega o ifrArvore depois, disparando o evento de novo): ler contentWindow ali
+// lancava TypeError e a fila parava calada. Espera a arvore ficar pronta, ignora as cargas
+// repetidas e, esgotada a espera, pula o processo em vez de parar tudo.
+function iniciarUploadArvoreProcessoPro(load_upload, seqCarga) {
+    if (seqCarga !== uploadProcessCargaSeq || uploadProcessCargaIniciada === seqCarga) return;
+
+    var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore');
+    var janelaArvore = (ifrArvore.length && ifrArvore[0].contentWindow) ? ifrArvore[0].contentWindow : false;
+
+    if (!janelaArvore || typeof janelaArvore.sendUploadArvore !== 'function') {
+        uploadProcessTentativasArvore++;
+        if (uploadProcessTentativasArvore > 40) {
+            $(divComandos+' .iconUpload_new').removeClass('iconLoading');
+            falhaUploadFilesInProcess('N\u00E3o foi poss\u00EDvel abrir o processo');
+            return;
+        }
+        setTimeout(function(){ iniciarUploadArvoreProcessoPro(load_upload, seqCarga) }, 500);
+        return;
+    }
+
+    uploadProcessCargaIniciada = seqCarga;
+    contentW = janelaArvore;
+    $(divComandos+' .iconUpload_new').removeClass('iconLoading');
+    if (load_upload) {
+        getUploadFilesInProcess();
+    } else {
+        contentW.sendUploadArvore('upload', false, arvoreDropzone, $(containerUpload));
+    }
+}
 function completeIdProtocoloSelected() {
-    var listId = getListIdProtocoloSelected();
-        $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr#P'+listId[0]).find(getElemCheckboxPro()+':checked').trigger('click');
+    var listId = getListIdProtocoloPendentePro();
+    if (!listId) return;
+    getCheckboxProtocoloPro(listId[0]).filter(':checked').trigger('click');
 }
 function nextUploadFilesInProcess() {
     completeIdProtocoloSelected();
-
-    if (getListIdProtocoloSelected()) {
+    seguirUploadFilesInProcess();
+}
+// Chamada pelos pontos de erro da arvore (sei-pro-arvore.js): guarda o motivo, DEIXA o processo
+// marcado -- e como o usuario enxerga onde o documento nao entrou -- e passa para o proximo.
+function falhaUploadFilesInProcess(motivo) {
+    var listId = getListIdProtocoloPendentePro();
+    if (!listId) return;
+    var idProcedimento = listId[0];
+    uploadProcessPulados.push(idProcedimento);
+    uploadProcessFalhas.push({
+        id: idProcedimento,
+        processo: getNumProcessoUploadPro(idProcedimento),
+        motivo: $.trim(motivo || '') || 'Falha n\u00E3o identificada'
+    });
+    seguirUploadFilesInProcess();
+}
+function seguirUploadFilesInProcess() {
+    if (getListIdProtocoloPendentePro()) {
         cleanUploadFilesInProcess();
         setUploadFilesInProcess(false);
     } else {
         removeUploadFilesInProcess();
-        alertaBoxPro('Sucess', 'check-circle', 'Arquivos enviados com sucesso!');
+        resumoUploadFilesInProcess();
     }
 }
+function resumoUploadFilesInProcess() {
+    var falhas = uploadProcessFalhas;
+    uploadProcessFalhas = [];
+    uploadProcessPulados = [];
+
+    if (falhas.length == 0) {
+        alertaBoxPro('Sucess', 'check-circle', 'Arquivos enviados com sucesso!');
+        return;
+    }
+
+    var lista = $.map(falhas, function(v){
+        return '<div style="font-size: 9pt; background: #f2f2f2; border-radius: 5px; padding: 6px 8px; margin: 6px 0;">'+
+               '   <i class="fas fa-folder cinzaColor" style="margin-right: 5px;"></i>'+v.processo+
+               '   <span style="background: #fff0f0; display: block; margin-top: 4px; padding: 3px 5px; border-radius: 5px; color: #f54040;">'+v.motivo+'</span>'+
+               '</div>';
+    }).join('');
+
+    alertaBoxPro('Error', 'exclamation-triangle',
+        'O envio terminou, mas '+falhas.length+' '+(falhas.length == 1 ? 'processo ficou' : 'processos ficaram')+' sem o documento:'+
+        '<div style="margin-top: 8px; max-height: 260px; overflow: auto;">'+lista+'</div>'+
+        '<span style="font-size: 9pt; display: block; margin-top: 6px;">'+
+        (falhas.length == 1 ? 'Ele continua marcado' : 'Eles continuam marcados')+' na tela, para voc\u00EA conferir e tentar de novo.</span>');
+}
+// A mensagem de erro do dropzone pode vir como objeto ou como a pagina de erro inteira do
+// servidor (o 504 do nginx chega assim): so o comeco, em texto puro, serve para o resumo.
+function textoFalhaUploadPro(mensagem) {
+    var texto = (typeof mensagem === 'string') ? mensagem : ((mensagem && mensagem.error) ? mensagem.error : '');
+        texto = $.trim($('<div>').html(String(texto).replace(/<[^>]*>/g, ' ')).text()).replace(/\s+/g, ' ');
+    return texto ? texto.substring(0, 160) : 'Falha no envio do arquivo';
+}
 function removeUploadFilesInProcess() {
+    uploadProcessArquivos = [];
     $('#uploadListPro').remove();
     $('.dz-infoupload-home').remove();
     $(containerUpload).data('index',0);
@@ -3239,11 +3345,22 @@ function onClickRemoveDragHoverHome() {
 function cleanUploadFilesInProcess() {
     $('#uploadListPro').html('');
     $(containerUpload).data('index',0);
-    if (typeof arvoreDropzone.files !== 'undefined' && arvoreDropzone.files.length) {
+    // Os mesmos arquivos sao reenfileirados a cada processo. Antes isto era feito percorrendo
+    // arvoreDropzone.files e chamando addFile(), que empurra de volta no MESMO array: a lista
+    // DOBRAVA a cada processo (2, 4, 8, 16...) e, em listas com algumas dezenas de processos, o
+    // navegador afogava em previews e parava no meio -- o "travou e nao enviou para os outros".
+    // Sao as mesmas referencias de File, entao nunca chegou a duplicar documento no SEI.
+    // Guarda os arquivos originais uma vez e recomeca sempre a partir deles.
+    if (typeof arvoreDropzone.files === 'undefined') return;
+    if (uploadProcessArquivos.length == 0) {
         $.each(arvoreDropzone.files, function(i, v){
-            arvoreDropzone.addFile(v);
+            if ($.inArray(v, uploadProcessArquivos) === -1) uploadProcessArquivos.push(v);
         });
     }
+    arvoreDropzone.files = [];
+    $.each(uploadProcessArquivos, function(i, v){
+        arvoreDropzone.addFile(v);
+    });
 }
 function getUploadFilesInProcess() {
     var _containerUpload = $(containerUpload);
@@ -3336,8 +3453,15 @@ function getUploadFilesInProcess() {
         }
         params.paramsForm = postData;
         contentW.sendUploadArvore('save', params, arvoreDropzone, _containerUpload);
-    }).on('error', function(e) {
-        contentW.sendUploadArvore('upload', false, arvoreDropzone, _containerUpload);
+    }).on('error', function(file, mensagem) {
+        // Erro do proprio envio (rede caindo, 504 do servidor, arquivo recusado pelo SEI): se
+        // ainda ha arquivos na fila deste processo, segue com eles; se nao, pula o processo em
+        // vez de deixar a rodada inteira parada, como acontecia.
+        if (arvoreDropzone.getQueuedFiles().length > 0) {
+            contentW.sendUploadArvore('upload', false, arvoreDropzone, _containerUpload);
+        } else if (typeof falhaUploadFilesInProcess === 'function' && $('#dz-infoupload.dz-infoupload-home').length) {
+            falhaUploadFilesInProcess(textoFalhaUploadPro(mensagem));
+        }
     }).on('dragleave', function(e) {
         _containerUpload.addClass('dz-drag-hover');
         onClickRemoveDragHoverHome();

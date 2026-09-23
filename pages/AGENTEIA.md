@@ -18,6 +18,7 @@ Um agente de inteligência artificial que trabalha **dentro do SEI**, pela sua p
 | Pesquisar processos e documentos do órgão | Criar documento e escrever o conteúdo |
 | Ler o documento aberto no editor | Assinar, enviar para outra unidade, excluir, cancelar, dar ciência |
 | Ver blocos de assinatura e internos, com o conteúdo | Criar bloco, incluir e retirar documentos, assinar o bloco inteiro, disponibilizar, retornar, concluir e reabrir |
+| Carregar as **skills** da sua unidade (o modelo de despacho, o roteiro da nota técnica) | Seguir essas regras ao escrever |
 
 Alguns exemplos do que dá para pedir:
 
@@ -78,6 +79,31 @@ No fim das configurações há a seção **Avançado**, fechada por padrão — 
 Campo em branco usa o padrão do serviço, e **Restaurar padrões** limpa todos. Se o modelo escolhido não aceitar um desses ajustes, o agente refaz o pedido sem ele em vez de falhar.
 
 As instruções adicionais entram no fim das instruções do agente e valem para estilo e formato. Elas **não** dispensam a sua aprovação antes de qualquer escrita no SEI, não liberam processo sigiloso e não fazem o agente pedir senha na conversa.
+
+### Skills: as regras da sua unidade
+
+O agente já sabe trabalhar no SEI, mas não sabe como **a sua unidade** faz as coisas — o que o despacho de encaminhamento precisa ter, o roteiro da nota técnica, as exigências do parecer. Uma **skill** é esse conhecimento escrito uma vez e carregado **só quando o pedido é daquele assunto**, para não pesar em toda conversa.
+
+Cadastre em **Configuração → Skills**:
+
+| Campo | Para que serve |
+| ----- | -------------- |
+| **Nome** | Como você chama a skill (livre) |
+| **Atalho** | O que você digita na conversa, depois de `/` |
+| **Quando usar** | Uma linha; é por ela que o agente decide sozinho se a skill serve ao pedido |
+| **Arquivo no GitHub** | Opcional: link de um `.md` em repositório público — o conteúdo é copiado para cá |
+| **Conteúdo** | O texto da instrução, escrito como se fosse para um colega novo |
+
+Há duas formas de usar:
+
+* **Você chama**: digite `/` na conversa e escolha na lista (ou `/desp` para filtrar). O conteúdo entra junto com aquele pedido;
+* **O agente chama**: quando o assunto bate com o "quando usar", ele carrega a skill sozinho — aparece na conversa como *Ler instruções*.
+
+Guardar o conteúdo, e não só o link, é proposital: a conversa não pode parar porque a rede do órgão não alcançou o GitHub naquele instante. Quando o arquivo mudar, abra a skill e clique em **Buscar do GitHub** de novo.
+
+> As skills orientam o trabalho, mas **não** revogam as regras do agente: escrita no SEI continua passando pela sua aprovação, processo sigiloso continua fora e senha nunca é pedida na conversa.
+
+Para preferências curtas que valem para **toda** conversa — tratamento, estilo, o que sempre citar —, use **Instruções adicionais**, na seção Avançado.
 
 ### Nada é alterado sem a sua aprovação
 

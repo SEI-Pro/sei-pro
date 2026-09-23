@@ -10,7 +10,21 @@ import { definirTool, type DefTool } from "../motor/tools";
 import type { Tarefa } from "../motor/tipos";
 import { SKILLS } from "../skills";
 
-export const TOOLS_MOTOR: DefTool[] = [
+/** Skill escrita pelo usuário nas configurações (ver painel/skills.ts). */
+export interface SkillExtra {
+  slug: string;
+  nome: string;
+  descricao: string;
+  texto: string;
+}
+
+export function toolsMotor(extras: SkillExtra[] = []): DefTool[] {
+  const disponiveis: Array<[string, string, string]> = [
+    ...Object.entries(SKILLS).map(([k, v]) => [k, v.descricao, v.texto] as [string, string, string]),
+    ...extras.map((e) => [e.slug, `${e.nome}: ${e.descricao}`.trim(), e.texto] as [string, string, string]),
+  ];
+  const textos = new Map(disponiveis.map(([k, , t]) => [k, t]));
+  return [
   definirTool({
     nome: "plano_propor",
     descricao:
@@ -51,12 +65,16 @@ export const TOOLS_MOTOR: DefTool[] = [
 
   definirTool({
     nome: "skill_ler",
-    descricao: `Carrega instru\u00E7\u00F5es detalhadas sobre um assunto. Dispon\u00EDveis: ${Object.entries(SKILLS)
-      .map(([k, v]) => `"${k}" (${v.descricao})`)
+    descricao: `Carrega instru\u00E7\u00F5es detalhadas sobre um assunto. Dispon\u00EDveis: ${disponiveis
+      .map(([k, d]) => `"${k}" (${d})`)
       .join("; ")}. Leia "redacao-oficial" antes de escrever conte\u00FAdo de documento.`,
-    parametros: s.objeto({ nome: s.texto({ enum: Object.keys(SKILLS) }) }),
+    parametros: s.objeto({ nome: s.texto({ enum: disponiveis.map(([k]) => k) }) }),
     efeito: "interna",
     rotulo: (a) => `Ler instru\u00E7\u00F5es: ${a.nome}`,
-    executar: async (a) => SKILLS[String(a.nome)]?.texto ?? "Skill n\u00E3o encontrada.",
+    executar: async (a) => textos.get(String(a.nome)) ?? "Skill n\u00E3o encontrada.",
   }),
-];
+  ];
+}
+
+/** As tools do motor sem skills do usuário (testes e usos que não têm configuração). */
+export const TOOLS_MOTOR: DefTool[] = toolsMotor();
