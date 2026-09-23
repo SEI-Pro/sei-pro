@@ -14,7 +14,7 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { avaliarNaTela, executarOperacao, lerTela } from "./operacoes";
+import { avaliarNaTela, executarOperacao, lerTela, marcarAvisoDeFluxo } from "./operacoes";
 import { CANAL, CHAVE_ABERTURA, ehDoCanal, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
@@ -183,11 +183,25 @@ function iniciar(): void {
     return cache.pagina;
   };
   const sei = new Sei(location.href, paginaViva);
-  // `tela` e `fluxo.avaliar` leem o DOM vivo: nenhuma requisição ao SEI nasce
-  // delas, e por isso ficam fora do despacho de operações do núcleo.
+  // O legado redesenha os ícones da barra a cada 1,5 s e leva o ponto de aviso
+  // junto: enquanto o aviso vale, ele precisa ser reposto.
+  let repor: ReturnType<typeof setInterval> | null = null;
+  const avisoDeFluxo = (tem: boolean) => {
+    marcarAvisoDeFluxo(document, tem);
+    if (tem && !repor) repor = setInterval(() => marcarAvisoDeFluxo(document, true), 2000);
+    if (!tem && repor) {
+      clearInterval(repor);
+      repor = null;
+    }
+  };
+
+  // `tela`, `fluxo.avaliar` e `fluxo.aviso` só mexem no DOM vivo: nenhuma
+  // requisição ao SEI nasce delas, e por isso ficam fora do despacho de
+  // operações do núcleo.
   abrirCanal("sei", undefined, (op, args, sinal) => {
     if (op === "tela") return Promise.resolve(lerTela(document, location.href));
     if (op === "fluxo.avaliar") return Promise.resolve(avaliarNaTela(document, args));
+    if (op === "fluxo.aviso") return Promise.resolve(avisoDeFluxo(args.tem === true));
     return executarOperacao(sei, op, args, sinal);
   });
   instalarEntradaNoMenu();

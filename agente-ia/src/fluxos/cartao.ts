@@ -1,0 +1,41 @@
+/**
+ * O texto do cartão de sugestão.
+ *
+ * Fica separado da tela porque é uma promessa, não uma string: o cartão fala de
+ * ESTRUTURA — que documento existe, qual não existe, em que ordem — e SEMPRE no
+ * condicional.
+ *
+ * Duas coisas que ele não pode fazer, e que o teste guarda:
+ *
+ * 1. afirmar qualquer coisa sobre o CONTEÚDO dos documentos. A avaliação nem
+ *    leu o conteúdo (é local, sobre os títulos da árvore). Se a etapa depende
+ *    do que a Nota Técnica concluiu, isso só é conferido DEPOIS do clique, ao
+ *    preparar a minuta — e o agente avisa quando o conteúdo não confirma;
+ * 2. mandar o servidor público fazer algo. Quem decide o rito é a unidade; o
+ *    SEI Pro mostra o que o mapa dela prevê.
+ */
+
+export interface DadosDoCartao {
+  /** Nome do fluxo. */
+  fluxo: string;
+  /** Nome da etapa que falta. */
+  etapa: string;
+  etapaAnterior: string;
+  anterior: { numero: string; titulo: string; assinado: boolean };
+  cumpridas: Array<{ etapa: string; numero: string; titulo: string }>;
+}
+
+const comNumero = (d: { titulo: string; numero: string }): string => (d.numero ? `${d.titulo} (${d.numero})` : d.titulo);
+
+export function textoDaSugestao(s: DadosDoCartao): string {
+  const selo = s.anterior.assinado ? "assinado" : "ainda sem assinatura";
+  return `Nestes autos, o último documento do rito é ${comNumero(s.anterior)}, ${selo}. O fluxo "${s.fluxo}" prevê ${s.etapa} depois dele, e não há ${s.etapa} na árvore — talvez seja a próxima providência.`;
+}
+
+/** "Ver detalhes": as etapas cumpridas, na ordem, e a que falta. */
+export function detalhesDaSugestao(s: DadosDoCartao): string[] {
+  return [
+    ...s.cumpridas.map((c, i) => `${i + 1}. ${c.etapa}: ${comNumero(c)}`),
+    `${s.cumpridas.length + 1}. ${s.etapa}: falta`,
+  ];
+}

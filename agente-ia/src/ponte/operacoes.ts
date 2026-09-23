@@ -167,6 +167,58 @@ export function processoParaFluxo(arv: Arvore, unidade?: string): ProcessoNaTela
   };
 }
 
+const MARCA_AVISO = "seiProAvisoFluxo";
+
+/**
+ * Ponto discreto no ícone do agente, na barra do SEI.
+ *
+ * O ícone vive no DOM da PÁGINA (o legado o desenha), mas o content script o
+ * alcança: é o mesmo documento, e o iframe da visualização é da mesma origem.
+ * O estilo vai inline porque a folha do SEI Pro não conhece este ponto — e
+ * porque uma classe nova exigiria mexer no CSS de doze empacotamentos.
+ *
+ * ARMADILHA: o legado redesenha os ícones da barra a cada 1,5 s (o iframe da
+ * visualização recarrega e os apaga), e leva o ponto junto. Quem chama isto
+ * precisa reaplicar enquanto o aviso valer — ver `aba.ts`.
+ */
+export function marcarAvisoDeFluxo(doc: Document, tem: boolean): void {
+  const alvos: Element[] = [];
+  const juntar = (d: Document | null | undefined) => {
+    if (!d) return;
+    try {
+      alvos.push(...d.querySelectorAll(".iconPro_agenteia, #iconAIActions"));
+    } catch {
+      /* iframe de outra origem ou ainda carregando */
+    }
+  };
+  juntar(doc);
+  const conteudo = doc.querySelector<HTMLIFrameElement>("#ifrConteudoVisualizacao");
+  juntar(conteudo?.contentDocument);
+  juntar(conteudo?.contentDocument?.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentDocument);
+  juntar(doc.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentDocument);
+
+  for (const alvo of alvos) {
+    const antigo = alvo.querySelector(`.${MARCA_AVISO}`);
+    if (!tem) {
+      antigo?.remove();
+      continue;
+    }
+    if (antigo) continue;
+    const ponto = alvo.ownerDocument.createElement("span");
+    ponto.className = MARCA_AVISO;
+    ponto.title = "O Agente de IA tem uma sugest\u00E3o de fluxo para este processo.";
+    ponto.setAttribute("aria-hidden", "true");
+    ponto.setAttribute(
+      "style",
+      "position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:#e8710a;box-shadow:0 0 0 2px rgba(255,255,255,.9);pointer-events:none;",
+    );
+    // O ícone precisa ser a referência do posicionamento, ou o ponto vai parar
+    // no canto da barra inteira.
+    if (alvo instanceof HTMLElement && getComputedStyle(alvo).position === "static") alvo.style.position = "relative";
+    alvo.append(ponto);
+  }
+}
+
 /** O que o painel recebe quando há sugestão: ids e texto, nada do SEI. */
 export interface SugestaoDeFluxo {
   protocolo: string;

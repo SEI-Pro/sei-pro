@@ -591,3 +591,10 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
   .estudio { grid-template-columns: minmax(0, 1fr); }
   .estudio .lado { border-right: none; border-bottom: 1px solid var(--linha); max-height: 32vh; }
 }
+
+/* Cartão de sugestão do Estúdio de Fluxo, acima da conversa. */
+.aviso-fluxo { padding: var(--e3) var(--e3) 0; }
+.cartao.fluxo { border-color: color-mix(in srgb, var(--atencao) 45%, var(--linha)); }
+.cartao.fluxo .badge { background: var(--atencao-bg); color: var(--atencao); }
+.cartao.fluxo .acoes button { flex: 0 1 auto; font-size: 11.5px; padding: 5px 9px; }
+.detalhes-fluxo { color: var(--ink-2); margin-top: var(--e2); }
