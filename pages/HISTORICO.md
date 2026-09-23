@@ -2,6 +2,18 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.1.1
+23/09/2026
+
+Versão de correção do editor, com uma função nova.
+
+- **Novo** — [Converter os números SEI do texto em links](../pages/LINKSEILOTE.md): escreveu um despacho que cita vários documentos? Em vez de marcar número por número e clicar no botão de link a cada vez, a extensão varre o texto, encontra os números e converte todos de uma vez. Ela reconhece o tamanho do número olhando os documentos do próprio processo, mostra antes a lista do que encontrou — para você desmarcar o que não for documento — e, no fim, diz quais ficaram de fora e por quê. No SEI 5 fica na barra do editor; no SEI 3 e 4, dentro da janela *Inserir um Link para processo ou documento do SEI!*
+- **Botões do SEI Pro voltam à barra do editor no SEI 5.** Nenhum deles aparecia: a extensão concluía que o editor era o antigo, porque o SEI 5 também chama o CKEditor de `CKEDITOR`. Com isso, as funções do editor ficavam todas inacessíveis — tabela rápida, estilos, sumário, nota de rodapé, referências, QR Code, marca d'água e as demais
+- **Aumentar e diminuir o tamanho da letra** volta a funcionar no SEI 3 e 4: a extensão dizia *"Selecione um texto"* mesmo com o texto selecionado. O mesmo defeito atingia **Copiar formatação**, **Marca de sigilo** e **Revisar documento**
+- Aumentar e diminuir a letra também passam a existir **no SEI 5**, onde os botões nunca chegaram a ser criados. E, no SEI 3 e 4, a fonte deixa de empacar: a partir do terceiro clique ela parava de crescer
+- **Inserir link do SEI** com o número já selecionado: a janela volta a vir preenchida e confirmada sozinha
+- Corrigido um erro que disparava a cada clique dentro do texto e impedia a extensão de receber as teclas — era o que atrapalhava a [escrita interativa](../pages/ESCRITAINTERATIVA.md) (`#` e `@`) no SEI 3 e 4
+
 ### Versão 2.1
 23/09/2026
 
