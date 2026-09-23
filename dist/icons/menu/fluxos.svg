@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg width="100%" height="100%" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g>
+    <!-- Tres etapas empilhadas e as setas entre elas: o rito, de cima para baixo.
+         Icone PROPRIO com cor propria, como o das Ferramentas de PDF. Os botoes
+         vizinhos da barra usam GIF 1x1 + <i> do Font Awesome com `color: #fff`
+         inline, que no SEI 4.1+/5 -- barra de acoes BRANCA -- fica branco sobre
+         branco e some sem erro nenhum. -->
+    <rect x="232" y="96" width="560" height="196" rx="62" style="fill:#4a7dff;"/>
+    <rect x="232" y="414" width="560" height="196" rx="62" style="fill:#6b74f7;"/>
+    <rect x="232" y="732" width="560" height="196" rx="62" style="fill:#8f6ef0;"/>
+    <path d="M512,292L512,414" style="fill:none;stroke:#939ea7;stroke-width:44px;stroke-linecap:round;"/>
+    <path d="M512,610L512,732" style="fill:none;stroke:#939ea7;stroke-width:44px;stroke-linecap:round;"/>
+  </g>
+</svg>

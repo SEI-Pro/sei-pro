@@ -556,3 +556,38 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .grupo > summary:hover strong { color: var(--acento); }
 .grupo-corpo { display: flex; flex-direction: column; gap: var(--e3); padding: var(--e3); }
 .rodape-modal { margin-top: var(--e2); }
+
+/* ---------------------------------------------------- Estúdio de Fluxo
+   A página do estúdio (html/fluxos.html) usa ESTA folha: os tokens, os botões,
+   os campos e o modal são os mesmos do painel. O que entra aqui é só o que a
+   tela cheia precisa e o painel não tem — o layout de duas colunas e o cartão
+   de etapa. Um segundo sistema de estilo só criaria dois lugares para corrigir
+   a mesma cor. */
+.estudio { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); }
+.estudio .lado { border-right: 1px solid var(--linha); background: var(--superficie); overflow-y: auto; padding: var(--e3); display: flex; flex-direction: column; gap: 6px; }
+.estudio .lado h3 { margin: 0 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; }
+.estudio .obra { overflow-y: auto; padding: var(--e4) var(--e4) var(--e5); }
+.obra-caixa { max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--e4); }
+.obra-caixa h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.02em; }
+.item-fluxo { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; text-align: left; width: 100%; }
+.item-fluxo:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
+.item-fluxo.atual { border-color: var(--acento); background: var(--acento-suave); }
+.item-fluxo .corpo { flex: 1; min-width: 0; }
+.item-fluxo b { display: block; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fluxo small { display: block; font-size: 11px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-fluxo.desligado b, .item-fluxo.desligado small { color: var(--ink-3); }
+.etapa-cartao { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); box-shadow: var(--sombra-1); }
+.etapa-topo { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+.etapa-topo .ordem { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--acento-suave); color: var(--acento); font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.etapa-topo .nome { flex: 1; min-width: 0; font-weight: 600; font-size: 13px; }
+.etapa-corpo { display: flex; flex-direction: column; gap: var(--e3); padding: 0 10px 10px; border-top: 1px solid var(--linha); padding-top: var(--e3); }
+.dupla { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--e3); }
+.pendencias { display: flex; flex-direction: column; gap: 4px; margin: 0; padding-left: 18px; font-size: 12px; color: var(--erro); }
+.acoes-obra { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.acoes-obra .espaco { margin-right: auto; }
+/* Em tela estreita (a janela pode ser dividida ao lado do SEI) as duas colunas
+   viram uma: a lista some para o editor caber. */
+@media (max-width: 880px) {
+  .estudio { grid-template-columns: minmax(0, 1fr); }
+  .estudio .lado { border-right: none; border-bottom: 1px solid var(--linha); max-height: 32vh; }
+}

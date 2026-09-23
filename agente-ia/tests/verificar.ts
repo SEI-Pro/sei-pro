@@ -9,6 +9,7 @@ import { verificarCambio, verificarSugestoes } from "./verificar-sugestoes";
 import { verificarFluxosModelo } from "./verificar-fluxos";
 import { verificarAvaliarFluxo, verificarProcessoDaArvore } from "./verificar-avaliar";
 import { verificarInferirFluxo } from "./verificar-inferir";
+import { verificarEstudio } from "./verificar-estudio";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -24,4 +25,5 @@ verificarFluxosModelo();
 verificarAvaliarFluxo();
 verificarProcessoDaArvore();
 await verificarInferirFluxo();
+verificarEstudio();
 resumo();

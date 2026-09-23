@@ -3,6 +3,7 @@
  * Build do Agente de IA.
  *
  *   dist/js/agente/painel.js   painel lateral (ESM; pdf.js entra em chunk sob demanda)
+ *   dist/js/estudio/estudio.js Estudio de Fluxo, pagina em tela cheia (ESM)
  *   dist/js/init_agente.js     content script do SEI (IIFE, mundo isolado)
  *   dist/html/agente.html      página do painel (cópia de estatico/)
  *   dist/css/agente.css        estilos do painel (cópia de estatico/)
@@ -20,6 +21,7 @@ import { fileURLToPath } from "node:url";
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(AQUI, "..", "dist");
 const SAIDA_PAINEL = join(DIST, "js", "agente");
+const SAIDA_ESTUDIO = join(DIST, "js", "estudio");
 
 const comum = {
   bundle: true,
@@ -34,6 +36,8 @@ const comum = {
 
 await rm(SAIDA_PAINEL, { recursive: true, force: true });
 await mkdir(SAIDA_PAINEL, { recursive: true });
+await rm(SAIDA_ESTUDIO, { recursive: true, force: true });
+await mkdir(SAIDA_ESTUDIO, { recursive: true });
 
 await build({
   ...comum,
@@ -42,6 +46,15 @@ await build({
   entryNames: "painel",
   format: "esm",
   splitting: true,
+});
+
+// Sem `splitting`: e uma entrada so, e chunk compartilhado nao teria com quem
+// compartilhar -- daria um arquivo a mais para declarar no web_accessible_resources.
+await build({
+  ...comum,
+  entryPoints: [resolve(AQUI, "src/estudio/main.ts")],
+  outfile: join(SAIDA_ESTUDIO, "estudio.js"),
+  format: "esm",
 });
 
 await build({
@@ -60,10 +73,12 @@ await build({
 });
 
 await copyFile(resolve(AQUI, "estatico/agente.html"), join(DIST, "html", "agente.html"));
+await copyFile(resolve(AQUI, "estatico/fluxos.html"), join(DIST, "html", "fluxos.html"));
 await copyFile(resolve(AQUI, "estatico/agente.css"), join(DIST, "css", "agente.css"));
 
 const kb = async (f) => `${Math.round((await stat(f)).size / 1024)} KB`;
 console.log("\nAgente de IA -- build");
 for (const f of await readdir(SAIDA_PAINEL)) console.log(`  js/agente/${f.padEnd(28)} ${await kb(join(SAIDA_PAINEL, f))}`);
+for (const f of await readdir(SAIDA_ESTUDIO)) console.log(`  js/estudio/${f.padEnd(27)} ${await kb(join(SAIDA_ESTUDIO, f))}`);
 console.log(`  js/init_agente.js${" ".repeat(20)} ${await kb(join(DIST, "js", "init_agente.js"))}`);
-console.log("  html/agente.html, css/agente.css\nok\n");
+console.log("  html/agente.html, html/fluxos.html, css/agente.css\nok\n");
