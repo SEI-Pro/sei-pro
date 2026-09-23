@@ -128,6 +128,17 @@ Quando o pedido implica mexer no processo, o agente **não executa**: ele monta 
 * **Assinar** pede o cargo e a sua senha do SEI no próprio cartão. A senha vai do painel direto para o SEI: ela **não** é enviada ao modelo de IA nem guardada;
 * **Recusar** pede, opcionalmente, o que ajustar — e o agente tenta de novo com a sua correção.
 
+### Rotinas
+
+Há perguntas que valem toda semana e ninguém lembra de fazer: *"processos parados há mais de 30 dias"*, *"documentos sem assinatura na unidade"*. Em **Configuração → Rotinas** você cadastra a pergunta e quando ela deve rodar (todo dia, toda semana num dia, todo mês num dia, a partir de um horário).
+
+Duas coisas para entender antes de usar:
+
+* **Rotina é só leitura.** Ela nunca altera nada no SEI — o que roda sem alguém olhando não escreve;
+* **Ela roda quando você abre o agente** depois do horário marcado, não no horário exato. A extensão vive no seu navegador, com a sua sessão do SEI; não existe servidor do SEI Pro guardando esse acesso para agir de madrugada — e é bom que não exista.
+
+Quem ficou uma semana fora volta com **uma** execução pendente, não sete: o que interessa é a foto de agora. O resultado aparece na conversa assim que você abre o painel, e o gasto respeita o teto que você definiu.
+
 ### Memória da unidade
 
 Skills são o que **você escreve**. A memória é o que o agente **aprende** conversando: você corrige uma vez ("aqui o despacho termina com *Respeitosamente*") e ele leva isso para as próximas conversas.
@@ -143,6 +154,8 @@ Quando o pedido exige **ler muito** — trinta documentos de um processo, vário
 Isso existe por dois motivos práticos: a conversa principal não fica entupida de texto que ninguém vai reler, e você não paga de novo por esse texto a cada pergunta seguinte.
 
 O auxiliar tem limites rígidos: **só ferramentas de leitura** (ele não escreve no SEI, não pede aprovação e não assina), não vê a conversa, não pode delegar de novo e trabalha por poucos passos. O gasto dele entra no mesmo contador, no topo do painel.
+
+Como a tarefa dele é mecânica — abrir, extrair, resumir —, dá para rodá-la num **modelo mais barato**: em **Configuração → Modelo** há o campo *Modelo das tarefas auxiliares*, que por padrão usa o mesmo da conversa. Escolhendo um modelo econômico (mini, flash, haiku), essa parte costuma custar uma fração. Só precisa ser um modelo que saiba usar ferramentas.
 
 ### Regras da unidade
 

@@ -18,5 +18,5 @@
       "@/*": ["../ferramentas-pdf/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts", "evals/**/*.ts"]
 }

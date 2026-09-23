@@ -8,7 +8,8 @@
     "build": "npm run verificar && node build.mjs",
     "build:rapido": "node build.mjs",
     "tipos": "tsc --noEmit",
-    "verificar": "tsx tests/verificar.ts"
+    "verificar": "tsx tests/verificar.ts",
+    "evals": "tsx evals/rodar.ts"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.300",

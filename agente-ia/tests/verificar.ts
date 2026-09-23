@@ -4,6 +4,7 @@ import { verificarSkills } from "./verificar-skills";
 import { verificarDesfazer } from "./verificar-desfazer";
 import { verificarRegras } from "./verificar-regras";
 import { verificarCusto } from "./verificar-custo";
+import { verificarRotinas } from "./verificar-rotinas";
 import { verificarCambio, verificarSugestoes } from "./verificar-sugestoes";
 import { resumo } from "./util";
 
@@ -13,6 +14,7 @@ await verificarSkills();
 verificarDesfazer();
 verificarRegras();
 verificarCusto();
+verificarRotinas();
 verificarSugestoes();
 verificarCambio();
 resumo();

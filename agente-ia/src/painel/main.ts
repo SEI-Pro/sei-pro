@@ -27,6 +27,7 @@ import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita }
 import { avaliarRegras, guardarRegras, listarRegras, recadoDoBloqueio, REGRAS_SUGERIDAS, type Regra } from "./regras";
 import { cabeMaisUma, gastoDeHoje, somarGastoDoDia, SEM_LIMITE, type Limites } from "./gasto";
 import { anotar, blocoDeMemoria, guardarMemoria, listarMemoria, MAX_TEXTO, type Lembranca } from "./memoria";
+import { descreverFrequencia, DIAS, guardarRotinas, listarRotinas, vencidas, type Rotina } from "./rotinas";
 import {
   baixarColecao,
   baixarSkillSeMudou,
@@ -72,6 +73,8 @@ interface Config {
   cache: boolean;
   /** Deixar o agente anotar o que aprende sobre a unidade. */
   memoria: boolean;
+  /** Modelo das tarefas auxiliares (vazio = o mesmo da conversa). */
+  modeloAuxiliar: string;
 }
 
 type Item =
@@ -148,7 +151,7 @@ function ajudaDoServico(svc: Servico): Node[] {
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
-  private config: Config = { reais: true, guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false, ajustes: {}, instrucoes: "", limites: SEM_LIMITE, cache: true, memoria: true };
+  private config: Config = { reais: true, guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false, ajustes: {}, instrucoes: "", limites: SEM_LIMITE, cache: true, memoria: true, modeloAuxiliar: "" };
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
@@ -170,6 +173,9 @@ class App {
 
   /** O que o agente aprendeu sobre a unidade, e leva para as próximas conversas. */
   private memoria: Lembranca[] = [];
+
+  /** Perguntas que o agente faz sozinho de tempos em tempos. */
+  private rotinas: Rotina[] = [];
 
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
@@ -204,6 +210,7 @@ class App {
     this.colecoes = await listarColecoes();
     this.regras = await listarRegras();
     this.memoria = await listarMemoria();
+    this.rotinas = await listarRotinas();
     void this.sincronizarSkills();
     void this.sincronizarColecoes();
     this.ponte.aoMudar(() => this.atualizarAba());
@@ -331,6 +338,7 @@ class App {
     );
     await this.restaurarSessao();
     this.atualizarAba();
+    void this.rodarRotinas();
     this.redesenhar();
     this.elEntrada.focus();
   }
@@ -628,6 +636,8 @@ class App {
       verChave.setAttribute("title", escondida ? "Ocultar a chave" : "Mostrar a chave");
     });
     const modelo = h("select", { "aria-label": "Modelo" }, h("option", { value: this.config.modelo }, this.config.modelo));
+    const modeloAux = h("select", { "aria-label": "Modelo das tarefas auxiliares" }, h("option", { value: "" }, "O mesmo da conversa"));
+    const modeloAuxLivre = h("input", { type: "text", placeholder: "o mesmo da conversa", value: this.config.modeloAuxiliar, spellcheck: "false", "aria-label": "Modelo das tarefas auxiliares" });
     const modeloLivre = h("input", { type: "text", placeholder: "nome do modelo no servi\u00E7o", value: this.config.modelo, list: "modelosCompativeis", spellcheck: "false", "aria-label": "Modelo" });
     const listaModelos = h("datalist", { id: "modelosCompativeis" });
     const buscar = h("button", { title: "Buscar a lista de modelos do servi\u00E7o" }, "Atualizar");
@@ -678,6 +688,7 @@ class App {
       ),
     );
     const linhaBuscar = h("div", { class: "com-botao" }, modeloLivre, buscar);
+    const linhaAux = h("div", {}, modeloAux, modeloAuxLivre);
 
     /**
      * Preenche o seletor de modelos com o catálogo do serviço.
@@ -726,6 +737,16 @@ class App {
           ),
         );
         listaModelos.replaceChildren(...lista.map((m) => h("option", { value: m.id })));
+        modeloAux.replaceChildren(
+          h("option", { value: "", ...(this.config.modeloAuxiliar ? {} : { selected: true }) }, "O mesmo da conversa"),
+          ...lista.map((m) =>
+            h(
+              "option",
+              { value: m.id, ...(m.id === this.config.modeloAuxiliar ? { selected: true } : {}) },
+              comPreco ? `${m.nome} \u2014 US$ ${m.precoEntrada.toFixed(2)} / ${m.precoSaida.toFixed(2)}` : m.nome,
+            ),
+          ),
+        );
         modeloAtual = modelo.value || escolhido;
         ajudaModelo.textContent = comPreco
           ? "S\u00F3 modelos que usam ferramentas; pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda)."
@@ -751,6 +772,8 @@ class App {
       // O seletor vale para os serviços com catálogo; num servidor próprio, que
       // pode nem ter /models, o nome do modelo continua sendo digitado.
       modelo.hidden = comp;
+      modeloAux.hidden = comp;
+      modeloAuxLivre.hidden = !comp;
       linhaBuscar.hidden = !comp;
       chave.placeholder = SERVICOS[svc].exemploChave;
       ajudaServico.replaceChildren(...ajudaDoServico(svc));
@@ -892,6 +915,80 @@ class App {
         "Na conversa, digite ",
         h("code", {}, "/"),
         " para escolher uma skill; o agente tamb\u00E9m carrega sozinho quando o assunto bate. O conte\u00FAdo pode ser colado ou vir de um arquivo .md do GitHub.",
+      ),
+    );
+
+    // ------------------------------------------------- rotinas
+    const listaRotinas = h("div", { class: "skills" });
+    const novaRotina = h("button", {}, "Nova rotina");
+    const desenharRotinas = () => {
+      listaRotinas.replaceChildren(
+        ...(this.rotinas.length
+          ? this.rotinas.map((ro) =>
+              h(
+                "div",
+                { class: "skill rotina" },
+                h("input", {
+                  type: "checkbox",
+                  class: "switch",
+                  title: ro.ativa ? "Ativa" : "Desligada",
+                  ...(ro.ativa ? { checked: true } : {}),
+                  onchange: async (ev: Event) => {
+                    ro.ativa = (ev.target as HTMLInputElement).checked;
+                    await guardarRotinas(this.rotinas);
+                  },
+                }),
+                h(
+                  "div",
+                  { class: "skill-texto" },
+                  h("strong", {}, ro.nome),
+                  h("code", {}, descreverFrequencia(ro)),
+                  h("small", {}, ro.pergunta),
+                  h("small", { class: "origem" }, ro.ultimaEm ? `rodou em ${new Date(ro.ultimaEm).toLocaleString("pt-BR")}` : "ainda n\u00E3o rodou"),
+                ),
+                h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${ro.nome}`, onclick: () => this.editarRotina(ro, desenharRotinas) }, icone("lapis", 15)),
+                h(
+                  "button",
+                  {
+                    class: "icone",
+                    title: "Remover",
+                    "aria-label": `Remover ${ro.nome}`,
+                    onclick: async () => {
+                      this.rotinas = this.rotinas.filter((x) => x.id !== ro.id);
+                      await guardarRotinas(this.rotinas);
+                      desenharRotinas();
+                    },
+                  },
+                  icone("lixeira", 15),
+                ),
+              ),
+            )
+          : [
+              h(
+                "div",
+                { class: "ajuda" },
+                "Nenhuma rotina. Rotina \u00E9 uma pergunta que o agente faz sozinho de tempos em tempos \u2014 \u201Cprocessos parados h\u00E1 mais de 30 dias\u201D, \u201Cdocumentos sem assinatura na unidade\u201D.",
+              ),
+            ]),
+      );
+    };
+    desenharRotinas();
+    novaRotina.addEventListener("click", () => this.editarRotina(null, desenharRotinas));
+    const secaoRotinas = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Rotinas"),
+      listaRotinas,
+      h("div", { class: "com-botao" }, novaRotina),
+      h(
+        "div",
+        { class: "nota" },
+        icone("escudo", 15),
+        h(
+          "span",
+          {},
+          "Rotina \u00E9 s\u00F3 LEITURA: ela nunca altera nada no SEI. E ela roda quando voc\u00EA abre o agente depois do hor\u00E1rio marcado \u2014 a extens\u00E3o vive no seu navegador, com a sua sess\u00E3o, e n\u00E3o h\u00E1 servidor do SEI Pro para agir de madrugada.",
+        ),
       ),
     );
 
@@ -1114,6 +1211,17 @@ class App {
           listaModelos,
           ajudaModelo,
           notaCompativel,
+          h(
+            "div",
+            { class: "campo-fino" },
+            h("label", {}, "Modelo das tarefas auxiliares"),
+            linhaAux,
+            h(
+              "small",
+              {},
+              "Quando o agente delega leituras pesadas, elas podem rodar num modelo mais barato (mini, flash, haiku). Precisa ser um modelo que saiba usar ferramentas.",
+            ),
+          ),
         ),
         h(
           "div",
@@ -1170,6 +1278,7 @@ class App {
           ),
         ),
         secaoSkills,
+        secaoRotinas,
         secaoMemoria,
         secaoRegras,
         avancado,
@@ -1249,11 +1358,126 @@ class App {
         limites: { conversa: Math.max(0, Number(limiteConversa.value) || 0), dia: Math.max(0, Number(limiteDia.value) || 0) },
         cache: usarCache.checked,
         memoria: usarMemoria.checked,
+        modeloAuxiliar: (comp ? modeloAuxLivre.value : modeloAux.value).trim(),
       });
       dlg.close();
     });
     ajustarServico();
     void carregarModelos(false);
+  }
+
+  /** Cadastro de uma rotina. */
+  private editarRotina(rotina: Rotina | null, aoFechar: () => void): void {
+    const nome = h("input", { type: "text", value: rotina?.nome ?? "", placeholder: "Processos parados", "aria-label": "Nome da rotina" });
+    const pergunta = h("textarea", { rows: "3", placeholder: "Liste os processos da minha unidade sem andamento h\u00E1 mais de 30 dias, do mais antigo para o mais novo.", "aria-label": "Pergunta" }, rotina?.pergunta ?? "");
+    const frequencia = h(
+      "select",
+      { "aria-label": "Frequ\u00EAncia" },
+      ...([["diaria", "Todo dia"], ["semanal", "Toda semana"], ["mensal", "Todo m\u00EAs"]] as Array<[string, string]>).map(([v, t]) =>
+        h("option", { value: v, ...(rotina?.frequencia === v ? { selected: true } : {}) }, t),
+      ),
+    );
+    const diaSemana = h(
+      "select",
+      { "aria-label": "Dia da semana" },
+      ...DIAS.map((d, i) => h("option", { value: String(i + 1), ...((rotina?.diaSemana ?? 1) === i + 1 ? { selected: true } : {}) }, d)),
+    );
+    const diaMes = h("input", { type: "number", min: "1", max: "28", value: String(rotina?.diaMes ?? 1), "aria-label": "Dia do m\u00EAs" });
+    const hora = h("input", { type: "time", value: rotina?.hora ?? "08:00", "aria-label": "A partir das" });
+    const status = h("div", { class: "status" });
+    const salvar = h("button", { class: "primario" }, rotina ? "Salvar" : "Adicionar");
+    const ajustar = () => {
+      diaSemana.hidden = frequencia.value !== "semanal";
+      diaMes.hidden = frequencia.value !== "mensal";
+    };
+    frequencia.addEventListener("change", ajustar);
+    const dlg = this.abrirModal({
+      titulo: rotina ? "Editar rotina" : "Nova rotina",
+      corpo: [
+        h("div", { class: "campo" }, h("label", {}, "Nome"), nome),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Pergunta"),
+          pergunta,
+          h("div", { class: "ajuda" }, "Escreva como escreveria na conversa. S\u00F3 perguntas de leitura \u2014 rotina n\u00E3o altera nada no SEI."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Quando"),
+          h("div", { class: "com-botao" }, frequencia, diaSemana, diaMes, hora),
+          h("div", { class: "ajuda" }, "A rotina roda na primeira vez que voc\u00EA abrir o agente depois desse hor\u00E1rio."),
+        ),
+      ],
+      acoes: [status, h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
+    });
+    ajustar();
+    salvar.addEventListener("click", async () => {
+      const n = nome.value.trim();
+      const q = pergunta.value.trim();
+      if (!n || !q) {
+        status.className = "status erro";
+        status.textContent = "Informe o nome e a pergunta.";
+        return;
+      }
+      const nova: Rotina = {
+        id: rotina?.id ?? crypto.randomUUID(),
+        nome: n,
+        pergunta: q,
+        frequencia: frequencia.value as Rotina["frequencia"],
+        hora: hora.value || "08:00",
+        ...(frequencia.value === "semanal" ? { diaSemana: Number(diaSemana.value) } : {}),
+        ...(frequencia.value === "mensal" ? { diaMes: Math.min(28, Math.max(1, Number(diaMes.value) || 1)) } : {}),
+        ativa: rotina?.ativa ?? true,
+        // Rotina nova não dispara retroativamente: conta a partir de agora.
+        ultimaEm: rotina?.ultimaEm ?? Date.now(),
+        ...(rotina?.ultimoResultado ? { ultimoResultado: rotina.ultimoResultado } : {}),
+      };
+      this.rotinas = rotina ? this.rotinas.map((x) => (x.id === rotina.id ? nova : x)) : [...this.rotinas, nova];
+      await guardarRotinas(this.rotinas);
+      aoFechar();
+      dlg.close();
+    });
+  }
+
+  /**
+   * Roda as rotinas vencidas, uma de cada vez.
+   *
+   * Acontece ao abrir o painel, porque é o único momento em que a extensão
+   * existe: não há servidor guardando a sessão do usuário para agir sozinho.
+   * Espera a aba do SEI conectar — sem ela não há o que consultar — e respeita
+   * o teto de gasto, senão a rotina viraria a maneira mais fácil de estourar o
+   * limite sem perceber.
+   */
+  private async rodarRotinas(): Promise<void> {
+    const pendentes = vencidas(this.rotinas);
+    if (!pendentes.length || !this.config.chave) return;
+    for (let i = 0; i < 20 && !this.ponte.atual(); i += 1) await new Promise((r) => setTimeout(r, 1000));
+    if (!this.ponte.atual()) return;
+    for (const rotina of pendentes) {
+      const emReais = (d: number) => d * (this.cambio?.valor ?? 5.5);
+      const veredito = cabeMaisUma(this.config.limites, emReais(this.uso.custo), await gastoDeHoje());
+      if (!veredito.permite) {
+        this.adicionar({ tipo: "aviso", texto: `A rotina "${rotina.nome}" n\u00E3o rodou: ${veredito.motivo}` });
+        break;
+      }
+      this.adicionar({ tipo: "aviso", texto: `Rotina "${rotina.nome}" (${descreverFrequencia(rotina)}) \u2014 s\u00F3 leitura, sem alterar nada no SEI.` });
+      const antes = this.uso.custo;
+      let resultado = "";
+      try {
+        resultado = await this.delegar(rotina.pergunta, new AbortController().signal);
+        this.adicionar({ tipo: "agente", texto: resultado });
+      } catch (e) {
+        resultado = `Falhou: ${(e as Error).message}`;
+        this.adicionar({ tipo: "erro", texto: `Rotina "${rotina.nome}": ${(e as Error).message}` });
+      }
+      const gasto = this.uso.custo - antes;
+      if (gasto > 0) await somarGastoDoDia(emReais(gasto));
+      this.rotinas = this.rotinas.map((r) => (r.id === rotina.id ? { ...r, ultimaEm: Date.now(), ultimoResultado: resultado.slice(0, 200) } : r));
+      await guardarRotinas(this.rotinas);
+      await this.salvarSessao();
+    }
   }
 
   /**
@@ -1292,7 +1516,16 @@ class App {
     const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => t.efeito === "leitura" || t.nome === "skill_ler");
     let resposta = "";
     const auxiliar = new Motor({
-      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes, cache: this.config.cache }),
+      // O auxiliar faz trabalho mecânico (abrir, extrair, resumir): quando o
+      // usuário aponta um modelo mais barato, é aqui que ele entra.
+      provedor: criarProvedor({
+        servico: this.config.servico,
+        url: this.config.url,
+        chave: this.config.chave,
+        modelo: this.config.modeloAuxiliar || this.config.modelo,
+        ajustes: this.config.ajustes,
+        cache: this.config.cache,
+      }),
       tools: new RegistroTools(soLeitura),
       privacidade: this.privacidade,
       sei: (op, args, s2) => this.ponte.executar(op, args, s2),
