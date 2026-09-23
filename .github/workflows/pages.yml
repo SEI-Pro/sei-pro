@@ -1,0 +1,45 @@
+# Publica o site do GitHub Pages (https://sei-pro.github.io/sei-pro).
+#
+# POR QUE EXISTE. O Pages construia sozinho a cada push (build "legacy"). Em
+# 23/09/2026 esse gatilho parou: os pushes chegavam ao master, mas nenhum build
+# era enfileirado, nem pela API. O deploy por Actions faz o mesmo trabalho, com
+# a mesma imagem que o Pages usava (actions/jekyll-build-pages), e pode ser
+# reexecutado a mao quando precisar.
+name: Publicar o site
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez, sem cancelar o que ja esta publicando.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@v3
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
