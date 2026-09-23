@@ -50,7 +50,9 @@ export function verificarSugestoes(): void {
     const usa = SUGESTOES.some((s) => new RegExp(palavra, "i").test(s.rotulo + s.descricao));
     checar(`tema "${palavra}" tem ferramenta (${tool})`, !usa || nomes.includes(tool));
   }
-  checar("nenhuma sugestao fala de bloco de assinatura", !SUGESTOES.some((s) => /bloco/i.test(s.rotulo + s.descricao + s.prompt({}))));
+  checar("sugestao de bloco so existe com a ferramenta", !SUGESTOES.some((s) => /bloco/i.test(s.rotulo + s.descricao + s.prompt({}))) || nomes.includes("blocos_listar"));
+  checar("bloco aparece na caixa", sugestoesPara({ acao: "procedimento_controlar" }, 8).some((s) => /assinatura|blocos/i.test(s.rotulo)));
+  checar("na tela de blocos as sugestoes sao de bloco", sugestoesPara({ acao: "bloco_assinatura_listar" }, 4).some((s) => /bloco|assinatura/i.test(s.rotulo)));
   checar("todas tem rotulo curto", SUGESTOES.every((s) => s.rotulo.length <= 34), SUGESTOES.filter((s) => s.rotulo.length > 34).map((s) => s.rotulo));
 }
 

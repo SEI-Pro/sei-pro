@@ -119,6 +119,32 @@ export const TOOLS_SEI: DefTool[] = [
   }),
 
   definirTool({
+    nome: "blocos_listar",
+    descricao:
+      "Blocos da unidade: de ASSINATURA (documentos juntados para assinar de uma vez ou enviados a outra unidade para assinar) e INTERNOS (processos que a unidade agrupou para trabalhar). Traz n\u00FAmero, estado (Gerado, Disponibilizado, Retornado, Conclu\u00EDdo), unidade geradora, a quem foi disponibilizado, grupo e descri\u00E7\u00E3o. Use para 'quais blocos tenho', 'o que est\u00E1 esperando assinatura', 'blocos disponibilizados para a minha unidade'.",
+    parametros: s.objeto({
+      "tipo?": s.texto({ enum: ["assinatura", "interno"], descricao: "Padr\u00E3o: assinatura." }),
+      "filtro?": s.texto({ descricao: "Texto em n\u00FAmero, descri\u00E7\u00E3o, estado ou grupo (sem acento/caixa)." }),
+    }),
+    efeito: "leitura",
+    rotulo: (a) => `Listar blocos de ${a.tipo === "interno" ? "processos" : "assinatura"}`,
+    executar: (a, ctx) => ctx.sei("blocos.listar", a),
+  }),
+
+  definirTool({
+    nome: "bloco_conteudo",
+    descricao:
+      "O que h\u00E1 dentro de um bloco, pelo n\u00FAmero. Em bloco de ASSINATURA cada item \u00E9 um documento (processo, n\u00BA SEI, tipo, quem j\u00E1 assinou); em bloco INTERNO cada item \u00E9 um processo (sem documento e sem assinaturas). Use para saber o que falta assinar num bloco ou quais processos ele re\u00FAne. N\u00E3o assina nem altera nada.",
+    parametros: s.objeto({
+      bloco: s.texto({ descricao: "N\u00FAmero do bloco, como aparece na listagem." }),
+      "tipo?": s.texto({ enum: ["assinatura", "interno"] }),
+    }),
+    efeito: "leitura",
+    rotulo: (a) => `Conte\u00FAdo do bloco ${a.bloco}`,
+    executar: (a, ctx) => ctx.sei("bloco.conteudo", a),
+  }),
+
+  definirTool({
     nome: "processos_listar",
     descricao:
       "Processos abertos na unidade (caixa do Controle de Processos), com tipo, especifica\u00E7\u00E3o, atribui\u00E7\u00E3o, marcadores e anota\u00E7\u00F5es. Filtra, agrupa e conta sem abrir cada processo. Use para 'quantos processos', 'quais est\u00E3o atribu\u00EDdos a X', 'processos do tipo Y', 'com marcador Z'. Sigilosos aparecem s\u00F3 pelo n\u00FAmero.",

@@ -10,6 +10,7 @@
  */
 
 import { lerArvore, type Arvore, type DocumentoArvore } from "@nucleo/dominio/arvore";
+import { conteudoDoBloco, listarBlocos, type TipoBloco } from "@nucleo/dominio/blocos";
 import { listarCaixa } from "@nucleo/dominio/caixa";
 import {
   alterarDocumento,
@@ -144,6 +145,17 @@ export const OPERACOES: Record<string, Op> = {
           : { protocolo: p.protocolo, grupo: p.grupo, tipo: p.tipo, especificacao: p.especificacao, novo: p.novo, atribuido: p.atribuido, sinais: p.sinais },
       ),
     };
+  },
+
+  "blocos.listar": async (sei, a, sinal) => {
+    const blocos = await listarBlocos(sei, (a.tipo as TipoBloco) ?? "assinatura", { filtro: txt(a.filtro), sinal });
+    return blocos.map(({ link: _l, ...b }) => b);
+  },
+
+  "bloco.conteudo": async (sei, a, sinal) => {
+    const r = await conteudoDoBloco(sei, String(a.bloco), { tipo: a.tipo as TipoBloco | undefined, sinal });
+    const { link: _l, ...bloco } = r.bloco;
+    return { bloco, itens: r.itens };
   },
 
   "processo.consultar": async (sei, a, sinal) => {

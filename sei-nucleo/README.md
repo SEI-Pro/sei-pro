@@ -28,6 +28,14 @@ src/
   index.ts      API pública (o bundle IIFE expõe window.SeiNucleo)
 ```
 
+## Blocos
+
+`dominio/blocos.ts` lê os blocos da unidade (assinatura e interno) e o conteúdo
+de cada um. Duas diferenças entre os dois tipos custam caro se ignoradas: o
+bloco interno **não tem a coluna "Disponibilização"**, o que desloca todas as
+colunas seguintes, e o conteúdo dele é de **processos**, não de documentos. Por
+isso as colunas são lidas pelo CABEÇALHO, não por posição.
+
 ## Regras que o código garante
 
 1. **Link se colhe, não se monta.** Link sem `infra_hash`, com hash de outro link
