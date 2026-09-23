@@ -265,7 +265,7 @@
                     '</div>' +
                     // --- Aba 4: guia ---
                     '<div id="sigiloTabGuia">' +
-                        '<label>Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://sei-pro.github.io/sei-pro/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt bLink" style="font-size:90%;text-decoration:underline;"></i></a></label>' +
+                        '<label>Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://seipro.app/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt bLink" style="font-size:90%;text-decoration:underline;"></i></a></label>' +
                     '</div>' +
                 '</div>' +
             '</div>';

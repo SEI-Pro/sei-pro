@@ -131,7 +131,7 @@ export interface ServicoInfo {
 }
 
 /** Passo a passo de como conseguir a chave de cada serviço. */
-export const DOC_CHAVES = "https://sei-pro.github.io/sei-pro/pages/CHAVEIA.html";
+export const DOC_CHAVES = "https://seipro.app/pages/CHAVEIA.html";
 
 /**
  * Os serviços que o painel oferece prontos.
@@ -359,7 +359,7 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
           headers: {
             ...cabecalhos(servico, o.chave),
             "Content-Type": "application/json",
-            ...(openrouter ? { "HTTP-Referer": "https://sei-pro.github.io/sei-pro/", "X-Title": "SEI Pro - Agente de IA" } : {}),
+            ...(openrouter ? { "HTTP-Referer": "https://seipro.app/", "X-Title": "SEI Pro - Agente de IA" } : {}),
           },
           body: montar(),
           signal: sinal,

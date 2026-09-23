@@ -22,9 +22,9 @@ function handleInstalled(details) {
     // configuracoes atuais nao gravam mais (elas usam storage.sync/dataValues): sem o details.reason,
     // toda atualizacao abria a pagina inicial em vez do historico de versoes.
     if (details.reason == "install") {
-      browser.tabs.create({ url: "https://sei-pro.github.io/sei-pro/" });
+      browser.tabs.create({ url: "https://seipro.app/" });
     } else if (item.CheckTypes == undefined || item.CheckTypes.indexOf("hidemsgupdate") == -1) {
-      browser.tabs.create({ url: "https://sei-pro.github.io/sei-pro/pages/HISTORICO.html" });
+      browser.tabs.create({ url: "https://seipro.app/pages/HISTORICO.html" });
     }
   }
 

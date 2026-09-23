@@ -72,6 +72,8 @@ Associe um local ao favorito, clicando no mapa ou pesquisando um endereço. O bo
 
 > ![Tela Mapa](../img/tela-mapa.gif)
 
+> **De onde vem o mapa.** As imagens são as do [OpenStreetMap](https://www.openstreetmap.org), e a busca de endereços usa o serviço Nominatim, do mesmo projeto. Isso só acontece quando você abre o mapa: nesse momento o seu navegador pede as imagens da região ao OpenStreetMap e, se você pesquisar, envia o endereço digitado. **Nenhum dado do processo sai daqui** — nem o número, nem o conteúdo —, e o SEI Pro não pede a localização do seu computador.
+
 ### Cópia de segurança
 
 Em ⚙ **Configurações**, use **Baixar Favoritos** para salvar a lista num arquivo e **Carregar Favoritos** para restaurá-la — por exemplo, ao trocar de computador.

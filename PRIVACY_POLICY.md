@@ -140,6 +140,14 @@ O SEI Pro oferece **funcionalidades opcionais** que, quando habilitadas pelo usu
 - **Política de privacidade aplicável:** [Política de Privacidade da OpenAI](https://openai.com/policies/privacy-policy)
 - **Controle:** Usuário decide o que enviar e quando enviar
 
+#### 4.2.4. OpenStreetMap (mapa dos processos favoritos)
+
+- **Funcionalidade:** Exibir no mapa o local associado a um processo favorito e pesquisar endereços
+- **Dados transmitidos:** As imagens do mapa são buscadas em `tile.openstreetmap.org`, o que revela o endereço IP e a área visualizada; ao pesquisar um endereço, o texto digitado é enviado a `nominatim.openstreetmap.org`
+- **Dados que NÃO são transmitidos:** Número, conteúdo, interessados ou qualquer outra informação do processo
+- **Política de privacidade aplicável:** [Política de Privacidade da OpenStreetMap Foundation](https://osmfoundation.org/wiki/Privacy_Policy)
+- **Controle:** As requisições ocorrem somente quando o usuário abre o mapa; a extensão não solicita a localização do dispositivo
+
 ### 4.3. Responsabilidade e Alertas
 
 **⚠️ ATENÇÃO:** Ao utilizar integrações com serviços externos:

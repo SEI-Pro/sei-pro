@@ -231,7 +231,7 @@
                                     <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
                                         <i class="fas fa-info-circle" style="color: #007fff;"></i>
                                         Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet.
-                                        <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
+                                        <a href="https://seipro.app/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
                                     </label>
                                 </td>
                             </tr>
@@ -265,7 +265,7 @@
                                     <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
                                         <i class="fas fa-info-circle" style="color: #007fff;"></i>
                                         Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha.
-                                        <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
+                                        <br><a href="https://seipro.app/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
                                     </label>
                                 </td>
                             </tr>
