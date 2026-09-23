@@ -18,6 +18,10 @@ export function h<K extends keyof HTMLElementTagNameMap>(
     if (typeof v === "function") el.addEventListener(k.replace(/^on/, ""), v);
     else if (v === true) el.setAttribute(k, "");
     else if (k === "class") el.className = v;
+    // `<textarea>` NÃO tem atributo `value`: o valor inicial é o conteúdo do
+    // elemento. Com setAttribute, a caixa de texto abre VAZIA, como se o que
+    // estava guardado tivesse sumido — e sem erro nenhum no console.
+    else if (k === "value" && tag === "textarea") (el as HTMLTextAreaElement).value = v;
     else el.setAttribute(k, v);
   }
   for (const f of filhos) if (f !== null && f !== undefined && f !== false) el.append(f);

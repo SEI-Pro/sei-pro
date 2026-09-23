@@ -18,7 +18,7 @@ import { h, icone } from "../painel/dom";
 import { PontePainel } from "../ponte/cliente";
 import { criarProvedor, MODELO_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
 import { inferirFluxo, type ProcessoModelo } from "../fluxos/inferir";
-import { comAcao, comDesvio, deLinhas, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "./campos";
+import { comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "./campos";
 import {
   etapaNova,
   fluxoNovo,
@@ -79,6 +79,13 @@ class Estudio {
       this.fluxos = (mud[CHAVE_FLUXOS].newValue as Fluxo[]) ?? [];
       if (this.rascunho && !this.novo) this.rascunho = this.fluxos.find((f) => f.id === this.rascunho!.id) ?? null;
       this.desenhar();
+    });
+    // Fechar a aba com rascunho não salvo perde tudo: é uma página em tela
+    // cheia, e fechar a aba é o gesto mais fácil que existe.
+    addEventListener("beforeunload", (ev) => {
+      if (!this.sujo) return;
+      ev.preventDefault();
+      ev.returnValue = "";
     });
     this.montar();
   }
@@ -162,7 +169,7 @@ class Estudio {
   }
 
   private async ligar(id: string, ativo: boolean): Promise<void> {
-    this.fluxos = this.fluxos.map((f) => (f.id === id ? { ...f, ativo, atualizadoEm: Date.now() } : f));
+    this.fluxos = (await listarFluxos()).map((f) => (f.id === id ? { ...f, ativo, atualizadoEm: Date.now() } : f));
     if (this.rascunho?.id === id && !this.sujo) this.rascunho = { ...this.rascunho, ativo };
     await guardarFluxos(this.fluxos);
     this.desenhar();
@@ -202,7 +209,17 @@ class Estudio {
       return;
     }
 
-    const pendencias = validarFluxo(r);
+    const elPendencias = h("div", {});
+    const elSalvar = h("button", { class: "primario", onclick: () => void this.salvar() }, icone("check", 16), this.novo ? "Salvar fluxo" : "Salvar alterações");
+    this.revalidar = () => {
+      const faltam = validarFluxo(r);
+      elSalvar.disabled = faltam.length > 0;
+      elPendencias.replaceChildren(
+        ...(faltam.length
+          ? [h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, h("b", {}, "Falta resolver antes de salvar:"), h("ul", { class: "pendencias" }, ...faltam.map((p) => h("li", {}, p)))))]
+          : []),
+      );
+    };
     const campo = (rotulo: string, ajuda: string | null, ...filhos: Array<Node | string | null>) =>
       h("div", { class: "campo" }, h("label", {}, rotulo), ...filhos, ajuda ? h("div", { class: "ajuda" }, ajuda) : null);
 
@@ -255,26 +272,35 @@ class Estudio {
         h("div", { class: "skills" }, ...r.etapas.map((e, i) => this.cartaoDeEtapa(r, e, i))),
         h("button", { class: "plana", onclick: () => this.mudar((x) => x.etapas.push(etapaNova("Nova etapa"))) }, icone("mais", 15), "Acrescentar etapa"),
 
-        pendencias.length
-          ? h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, h("b", {}, "Falta resolver antes de salvar:"), h("ul", { class: "pendencias" }, ...pendencias.map((p) => h("li", {}, p)))))
-          : null,
+        elPendencias,
 
         h(
           "div",
           { class: "acoes-obra" },
           h("label", { class: "linha-switch espaco" }, h("input", { type: "checkbox", class: "switch", ...(r.ativo ? { checked: true } : {}), change: (ev: Event) => this.mudar((x) => (x.ativo = (ev.target as HTMLInputElement).checked)) }), h("span", {}, "Ligado", h("small", {}, "Só fluxo ligado sugere no painel do agente."))),
           this.novo ? null : h("button", { class: "perigo", onclick: () => void this.excluir(r.id) }, icone("lixeira", 15), "Excluir"),
-          h("button", { class: "primario", disabled: pendencias.length > 0, onclick: () => void this.salvar() }, icone("check", 16), this.novo ? "Salvar fluxo" : "Salvar alterações"),
+          elSalvar,
         ),
       ),
     );
+    this.revalidar();
   }
 
-  /** Edição de campo de texto: mexer no rascunho sem redesenhar (o cursor se perderia). */
+  /**
+   * Edição de campo de texto: mexe no rascunho sem redesenhar (o cursor se
+   * perderia). A validação, porém, PRECISA ser refeita: sem isso o botão
+   * Salvar seguia mostrando o veredito do último desenho — habilitado num fluxo
+   * que acabou de ficar inválido (e aí o clique virava um nada silencioso) ou
+   * travado desabilitado depois de a pendência já ter sido resolvida.
+   */
   private mudarSemRedesenhar(f: () => void): void {
     f();
     this.sujo = true;
+    this.revalidar();
   }
+
+  /** Reposta pelo `desenharObra` do rascunho aberto. */
+  private revalidar: () => void = () => undefined;
 
   private camposDoAlcance(r: Fluxo): Node[] {
     const area = (rotulo: string, valor: string[] | undefined, placeholder: string, guardar: (v: string[]) => void) =>
@@ -396,8 +422,8 @@ class Estudio {
           h(
             "div",
             { class: "campo" },
-            h("div", { class: "ajuda" }, "Se o documento da etapa ANTERIOR contiver o texto abaixo, o fluxo pula para outra etapa em vez desta."),
-            h("input", { type: "text", placeholder: "diligência", value: etapa.condicao?.seDocumentoContem ?? "", input: (ev: Event) => this.mudarSemRedesenhar(() => (etapa.condicao = comDesvio(etapa, { seDocumentoContem: (ev.target as HTMLInputElement).value }))) }),
+            h("div", { class: "ajuda" }, "Se o TÍTULO do documento da etapa ANTERIOR contiver o texto abaixo, o fluxo pula para outra etapa em vez desta. É o título na árvore, não o conteúdo: a avaliação é local e não lê documento."),
+            h("input", { type: "text", placeholder: "MINUTA", value: etapa.condicao?.seDocumentoContem ?? "", input: (ev: Event) => this.mudarSemRedesenhar(() => (etapa.condicao = comDesvio(etapa, { seDocumentoContem: (ev.target as HTMLInputElement).value }))) }),
             h(
               "select",
               { change: (ev: Event) => this.mudar(() => (etapa.condicao = comDesvio(etapa, { entaoIrPara: (ev.target as HTMLSelectElement).value }))) },
@@ -420,11 +446,23 @@ class Estudio {
     ];
   }
 
+  /**
+   * Grava o rascunho.
+   *
+   * RELÊ a lista antes de escrever, e troca só o fluxo editado. O painel do
+   * agente mexe na mesma chave ("não sugerir este fluxo" desliga um), e esta
+   * tela não se recarrega enquanto há edição em curso: gravar a lista que
+   * estava em memória desfaria, sem avisar, o que o painel decidiu.
+   */
   private async salvar(): Promise<void> {
     const r = this.rascunho;
-    if (!r || validarFluxo(r).length) return;
+    if (!r || validarFluxo(r).length) {
+      this.revalidar();
+      return;
+    }
     r.atualizadoEm = Date.now();
-    this.fluxos = this.novo ? [...this.fluxos, r] : this.fluxos.map((f) => (f.id === r.id ? r : f));
+    const atuais = await listarFluxos();
+    this.fluxos = atuais.some((f) => f.id === r.id) ? atuais.map((f) => (f.id === r.id ? r : f)) : [...atuais, r];
     await guardarFluxos(this.fluxos);
     this.novo = false;
     this.sujo = false;
@@ -435,7 +473,7 @@ class Estudio {
   private async excluir(id: string): Promise<void> {
     const f = this.fluxos.find((x) => x.id === id);
     if (!f || !confirm(`Excluir o fluxo "${f.nome}"? As etapas mapeadas se vão com ele.`)) return;
-    this.fluxos = this.fluxos.filter((x) => x.id !== id);
+    this.fluxos = (await listarFluxos()).filter((x) => x.id !== id);
     await guardarFluxos(this.fluxos);
     this.rascunho = null;
     this.novo = false;
@@ -481,6 +519,12 @@ class Estudio {
       botao.title = SEM_CHAVE;
       return;
     }
+    // O diálogo fecha com Esc e com clique fora. Sem abortar, a chamada ao
+    // modelo seguiria correndo (e sendo paga) e, ao voltar, trocaria o fluxo
+    // que o usuário tivesse aberto no meio-tempo.
+    const ctl = new AbortController();
+    let pronto = false;
+    dlg.addEventListener("close", () => !pronto && ctl.abort());
     botao.addEventListener("click", async () => {
       const numeros = numerosDeProcesso(campo.value);
       if (!numeros.length) {
@@ -506,7 +550,12 @@ class Estudio {
           ajustes: this.config.ajustes,
           cache: this.config.cache,
         });
-        const r = await inferirFluxo(provedor, modelos, new AbortController().signal);
+        const r = await inferirFluxo(provedor, modelos, ctl.signal);
+        if (ctl.signal.aborted) return;
+        // A proposta substitui o que está aberto: se havia edição em curso
+        // atrás do diálogo, ela se perderia sem uma palavra.
+        if (this.sujo && !confirm("Você tem alterações não salvas no fluxo aberto. Substituir pela proposta?")) return;
+        pronto = true;
         dlg.close();
         this.rascunho = r.fluxo;
         this.novo = true;
@@ -514,6 +563,7 @@ class Estudio {
         this.notas = { divergencias: r.divergencias, avisos: r.avisos };
         this.desenhar();
       } catch (e) {
+        if (ctl.signal.aborted) return;
         estado.className = "status erro";
         estado.replaceChildren(icone("alerta", 14), (e as Error).message);
         botao.disabled = false;
@@ -531,7 +581,7 @@ class Estudio {
     const arv = (await this.ponte.executar("processo.arvore", { processo: numero })) as {
       protocolo: string;
       tipo?: string;
-      documentos: Array<{ numero: string; titulo?: string; assinado?: boolean; externo?: boolean; unidade?: string; nivel?: string }>;
+      documentos: Array<{ numero: string; titulo?: string; assinado?: boolean; externo?: boolean; unidade?: string; nivel?: string; cancelado?: boolean }>;
     };
     const historico = (await this.ponte
       .executar("processo.historico", { processo: numero, tipo: "resumido", limite: 200 })
@@ -539,9 +589,7 @@ class Estudio {
     return {
       protocolo: arv.protocolo || numero,
       tipo: arv.tipo,
-      documentos: arv.documentos
-        .filter((d) => d.nivel !== "sigiloso")
-        .map((d, i) => ({ ordem: i + 1, titulo: d.titulo ?? "", unidade: d.unidade, assinado: d.assinado === true, externo: d.externo === true })),
+      documentos: metadadosDaArvore(arv.documentos),
       historico: historico.map((a) => ({ data: a.data, unidade: a.unidade, descricao: a.descricao })),
     };
   }

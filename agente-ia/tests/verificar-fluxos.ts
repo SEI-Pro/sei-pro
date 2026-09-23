@@ -46,3 +46,22 @@ export function verificarFluxosModelo(): void {
   checar("etapa nova usa o nome como título procurado", etapaNova("Ofício").documento.tituloContem[0] === "Ofício");
   checar("etapa nova é obrigatória", etapaNova("Ofício").obrigatoria === true);
 }
+
+/**
+ * Casos vindos da revisão: coisas que passavam na validação e quebravam o fluxo
+ * em silêncio depois.
+ */
+export function verificarFluxosRevisao(): void {
+  secao("fluxos: validacao, casos da revisao");
+  const proprio: Fluxo = {
+    ...fluxoNovo("Rito"),
+    etapas: [
+      { ...etapaNova("A"), id: "a" },
+      { ...etapaNova("B"), id: "b", condicao: { seDocumentoContem: "x", entaoIrPara: "b" } },
+      { ...etapaNova("C"), id: "c" },
+    ],
+  };
+  // Um desvio para a própria etapa bate na guarda de laço da avaliação e
+  // ENCERRA o percurso ali: as etapas seguintes nunca são avaliadas.
+  checar("desvio para a propria etapa acusa", validarFluxo(proprio).some((p) => /desvio/i.test(p)), validarFluxo(proprio));
+}

@@ -8,6 +8,7 @@
  */
 
 import type { Etapa, Fluxo } from "../fluxos/modelo";
+import type { DocumentoModelo } from "../fluxos/inferir";
 
 /** Lista de textos num campo só: uma por linha lê melhor que separada por vírgula. */
 export const paraLinhas = (lista: string[] | undefined): string => (lista ?? []).join("\n");
@@ -57,4 +58,23 @@ export function comDesvio(etapa: Etapa, parte: { seDocumentoContem?: string; ent
   const entaoIrPara = parte.entaoIrPara ?? etapa.condicao?.entaoIrPara ?? "";
   if (!seDocumentoContem.trim() || !entaoIrPara) return undefined;
   return { seDocumentoContem, entaoIrPara };
+}
+
+/**
+ * Documentos da árvore de um processo modelo, como vão para a inferência.
+ *
+ * Descarta o SIGILOSO (não sai da aba do SEI) e o CANCELADO. O cancelado foi
+ * riscado dos autos: se ele entra no prompt, o modelo pode propor como etapa do
+ * rito um documento que `avaliar.ts` nunca aceita — e o fluxo passaria a cobrar
+ * para sempre uma etapa impossível de cumprir.
+ *
+ * A ordem é renumerada depois do descarte: o número que o modelo vê tem de ser
+ * a posição na lista que ele recebeu.
+ */
+export function metadadosDaArvore(
+  documentos: Array<{ titulo?: string; assinado?: boolean; externo?: boolean; unidade?: string; nivel?: string; cancelado?: boolean }>,
+): DocumentoModelo[] {
+  return documentos
+    .filter((d) => d.nivel !== "sigiloso" && d.cancelado !== true)
+    .map((d, i) => ({ ordem: i + 1, titulo: d.titulo ?? "", unidade: d.unidade, assinado: d.assinado === true, externo: d.externo === true }));
 }

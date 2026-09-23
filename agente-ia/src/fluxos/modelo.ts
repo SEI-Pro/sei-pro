@@ -127,7 +127,10 @@ export function validarFluxo(fluxo: Fluxo): string[] {
     vistos.add(etapa.id);
     if (etapa.condicao) {
       if (!etapa.condicao.seDocumentoContem.trim()) problemas.push(`O desvio da etapa "${onde}" não diz o que procurar no documento anterior.`);
-      if (!ids.has(etapa.condicao.entaoIrPara)) problemas.push(`O desvio da etapa "${onde}" aponta para uma etapa que não existe mais.`);
+      // Desvio para a PRÓPRIA etapa bate na guarda de laço da avaliação e
+      // encerra o percurso ali: as etapas seguintes nunca seriam avaliadas.
+      if (etapa.condicao.entaoIrPara === etapa.id) problemas.push(`O desvio da etapa "${onde}" aponta para ela mesma, e isso interromperia o fluxo nesse ponto.`);
+      else if (!ids.has(etapa.condicao.entaoIrPara)) problemas.push(`O desvio da etapa "${onde}" aponta para uma etapa que não existe mais.`);
     }
   }
   return problemas;

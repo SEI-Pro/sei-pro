@@ -40,7 +40,12 @@ function contextoDaTela(): string {
 }
 
 /** Canal com o painel: porta, apresentação, reconexão e foco. Comum às telas do SEI e à janela do editor. */
-function abrirCanal(papel: "sei" | "editor", documento: string | undefined, executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>): void {
+function abrirCanal(
+  papel: "sei" | "editor",
+  documento: string | undefined,
+  executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>,
+  aoCairAPorta?: () => void,
+): void {
   const emCurso = new Map<string, AbortController>();
   let porta: chrome.runtime.Port | null = null;
   let ultimoFoco = document.hasFocus() ? Date.now() : 0;
@@ -107,6 +112,7 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
         void chrome.runtime.lastError;
         porta = null;
         for (const c of emCurso.values()) c.abort();
+        aoCairAPorta?.();
       });
       p.onMessage.addListener((m: unknown) => {
         if (ehDoCanal(m)) void atender(m as MensagemPainel);
@@ -203,7 +209,10 @@ function iniciar(): void {
     if (op === "fluxo.avaliar") return Promise.resolve(avaliarNaTela(document, args));
     if (op === "fluxo.aviso") return Promise.resolve(avisoDeFluxo(args.tem === true));
     return executarOperacao(sei, op, args, sinal);
-  });
+  // Painel fechado, porta caída: o ponto TEM de sair. Sem isso ele seguiria
+  // sendo reposto a cada 2 s, para sempre, anunciando uma sugestão que não
+  // existe mais e que ninguém consegue abrir.
+  }, () => avisoDeFluxo(false));
   instalarEntradaNoMenu();
 }
 

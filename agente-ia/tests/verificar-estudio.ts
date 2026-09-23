@@ -8,7 +8,7 @@
  * ao cartão prometendo um botão que não faz nada.
  */
 
-import { comAcao, comDesvio, deLinhas, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "../src/estudio/campos";
+import { comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "../src/estudio/campos";
 import { etapaNova, fluxoNovo, type Fluxo } from "../src/fluxos/modelo";
 import { checar, secao } from "./util";
 
@@ -53,4 +53,28 @@ export function verificarEstudio(): void {
   checar("os dois formam o desvio", comDesvio(e, { seDocumentoContem: "diligência", entaoIrPara: "e1" })?.entaoIrPara === "e1");
   const comOs2 = { ...e, condicao: { seDocumentoContem: "dilig", entaoIrPara: "e1" } };
   checar("escolher “nenhuma” desfaz o desvio", comDesvio(comOs2, { entaoIrPara: "" }) === undefined);
+}
+
+/**
+ * Metadados que vão para a inferência.
+ *
+ * Documento cancelado foi riscado dos autos: se ele entra no prompt, o modelo
+ * pode propor como etapa do rito um documento que a avaliação NUNCA aceita
+ * (avaliar.ts o recusa) — e o fluxo passaria a cobrar para sempre uma etapa
+ * impossível de cumprir.
+ */
+export function verificarMetadadosDoModelo(): void {
+  secao("estudio: metadados do processo modelo");
+  const docs = [
+    { numero: "1", titulo: "Nota Técnica 55", assinado: true, unidade: "GESP" },
+    { numero: "2", titulo: "Despacho errado", assinado: true, cancelado: true },
+    { numero: "3", titulo: "", nivel: "sigiloso" },
+    { numero: "4", titulo: "Ofício 12", assinado: false, externo: true },
+  ];
+  const m = metadadosDaArvore(docs);
+  checar("descarta documento cancelado", !m.some((d) => d.titulo.includes("errado")), m);
+  checar("descarta documento sigiloso", m.length === 2, m);
+  checar("mantem a ordem cronologica", m[0].titulo === "Nota Técnica 55" && m[1].titulo === "Ofício 12");
+  checar("renumera a ordem depois do descarte", m[0].ordem === 1 && m[1].ordem === 2, m.map((d) => d.ordem));
+  checar("leva unidade, assinatura e anexo", m[0].unidade === "GESP" && m[0].assinado === true && m[1].externo === true);
 }

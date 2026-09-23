@@ -197,24 +197,43 @@ export function marcarAvisoDeFluxo(doc: Document, tem: boolean): void {
   juntar(conteudo?.contentDocument?.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentDocument);
   juntar(doc.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentDocument);
 
+  const AVISO = " \u2014 h\u00E1 uma sugest\u00E3o de fluxo para este processo";
   for (const alvo of alvos) {
     const antigo = alvo.querySelector(`.${MARCA_AVISO}`);
+    const el = alvo as HTMLElement;
     if (!tem) {
       antigo?.remove();
+      // Desfaz o que este código pôs no ícone do SEI: tooltip e posicionamento.
+      if (el.dataset?.sproTituloAntes !== undefined) {
+        el.title = el.dataset.sproTituloAntes;
+        delete el.dataset.sproTituloAntes;
+      }
+      if (el.dataset?.sproPosicaoPosta !== undefined) {
+        el.style.position = "";
+        delete el.dataset.sproPosicaoPosta;
+      }
       continue;
     }
     if (antigo) continue;
     const ponto = alvo.ownerDocument.createElement("span");
     ponto.className = MARCA_AVISO;
-    ponto.title = "O Agente de IA tem uma sugest\u00E3o de fluxo para este processo.";
+    // `aria-hidden` e sem tooltip PRÓPRIO: com `pointer-events:none` o title do
+    // ponto nunca apareceria. Quem explica é o tooltip do ícone, abaixo.
     ponto.setAttribute("aria-hidden", "true");
     ponto.setAttribute(
       "style",
       "position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:#e8710a;box-shadow:0 0 0 2px rgba(255,255,255,.9);pointer-events:none;",
     );
+    if (el.dataset && el.dataset.sproTituloAntes === undefined) {
+      el.dataset.sproTituloAntes = el.title ?? "";
+      el.title = `${el.title ?? ""}${AVISO}`;
+    }
     // O ícone precisa ser a referência do posicionamento, ou o ponto vai parar
     // no canto da barra inteira.
-    if (alvo instanceof HTMLElement && getComputedStyle(alvo).position === "static") alvo.style.position = "relative";
+    if (el.style && getComputedStyle(el).position === "static") {
+      el.style.position = "relative";
+      if (el.dataset) el.dataset.sproPosicaoPosta = "1";
+    }
     alvo.append(ponto);
   }
 }

@@ -88,6 +88,7 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 * **Uma sugestão por processo.** Vale o primeiro fluxo ligado que se aplica, e só a primeira etapa obrigatória que falta;
 * **A ordem da árvore é cronológica.** Um Despacho que já estava nos autos *antes* da Nota Técnica não cumpre a etapa que vem *depois* dela;
 * **Documento cancelado não cumpre etapa**, e documento de processo **sigiloso** nunca é avaliado nem sugerido;
+* **Duas etapas com títulos parecidos precisam de algo que as distinga.** No rito "Ofício-MINUTA assinado → Ofício expedido", as duas etapas casariam o mesmo "Ofício": a primeira consome o documento e a segunda parece faltar. Use a variação completa do título ("Ofício-MINUTA") ou a exigência de assinatura para separá-las;
 * A avaliação só roda com o **painel do agente aberto**, e sobre a árvore que já está na tela: ela **não faz nenhuma requisição** ao SEI;
 * Os fluxos ficam guardados **só neste navegador**. Ainda não há como compartilhá-los com a equipe — está previsto;
 * O fluxo descreve o que a sua unidade **costuma** fazer. Quem decide o que fazer em cada processo continua sendo você.
