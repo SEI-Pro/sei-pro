@@ -13,6 +13,7 @@
  */
 
 import type { TelaAtual } from "../src/motor/motor";
+import type { ProcessoModelo } from "../src/fluxos/inferir";
 
 export interface Caso {
   nome: string;
@@ -99,3 +100,55 @@ export const CASOS: Caso[] = [
 ];
 
 export const TELA_BASE = TELA_PADRAO;
+
+/**
+ * Casos do Estúdio de Fluxo: aprender o rito de um processo modelo.
+ *
+ * Não é conversa: é UMA chamada ao modelo com os metadados da árvore. O que se
+ * mede é a única coisa que o parse não consegue garantir sozinho — se o modelo
+ * sabe separar ETAPA DO RITO de DOCUMENTO ACESSÓRIO. Um fluxo que traz o anexo
+ * e o comprovante como etapa cobra do usuário, para sempre, documentos que não
+ * fazem parte de rito nenhum.
+ */
+export interface CasoFluxo {
+  nome: string;
+  modelos: ProcessoModelo[];
+  espera: {
+    /** Precisa haver uma etapa para cada um destes (casa por trecho, sem acento e sem caixa). */
+    etapas: string[];
+    /** Nenhuma etapa pode ser sobre estes. */
+    naoEtapas: string[];
+    /** Teto de etapas: o rito não pode inflar com o que estava junto nos autos. */
+    maxEtapas?: number;
+  };
+}
+
+const CONTRATACAO: ProcessoModelo = {
+  protocolo: "12345.000001/2026-11",
+  tipo: "Contratação Direta",
+  documentos: [
+    { ordem: 1, titulo: "Nota Técnica 55", unidade: "GESP", assinado: true },
+    { ordem: 2, titulo: "Anexo - Planilha de custos", unidade: "GESP", assinado: false, externo: true },
+    { ordem: 3, titulo: "E-mail Confirmação do fornecedor", unidade: "GESP", assinado: false, externo: true },
+    { ordem: 4, titulo: "Despacho de aprovação", unidade: "GESP", assinado: true },
+    { ordem: 5, titulo: "Comprovante de publicação no DOU", unidade: "GESP", assinado: false, externo: true },
+    { ordem: 6, titulo: "Ofício 12", unidade: "GESP", assinado: true },
+  ],
+  historico: [
+    { data: "02/03/2026", unidade: "GESP", descricao: "Processo público gerado" },
+    { data: "10/03/2026", unidade: "GESP", descricao: "Documento assinado por Fulano de Tal" },
+    { data: "18/03/2026", unidade: "GESP", descricao: "Processo remetido para a unidade GABIN" },
+  ],
+};
+
+export const CASOS_FLUXO: CasoFluxo[] = [
+  {
+    nome: "aprende o rito e deixa os anexos de fora",
+    modelos: [CONTRATACAO],
+    espera: {
+      etapas: ["nota tecnica", "despacho", "oficio"],
+      naoEtapas: ["planilha", "e-mail", "comprovante", "anexo"],
+      maxEtapas: 5,
+    },
+  },
+];

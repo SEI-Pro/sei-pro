@@ -17,7 +17,9 @@ import { RegistroTools } from "../src/motor/tools";
 import type { InterfaceMotor, PlanoPrevisto, Uso } from "../src/motor/tipos";
 import { TOOLS_SEI } from "../src/tools/sei";
 import { toolsMotor } from "../src/tools/motor";
-import { CASOS, TELA_BASE, type Caso } from "./casos";
+import { CASOS, CASOS_FLUXO, TELA_BASE, type Caso, type CasoFluxo } from "./casos";
+import { inferirFluxo } from "../src/fluxos/inferir";
+import { normalizar } from "../src/fluxos/modelo";
 
 const chave = process.env.CHAVE_IA ?? "";
 const servico = (process.env.SERVICO ?? "openrouter") as Servico;
@@ -87,9 +89,26 @@ async function rodarCaso(caso: Caso): Promise<{ ok: boolean; falhas: string[]; r
   return { ok: !falhas.length, falhas, reg };
 }
 
+/**
+ * Caso do Estúdio de Fluxo: uma chamada só, com os metadados de um processo
+ * modelo. Mede se o modelo separa etapa do rito de documento acessório.
+ */
+async function rodarCasoFluxo(caso: CasoFluxo): Promise<{ ok: boolean; falhas: string[]; texto: string; uso: Uso }> {
+  const r = await inferirFluxo(criarProvedor({ servico, chave, modelo }), caso.modelos, new AbortController().signal);
+  const etapas = r.fluxo.etapas;
+  // A etapa "é sobre" um termo quando o nome ou qualquer variação do título o contém.
+  const fala = (termo: string) => etapas.some((e) => [e.nome, ...e.documento.tituloContem].some((t) => normalizar(t).includes(normalizar(termo))));
+  const falhas: string[] = [];
+  for (const t of caso.espera.etapas) if (!fala(t)) falhas.push(`nao criou etapa para "${t}"`);
+  for (const t of caso.espera.naoEtapas) if (fala(t)) falhas.push(`criou etapa para "${t}", que e documento acessorio`);
+  if (caso.espera.maxEtapas && etapas.length > caso.espera.maxEtapas) falhas.push(`${etapas.length} etapas, teto era ${caso.espera.maxEtapas}`);
+  return { ok: !falhas.length, falhas, texto: etapas.map((e) => e.nome).join(" > "), uso: r.uso ?? { entrada: 0, saida: 0, custo: 0 } };
+}
+
 const so = process.argv[2];
 const escolhidos = so ? CASOS.filter((c) => c.nome.includes(so)) : CASOS;
-console.log(`Avaliando ${escolhidos.length} caso(s) com ${modelo} (${servico})\n`);
+const escolhidosFluxo = so ? CASOS_FLUXO.filter((c) => c.nome.includes(so)) : CASOS_FLUXO;
+console.log(`Avaliando ${escolhidos.length + escolhidosFluxo.length} caso(s) com ${modelo} (${servico})\n`);
 
 let passou = 0;
 let custo = 0;
@@ -111,7 +130,26 @@ for (const caso of escolhidos) {
     console.log(`  ERRO  ${caso.nome}: ${(erro as Error).message}`);
   }
 }
+for (const caso of escolhidosFluxo) {
+  const t = Date.now();
+  try {
+    const r = await rodarCasoFluxo(caso);
+    custo += r.uso.custo;
+    if (r.ok) {
+      passou += 1;
+      console.log(`  ok    ${caso.nome} (${((Date.now() - t) / 1000).toFixed(1)}s) \u2014 ${r.texto}`);
+    } else {
+      console.log(`  FALHA ${caso.nome}`);
+      for (const f of r.falhas) console.log(`        ${f}`);
+      console.log(`        proposta: ${r.texto}`);
+    }
+  } catch (erro) {
+    console.log(`  ERRO  ${caso.nome}: ${(erro as Error).message}`);
+  }
+}
+
+const total = escolhidos.length + escolhidosFluxo.length;
 console.log(
-  `\n${passou}/${escolhidos.length} casos · ${((Date.now() - comeco) / 1000).toFixed(0)}s · US$ ${custo.toFixed(4)}`,
+  `\n${passou}/${total} casos \u00b7 ${((Date.now() - comeco) / 1000).toFixed(0)}s \u00b7 US$ ${custo.toFixed(4)}`,
 );
-process.exit(passou === escolhidos.length ? 0 : 1);
+process.exit(passou === total ? 0 : 1);
