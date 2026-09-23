@@ -808,6 +808,11 @@ class App {
       if ((servico.value as Servico) !== "compativel") void carregarModelos(false);
     });
 
+    // Os resumos dos grupos são montados no fim, mas as listas (skills, regras,
+    // memória, rotinas) desenham antes e já pedem atualização: por isso a
+    // função nasce vazia e é substituída lá embaixo.
+    let atualizarResumos: () => void = () => undefined;
+
     // ------------------------------------------------- skills do usuário
     const listaSkills = h("div", { class: "skills" });
     const novaSkill = h("button", {}, "Nova skill");
@@ -886,6 +891,7 @@ class App {
             )
           : [h("div", { class: "ajuda" }, "Nenhuma skill ainda. Uma skill \u00E9 um texto com as regras da sua unidade \u2014 como \u00E9 um despacho de encaminhamento, o que a nota t\u00E9cnica precisa ter \u2014 que o agente carrega s\u00F3 quando o pedido \u00E9 daquele assunto.")]),
       );
+      atualizarResumos();
     };
     desenharSkills();
     novaSkill.addEventListener("click", () => this.editarSkill(null, desenharSkills));
@@ -971,6 +977,7 @@ class App {
               ),
             ]),
       );
+      atualizarResumos();
     };
     desenharRotinas();
     novaRotina.addEventListener("click", () => this.editarRotina(null, desenharRotinas));
@@ -1030,6 +1037,7 @@ class App {
             )
           : [h("div", { class: "ajuda" }, "Nada aprendido ainda. O agente anota sozinho o que voc\u00EA corrigir sobre o jeito da unidade trabalhar \u2014 e tudo aparece aqui, para conferir ou apagar.")]),
       );
+      atualizarResumos();
     };
     desenharMemoria();
     addLembranca.addEventListener("click", async () => {
@@ -1114,6 +1122,7 @@ class App {
               ),
             ]),
       );
+      atualizarResumos();
     };
     desenharRegras();
     novaRegra.addEventListener("click", () => this.editarRegra(null, desenharRegras));
@@ -1159,135 +1168,188 @@ class App {
     const padroes = h("button", {}, "Restaurar padr\u00F5es");
     padroes.addEventListener("click", () => {
       for (const n of [temperatura, topP, maxTokens, penFrequencia, penPresenca]) n.campo.value = "";
-      instrucoes.value = "";
     });
-    const avancado = h(
+    const controleDoModelo = h(
       "details",
       { class: "avancado" },
-      h("summary", {}, "Avan\u00E7ado"),
+      h("summary", {}, "Controle fino do modelo"),
       h(
         "div",
         { class: "campo" },
-        h("label", {}, "Controle do modelo"),
         h("div", { class: "finos" }, temperatura.bloco, topP.bloco, maxTokens.bloco, penFrequencia.bloco, penPresenca.bloco),
         h("div", { class: "ajuda" }, "Campo em branco usa o padr\u00E3o do servi\u00E7o. Modelo que n\u00E3o aceitar um desses ajustes faz o agente repetir o pedido sem ele."),
+        h("div", { class: "com-botao" }, padroes),
       ),
+    );
+    const campoInstrucoes = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Instru\u00E7\u00F5es que valem sempre"),
+      instrucoes,
       h(
         "div",
-        { class: "campo" },
-        h("label", {}, "Instru\u00E7\u00F5es adicionais"),
-        instrucoes,
-        h("div", { class: "ajuda" }, "Entram no fim das instru\u00E7\u00F5es do agente, para ajustar estilo e prefer\u00EAncias da sua unidade. As regras de seguran\u00E7a (aprova\u00E7\u00E3o antes de escrever, nada de sigiloso, senha nunca na conversa) continuam valendo."),
+        { class: "ajuda" },
+        "Entram no fim das instru\u00E7\u00F5es do agente, para ajustar estilo e prefer\u00EAncias da sua unidade. As regras de seguran\u00E7a (aprova\u00E7\u00E3o antes de escrever, nada de sigiloso, senha nunca na conversa) continuam valendo.",
       ),
-      h("div", { class: "com-botao" }, padroes),
     );
+
+    // ------------------------------------------------- grupos da configuração
+    /**
+     * A configuração passou de dez seções: numa tela só, viravam quatro
+     * rolagens. Agrupadas e fechadas, o modal inteiro cabe na tela e o resumo
+     * de cada grupo responde a maior parte das visitas ("qual modelo estou
+     * usando?") sem precisar abrir nada. O `name` faz o próprio navegador
+     * manter um aberto por vez.
+     */
+    const resumos = {
+      ia: h("small", {}),
+      sabe: h("small", {}),
+      pode: h("small", {}),
+      gasto: h("small", {}),
+      conversas: h("small", {}),
+    };
+    let primeiroGrupo = true;
+    const grupo = (titulo: string, resumo: HTMLElement, ...filhos: Array<Node | null>) => {
+      // Na primeira vez (sem chave), o grupo do serviço já abre: é o único
+      // passo obrigatório para o agente funcionar.
+      const abrir = obrigatorio && primeiroGrupo;
+      primeiroGrupo = false;
+      return h(
+        "details",
+        { class: "grupo", name: "configuracao", ...(abrir ? { open: true } : {}) },
+        h("summary", {}, h("strong", {}, titulo), resumo),
+        h("div", { class: "grupo-corpo" }, ...filhos),
+      );
+    };
+    const qtd2 = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+    atualizarResumos = () => {
+      const svc = SERVICOS[(servico.value as Servico) ?? this.config.servico];
+      const nomeModelo = ((servico.value as Servico) === "compativel" ? modeloLivre.value : modelo.value) || this.config.modelo;
+      resumos.ia.textContent = `${svc.nome.replace(/ \(.*\)$/, "")} \u00B7 ${nomeModelo || "sem modelo"}`;
+      const colecoes = this.colecoes.length ? `, ${qtd2(this.colecoes.length, "cole\u00E7\u00E3o", "cole\u00E7\u00F5es")}` : "";
+      resumos.sabe.textContent = `${qtd2(this.skills.length, "skill", "skills")}${colecoes} \u00B7 mem\u00F3ria ${usarMemoria.checked ? `com ${qtd2(this.memoria.length, "lembran\u00E7a", "lembran\u00E7as")}` : "desligada"}`;
+      const ativas = this.regras.filter((r) => r.ativa).length;
+      resumos.pode.textContent = `${ativas ? qtd2(ativas, "regra ativa", "regras ativas") : "sem regras"} \u00B7 ${nomes.checked ? "nomes mascarados" : "nomes vis\u00EDveis"}`;
+      const teto = [
+        Number(limiteConversa.value) > 0 ? `R$ ${limiteConversa.value}/conversa` : "",
+        Number(limiteDia.value) > 0 ? `R$ ${limiteDia.value}/dia` : "",
+      ].filter(Boolean);
+      resumos.gasto.textContent = `${teto.length ? `teto ${teto.join(" e ")}` : "sem teto"} \u00B7 cache ${usarCache.checked ? "ligado" : "desligado"}`;
+      const ativa = this.rotinas.filter((r) => r.ativa).length;
+      resumos.conversas.textContent = `${guardar.checked ? `guarda ${dias.value === "0" ? "sem limite" : `${dias.value} dias`}` : "n\u00E3o guarda"} \u00B7 ${ativa ? qtd2(ativa, "rotina", "rotinas") : "sem rotina"}`;
+    };
+    atualizarResumos();
+    for (const el of [servico, modelo, modeloLivre, nomes, cnpj, usarCache, usarMemoria, guardar, dias, limiteConversa, limiteDia])
+      el.addEventListener("change", atualizarResumos);
 
     const salvar = h("button", { class: "primario" }, obrigatorio ? "Salvar e come\u00E7ar" : "Salvar");
     const dlg = this.abrirModal({
       titulo: "Configura\u00E7\u00E3o",
       obrigatorio,
       corpo: [
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Servi\u00E7o de IA"),
-          servico,
-          ajudaServico,
-        ),
-        campoUrl,
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Chave"),
-          h("div", { class: "com-botao" }, chave, verChave),
-          h("div", { class: "ajuda" }, "Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave."),
-        ),
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Modelo"),
-          h("div", { class: "com-botao" }, modelo, buscar),
-          linhaBuscar,
-          listaModelos,
-          ajudaModelo,
-          notaCompativel,
+        grupo(
+          "Servi\u00E7o de IA",
+          resumos.ia,
+          h("div", { class: "campo" }, h("label", {}, "Onde o agente pensa"), servico, ajudaServico),
+          campoUrl,
           h(
             "div",
-            { class: "campo-fino" },
-            h("label", {}, "Modelo das tarefas auxiliares"),
-            linhaAux,
-            h(
-              "small",
-              {},
-              "Quando o agente delega leituras pesadas, elas podem rodar num modelo mais barato (mini, flash, haiku). Precisa ser um modelo que saiba usar ferramentas.",
-            ),
-          ),
-        ),
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Privacidade"),
-          h("label", { class: "linha-switch" }, nomes, h("span", {}, "Mascarar nomes de pessoas", h("small", {}, "Interessados e nomes ap\u00F3s \u201CSr.\u201D, \u201Crequerente\u201D, \u201Cfilho de\u201D..."))),
-          h("label", { class: "linha-switch" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ", h("small", {}, "Empresas; CPF, e-mail e telefone s\u00E3o sempre mascarados."))),
-          h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE)),
-        ),
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Gasto"),
-          h(
-            "label",
-            { class: "linha-switch" },
-            emReais,
-            h("span", {}, "Mostrar o gasto em reais", h("small", {}, "Convertido pela cota\u00E7\u00E3o do dia (PTAX do Banco Central). Desligado, o painel mostra em d\u00F3lares.")),
+            { class: "campo" },
+            h("label", {}, "Chave"),
+            h("div", { class: "com-botao" }, chave, verChave),
+            h("div", { class: "ajuda" }, "Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave."),
           ),
           h(
             "div",
-            { class: "finos" },
-            h("div", { class: "campo-fino" }, h("label", {}, "Limite por conversa (R$)"), limiteConversa, h("small", {}, "Ao chegar no teto, a conversa para de aceitar perguntas. Em branco = sem limite.")),
-            h("div", { class: "campo-fino" }, h("label", {}, "Limite por dia (R$)"), limiteDia, h("small", {}, "Soma o que foi gasto hoje, em todas as conversas. Zera \u00E0 meia-noite.")),
-          ),
-          h("div", { class: "ajuda" }, gastoHoje),
-          h(
-            "label",
-            { class: "linha-switch" },
-            usarCache,
+            { class: "campo" },
+            h("label", {}, "Modelo"),
+            h("div", { class: "com-botao" }, modelo, buscar),
+            linhaBuscar,
+            listaModelos,
+            ajudaModelo,
+            notaCompativel,
             h(
-              "span",
-              {},
-              "Reaproveitar o pedido no cache do servi\u00E7o",
-              h("small", {}, "Marca o trecho que se repete (instru\u00E7\u00F5es, ferramentas, skills) para o provedor cobrar menos por ele. Alguns modelos ignoram; nenhum perde qualidade."),
+              "div",
+              { class: "campo-fino" },
+              h("label", {}, "Modelo das tarefas auxiliares"),
+              linhaAux,
+              h(
+                "small",
+                {},
+                "Quando o agente delega leituras pesadas, elas podem rodar num modelo mais barato (mini, flash, haiku). Precisa ser um modelo que saiba usar ferramentas.",
+              ),
             ),
           ),
+          controleDoModelo,
         ),
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Conversas"),
-          h("label", { class: "linha-switch" }, guardar, h("span", {}, "Guardar as conversas neste navegador", h("small", {}, "Para reler e exportar depois, pelo rel\u00F3gio no topo do painel."))),
-          h("div", { class: "com-botao" }, h("span", { class: "ajuda" }, "Apagar depois de"), dias),
+        grupo("O que o agente sabe", resumos.sabe, secaoSkills, secaoMemoria, campoInstrucoes),
+        grupo(
+          "O que o agente pode",
+          resumos.pode,
+          secaoRegras,
           h(
             "div",
-            { class: "nota" },
-            icone("escudo", 15),
+            { class: "campo" },
+            h("label", {}, "Privacidade"),
+            h("label", { class: "linha-switch" }, nomes, h("span", {}, "Mascarar nomes de pessoas", h("small", {}, "Interessados e nomes ap\u00F3s \u201CSr.\u201D, \u201Crequerente\u201D, \u201Cfilho de\u201D..."))),
+            h("label", { class: "linha-switch" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ", h("small", {}, "Empresas; CPF, e-mail e telefone s\u00E3o sempre mascarados."))),
+            h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE)),
+          ),
+        ),
+        grupo(
+          "Gasto",
+          resumos.gasto,
+          h(
+            "div",
+            { class: "campo" },
             h(
-              "span",
-              {},
-              "Fica guardada s\u00F3 a transcri\u00E7\u00E3o \u2014 o que apareceu na tela. O hist\u00F3rico que vai ao modelo e a tabela que liga [PESSOA_1] ao nome real morrem quando o navegador fecha, e por isso uma conversa guardada abre para ler e exportar, n\u00E3o para continuar.",
+              "label",
+              { class: "linha-switch" },
+              emReais,
+              h("span", {}, "Mostrar o gasto em reais", h("small", {}, "Convertido pela cota\u00E7\u00E3o do dia (PTAX do Banco Central). Desligado, o painel mostra em d\u00F3lares.")),
+            ),
+            h(
+              "div",
+              { class: "finos" },
+              h("div", { class: "campo-fino" }, h("label", {}, "Limite por conversa (R$)"), limiteConversa, h("small", {}, "Ao chegar no teto, a conversa para de aceitar perguntas. Em branco = sem limite.")),
+              h("div", { class: "campo-fino" }, h("label", {}, "Limite por dia (R$)"), limiteDia, h("small", {}, "Soma o que foi gasto hoje, em todas as conversas. Zera \u00E0 meia-noite.")),
+            ),
+            h("div", { class: "ajuda" }, gastoHoje),
+            h(
+              "label",
+              { class: "linha-switch" },
+              usarCache,
+              h(
+                "span",
+                {},
+                "Reaproveitar o pedido no cache do servi\u00E7o",
+                h("small", {}, "Marca o trecho que se repete (instru\u00E7\u00F5es, ferramentas, skills) para o provedor cobrar menos por ele. Alguns modelos ignoram; nenhum perde qualidade."),
+              ),
             ),
           ),
         ),
-        secaoSkills,
-        secaoRotinas,
-        secaoMemoria,
-        secaoRegras,
-        avancado,
-        h(
-          "div",
-          { class: "campo" },
-          h("label", {}, "Responsabilidade"),
-          h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, RESPONSABILIDADE)),
+        grupo(
+          "Conversas e rotinas",
+          resumos.conversas,
+          h(
+            "div",
+            { class: "campo" },
+            h("label", { class: "linha-switch" }, guardar, h("span", {}, "Guardar as conversas neste navegador", h("small", {}, "Para reler e exportar depois, pelo rel\u00F3gio no topo do painel."))),
+            h("div", { class: "com-botao" }, h("span", { class: "ajuda" }, "Apagar depois de"), dias),
+            h(
+              "div",
+              { class: "nota" },
+              icone("escudo", 15),
+              h(
+                "span",
+                {},
+                "Fica guardada s\u00F3 a transcri\u00E7\u00E3o \u2014 o que apareceu na tela. O hist\u00F3rico que vai ao modelo e a tabela que liga [PESSOA_1] ao nome real morrem quando o navegador fecha, e por isso uma conversa guardada abre para ler e exportar, n\u00E3o para continuar.",
+              ),
+            ),
+          ),
+          secaoRotinas,
         ),
+        h("div", { class: "nota atencao rodape-modal" }, icone("alerta", 15), h("span", {}, RESPONSABILIDADE)),
       ],
       acoes: [status, obrigatorio ? null : h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
     });
@@ -1329,7 +1391,10 @@ class App {
       for (const [nome, campo, rotulo, min, max] of finos) {
         const v = numeroDe(campo, rotulo, min, max);
         if (v === null) {
-          avancado.open = true;
+          // Abre onde está o campo errado: o grupo e, dentro dele, o controle fino.
+          controleDoModelo.closest("details.grupo")?.setAttribute("open", "");
+          controleDoModelo.open = true;
+          controleDoModelo.scrollIntoView({ block: "center" });
           return;
         }
         if (v !== undefined) ajustes[nome] = v;

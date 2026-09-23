@@ -536,3 +536,23 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 
 .skill.rotina { border-left: 3px solid var(--acento); }
 .skill.rotina .skill-texto small:not(.origem) { white-space: normal; }
+
+/* Configuração em grupos: um aberto por vez, com o estado no cabeçalho. */
+.grupo { border: 1px solid var(--linha); border-radius: var(--r2); background: var(--superficie); }
+.grupo > summary {
+  cursor: pointer; padding: 11px var(--e3); list-style: none;
+  display: flex; flex-direction: column; gap: 2px; position: relative;
+}
+.grupo > summary::-webkit-details-marker { display: none; }
+.grupo > summary strong { font-size: 13px; }
+.grupo > summary small { font-size: 11.5px; color: var(--ink-2); }
+.grupo > summary::after {
+  content: ""; position: absolute; right: var(--e3); top: 18px;
+  width: 7px; height: 7px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3);
+  transform: rotate(45deg); transition: transform .15s ease;
+}
+.grupo[open] > summary::after { transform: rotate(-135deg); top: 21px; }
+.grupo[open] > summary { border-bottom: 1px solid var(--linha); background: var(--superficie-2); }
+.grupo > summary:hover strong { color: var(--acento); }
+.grupo-corpo { display: flex; flex-direction: column; gap: var(--e3); padding: var(--e3); }
+.rodape-modal { margin-top: var(--e2); }

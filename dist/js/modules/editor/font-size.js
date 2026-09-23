@@ -65,6 +65,20 @@
         // Mesmos limites do original (CK4): novo tamanho > 7 && < 70 px.
         if (!(newFontSize > 7 && newFontSize < 70)) return;
 
+        // No CK4 o caminho continua sendo o applyStyle do proprio editor. A estrategia de
+        // envolver a selecao numa span, necessaria no CK5, ANINHA spans a cada clique -- e a
+        // leitura do tamanho passa a pegar a span de dentro, entao a fonte para de crescer no
+        // terceiro clique (medido: 18px, 20px, 20px...). O applyStyle faz o merge das spans.
+        if (SeiProEditorAdapter.version === 4) {
+            SeiProEditorAdapter.withEdit(editor, function () {
+                SeiProEditorAdapter.applyStyle(editor, {
+                    element: 'span',
+                    attributes: { 'style': 'font-size: ' + newFontSize + 'px' }
+                });
+            });
+            return;
+        }
+
         SeiProEditorAdapter.withEdit(editor, function () {
             SeiProEditorAdapter.insertHtml(
                 editor,

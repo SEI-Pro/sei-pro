@@ -595,19 +595,32 @@
             } catch (e) { return ''; }
         },
 
+        // No CKEditor 4 getSelectedHtml e metodo do EDITOR, nao da selecao. Chamado em
+        // editor.getSelection() ele e simplesmente undefined (conferido no CK 4.17 do SEI),
+        // entao esta funcao devolvia '' para QUALQUER selecao -- e as features que a usam para
+        // saber se ha texto marcado acusavam "Selecione um texto" com o texto selecionado
+        // (tamanho da fonte, copiar formatacao, marca de sigilo, revisao).
         getSelectedHtml: function (editor) {
             try {
-                var sel = editor && editor.getSelection && editor.getSelection();
-                if (!sel) return '';
-                var frag = sel.getSelectedHtml ? sel.getSelectedHtml() : null;
-                if (!frag) return '';
-                if (frag.getHtml) return frag.getHtml();
-                if (window.CKEDITOR && CKEDITOR.dom) {
-                    var tmp = new CKEDITOR.dom.element('div');
-                    tmp.append(frag);
-                    return tmp.getHtml();
+                if (!editor) return '';
+                if (typeof editor.getSelectedHtml === 'function') {
+                    var frag = editor.getSelectedHtml();
+                    if (frag) {
+                        if (frag.getHtml) return frag.getHtml();
+                        if (window.CKEDITOR && CKEDITOR.dom) {
+                            var tmp = new CKEDITOR.dom.element('div');
+                            tmp.append(frag);
+                            return tmp.getHtml();
+                        }
+                    }
                 }
-                return '';
+                // CK4 anterior ao 4.5 nao tem editor.getSelectedHtml: clona o range da selecao.
+                var sel = editor.getSelection && editor.getSelection();
+                var ranges = (sel && sel.getRanges) ? sel.getRanges() : [];
+                if (!ranges.length || ranges[0].collapsed || !window.CKEDITOR || !CKEDITOR.dom) return '';
+                var tmp2 = new CKEDITOR.dom.element('div');
+                tmp2.append(ranges[0].cloneContents());
+                return tmp2.getHtml();
             } catch (e) { return ''; }
         },
 
