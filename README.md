@@ -80,6 +80,7 @@ Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo
 - ![Comparador de Documentos](/img/icon-comparardocumentos.png) [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
 - ![Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](/img/icon-ferramentaspdf.png) [Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](./pages/FERRAMENTASPDF.md)
 - ![Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](/img/icon-agenteia.png) [Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](./pages/AGENTEIA.md)
+- ![Estúdio de Fluxo: mapeie o rito da sua unidade e veja em que etapa cada processo está](/img/icon-fluxos.png) [Estúdio de Fluxo: mapeie o rito da sua unidade e veja em que etapa cada processo está](./pages/FLUXOS.md)
 - ![Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](/img/icon-certidaosigilo.png) [Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](./pages/CERTIDAOSIGILO.md)
 
 ### Visualização de documentos
