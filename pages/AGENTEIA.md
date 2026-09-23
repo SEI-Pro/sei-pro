@@ -92,6 +92,7 @@ Cadastre em **Configuração → Skills**:
 | **Atalho** | O que você digita na conversa, depois de `/` |
 | **Quando usar** | Uma linha; é por ela que o agente decide sozinho se a skill serve ao pedido |
 | **Arquivo no GitHub** | Opcional: link de um `.md` em repositório público — o conteúdo é copiado para cá |
+| **Manter sincronizada** | Opcional, **desligado** por padrão: com isso ligado, o agente confere o arquivo a cada 6 horas e traz as mudanças sozinho |
 | **Conteúdo** | O texto da instrução, escrito como se fosse para um colega novo |
 
 Há duas formas de usar:
@@ -99,7 +100,9 @@ Há duas formas de usar:
 * **Você chama**: digite `/` na conversa e escolha na lista (ou `/desp` para filtrar). O conteúdo entra junto com aquele pedido;
 * **O agente chama**: quando o assunto bate com o "quando usar", ele carrega a skill sozinho — aparece na conversa como *Ler instruções*.
 
-Guardar o conteúdo, e não só o link, é proposital: a conversa não pode parar porque a rede do órgão não alcançou o GitHub naquele instante. Quando o arquivo mudar, abra a skill e clique em **Buscar do GitHub** de novo.
+Guardar o conteúdo, e não só o link, é proposital: a conversa não pode parar porque a rede do órgão não alcançou o GitHub naquele instante.
+
+Para não ter de lembrar de atualizar, ligue **Manter sincronizada com o GitHub** na skill. A conferência é barata — o agente pergunta ao GitHub se o arquivo mudou e, quando não mudou, nada é baixado — e acontece no máximo a cada 6 horas, ao abrir o painel ou as configurações. O botão **Sincronizar agora**, na lista de skills, confere na hora. Se a rede falhar, o texto que já está aqui continua valendo e o motivo aparece embaixo da skill.
 
 > As skills orientam o trabalho, mas **não** revogam as regras do agente: escrita no SEI continua passando pela sua aprovação, processo sigiloso continua fora e senha nunca é pedida na conversa.
 

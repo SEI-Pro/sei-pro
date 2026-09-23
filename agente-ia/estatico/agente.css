@@ -516,3 +516,5 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 /* No menu de skills (digitando "/"), o atalho vem antes do nome. */
 .menu button code { font-size: 11px; background: var(--superficie-2); border-radius: 4px; padding: 1px 5px; margin-right: 6px; color: var(--ink-2); }
 .menu button.focado { background: var(--superficie-2); }
+
+.skill-texto small.falha { color: var(--atencao); white-space: normal; }

@@ -23,7 +23,7 @@ import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
-import { baixarSkill, comSkills, descricaoDoTexto, guardarSkills, listarSkills, LIMITE_SKILL, skillsCitadas, slugLivre, urlCrua, type SkillUsuario } from "./skills";
+import { baixarSkillSeMudou, comSkills, descricaoDoTexto, guardarSkills, listarSkills, LIMITE_SKILL, sincronizarSkills, skillsCitadas, slugLivre, urlCrua, type SkillUsuario } from "./skills";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
@@ -90,6 +90,17 @@ function carimboDeTempo(ms: number): HTMLElement {
 }
 
 
+/** "agora", "há 3 h", "ontem": quando a skill foi conferida pela última vez. */
+function quando(ms?: number): string {
+  if (!ms) return "ainda n\u00E3o conferida";
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 2) return "conferida agora";
+  if (min < 60) return `conferida h\u00E1 ${min} min`;
+  const horas = Math.round(min / 60);
+  if (horas < 24) return `conferida h\u00E1 ${horas} h`;
+  return `conferida em ${new Date(ms).toLocaleDateString("pt-BR")}`;
+}
+
 /** Texto do serviço + link do painel do fabricante + link do passo a passo. */
 function ajudaDoServico(svc: Servico): Node[] {
   const info = SERVICOS[svc];
@@ -148,6 +159,7 @@ class App {
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<Config> | undefined;
     this.config = { ...this.config, ...salvo };
     this.skills = await listarSkills();
+    void this.sincronizarSkills();
     this.ponte.aoMudar(() => this.atualizarAba());
     await this.telaConversa();
     void this.atualizarCambio();
@@ -724,6 +736,7 @@ class App {
     // ------------------------------------------------- skills do usuário
     const listaSkills = h("div", { class: "skills" });
     const novaSkill = h("button", {}, "Nova skill");
+    const sincronizarAgora = h("button", { title: "Conferir agora os arquivos no GitHub" }, "Sincronizar agora");
     const desenharSkills = () => {
       listaSkills.replaceChildren(
         ...(this.skills.length
@@ -737,7 +750,8 @@ class App {
                   h("strong", {}, sk.nome),
                   h("code", {}, `/${sk.slug}`),
                   h("small", {}, sk.descricao || descricaoDoTexto(sk.texto) || `${sk.texto.length.toLocaleString("pt-BR")} caracteres`),
-                  sk.url ? h("small", { class: "origem" }, sk.url.replace(/^https?:\/\//, "")) : null,
+                  sk.url ? h("small", { class: "origem" }, `${sk.sincronizar ? "\u21BB " : ""}${sk.url.replace(/^https?:\/\//, "")}${sk.sincronizar ? ` \u00B7 ${quando(sk.verificadaEm)}` : ""}`) : null,
+                  sk.erroSync ? h("small", { class: "falha" }, `N\u00E3o deu para sincronizar: ${sk.erroSync}`) : null,
                 ),
                 h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${sk.nome}`, onclick: () => this.editarSkill(sk, desenharSkills) }, icone("lapis", 15)),
                 h(
@@ -761,12 +775,30 @@ class App {
     };
     desenharSkills();
     novaSkill.addEventListener("click", () => this.editarSkill(null, desenharSkills));
+    sincronizarAgora.addEventListener("click", async () => {
+      sincronizarAgora.disabled = true;
+      status.className = "status";
+      status.textContent = "Conferindo os arquivos...";
+      // O clique é o gesto que permite pedir a permissão que faltar.
+      for (const sk of this.skills.filter((x) => x.url && x.sincronizar)) {
+        const origens = [`${new URL(urlCrua(sk.url ?? "")).origin}/*`];
+        await chrome.permissions
+          .contains({ origins: origens })
+          .then((tem) => tem || chrome.permissions.request({ origins: origens }))
+          .catch(() => false);
+      }
+      const mudaram = await this.sincronizarSkills(true);
+      desenharSkills();
+      status.className = "status ok";
+      status.textContent = mudaram.length ? `Atualizada(s): ${mudaram.join(", ")}.` : "Nenhuma mudan\u00E7a no GitHub.";
+      sincronizarAgora.disabled = false;
+    });
     const secaoSkills = h(
       "div",
       { class: "campo" },
       h("label", {}, "Skills (instru\u00E7\u00F5es da sua unidade)"),
       listaSkills,
-      h("div", { class: "com-botao" }, novaSkill),
+      h("div", { class: "com-botao" }, novaSkill, this.skills.some((x) => x.url && x.sincronizar) ? sincronizarAgora : null),
       h(
         "div",
         { class: "ajuda" },
@@ -970,6 +1002,27 @@ class App {
   }
 
   /**
+   * Atualiza as skills marcadas para acompanhar o arquivo no GitHub.
+   *
+   * Em segundo plano, sem travar o painel: quem depende disso é a próxima
+   * pergunta, não a abertura. Só busca onde o navegador já autorizou o
+   * endereço — pedir permissão exige um clique, e aqui não há nenhum.
+   */
+  private async sincronizarSkills(forcar = false): Promise<string[]> {
+    if (!this.skills.some((s) => s.url && s.sincronizar)) return [];
+    const { lista, mudaram } = await sincronizarSkills(this.skills, {
+      forcar,
+      autorizado: (origem) => chrome.permissions.contains({ origins: [`${origem}/*`] }).catch(() => false),
+    });
+    if (JSON.stringify(lista) === JSON.stringify(this.skills)) return [];
+    this.skills = lista;
+    await guardarSkills(lista);
+    // O motor em curso carrega as skills no prompt e no skill_ler: precisa ser refeito.
+    if (mudaram.length) await this.aplicarConfig(this.config);
+    return mudaram;
+  }
+
+  /**
    * Cadastro de uma skill, em modal por cima da configuração.
    *
    * O conteúdo pode ser colado ou vir de um `.md` do GitHub — e, vindo de lá,
@@ -983,8 +1036,36 @@ class App {
     const url = h("input", { type: "url", value: skill?.url ?? "", placeholder: "https://github.com/orgao/repo/blob/main/despacho.md", spellcheck: "false", "aria-label": "Arquivo .md no GitHub" });
     const texto = h("textarea", { rows: "8", spellcheck: "true", "aria-label": "Conte\u00FAdo da skill" }, skill?.texto ?? "");
     const buscar = h("button", {}, "Buscar do GitHub");
+    const sincronizar = h("input", { type: "checkbox", class: "switch", ...(skill?.sincronizar ? { checked: true } : {}) });
+    const linhaSync = h(
+      "label",
+      { class: "linha-switch" },
+      sincronizar,
+      h(
+        "span",
+        {},
+        "Manter sincronizada com o GitHub",
+        h("small", {}, "Desligado, o texto fica como est\u00E1 hoje. Ligado, o agente confere o arquivo a cada 6 horas e traz as mudan\u00E7as sozinho."),
+      ),
+    );
     const status = h("div", { class: "status" });
     const salvar = h("button", { class: "primario" }, skill ? "Salvar" : "Adicionar");
+
+    // Guardados quando o botão busca, para a primeira sincronização não repetir o download.
+    let etagBaixado = skill?.etag;
+    let verificadaEmBaixado = skill?.verificadaEm;
+
+    const ajustarSync = () => {
+      const tem = /^https?:\/\//.test(url.value.trim());
+      linhaSync.hidden = !tem;
+      if (!tem) sincronizar.checked = false;
+      if (url.value.trim() !== skill?.url) {
+        etagBaixado = undefined;
+        verificadaEmBaixado = undefined;
+      }
+    };
+    url.addEventListener("input", ajustarSync);
+    ajustarSync();
 
     // O slug acompanha o nome enquanto o usuário não o editar à mão.
     let slugManual = Boolean(skill);
@@ -1014,7 +1095,10 @@ class App {
         return;
       }
       try {
-        const conteudo = await baixarSkill(endereco);
+        const r = await baixarSkillSeMudou(endereco);
+        const conteudo = r?.texto ?? "";
+        etagBaixado = r?.etag;
+        verificadaEmBaixado = Date.now();
         texto.value = conteudo;
         if (!nome.value.trim()) {
           nome.value = decodeURIComponent(endereco.split("/").pop() ?? "").replace(/\.mdx?$/i, "").replace(/[-_]+/g, " ");
@@ -1040,7 +1124,8 @@ class App {
           { class: "campo" },
           h("label", {}, "Arquivo no GitHub (opcional)"),
           h("div", { class: "com-botao" }, url, buscar),
-          h("div", { class: "ajuda" }, "Link do arquivo .md em reposit\u00F3rio p\u00FAblico. O conte\u00FAdo \u00E9 copiado para c\u00E1; clique em Buscar de novo quando o arquivo mudar."),
+          h("div", { class: "ajuda" }, "Link do arquivo .md em reposit\u00F3rio p\u00FAblico. O conte\u00FAdo \u00E9 copiado para c\u00E1, e \u00E9 esse texto que o agente usa."),
+          linhaSync,
         ),
         h("div", { class: "campo" }, h("label", {}, "Conte\u00FAdo"), texto, h("div", { class: "ajuda" }, `Texto ou markdown, at\u00E9 ${LIMITE_SKILL.toLocaleString("pt-BR")} caracteres. Vale escrever como se fosse uma instru\u00E7\u00E3o para um colega novo.`)),
       ],
@@ -1064,7 +1149,7 @@ class App {
         slug: s,
         descricao: descricao.value.trim() || descricaoDoTexto(conteudo),
         texto: conteudo,
-        ...(url.value.trim() ? { url: url.value.trim() } : {}),
+        ...(url.value.trim() ? { url: url.value.trim(), sincronizar: sincronizar.checked, etag: etagBaixado, verificadaEm: verificadaEmBaixado } : {}),
         atualizadaEm: Date.now(),
       };
       this.skills = skill ? this.skills.map((x) => (x.id === skill.id ? nova : x)) : [...this.skills, nova];

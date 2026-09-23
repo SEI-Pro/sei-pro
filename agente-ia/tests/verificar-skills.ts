@@ -3,7 +3,7 @@
  * para o modelo quando o usuário chama `/slug`.
  */
 
-import { baixarSkill, comSkills, descricaoDoTexto, skillsCitadas, slugificar, slugLivre, urlCrua, type SkillUsuario } from "../src/painel/skills";
+import { baixarSkill, comSkills, descricaoDoTexto, sincronizarSkills, skillsCitadas, slugificar, slugLivre, urlCrua, type SkillUsuario } from "../src/painel/skills";
 import { promptSistema } from "../src/motor/prompt";
 import { toolsMotor } from "../src/tools/motor";
 import { checar, secao } from "./util";
@@ -35,6 +35,53 @@ export async function verificarSkills(): Promise<void> {
   erro = "";
   await baixarSkill("https://raw.githubusercontent.com/o/r/main/x.md", resposta("Not Found", 404)).catch((e) => (erro = (e as Error).message));
   checar("404 explica o que conferir", /não encontrado/i.test(erro), erro);
+
+  secao("skills: sincronizacao com o GitHub");
+  const respostaSync = (corpo: string, status = 200, etag?: string) => {
+    const chamadas: Array<Record<string, string>> = [];
+    const f = (async (_u: string, init: RequestInit) => {
+      chamadas.push((init.headers ?? {}) as Record<string, string>);
+      return {
+        ok: status < 400,
+        status,
+        text: async () => corpo,
+        headers: { get: (n: string) => (n.toLowerCase() === "etag" ? (etag ?? null) : null) },
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+    return { f, chamadas };
+  };
+  const hospedada = (extra: Partial<SkillUsuario> = {}): SkillUsuario => ({
+    ...skill("despacho", "Despacho"),
+    texto: "versao antiga",
+    url: "https://github.com/o/r/blob/main/d.md",
+    sincronizar: true,
+    ...extra,
+  });
+
+  const desligada = await sincronizarSkills([hospedada({ sincronizar: false })], { buscar: respostaSync("versao nova").f });
+  checar("desligada nao busca nada", desligada.lista[0].texto === "versao antiga" && !desligada.lista[0].verificadaEm);
+
+  const nova = await sincronizarSkills([hospedada()], { buscar: respostaSync("versao nova", 200, 'W/"abc"').f });
+  checar("ligada traz o texto novo", nova.lista[0].texto === "versao nova" && nova.mudaram.includes("Despacho"));
+  checar("guarda o etag para a proxima pergunta", nova.lista[0].etag === 'W/"abc"');
+  checar("marca quando conferiu", typeof nova.lista[0].verificadaEm === "number");
+
+  const comEtag = respostaSync("", 304);
+  const igual = await sincronizarSkills([hospedada({ etag: 'W/"abc"' })], { buscar: comEtag.f });
+  checar("304 mantem o texto e nao avisa mudanca", igual.lista[0].texto === "versao antiga" && !igual.mudaram.length);
+  checar("pergunta com If-None-Match", comEtag.chamadas[0]?.["If-None-Match"] === 'W/"abc"', comEtag.chamadas[0]);
+
+  const cedo = await sincronizarSkills([hospedada({ verificadaEm: Date.now() - 60_000 })], { buscar: respostaSync("versao nova").f });
+  checar("dentro do intervalo nao consulta de novo", cedo.lista[0].texto === "versao antiga");
+  const forcado = await sincronizarSkills([hospedada({ verificadaEm: Date.now() - 60_000 })], { forcar: true, buscar: respostaSync("versao nova").f });
+  checar("Sincronizar agora ignora o intervalo", forcado.lista[0].texto === "versao nova");
+
+  const caiu = await sincronizarSkills([hospedada()], { buscar: respostaSync("erro", 500).f });
+  checar("falha de rede NAO apaga o texto", caiu.lista[0].texto === "versao antiga");
+  checar("e registra o motivo", Boolean(caiu.lista[0].erroSync), caiu.lista[0].erroSync);
+
+  const semPermissao = await sincronizarSkills([hospedada()], { buscar: respostaSync("versao nova").f, autorizado: async () => false });
+  checar("sem permissao de host nao busca", semPermissao.lista[0].texto === "versao antiga" && !semPermissao.lista[0].verificadaEm);
 
   secao("skills: uso na conversa");
   const lista = [skill("despacho-encaminhamento", "Despacho de encaminhamento"), skill("nota-tecnica", "Nota tecnica")];
