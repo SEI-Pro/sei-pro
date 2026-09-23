@@ -17,6 +17,7 @@ Um agente de inteligência artificial que trabalha **dentro do SEI**, pela sua p
 | Ler documentos, inclusive PDF | Registrar andamento, concluir e reabrir |
 | Pesquisar processos e documentos do órgão | Criar documento e escrever o conteúdo |
 | Ler o documento aberto no editor | Assinar, enviar para outra unidade, excluir, cancelar, dar ciência |
+| Ver blocos de assinatura e internos, com o conteúdo | Criar bloco, incluir e retirar documentos, assinar o bloco inteiro, disponibilizar, retornar, concluir e reabrir |
 
 Alguns exemplos do que dá para pedir:
 
@@ -26,6 +27,7 @@ Alguns exemplos do que dá para pedir:
 * *"Liste os processos da minha unidade agrupados por marcador e aponte os parados."*
 * *"Marque este processo como urgente e anote que aguarda parecer."*
 * *"Crie um Despacho encaminhando o processo à unidade X, com o texto abaixo."*
+* *"Ponha os despachos que acabei de criar num bloco de assinatura e disponibilize para a unidade X."*
 
 ### Como abrir
 

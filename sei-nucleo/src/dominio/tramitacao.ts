@@ -39,8 +39,8 @@ export interface Envio {
   retornoEm?: string;
 }
 
-/** Resolve uma unidade pelo autocompletar do envio; ambíguo ou ausente é erro. */
-async function resolverUnidade(sei: Sei, ajax: string, termo: string, sinal?: AbortSignal): Promise<ItemLupa> {
+/** Resolve uma unidade pelo autocompletar da tela (envio, bloco); ambígua ou ausente é erro. */
+export async function resolverUnidade(sei: Sei, ajax: string, termo: string, sinal?: AbortSignal): Promise<ItemLupa> {
   const itens = await sei.ajax(ajax, [["palavras_pesquisa", termo], ["id_orgao", ""], ["unidade_atual", "0"]], { sinal });
   const alvo = normalizar(termo);
   const sigla = (t: string) => normalizar(t.split(" - ")[0]);

@@ -10,7 +10,7 @@
  */
 
 import { lerArvore, type Arvore, type DocumentoArvore } from "@nucleo/dominio/arvore";
-import { assinarBloco, conteudoDoBloco, listarBlocos, type TipoBloco } from "@nucleo/dominio/blocos";
+import { assinarBloco, conteudoDoBloco, criarBloco, incluirNoBloco, listarBlocos, mudarBloco, retirarDoBloco, type AcaoDeBloco, type TipoBloco } from "@nucleo/dominio/blocos";
 import { listarCaixa } from "@nucleo/dominio/caixa";
 import {
   alterarDocumento,
@@ -148,7 +148,7 @@ export const OPERACOES: Record<string, Op> = {
   },
 
   "blocos.listar": async (sei, a, sinal) => {
-    const blocos = await listarBlocos(sei, (a.tipo as TipoBloco) ?? "assinatura", { filtro: txt(a.filtro), sinal });
+    const blocos = await listarBlocos(sei, (a.tipo as TipoBloco) ?? "assinatura", { filtro: txt(a.filtro), concluidos: Boolean(a.concluidos), sinal });
     return blocos.map(({ link: _l, ...b }) => b);
   },
 
@@ -157,6 +157,20 @@ export const OPERACOES: Record<string, Op> = {
     const { link: _l, ...bloco } = r.bloco;
     return { bloco, itens: r.itens };
   },
+
+  "bloco.incluir": (sei, a, sinal) =>
+    incluirNoBloco(sei, String(a.bloco), (a.documentos as string[]) ?? [], { disponibilizar: a.disponibilizar === true }, { aplicar: aplicar(a), sinal }),
+
+  "bloco.criar": (sei, a, sinal) =>
+    criarBloco(
+      sei,
+      { tipo: a.tipo as TipoBloco | undefined, descricao: String(a.descricao ?? ""), unidades: (a.unidades as string[]) ?? [], grupo: a.grupo ? String(a.grupo) : undefined },
+      { aplicar: aplicar(a), sinal },
+    ),
+
+  "bloco.mudar": (sei, a, sinal) => mudarBloco(sei, String(a.bloco), a.acao as AcaoDeBloco, { aplicar: aplicar(a), sinal }),
+
+  "bloco.retirar": (sei, a, sinal) => retirarDoBloco(sei, String(a.bloco), (a.itens as string[]) ?? [], { aplicar: aplicar(a), sinal }),
 
   // A senha chega do painel (cartão de aprovação) e só vai para o POST.
   "bloco.assinar": (sei, a, sinal) =>

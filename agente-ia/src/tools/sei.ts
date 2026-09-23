@@ -125,6 +125,7 @@ export const TOOLS_SEI: DefTool[] = [
     parametros: s.objeto({
       "tipo?": s.texto({ enum: ["assinatura", "interno"], descricao: "Padr\u00E3o: assinatura." }),
       "filtro?": s.texto({ descricao: "Texto em n\u00FAmero, descri\u00E7\u00E3o, estado ou grupo (sem acento/caixa)." }),
+      "concluidos?": s.booleano({ descricao: "Inclui os blocos conclu\u00EDdos, que o filtro do SEI esconde por padr\u00E3o." }),
     }),
     efeito: "leitura",
     rotulo: (a) => `Listar blocos de ${a.tipo === "interno" ? "processos" : "assinatura"}`,
@@ -142,6 +143,103 @@ export const TOOLS_SEI: DefTool[] = [
     efeito: "leitura",
     rotulo: (a) => `Conte\u00FAdo do bloco ${a.bloco}`,
     executar: (a, ctx) => ctx.sei("bloco.conteudo", a),
+  }),
+
+  definirTool({
+    nome: "bloco_incluir",
+    descricao:
+      "Inclui documentos num bloco de assinatura existente. Aceita documentos de processos diferentes (o agente percorre um processo por vez). Documento que j\u00E1 est\u00E1 no bloco fica de fora. Com `disponibilizar`, usa o bot\u00E3o Incluir e Disponibilizar, que manda o bloco \u00E0s unidades de destino \u2014 e a\u00ED outra unidade passa a ver os documentos.",
+    parametros: s.objeto({
+      bloco: s.texto({ descricao: "N\u00FAmero do bloco de assinatura." }),
+      documentos: DOCUMENTOS,
+      "disponibilizar?": s.booleano({ descricao: "Incluir e disponibilizar o bloco (padr\u00E3o: s\u00F3 incluir)." }),
+    }),
+    efeito: "escrita",
+    rotulo: (a) => `Incluir ${qtd((a.documentos as string[]).length, "documento", "documentos")} no bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.incluir", { ...a, aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.incluir", { ...a, aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_retirar",
+    descricao:
+      "Retira documentos de um bloco de assinatura (ou processos de um bloco interno). N\u00E3o apaga nada do processo: s\u00F3 tira do bloco.",
+    parametros: s.objeto({
+      bloco: s.texto({ descricao: "N\u00FAmero do bloco." }),
+      itens: s.lista(s.texto(), { descricao: "N\u00BA SEI dos documentos (bloco de assinatura) ou protocolos (bloco interno)." }),
+    }),
+    efeito: "escrita",
+    rotulo: (a) => `Retirar ${qtd((a.itens as string[]).length, "item", "itens")} do bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.retirar", { ...a, aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.retirar", { ...a, aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_criar",
+    descricao:
+      "Cria um bloco de assinatura (para assinar v\u00E1rios documentos de uma vez) ou um bloco interno (para organizar processos na unidade). As unidades s\u00E3o para disponibiliza\u00E7\u00E3o e s\u00F3 valem no bloco de assinatura.",
+    parametros: s.objeto({
+      descricao: s.texto({ descricao: "Descri\u00E7\u00E3o do bloco." }),
+      "tipo?": s.texto({ enum: ["assinatura", "interno"], descricao: "Tipo do bloco. Padr\u00E3o: assinatura." }),
+      "unidades?": s.lista(s.texto(), { descricao: "Siglas das unidades para disponibiliza\u00E7\u00E3o (bloco de assinatura)." }),
+      "grupo?": s.texto({ descricao: "Grupo de blocos da unidade, se houver." }),
+    }),
+    efeito: "escrita",
+    rotulo: (a) => `Criar bloco ${a.tipo === "interno" ? "interno" : "de assinatura"}: ${a.descricao}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.criar", { ...a, aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.criar", { ...a, aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_disponibilizar",
+    descricao:
+      "Disponibiliza um bloco de assinatura para as unidades cadastradas nele (o bloco precisa estar gerado e ter unidades). Use bloco_concluir para fechar o bloco depois.",
+    parametros: s.objeto({ bloco: s.texto({ descricao: "N\u00FAmero do bloco." }) }),
+    efeito: "escrita",
+    rotulo: (a) => `Disponibilizar o bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "disponibilizar", aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "disponibilizar", aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_cancelar_disponibilizacao",
+    descricao: "Cancela a disponibiliza\u00E7\u00E3o de um bloco, trazendo-o de volta para a unidade que o gerou.",
+    parametros: s.objeto({ bloco: s.texto({ descricao: "N\u00FAmero do bloco." }) }),
+    efeito: "escrita",
+    rotulo: (a) => `Cancelar a disponibiliza\u00E7\u00E3o do bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "cancelar", aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "cancelar", aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_retornar",
+    descricao: "Devolve \u00E0 unidade de origem um bloco que foi disponibilizado para a sua unidade.",
+    parametros: s.objeto({ bloco: s.texto({ descricao: "N\u00FAmero do bloco." }) }),
+    efeito: "escrita",
+    rotulo: (a) => `Retornar o bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "retornar", aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "retornar", aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_concluir",
+    descricao: "Conclui um bloco (assinatura ou interno). Bloco conclu\u00EDdo sai da lista de trabalho da unidade e pode ser reaberto.",
+    parametros: s.objeto({ bloco: s.texto({ descricao: "N\u00FAmero do bloco." }) }),
+    efeito: "escrita",
+    rotulo: (a) => `Concluir o bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "concluir", aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "concluir", aplicar: true }),
+  }),
+
+  definirTool({
+    nome: "bloco_reabrir",
+    descricao:
+      "Reabre um bloco conclu\u00EDdo, devolvendo-o ao estado gerado: ele volta para a lista de blocos da unidade e aceita de novo inclus\u00E3o, assinatura e disponibiliza\u00E7\u00E3o.",
+    parametros: s.objeto({ bloco: s.texto({ descricao: "N\u00FAmero do bloco." }) }),
+    efeito: "escrita",
+    rotulo: (a) => `Reabrir o bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "reabrir", aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.mudar", { ...a, acao: "reabrir", aplicar: true }),
   }),
 
   definirTool({

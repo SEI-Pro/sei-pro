@@ -181,6 +181,15 @@ export class Formulario {
     return achada;
   }
 
+  /**
+   * Linhas de uma tabela do formulário (as telas de seleção do SEI: documentos
+   * para incluir em bloco, itens marcáveis). Leitura: quem decide o que marcar
+   * é quem chama, com `definir`.
+   */
+  linhas(seletorTabela: string): Element[] {
+    return [...this.elemento.querySelectorAll(`${seletorTabela} tr`)].filter((tr) => tr.querySelector("input[type=checkbox]"));
+  }
+
   /** Itens atuais de uma lupa (pelo select visível). */
   itensLupa(select: string): ItemLupa[] {
     const hdn = this.hiddenDaLupa(select);
