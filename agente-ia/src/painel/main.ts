@@ -23,6 +23,7 @@ import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
+import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita } from "./desfazer";
 import {
   baixarColecao,
   baixarSkillSeMudou,
@@ -67,7 +68,7 @@ interface Config {
 type Item =
   /** `ms` (só na resposta do agente): quanto a rodada inteira demorou, do envio à resposta pronta. */
   | { tipo: "usuario" | "agente" | "aviso" | "erro" | "decisao"; texto: string; ms?: number }
-  | { tipo: "tool"; rotulo: string; estado: "rodando" | "ok" | "falha"; detalhe?: string };
+  | { tipo: "tool"; rotulo: string; estado: "rodando" | "ok" | "falha"; detalhe?: string; acao?: string; desfeita?: boolean };
 
 type ItemAgente = { tipo: "agente"; texto: string; ms?: number };
 
@@ -151,6 +152,9 @@ class App {
 
   /** Pastas do GitHub que trazem as skills da equipe. */
   private colecoes: ColecaoSkills[] = [];
+
+  /** O que esta conversa escreveu no SEI, para o botão de desfazer. */
+  private feitos = new Map<string, AcaoFeita>();
 
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
@@ -1062,6 +1066,34 @@ class App {
   }
 
   /**
+   * Desfaz uma ação já aplicada no SEI, pela operação inversa.
+   *
+   * Vai direto pela ponte, sem passar pelo modelo: desfazer é decisão do
+   * usuário, e um pedido em linguagem natural poderia virar outra coisa.
+   */
+  private async desfazer(acao: AcaoFeita): Promise<void> {
+    const inversa = inversaDe(acao.tool, acao.args, acao.resultado);
+    if (!inversa || acao.desfeita) return;
+    if (!confirm(`${inversa.rotulo}?`)) return;
+    this.adicionar({ tipo: "tool", rotulo: inversa.rotulo, estado: "rodando" });
+    const item = this.transcricao[this.transcricao.length - 1] as Extract<Item, { tipo: "tool" }>;
+    try {
+      for (const passo of inversa.passos) await this.ponte.executar(passo.op, passo.args);
+      acao.desfeita = true;
+      const original = this.transcricao.find((i) => i.tipo === "tool" && i.acao === acao.id);
+      if (original && original.tipo === "tool") original.desfeita = true;
+      item.estado = "ok";
+      // O modelo precisa saber, senão segue achando que a ação continua valendo.
+      this.motor?.anotar(`O usu\u00E1rio desfez a a\u00E7\u00E3o "${acao.rotulo}" (${inversa.rotulo}).`);
+    } catch (e) {
+      item.estado = "falha";
+      item.detalhe = (e as Error).message;
+    }
+    this.redesenhar();
+    await this.salvarSessao();
+  }
+
+  /**
    * Atualiza as skills marcadas para acompanhar o arquivo no GitHub.
    *
    * Em segundo plano, sem travar o painel: quem depende disso é a próxima
@@ -1439,7 +1471,20 @@ class App {
 
   private desenharItem(item: Item): HTMLElement {
     if (item.tipo === "tool") {
-      return h("div", { class: `tool ${item.estado === "rodando" ? "" : item.estado}` }, item.rotulo, item.detalhe ? h("span", { class: "detalhe" }, ` \u2014 ${item.detalhe}`) : null);
+      const acao = item.acao ? this.feitos.get(item.acao) : undefined;
+      const inversa = acao && !acao.desfeita ? inversaDe(acao.tool, acao.args, acao.resultado) : null;
+      const motivo = acao && !inversa && !acao.desfeita ? motivoSemDesfazer(acao.tool) : "";
+      return h(
+        "div",
+        { class: `tool ${item.estado === "rodando" ? "" : item.estado}` },
+        item.rotulo,
+        item.detalhe ? h("span", { class: "detalhe" }, ` \u2014 ${item.detalhe}`) : null,
+        item.desfeita ? h("span", { class: "detalhe" }, " \u2014 desfeita") : null,
+        inversa
+          ? h("button", { class: "plana desfazer", title: inversa.rotulo, onclick: () => void this.desfazer(acao as AcaoFeita) }, icone("voltar", 13), "Desfazer")
+          : null,
+        motivo ? h("span", { class: "detalhe", title: `N\u00E3o d\u00E1 para desfazer: ${motivo}` }, " \u2014 sem desfazer") : null,
+      );
     }
     if (item.tipo === "agente") {
       const el = h("div", { class: "msg agente" });
@@ -1560,6 +1605,15 @@ class App {
         Object.assign(t.item, { estado: ok ? "ok" : "falha", detalhe: ok ? undefined : resumo });
         t.el.replaceWith(this.desenharItem(t.item));
         this.toolsEl.delete(id);
+      },
+      escritaFeita: (id, tool, args, resultado) => {
+        const r = (resultado ?? {}) as ResultadoDeEscrita;
+        if (r.aplicado === false) return;
+        const t = this.toolsEl.get(id);
+        this.feitos.set(id, { id, tool, rotulo: t?.item.rotulo ?? tool, args, resultado: r, quando: Date.now() });
+        // Marca o item ANTES de `toolTerminada` redesenhá-lo: é assim que o
+        // botão de desfazer nasce junto com a linha da ação.
+        if (t) t.item.acao = id;
       },
       aprovarPlano: (p) => this.cartaoPlano(p),
       progressoPlano: () => undefined,
@@ -1791,5 +1845,5 @@ class App {
 const app = new App();
 // Diagnóstico: acessível só no console desta página da extensão (o SEI não a enxerga).
 Object.defineProperty(window, "agenteIA", { value: app });
-Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico } });
+Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico, inversaDe } });
 void app.iniciar();

@@ -88,6 +88,15 @@ export class Motor {
     this.estado.anexos = [];
   }
 
+  /**
+   * Registra no histórico um fato que aconteceu FORA da conversa — hoje, o
+   * usuário desfazendo uma ação. Sem isso o modelo segue raciocinando sobre um
+   * SEI que não existe mais.
+   */
+  anotar(texto: string): void {
+    this.historico.push({ role: "user", content: `[sistema] ${texto}` });
+  }
+
   restaurar(historico: Mensagem[], uso?: Uso): void {
     this.historico = historico;
     if (uso) this.usoTotal = uso;
@@ -291,6 +300,9 @@ export class Motor {
         }
         const r = await t.executar(args, this.contexto(sinal, p.efeito === "assinatura" ? { assinatura: decisao.assinatura } : {}));
         resultados.push(r);
+        // Antes de `toolTerminada`: é ela que redesenha o item, e o painel
+        // precisa já saber que aquela ação pode ser desfeita.
+        this.o.ui.escritaFeita?.(id, p.tool, args, r);
         this.o.ui.toolTerminada(id, true, "");
       } catch (e) {
         const erro = erroParaModelo(e);

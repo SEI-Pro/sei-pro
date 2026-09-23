@@ -521,3 +521,8 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 
 .skill.colecao { border-left: 3px solid var(--acento); }
 .etiqueta { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); background: var(--superficie-2); border-radius: 999px; padding: 2px 7px; }
+
+/* Desfazer: discreto, ao lado da ação, e só onde existe inversa de verdade. */
+.tool .desfazer { margin-left: auto; padding: 2px 8px; font-size: 11px; gap: 4px; color: var(--ink-2); }
+.tool .desfazer:hover:not(:disabled) { color: var(--acento); }
+.tool { display: flex; align-items: center; gap: 6px; }

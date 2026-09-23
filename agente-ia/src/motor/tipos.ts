@@ -99,6 +99,8 @@ export interface InterfaceMotor {
   fimDaResposta(): void;
   toolIniciada(id: string, nome: string, rotulo: string): void;
   toolTerminada(id: string, ok: boolean, resumo: string): void;
+  /** Uma escrita entrou no SEI: o painel guarda para poder desfazer. */
+  escritaFeita?(id: string, tool: string, args: Record<string, unknown>, resultado: unknown): void;
   aprovarPlano(p: PlanoPrevisto): Promise<DecisaoPlano>;
   progressoPlano(passo: number, total: number, rotulo: string): void;
   consentir(tipo: "restrito", detalhe: string): Promise<boolean>;

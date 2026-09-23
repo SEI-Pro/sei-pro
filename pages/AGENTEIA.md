@@ -128,6 +128,21 @@ Quando o pedido implica mexer no processo, o agente **não executa**: ele monta 
 * **Assinar** pede o cargo e a sua senha do SEI no próprio cartão. A senha vai do painel direto para o SEI: ela **não** é enviada ao modelo de IA nem guardada;
 * **Recusar** pede, opcionalmente, o que ajustar — e o agente tenta de novo com a sua correção.
 
+### Desfazer
+
+Toda alteração feita pelo agente aparece na conversa como uma linha — e, quando existe volta possível, essa linha traz um botão **Desfazer**. Clicar pergunta o que vai acontecer ("Tirar o marcador X?") e executa a ação inversa no SEI, em seu nome. A linha passa a mostrar *desfeita*, e o agente é avisado, para não seguir raciocinando sobre um processo que voltou atrás.
+
+| Dá para desfazer | Não dá |
+| ---------------- | ------ |
+| Concluir e reabrir processo | **Enviar processo** — já está na outra unidade |
+| Marcador (volta ao anterior, ou sai) | **Assinar** — assinatura não se apaga, só se cancela com justificativa |
+| Anotação e atribuição (voltam ao valor anterior) | **Excluir** e **cancelar** documento — são definitivos |
+| Incluir e retirar documento de bloco | **Registrar andamento** — o histórico do processo não se apaga |
+| Disponibilizar, concluir e reabrir bloco | **Editar conteúdo** — o texto anterior fica na versão do documento |
+| Criar bloco e criar documento (ainda não assinado) | |
+
+Onde não há volta, a linha diz *sem desfazer* e, ao passar o mouse, explica por quê. Nada é escondido: o agente continua pedindo aprovação **antes** de cada alteração — o desfazer é a segunda rede, não a primeira.
+
 ### O que o agente não faz
 
 * **Processo sigiloso:** o agente não carrega. Estando você num processo sigiloso, ele se recusa a responder qualquer coisa;
