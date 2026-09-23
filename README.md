@@ -97,6 +97,7 @@ Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo
 - ![Inserir tabela do Google Planilhas](/img/icon-inserirhtml.png) [Inserir tabela do Google Planilhas](./pages/INSERIRPLANILHA.md)
 - ![Inserir dados do processo e campos dinâmicos](/img/icon-dadosprocesso.png) [Inserir dados do processo e campos dinâmicos](./pages/DADOSPROCESSO.md)
 - ![Inserir referência de documentos do processo](/img/icon-refdocumentos.png) [Inserir referência de documentos do processo](./pages/REFDOCUMENTOS.md)
+- ![Converter os números SEI do texto em links](/img/icon-linkseilote.png) [Converter os números SEI do texto em links](./pages/LINKSEILOTE.md)
 - ![Adicionar link de legislação](/img/icon-linklegis.png) [Adicionar link de legislação](./pages/LINKLEGIS.md)
 - ![Adicionar link de documento público](/img/icon-docpublico.png) [Adicionar link de documento público](./pages/DOCPUBLICO.md)
 - ![Inserir nota de rodapé](/img/icon-notarodape.png) [Inserir nota de rodapé](./pages/NOTARODAPE.md)

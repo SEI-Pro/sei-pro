@@ -216,6 +216,17 @@ function htmlButton(status) {
             isNewEditor ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
         );
 
+    // So no CK5: no CK4 o acionamento fica dentro do proprio dialogo nativo de link
+    // do SEI (ver montarAtalhoLoteNoDialogoPro), que e onde o usuario ja esta.
+    const htmlButtonLinkSeiLote = isNewEditor
+        ? htmlButtonPro(
+            'getLinkSeiLoteButtom',
+            'linkseilote_pro',
+            'Converter os n\u00FAmeros SEI do texto em links',
+            'fab fa-magic azulColor'
+          )
+        : '';
+
     const htmlButtonAfterSave = htmlButtonPro(
         'getAutoSaveButtom',
         'autosave',
@@ -418,7 +429,8 @@ function htmlButton(status) {
         beforeList: htmlButtonBeforeList, 
         afterSave: htmlButtonAfterSave, 
         newBlock: htmlNewBlock,
-        afterImage: htmlButtonAfterImage
+        afterImage: htmlButtonAfterImage,
+        linkSeiLote: htmlButtonLinkSeiLote
     };
 }
 function addButton(TimeOut = 9000) {
@@ -443,6 +455,12 @@ function addButton(TimeOut = 9000) {
             insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);
             insertAfterOrAppend('button[data-cke-tooltip-text="Lista numerada"]', htmlButton('').beforeList);
             insertAfterOrAppend('span.ck-file-dialog-button', htmlButton('').afterImage);
+            // O grupo afterletters (Primeira Letra Maiuscula, Aumentar e Diminuir fonte) so estava
+            // no ramo CK4, ancorado no botao "minuscula": no SEI 5 esses tres botoes simplesmente
+            // nunca entravam na barra. A ancora equivalente no CK5 e "Transformar o texto em
+            // MAIUSCULO ou minusculo".
+            insertAfterOrAppend('button[data-cke-tooltip-text^="Transformar o texto"]', htmlButton('').afterletters);
+            insertAfterOrAppend('button[data-cke-tooltip-text^="Inserir link ou converter"]', htmlButton('').linkSeiLote);
             items.first().append(htmlButton('').newBlock);
             setClickButtons();
             initFunctions();
@@ -506,6 +524,7 @@ const setClickButtons = () => {
     $('.getFontSizeUpButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
     $('.getFontSizeDownButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
     $('.getCopyStyleButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
+    $('.getLinkSeiLoteButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { converterNumerosSeiEmLotePro(this) } });
     $('.getAlignButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
     $('.getAlignLeftButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
     $('.getAlignCenterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
@@ -537,7 +556,7 @@ const setClickButtons = () => {
     // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
     $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
     // O botao nasceu como <a href=".../pages/LEGISTICA.html" target="_blank">; o htmlButtonPro gera href="#", entao a ajuda abre por aqui.
-    $('.helpLegisButtom').on('click',function(e) { e.preventDefault(); window.open((typeof URLPAGES_SPRO !== 'undefined' && URLPAGES_SPRO ? URLPAGES_SPRO : 'https://sei-pro.github.io/sei-pro')+'/pages/LEGISTICA.html', '_blank'); });
+    $('.helpLegisButtom').on('click',function(e) { e.preventDefault(); window.open((typeof URLPAGES_SPRO !== 'undefined' && URLPAGES_SPRO ? URLPAGES_SPRO : 'https://seipro.app')+'/pages/LEGISTICA.html', '_blank'); });
     // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
     $('.cke_combo_button').on('click',function() { setDarkModeCkePanel(); });
 }
@@ -1828,13 +1847,31 @@ function loadResizeImg() {
 		}
 	});
 }
+// Os dois dialogos nativos abaixo liam a global oEditor, preenchida por setParamEditor -- chamada
+// que sumiu de varios caminhos no port para o CK5. Com oEditor vazio (ReferenceError) ou apontando
+// para outra secao do documento, o texto selecionado nao chegava ao campo do dialogo. Agora o
+// editor vem do proprio dialogo (this.getParentEditor(), passado por updateDialogDefinitionPro),
+// e o nome da instancia continua aceito por compatibilidade.
+function resolveEditorDialogoPro(ref) {
+    if (ref && typeof ref.getSelection === 'function') return ref;
+    if (typeof ref === 'string' && typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances[ref]) {
+        return CKEDITOR.instances[ref];
+    }
+    try {
+        var atual = (typeof CKEDITOR !== 'undefined' && CKEDITOR.dialog) ? CKEDITOR.dialog.getCurrent() : null;
+        if (atual && typeof atual.getParentEditor === 'function') return atual.getParentEditor();
+    } catch (e) {}
+    return (typeof SeiProEditorAdapter !== 'undefined') ? SeiProEditorAdapter.getInstance() : null;
+}
 //// Insere o texto selecionado no documento no campo 'Texto vis\u00EDvel' do janela de propriedades do link
 function insertTextTotLink(idEditor) {
-    var selectTxt = oEditor.getSelection().getSelectedText();
+    var ed = resolveEditorDialogoPro(idEditor);
+    if (!ed) return;
+    var selectTxt = SeiProEditorAdapter.getSelectedText(ed);
     if ( isValidHttpUrl(selectTxt) ) {
         var link = '<a href="'+selectTxt+'" target="_blank">'+selectTxt+'</a>';
             CKEDITOR.dialog.getCurrent().hide();
-            oEditor.insertHtml(link);
+            SeiProEditorAdapter.insertHtml(ed, link);
     } else {
         setTimeout(function(){ 
             if ( typeof selectTxt !== 'undefined' && selectTxt != '' ) { 
@@ -1845,11 +1882,19 @@ function insertTextTotLink(idEditor) {
 }
 //// Insere o texto selecionado no documento no campo 'Protocolo' do janela de adicionar protocolo SEI
 function insertProtocoloOnBox(idEditor) {
-    var selectTxt = oEditor.getSelection().getSelectedText();
+    var ed = resolveEditorDialogoPro(idEditor);
+    if (!ed) return;
+    var selectTxt = SeiProEditorAdapter.getSelectedText(ed);
     setTimeout(function(){ 
         if ( typeof selectTxt !== 'undefined' && selectTxt != '' ) { 
-            CKEDITOR.dialog.getCurrent().getContentElement('general', 'protocolo').setValue(selectTxt);
-            document.getElementById(CKEDITOR.dialog.getCurrent().getButton('ok').domId).click();
+            var dlg = CKEDITOR.dialog.getCurrent();
+            if (!dlg) return;
+            var campo = dlg.getContentElement('general', 'protocolo');
+            if (!campo) return;
+            campo.setValue(selectTxt);
+            var ok = dlg.getButton('ok');
+            var elOk = ok ? document.getElementById(ok.domId) : null;
+            if (elOk) elOk.click();
         }
     }, 100);
 }
@@ -2269,9 +2314,13 @@ function repairSaveButtonBug(loop = true) {
     // FUN\u00C7\u00C3O PARA ALTERAR OP\u00C7\u00D5ES DE IA INLINE
 
 function setOnKeyEditor() {
-    if ((!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) && !destroy) {
-            oEditor.on('key', onKeyEditorPro);
-            loadOnKeyEditor = oEditor.name;
+    // A condicao trazia "&& !destroy", e a variavel destroy nunca existiu em lugar nenhum (veio da
+    // v1.3). O ReferenceError estourava a cada mousedown no corpo do editor e o listener de teclas
+    // nunca chegava a ser registrado -- no CK4 a escrita interativa (# e @) nao recebia tecla.
+    if (typeof oEditor === 'undefined' || !oEditor || typeof oEditor.on !== 'function') return;
+    if (!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) {
+        oEditor.on('key', onKeyEditorPro);
+        loadOnKeyEditor = oEditor.name;
     }
 }
 // Funcao nomeada, e nao anonima: o loadOnKeyEditor guarda so a ultima instancia, entao voltar a uma secao

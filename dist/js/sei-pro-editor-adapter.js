@@ -51,10 +51,18 @@
     //  - A presenca de .ck-editor__editable_inline com propriedade
     //    ckeditorInstance eh o sinal mais confiavel de CK5.
     // ----------------------------------------------------------------
+    // No SEI 5 o CKEditor 5 TAMBEM se chama window.CKEDITOR -- a global existe e responde
+    // CKEDITOR.version = "45.1.0-infra-...". Ou seja, a presenca da global nao distingue as
+    // versoes, e o teste antigo ("existe CKEDITOR? entao e 4") dava 4 dentro do SEI 5. Como a
+    // marca do CK5 no DOM so aparece depois que ele monta, quem perguntasse antes disso recebia
+    // 4, e o resolveBackend congelava essa resposta: no editor do SEI 5 o adapter se declarava
+    // versao 4, getInstance() devolvia null (o CK5 nao tem CKEDITOR.instances) e TODA feature do
+    // editor abortava em silencio. O discriminante seguro e o proprio CKEDITOR.instances, que so
+    // o CK4 tem; sem ele e sem DOM do CK5, a resposta e "ainda nao sei".
     function detectVersion() {
-        var hasCK5 = !!document.querySelector('.ck-editor__editable_inline');
-        if (hasCK5) return 5;
-        if (typeof window.CKEDITOR !== 'undefined') return 4;
+        if (document.querySelector('.ck-editor__editable')) return 5;
+        var ck = window.CKEDITOR;
+        if (typeof ck !== 'undefined' && ck && ck.instances) return 4;
         return 0; // indeterminado, aguardar
     }
 
@@ -306,6 +314,7 @@
         'font-size.js',
         'copy-style.js',
         'link-pro.js',
+        'link-sei-lote.js',
         'importar-doc.js',
         'minuta-watermark.js',
         'processo-publico.js',

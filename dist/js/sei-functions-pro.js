@@ -12114,16 +12114,19 @@ function updateDialogDefinitionPro() {
             var dialog = dialogDefinition.dialog;
             if (dialogName == 'linkseiDialog') {
                 dialogDefinition.onShow = function () {
-                    var idEditor = this.getParentEditor().name;
-                    $('#idEditor').val(idEditor);
-                    insertProtocoloOnBox(idEditor);
+                    // Passa a INSTANCIA do dialogo, nao so o nome: do outro lado a funcao lia a
+                    // global oEditor, que deixou de ser preenchida em varios caminhos no port CK5.
+                    var edDialogo = this.getParentEditor();
+                    $('#idEditor').val(edDialogo.name);
+                    insertProtocoloOnBox(edDialogo);
+                    montarAtalhoLoteNoDialogoPro(edDialogo);
                 };
             }
             if (dialogName == 'simpleLinkDialog') {
                 dialogDefinition.onShow = function () {
-                    var idEditor = this.getParentEditor().name;
-                    $('#idEditor').val(idEditor);
-                    insertTextTotLink(idEditor);
+                    var edDialogo = this.getParentEditor();
+                    $('#idEditor').val(edDialogo.name);
+                    insertTextTotLink(edDialogo);
                 };
                 dialogDefinition.onOk = function () {
                     var a = this.getParentEditor(),
@@ -12149,6 +12152,30 @@ function updateDialogDefinitionPro() {
                 };
             }
     });
+}
+// Acrescenta ao rodape do dialogo nativo "Inserir um Link para processo ou documento do SEI!"
+// (CK4) o atalho para converter DE UMA VEZ todos os numeros SEI escritos no texto. No CK5 nao ha
+// dialogo -- o botao equivalente fica na barra (getLinkSeiLoteButtom).
+function montarAtalhoLoteNoDialogoPro(editor) {
+    setTimeout(function () {
+        try {
+            var dlg = CKEDITOR.dialog.getCurrent();
+            if (!dlg || typeof converterNumerosSeiEmLotePro !== 'function') return;
+            var corpo = dlg.getElement && dlg.getElement();
+            var raiz = corpo && corpo.$ ? $(corpo.$) : $();
+            var rodape = raiz.find('.cke_dialog_footer_buttons').first();
+            var onde = rodape.length ? rodape.closest('.cke_dialog_footer') : raiz.find('.cke_dialog_contents_body').first();
+            if (!onde.length || onde.find('.linkSeiLoteAtalhoPro').length) return;
+            var atalho = $('<a class="linkSeiLoteAtalhoPro" href="javascript:void(0)" ' +
+                           'style="float:left; margin:10px 0 0 12px; font-size:9pt; text-decoration:underline; cursor:pointer;">' +
+                           '<i class="fas fa-link" style="margin-right:4px;"></i>Converter todos os n\u00FAmeros do texto</a>');
+            atalho.on('click', function () {
+                dlg.hide();
+                converterNumerosSeiEmLotePro(null);
+            });
+            onde.prepend(atalho);
+        } catch (e) {}
+    }, 120);
 }
 function centralizeDialogBoxEditor() {
     let dialog = CKEDITOR.dialog.getCurrent();
