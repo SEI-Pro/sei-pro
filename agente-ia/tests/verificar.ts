@@ -8,6 +8,7 @@ import { verificarRotinas } from "./verificar-rotinas";
 import { verificarCambio, verificarSugestoes } from "./verificar-sugestoes";
 import { verificarFluxosModelo } from "./verificar-fluxos";
 import { verificarAvaliarFluxo } from "./verificar-avaliar";
+import { verificarInferirFluxo } from "./verificar-inferir";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -21,4 +22,5 @@ verificarSugestoes();
 verificarCambio();
 verificarFluxosModelo();
 verificarAvaliarFluxo();
+await verificarInferirFluxo();
 resumo();
