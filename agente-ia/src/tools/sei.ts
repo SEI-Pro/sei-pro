@@ -145,6 +145,20 @@ export const TOOLS_SEI: DefTool[] = [
   }),
 
   definirTool({
+    nome: "bloco_assinar",
+    descricao:
+      "Assina de uma vez os documentos de um bloco de assinatura \u2014 o que a tela faz com o bot\u00E3o Assinar depois de marcar as caixas. Sem `documentos`, assina todos os do bloco que ainda faltam a sua assinatura. Quem voc\u00EA j\u00E1 assinou fica de fora. Cargo e senha do SEI s\u00E3o pedidos ao usu\u00E1rio no cart\u00E3o de aprova\u00E7\u00E3o: NUNCA invente nem pe\u00E7a senha no chat.",
+    parametros: s.objeto({
+      bloco: s.texto({ descricao: "N\u00FAmero do bloco de assinatura." }),
+      "documentos?": s.lista(s.texto(), { descricao: "N\u00BA SEI dos documentos a assinar. Vazio = todos os pendentes do bloco." }),
+    }),
+    efeito: "assinatura",
+    rotulo: (a) => `Assinar o bloco ${a.bloco}`,
+    previsualizar: (a, ctx) => ctx.sei("bloco.assinar", { ...a, aplicar: false }),
+    executar: (a, ctx) => ctx.sei("bloco.assinar", { ...a, aplicar: true, ...(ctx.assinatura ?? {}) }),
+  }),
+
+  definirTool({
     nome: "processos_listar",
     descricao:
       "Processos abertos na unidade (caixa do Controle de Processos), com tipo, especifica\u00E7\u00E3o, atribui\u00E7\u00E3o, marcadores e anota\u00E7\u00F5es. Filtra, agrupa e conta sem abrir cada processo. Use para 'quantos processos', 'quais est\u00E3o atribu\u00EDdos a X', 'processos do tipo Y', 'com marcador Z'. Sigilosos aparecem s\u00F3 pelo n\u00FAmero.",

@@ -10,7 +10,7 @@
  */
 
 import { lerArvore, type Arvore, type DocumentoArvore } from "@nucleo/dominio/arvore";
-import { conteudoDoBloco, listarBlocos, type TipoBloco } from "@nucleo/dominio/blocos";
+import { assinarBloco, conteudoDoBloco, listarBlocos, type TipoBloco } from "@nucleo/dominio/blocos";
 import { listarCaixa } from "@nucleo/dominio/caixa";
 import {
   alterarDocumento,
@@ -157,6 +157,10 @@ export const OPERACOES: Record<string, Op> = {
     const { link: _l, ...bloco } = r.bloco;
     return { bloco, itens: r.itens };
   },
+
+  // A senha chega do painel (cartão de aprovação) e só vai para o POST.
+  "bloco.assinar": (sei, a, sinal) =>
+    assinarBloco(sei, String(a.bloco), { documentos: a.documentos as string[] | undefined, cargo: txt(a.cargo), senha: txt(a.senha) }, { aplicar: aplicar(a), sinal }),
 
   "processo.consultar": async (sei, a, sinal) => {
     const p = await consultarProcesso(sei, String(a.processo), { sinal });
