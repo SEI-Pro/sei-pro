@@ -39,6 +39,12 @@ export interface OpcoesMotor {
   sei: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>;
   /** Monta o prompt de sistema (recebe o resumo da tela atual). */
   sistema: (tela: TelaAtual | null) => string;
+  /**
+   * Regras da unidade, avaliadas antes de escrever (ver painel/regras.ts).
+   * Bloqueio nem chega ao cartão de aprovação: o que a unidade proíbe não se
+   * oferece para aprovar.
+   */
+  regras?: (passos: Array<{ tool: string; rotulo: string; args: Record<string, unknown> }>) => { bloqueios: unknown[]; avisos: string[]; recado: string };
   /** Lê a tela atual da aba do SEI. */
   tela?: (sinal: AbortSignal) => Promise<TelaAtual | null>;
   limitePassos?: number;
@@ -271,7 +277,19 @@ export class Motor {
     if (passos.every((p) => !p.dependente && p.previa.length && p.previa.every((i) => !i.erro && !i.mudancas.length))) {
       return passos.map((p) => ({ executado: false, nada_a_fazer: true, itens: p.previa.map((i) => ({ alvo: i.alvo, resumo: i.resumo })) }));
     }
-    const plano: PlanoPrevisto = { objetivo: objetivo || passos.map((p) => p.rotulo).join("; "), passos };
+    // Regras da unidade: barram ANTES da aprovação. Bloqueio que só aparecesse
+    // no cartão já teria deixado o usuário aprovar algo que a unidade proíbe.
+    const veredito = this.o.regras?.(passos.map((p) => ({ tool: p.tool, rotulo: p.rotulo, args: p.args })));
+    if (veredito?.bloqueios.length) {
+      const recado = veredito.recado;
+      this.o.ui.aviso(recado.split("\n")[0]);
+      return passos.map(() => ({ executado: false, barrado_por_regra: true, motivo: recado }));
+    }
+    const plano: PlanoPrevisto = {
+      objetivo: objetivo || passos.map((p) => p.rotulo).join("; "),
+      passos,
+      ...(veredito?.avisos.length ? { avisos: veredito.avisos } : {}),
+    };
     const decisao: DecisaoPlano = await this.o.ui.aprovarPlano(plano);
     if (!decisao.aprovado) {
       return passos.map(() => ({ aprovado: false, motivo: decisao.motivo || "O usu\u00E1rio n\u00E3o aprovou o plano. Pergunte o que ajustar." }));

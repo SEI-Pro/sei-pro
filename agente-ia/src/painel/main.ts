@@ -24,6 +24,7 @@ import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
 import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita } from "./desfazer";
+import { avaliarRegras, guardarRegras, listarRegras, recadoDoBloqueio, REGRAS_SUGERIDAS, type Regra } from "./regras";
 import {
   baixarColecao,
   baixarSkillSeMudou,
@@ -156,6 +157,9 @@ class App {
   /** O que esta conversa escreveu no SEI, para o botão de desfazer. */
   private feitos = new Map<string, AcaoFeita>();
 
+  /** Regras da unidade: o que o agente não pode fazer, e o que exige atenção. */
+  private regras: Regra[] = [];
+
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
   private chaveTela = "";
@@ -187,6 +191,7 @@ class App {
     this.config = { ...this.config, ...salvo };
     this.skills = await listarSkills();
     this.colecoes = await listarColecoes();
+    this.regras = await listarRegras();
     void this.sincronizarSkills();
     void this.sincronizarColecoes();
     this.ponte.aoMudar(() => this.atualizarAba());
@@ -872,6 +877,82 @@ class App {
       ),
     );
 
+    // ------------------------------------------------- regras da unidade
+    const listaRegras = h("div", { class: "skills" });
+    const novaRegra = h("button", {}, "Nova regra");
+    const desenharRegras = () => {
+      listaRegras.replaceChildren(
+        ...(this.regras.length
+          ? this.regras.map((re) =>
+              h(
+                "div",
+                { class: `skill regra ${re.efeito}` },
+                h("input", {
+                  type: "checkbox",
+                  class: "switch",
+                  title: re.ativa ? "Ativa" : "Desligada",
+                  ...(re.ativa ? { checked: true } : {}),
+                  onchange: async (ev: Event) => {
+                    re.ativa = (ev.target as HTMLInputElement).checked;
+                    await guardarRegras(this.regras);
+                  },
+                }),
+                h(
+                  "div",
+                  { class: "skill-texto" },
+                  h("strong", {}, re.nome),
+                  h("code", {}, re.efeito === "bloquear" ? "bloqueia" : "avisa"),
+                  h("small", {}, `${re.ferramentas.length ? re.ferramentas.join(", ") : "qualquer altera\u00E7\u00E3o"}${re.contem ? ` \u00B7 contendo "${re.contem}"` : ""}`),
+                  h("small", { class: "origem" }, re.mensagem),
+                ),
+                h("button", { class: "icone", title: "Editar", "aria-label": `Editar ${re.nome}`, onclick: () => this.editarRegra(re, desenharRegras) }, icone("lapis", 15)),
+                h(
+                  "button",
+                  {
+                    class: "icone",
+                    title: "Remover",
+                    "aria-label": `Remover ${re.nome}`,
+                    onclick: async () => {
+                      this.regras = this.regras.filter((x) => x.id !== re.id);
+                      await guardarRegras(this.regras);
+                      desenharRegras();
+                    },
+                  },
+                  icone("lixeira", 15),
+                ),
+              ),
+            )
+          : [
+              h(
+                "div",
+                { class: "ajuda" },
+                "Nenhuma regra. Regra \u00E9 o que o agente N\u00C3O pode fazer nesta unidade (ou o que exige aten\u00E7\u00E3o) \u2014 conferido pelo pr\u00F3prio SEI Pro antes de cada altera\u00E7\u00E3o, sem depender de o modelo lembrar.",
+              ),
+            ]),
+      );
+    };
+    desenharRegras();
+    novaRegra.addEventListener("click", () => this.editarRegra(null, desenharRegras));
+    const sugerirRegras = h("button", { title: "Come\u00E7ar com regras prontas" }, "Usar modelos");
+    sugerirRegras.addEventListener("click", async () => {
+      const faltando = REGRAS_SUGERIDAS.filter((m) => !this.regras.some((r) => r.nome === m.nome));
+      this.regras = [...this.regras, ...faltando.map((m) => ({ ...m, id: crypto.randomUUID() }))];
+      await guardarRegras(this.regras);
+      desenharRegras();
+    });
+    const secaoRegras = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Regras da unidade"),
+      listaRegras,
+      h("div", { class: "com-botao" }, novaRegra, this.regras.length ? null : sugerirRegras),
+      h(
+        "div",
+        { class: "ajuda" },
+        "Uma regra que BLOQUEIA impede a a\u00E7\u00E3o antes de ela ser oferecida para aprova\u00E7\u00E3o, e o agente explica o motivo. Uma regra que AVISA deixa aprovar, com o alerta \u00E0 vista.",
+      ),
+    );
+
     // ------------------------------------------------- avançado (controle fino)
     const numero = (rotulo: string, dica: string, min: number, max: number, passo: number, valor: number | undefined, vazio: string) => {
       const campo = h("input", {
@@ -984,6 +1065,7 @@ class App {
           ),
         ),
         secaoSkills,
+        secaoRegras,
         avancado,
         h(
           "div",
@@ -1236,6 +1318,79 @@ class App {
     });
   }
 
+  /** Cadastro de uma regra da unidade. */
+  private editarRegra(regra: Regra | null, aoFechar: () => void): void {
+    const nome = h("input", { type: "text", value: regra?.nome ?? "", placeholder: "Nunca enviar processo sem revis\u00E3o", "aria-label": "Nome da regra" });
+    const efeito = h(
+      "select",
+      { "aria-label": "Efeito" },
+      h("option", { value: "bloquear", ...(regra?.efeito !== "avisar" ? { selected: true } : {}) }, "Bloquear a a\u00E7\u00E3o"),
+      h("option", { value: "avisar", ...(regra?.efeito === "avisar" ? { selected: true } : {}) }, "Deixar passar, com aviso"),
+    );
+    // Só ferramentas que MUDAM algo no SEI: regra sobre leitura não faz sentido.
+    const escritas = [...TOOLS_SEI, ...toolsMotor()].filter((t) => t.efeito !== "leitura" && t.efeito !== "interna").map((t) => t.nome).sort();
+    const ferramentas = h(
+      "select",
+      { multiple: true, size: "8", "aria-label": "A\u00E7\u00F5es alcan\u00E7adas" },
+      ...escritas.map((n) => h("option", { value: n, ...(regra?.ferramentas.includes(n) ? { selected: true } : {}) }, n)),
+    );
+    const contem = h("input", { type: "text", value: regra?.contem ?? "", placeholder: "Portaria, GABIN, sigiloso...", "aria-label": "Condi\u00E7\u00E3o de texto" });
+    const mensagem = h("textarea", { rows: "2", "aria-label": "Mensagem" }, regra?.mensagem ?? "");
+    const status = h("div", { class: "status" });
+    const salvar = h("button", { class: "primario" }, regra ? "Salvar" : "Adicionar");
+    const dlg = this.abrirModal({
+      titulo: regra ? "Editar regra" : "Nova regra",
+      corpo: [
+        h("div", { class: "campo" }, h("label", {}, "Nome"), nome),
+        h("div", { class: "campo" }, h("label", {}, "O que fazer"), efeito),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "A\u00E7\u00F5es alcan\u00E7adas"),
+          ferramentas,
+          h("div", { class: "ajuda" }, "Segure Ctrl (ou Cmd) para escolher v\u00E1rias. Nenhuma escolhida = qualquer altera\u00E7\u00E3o no SEI."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "S\u00F3 quando aparecer (opcional)"),
+          contem,
+          h("div", { class: "ajuda" }, "Palavra que precisa estar no pedido \u2014 o tipo do documento, a sigla da unidade de destino, um termo. Sem acento e mai\u00FAscula n\u00E3o importam."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Mensagem"),
+          mensagem,
+          h("div", { class: "ajuda" }, "Aparece para voc\u00EA e vai para o agente, que explica na conversa em vez de tentar de novo."),
+        ),
+      ],
+      acoes: [status, h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
+    });
+    salvar.addEventListener("click", async () => {
+      const n = nome.value.trim();
+      const msg = mensagem.value.trim();
+      if (!n || !msg) {
+        status.className = "status erro";
+        status.textContent = "Informe o nome e a mensagem.";
+        return;
+      }
+      const nova: Regra = {
+        id: regra?.id ?? crypto.randomUUID(),
+        nome: n,
+        ativa: regra?.ativa ?? true,
+        efeito: efeito.value as Regra["efeito"],
+        ferramentas: [...ferramentas.selectedOptions].map((o) => o.value),
+        ...(contem.value.trim() ? { contem: contem.value.trim() } : {}),
+        mensagem: msg,
+      };
+      this.regras = regra ? this.regras.map((x) => (x.id === regra.id ? nova : x)) : [...this.regras, nova];
+      await guardarRegras(this.regras);
+      aoFechar();
+      dlg.close();
+    });
+  }
+
   /**
    * Cadastro de uma skill, em modal por cima da configuração.
    *
@@ -1392,6 +1547,10 @@ class App {
       privacidade: this.privacidade,
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
       sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills),
+      regras: (passos) => {
+        const v = avaliarRegras(this.regras, passos);
+        return { bloqueios: v.bloqueios, avisos: v.avisos.map((a) => `${a.regra.mensagem} (regra "${a.regra.nome}")`), recado: recadoDoBloqueio(v) };
+      },
       tela: async (sinal) => ({ ...((await this.ponte.executar("tela", {}, sinal)) as TelaAtual), editores: this.ponte.editores() }),
     });
   }
@@ -1688,6 +1847,7 @@ class App {
         { class: "cartao plano" },
         h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("lapis", 15)), h("h4", {}, "Aprovar altera\u00E7\u00F5es no SEI")),
         p.passos.length > 1 || p.objetivo !== p.passos[0]?.rotulo ? h("div", { class: "sub" }, p.objetivo) : null,
+        ...(p.avisos ?? []).map((a) => h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, a))),
         ...p.passos.map((passo, i) => {
           const linhas = passo.previa.slice(0, 15).map((item) =>
             item.erro

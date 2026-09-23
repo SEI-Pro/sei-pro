@@ -526,3 +526,7 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .tool .desfazer { margin-left: auto; padding: 2px 8px; font-size: 11px; gap: 4px; color: var(--ink-2); }
 .tool .desfazer:hover:not(:disabled) { color: var(--acento); }
 .tool { display: flex; align-items: center; gap: 6px; }
+
+.skill.regra.bloquear { border-left: 3px solid var(--erro); }
+.skill.regra.avisar { border-left: 3px solid var(--atencao); }
+.campo > select[multiple] { font-size: 12px; padding: 4px; }

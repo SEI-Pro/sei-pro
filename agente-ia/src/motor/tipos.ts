@@ -77,6 +77,8 @@ export interface PassoPlano {
 export interface PlanoPrevisto {
   objetivo: string;
   passos: PassoPlano[];
+  /** Avisos das regras da unidade, mostrados no cartão de aprovação. */
+  avisos?: string[];
 }
 
 export interface DecisaoPlano {

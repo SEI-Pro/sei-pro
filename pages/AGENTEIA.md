@@ -128,6 +128,21 @@ Quando o pedido implica mexer no processo, o agente **não executa**: ele monta 
 * **Assinar** pede o cargo e a sua senha do SEI no próprio cartão. A senha vai do painel direto para o SEI: ela **não** é enviada ao modelo de IA nem guardada;
 * **Recusar** pede, opcionalmente, o que ajustar — e o agente tenta de novo com a sua correção.
 
+### Regras da unidade
+
+Há coisas que, no seu setor, o agente simplesmente não deve fazer — e isso não pode depender de o modelo lembrar de uma instrução. Em **Configuração → Regras da unidade** você escreve a regra, e quem a aplica é o **próprio SEI Pro**, antes de qualquer alteração:
+
+| Campo | Para que serve |
+| ----- | -------------- |
+| **O que fazer** | **Bloquear** a ação, ou **deixar passar com aviso** |
+| **Ações alcançadas** | Quais ferramentas (enviar, assinar, criar documento…). Nenhuma escolhida = qualquer alteração |
+| **Só quando aparecer** | Opcional: palavra que precisa estar no pedido — o tipo do documento, a sigla da unidade de destino |
+| **Mensagem** | O que você lê, e o que o agente lê para explicar na conversa |
+
+Uma regra que **bloqueia** barra a ação **antes** de ela ser oferecida para aprovação: o cartão nem aparece, nada vai ao SEI e o agente explica o motivo em vez de tentar outro caminho. Uma regra que **avisa** deixa aprovar, com o alerta à vista no cartão.
+
+Exemplos que costumam fazer sentido: *"o envio de processo é feito por uma pessoa, não pelo agente"*, *"Portaria não é criada pelo agente"*, *"confira o conteúdo antes de assinar"*. O botão **Usar modelos** cria os três primeiros para você ajustar.
+
 ### Desfazer
 
 Toda alteração feita pelo agente aparece na conversa como uma linha — e, quando existe volta possível, essa linha traz um botão **Desfazer**. Clicar pergunta o que vai acontecer ("Tirar o marcador X?") e executa a ação inversa no SEI, em seu nome. A linha passa a mostrar *desfeita*, e o agente é avisado, para não seguir raciocinando sobre um processo que voltou atrás.
