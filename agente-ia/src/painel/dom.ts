@@ -97,14 +97,21 @@ export function markdown(texto: string): DocumentFragment {
 }
 
 /**
- * O que mostrar no medidor do cabeçalho: dólares quando o serviço informa o
- * custo (OpenRouter), tokens quando não informa (serviços compatíveis).
+ * O que mostrar no medidor do cabeçalho: o gasto em reais quando há cotação,
+ * em dólares quando não há, e em tokens quando o serviço nem informa custo
+ * (os compatíveis com a OpenAI).
  */
-export function formatarUso(u: { entrada: number; saida: number; custo: number }): string {
-  if (u.custo) return moeda(u.custo);
+export function formatarUso(u: { entrada: number; saida: number; custo: number }, cotacao?: { valor: number } | null): string {
+  if (u.custo) return cotacao ? reais(u.custo * cotacao.valor) : moeda(u.custo);
   const tokens = u.entrada + u.saida;
   if (!tokens) return "";
   return tokens >= 1000 ? `${(tokens / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k tokens` : `${tokens} tokens`;
+}
+
+/** Reais com centavos, e mais casas quando o valor é pequeno demais para aparecer. */
+export function reais(valor: number): string {
+  const casas = valor < 0.1 ? 3 : 2;
+  return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas })}`;
 }
 
 /** Duração curta para humanos: "8,4 s", "1 min 12 s". */

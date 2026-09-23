@@ -19,12 +19,15 @@ import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso
 import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
-import { duracao, formatarUso, h, icone, markdown } from "./dom";
+import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
+import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
+  /** Mostrar o gasto em reais, pela cotação do dia. */
+  reais: boolean;
   /** Guardar a transcrição das conversas neste navegador. */
   guardar: boolean;
   /** Dias de guarda (0 = para sempre). */
@@ -84,7 +87,7 @@ function carimboDeTempo(ms: number): HTMLElement {
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
-  private config: Config = { guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
+  private config: Config = { reais: true, guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
@@ -95,6 +98,8 @@ class App {
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
   private chaveTela = "";
+  /** Cotação do dólar para o medidor; `null` enquanto não chega (ou sem rede). */
+  private cambio: Cotacao | null = null;
   /** Conversa antiga aberta para leitura (sem como continuar: ver `historico.ts`). */
   private arquivada: historico.ConversaSalva | null = null;
 
@@ -121,6 +126,7 @@ class App {
     this.config = { ...this.config, ...salvo };
     this.ponte.aoMudar(() => this.atualizarAba());
     await this.telaConversa();
+    void this.atualizarCambio();
     void historico.podar(this.config.dias).catch(() => undefined);
     if (!this.config.chave) this.abrirConfig(true);
   }
@@ -272,6 +278,29 @@ class App {
     this.tela = aba ? ((await this.ponte.executar("tela", {}).catch(() => null)) as TelaAtual | null) : null;
     if (this.tela) this.tela.editores = this.ponte.editores();
     if (!this.transcricao.length && !this.arquivada) this.redesenhar();
+  }
+
+  /** Busca a cotação do dia (uma vez por sessão, com cache de 6 h no storage). */
+  private async atualizarCambio(): Promise<void> {
+    if (!this.config.reais) {
+      this.cambio = null;
+      this.mostrarUso();
+      return;
+    }
+    this.cambio = await cotacaoDolar().catch(() => null);
+    this.mostrarUso();
+  }
+
+  /** Medidor do cabeçalho: valor e, no title, de onde ele veio. */
+  private mostrarUso(): void {
+    if (!this.elCusto) return;
+    const uso = this.arquivada?.uso ?? this.uso;
+    this.elCusto.textContent = formatarUso(uso, this.cambio);
+    this.elCusto.title = uso.custo
+      ? this.cambio
+        ? `Gasto desta conversa: ${moeda(uso.custo)} \u00B7 c\u00E2mbio ${this.cambio.valor.toLocaleString("pt-BR", { minimumFractionDigits: 4 })} (${this.cambio.fonte}, ${this.cambio.dia})`
+        : `Gasto desta conversa informado pelo servi\u00E7o de IA`
+      : "Tokens desta conversa (o servi\u00E7o de IA n\u00E3o informa custo)";
   }
 
   private atualizarAba(): void {
@@ -452,6 +481,7 @@ class App {
     const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
     const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
     const guardar = h("input", { type: "checkbox", class: "switch", ...(this.config.guardar ? { checked: true } : {}) });
+    const emReais = h("input", { type: "checkbox", class: "switch", ...(this.config.reais ? { checked: true } : {}) });
     const dias = h(
       "select",
       { "aria-label": "Tempo de guarda" },
@@ -577,6 +607,17 @@ class App {
         h(
           "div",
           { class: "campo" },
+          h("label", {}, "Gasto"),
+          h(
+            "label",
+            { class: "linha-switch" },
+            emReais,
+            h("span", {}, "Mostrar o gasto em reais", h("small", {}, "Convertido pela cota\u00E7\u00E3o do dia (PTAX do Banco Central). Desligado, o painel mostra em d\u00F3lares.")),
+          ),
+        ),
+        h(
+          "div",
+          { class: "campo" },
           h("label", {}, "Conversas"),
           h("label", { class: "linha-switch" }, guardar, h("span", {}, "Guardar as conversas neste navegador", h("small", {}, "Para reler e exportar depois, pelo rel\u00F3gio no topo do painel."))),
           h("div", { class: "com-botao" }, h("span", { class: "ajuda" }, "Apagar depois de"), dias),
@@ -624,6 +665,7 @@ class App {
         if (!r.ok) return erro(comp ? "O servi\u00E7o n\u00E3o aceitou a chave (ou o endere\u00E7o est\u00E1 errado)." : "A chave n\u00E3o foi aceita pelo OpenRouter.");
       }
       await this.aplicarConfig({
+        reais: emReais.checked,
         guardar: guardar.checked,
         dias: Number(dias.value),
         servico: comp ? "compativel" : "openrouter",
@@ -646,6 +688,7 @@ class App {
     const historico = this.motor?.mensagens() ?? [];
     this.motor = this.criarMotor(Pseudonimos.importar(this.privacidade.exportar(), { nomes: nova.nomes, cnpj: nova.cnpj }));
     if (historico.length) this.motor.restaurar([...historico], this.uso);
+    void this.atualizarCambio();
     this.redesenhar();
     this.elEntrada.focus();
   }
@@ -763,14 +806,14 @@ class App {
         ),
         ...(a.itens as Item[]).map((i) => this.desenharItem(i)),
       );
-      this.elCusto.textContent = formatarUso(a.uso);
+      this.mostrarUso();
       this.desenharTarefas();
       this.estadoEnvio();
       return;
     }
     this.elConversa.replaceChildren(...this.transcricao.map((i) => this.desenharItem(i)));
     if (!this.transcricao.length) this.elConversa.append(this.boasVindas());
-    this.elCusto.textContent = formatarUso(this.uso);
+    this.mostrarUso();
     this.desenharTarefas();
     this.estadoEnvio();
     // Conversa começando: o começo é o que interessa (rolar cortaria o título
@@ -869,7 +912,7 @@ class App {
       },
       uso: (u) => {
         this.uso = u;
-        this.elCusto.textContent = formatarUso(u);
+        this.mostrarUso();
       },
       aviso: (t) => (this.fecharBolha(), void this.adicionar({ tipo: "aviso", texto: t })),
     };

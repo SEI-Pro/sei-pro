@@ -6,6 +6,7 @@
 import { SUGESTOES, sugestoesPara } from "../src/painel/sugestoes";
 import { TOOLS_SEI } from "../src/tools/sei";
 import { TOOLS_MOTOR } from "../src/tools/motor";
+import { formatarUso } from "../src/painel/dom";
 import { checar, secao } from "./util";
 
 export function verificarSugestoes(): void {
@@ -51,4 +52,16 @@ export function verificarSugestoes(): void {
   }
   checar("nenhuma sugestao fala de bloco de assinatura", !SUGESTOES.some((s) => /bloco/i.test(s.rotulo + s.descricao + s.prompt({}))));
   checar("todas tem rotulo curto", SUGESTOES.every((s) => s.rotulo.length <= 34), SUGESTOES.filter((s) => s.rotulo.length > 34).map((s) => s.rotulo));
+}
+
+/** Conversão do gasto para reais: formatação e escolha da unidade. */
+export function verificarCambio(): void {
+  secao("cambio: como o gasto aparece");
+  const uso = { entrada: 1000, saida: 200, custo: 0.0531 };
+  checar("sem cotacao mostra dolar", formatarUso(uso) === "US$ 0,0531", formatarUso(uso));
+  checar("com cotacao mostra real", formatarUso(uso, { valor: 5.1161 }) === "R$ 0,27", formatarUso(uso, { valor: 5.1161 }));
+  checar("centavo de centavo nao vira zero", formatarUso({ ...uso, custo: 0.004 }, { valor: 5 }) === "R$ 0,020", formatarUso({ ...uso, custo: 0.004 }, { valor: 5 }));
+  checar("valor maior usa dois digitos", formatarUso({ ...uso, custo: 1.5 }, { valor: 5 }) === "R$ 7,50", formatarUso({ ...uso, custo: 1.5 }, { valor: 5 }));
+  checar("sem custo informado mostra tokens", formatarUso({ entrada: 1200, saida: 300, custo: 0 }, { valor: 5 }) === "1,5k tokens");
+  checar("conversa nova nao mostra nada", formatarUso({ entrada: 0, saida: 0, custo: 0 }, { valor: 5 }) === "");
 }
