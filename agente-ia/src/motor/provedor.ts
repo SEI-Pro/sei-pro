@@ -37,7 +37,7 @@ interface Delta {
 
 interface Pedaco {
   choices?: Array<{ delta?: Delta; finish_reason?: string | null }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
+  usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number; prompt_tokens_details?: { cached_tokens?: number } };
   error?: { message?: string; code?: number | string };
 }
 
@@ -93,7 +93,12 @@ export class Acumulador {
     }
     if (escolha?.finish_reason) this.fim = escolha.finish_reason;
     if (p.usage) {
-      this.uso = { entrada: p.usage.prompt_tokens ?? 0, saida: p.usage.completion_tokens ?? 0, custo: p.usage.cost ?? 0 };
+      this.uso = {
+        entrada: p.usage.prompt_tokens ?? 0,
+        saida: p.usage.completion_tokens ?? 0,
+        custo: p.usage.cost ?? 0,
+        ...(p.usage.prompt_tokens_details?.cached_tokens ? { cache: p.usage.prompt_tokens_details.cached_tokens } : {}),
+      };
     }
   }
 
@@ -213,6 +218,8 @@ export interface OpcoesProvedor {
   modelo?: string;
   temperatura?: number;
   ajustes?: Ajustes;
+  /** Marcação de cache de prompt (padrão: ligada). */
+  cache?: boolean;
   /** Para testes. */
   fetch?: typeof fetch;
 }
@@ -290,6 +297,36 @@ export function mensagemDeErro(status: number, corpo: string, servico: Servico =
   return `O provedor de IA respondeu ${status}: ${msg.slice(0, 300)}`;
 }
 
+/**
+ * Prepara as mensagens para o cache de prompt.
+ *
+ * OpenAI e Gemini fazem cache sozinhos, sem marcação. A família Claude precisa
+ * que se diga ONDE termina o trecho estável (`cache_control`), e é justamente
+ * ela que mais se beneficia aqui: o prompt do agente, as ferramentas e as
+ * skills repetem inteiros a cada rodada da conversa.
+ *
+ * Dois pontos marcados, que é o que costuma render: o fim das instruções de
+ * sistema e o fim do histórico anterior ao último pedido do usuário.
+ */
+export function comCache(mensagens: PedidoLLM["mensagens"], modelo: string, servico: Servico): PedidoLLM["mensagens"] {
+  const claude = servico === "anthropic" || /(^|\/)(anthropic|claude)/i.test(modelo);
+  if (!claude || !mensagens.length) return mensagens;
+  const marcar = (m: PedidoLLM["mensagens"][number]) =>
+    typeof m.content === "string" && m.content.length > 500
+      ? ({ ...m, content: [{ type: "text", text: m.content, cache_control: { type: "ephemeral" } }] } as unknown as PedidoLLM["mensagens"][number])
+      : m;
+  const saida = [...mensagens];
+  if (saida[0]?.role === "system") saida[0] = marcar(saida[0]);
+  // O último "user" é o pedido novo; o ponto estável é o que vem antes dele.
+  for (let i = saida.length - 2; i > 0; i -= 1) {
+    if (saida[i].role === "assistant" || saida[i].role === "tool") {
+      saida[i] = marcar(saida[i]);
+      break;
+    }
+  }
+  return saida;
+}
+
 export function criarProvedor(o: OpcoesProvedor): Provedor {
   const fazer = o.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
   const servico = o.servico ?? "openrouter";
@@ -309,7 +346,7 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
       const montar = () =>
         JSON.stringify({
           model: modelo,
-          messages: pedido.mensagens,
+          messages: o.cache === false ? pedido.mensagens : comCache(pedido.mensagens, modelo, servico),
           tools: pedido.tools.length ? pedido.tools : undefined,
           stream: true,
           ...Object.fromEntries(Object.entries(parametros).filter(([k]) => !recusados.has(k))),

@@ -25,6 +25,8 @@ import { cotacaoDolar, type Cotacao } from "./cambio";
 import { sugestoesPara } from "./sugestoes";
 import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita } from "./desfazer";
 import { avaliarRegras, guardarRegras, listarRegras, recadoDoBloqueio, REGRAS_SUGERIDAS, type Regra } from "./regras";
+import { cabeMaisUma, gastoDeHoje, somarGastoDoDia, SEM_LIMITE, type Limites } from "./gasto";
+import { anotar, blocoDeMemoria, guardarMemoria, listarMemoria, MAX_TEXTO, type Lembranca } from "./memoria";
 import {
   baixarColecao,
   baixarSkillSeMudou,
@@ -64,6 +66,12 @@ interface Config {
   ajustes: Ajustes;
   /** Instruções do usuário anexadas ao fim do prompt do agente. */
   instrucoes: string;
+  /** Teto de gasto, em reais (0 = sem limite). */
+  limites: Limites;
+  /** Marcar o trecho estável do pedido para o cache do provedor. */
+  cache: boolean;
+  /** Deixar o agente anotar o que aprende sobre a unidade. */
+  memoria: boolean;
 }
 
 type Item =
@@ -140,7 +148,7 @@ function ajudaDoServico(svc: Servico): Node[] {
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
-  private config: Config = { reais: true, guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false, ajustes: {}, instrucoes: "" };
+  private config: Config = { reais: true, guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false, ajustes: {}, instrucoes: "", limites: SEM_LIMITE, cache: true, memoria: true };
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
@@ -159,6 +167,9 @@ class App {
 
   /** Regras da unidade: o que o agente não pode fazer, e o que exige atenção. */
   private regras: Regra[] = [];
+
+  /** O que o agente aprendeu sobre a unidade, e leva para as próximas conversas. */
+  private memoria: Lembranca[] = [];
 
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
@@ -192,6 +203,7 @@ class App {
     this.skills = await listarSkills();
     this.colecoes = await listarColecoes();
     this.regras = await listarRegras();
+    this.memoria = await listarMemoria();
     void this.sincronizarSkills();
     void this.sincronizarColecoes();
     this.ponte.aoMudar(() => this.atualizarAba());
@@ -430,10 +442,11 @@ class App {
     if (!this.elCusto) return;
     const uso = this.arquivada?.uso ?? this.uso;
     this.elCusto.textContent = formatarUso(uso, this.cambio);
+    const doCache = uso.cache ? ` \u00B7 ${uso.cache.toLocaleString("pt-BR")} tokens vieram do cache` : "";
     this.elCusto.title = uso.custo
       ? this.cambio
-        ? `Gasto desta conversa: ${moeda(uso.custo)} \u00B7 c\u00E2mbio ${this.cambio.valor.toLocaleString("pt-BR", { minimumFractionDigits: 4 })} (${this.cambio.fonte}, ${this.cambio.dia})`
-        : `Gasto desta conversa informado pelo servi\u00E7o de IA`
+        ? `Gasto desta conversa: ${moeda(uso.custo)} \u00B7 c\u00E2mbio ${this.cambio.valor.toLocaleString("pt-BR", { minimumFractionDigits: 4 })} (${this.cambio.fonte}, ${this.cambio.dia})${doCache}`
+        : `Gasto desta conversa informado pelo servi\u00E7o de IA${doCache}`
       : "Tokens desta conversa (o servi\u00E7o de IA n\u00E3o informa custo)";
   }
 
@@ -620,10 +633,15 @@ class App {
     const buscar = h("button", { title: "Buscar a lista de modelos do servi\u00E7o" }, "Atualizar");
     const ajudaModelo = h("div", { class: "ajuda" });
     const status = h("div", { class: "status" });
+    const gastoHoje = h("span", {}, "");
+    void gastoDeHoje().then((v) => (gastoHoje.textContent = v > 0 ? `Hoje foram gastos ${v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} at\u00E9 agora.` : "Nada gasto hoje ainda."));
     const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
     const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
     const guardar = h("input", { type: "checkbox", class: "switch", ...(this.config.guardar ? { checked: true } : {}) });
     const emReais = h("input", { type: "checkbox", class: "switch", ...(this.config.reais ? { checked: true } : {}) });
+    const limiteConversa = h("input", { type: "number", min: "0", step: "1", placeholder: "sem limite", ...(this.config.limites.conversa ? { value: String(this.config.limites.conversa) } : {}), "aria-label": "Limite por conversa" });
+    const limiteDia = h("input", { type: "number", min: "0", step: "1", placeholder: "sem limite", ...(this.config.limites.dia ? { value: String(this.config.limites.dia) } : {}), "aria-label": "Limite por dia" });
+    const usarCache = h("input", { type: "checkbox", class: "switch", ...(this.config.cache ? { checked: true } : {}) });
     const dias = h(
       "select",
       { "aria-label": "Tempo de guarda" },
@@ -877,6 +895,75 @@ class App {
       ),
     );
 
+    // ------------------------------------------------- memória da unidade
+    const usarMemoria = h("input", { type: "checkbox", class: "switch", ...(this.config.memoria ? { checked: true } : {}) });
+    const listaMemoria = h("div", { class: "skills" });
+    const novaLembranca = h("input", { type: "text", placeholder: "Ex.: despachos desta unidade v\u00E3o assinados pelo coordenador", maxlength: String(MAX_TEXTO), "aria-label": "Nova lembran\u00E7a" });
+    const addLembranca = h("button", {}, "Anotar");
+    const statusMemoria = h("div", { class: "ajuda" });
+    const desenharMemoria = () => {
+      listaMemoria.replaceChildren(
+        ...(this.memoria.length
+          ? [...this.memoria].reverse().map((l) =>
+              h(
+                "div",
+                { class: "skill lembranca" },
+                h(
+                  "div",
+                  { class: "skill-texto" },
+                  h("span", {}, l.texto),
+                  h("small", { class: "origem" }, `${l.origem === "agente" ? "aprendido pelo agente" : "escrito por voc\u00EA"} \u00B7 ${new Date(l.quando).toLocaleDateString("pt-BR")}`),
+                ),
+                h(
+                  "button",
+                  {
+                    class: "icone",
+                    title: "Esquecer",
+                    "aria-label": `Esquecer: ${l.texto}`,
+                    onclick: async () => {
+                      this.memoria = this.memoria.filter((x) => x.id !== l.id);
+                      await guardarMemoria(this.memoria);
+                      await this.aplicarConfig(this.config);
+                      desenharMemoria();
+                    },
+                  },
+                  icone("lixeira", 15),
+                ),
+              ),
+            )
+          : [h("div", { class: "ajuda" }, "Nada aprendido ainda. O agente anota sozinho o que voc\u00EA corrigir sobre o jeito da unidade trabalhar \u2014 e tudo aparece aqui, para conferir ou apagar.")]),
+      );
+    };
+    desenharMemoria();
+    addLembranca.addEventListener("click", async () => {
+      const r = anotar(this.memoria, novaLembranca.value, "usuario");
+      if (!r.ok) {
+        statusMemoria.textContent = r.motivo;
+        return;
+      }
+      this.memoria = [...this.memoria, r.lembranca];
+      await guardarMemoria(this.memoria);
+      await this.aplicarConfig(this.config);
+      novaLembranca.value = "";
+      statusMemoria.textContent = "";
+      desenharMemoria();
+    });
+    const secaoMemoria = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Mem\u00F3ria da unidade"),
+      h(
+        "label",
+        { class: "linha-switch" },
+        usarMemoria,
+        h("span", {}, "Deixar o agente aprender", h("small", {}, "S\u00F3 h\u00E1bito da unidade \u2014 estilo, destino de documento, jarg\u00E3o. Nada de dado de processo, n\u00FAmero ou nome de pessoa.")),
+      ),
+      listaMemoria,
+      h("div", { class: "com-botao" }, novaLembranca, addLembranca),
+      statusMemoria,
+      h("div", { class: "ajuda" }, "A mem\u00F3ria vai junto em toda conversa. O que estiver aqui o agente trata como o jeito certo de trabalhar; o que o SEI mostrar na hora sempre vale mais."),
+    );
+
     // ------------------------------------------------- regras da unidade
     const listaRegras = h("div", { class: "skills" });
     const novaRegra = h("button", {}, "Nova regra");
@@ -1046,6 +1133,24 @@ class App {
             emReais,
             h("span", {}, "Mostrar o gasto em reais", h("small", {}, "Convertido pela cota\u00E7\u00E3o do dia (PTAX do Banco Central). Desligado, o painel mostra em d\u00F3lares.")),
           ),
+          h(
+            "div",
+            { class: "finos" },
+            h("div", { class: "campo-fino" }, h("label", {}, "Limite por conversa (R$)"), limiteConversa, h("small", {}, "Ao chegar no teto, a conversa para de aceitar perguntas. Em branco = sem limite.")),
+            h("div", { class: "campo-fino" }, h("label", {}, "Limite por dia (R$)"), limiteDia, h("small", {}, "Soma o que foi gasto hoje, em todas as conversas. Zera \u00E0 meia-noite.")),
+          ),
+          h("div", { class: "ajuda" }, gastoHoje),
+          h(
+            "label",
+            { class: "linha-switch" },
+            usarCache,
+            h(
+              "span",
+              {},
+              "Reaproveitar o pedido no cache do servi\u00E7o",
+              h("small", {}, "Marca o trecho que se repete (instru\u00E7\u00F5es, ferramentas, skills) para o provedor cobrar menos por ele. Alguns modelos ignoram; nenhum perde qualidade."),
+            ),
+          ),
         ),
         h(
           "div",
@@ -1065,6 +1170,7 @@ class App {
           ),
         ),
         secaoSkills,
+        secaoMemoria,
         secaoRegras,
         avancado,
         h(
@@ -1140,11 +1246,33 @@ class App {
         cnpj: cnpj.checked,
         ajustes,
         instrucoes: instrucoes.value.trim(),
+        limites: { conversa: Math.max(0, Number(limiteConversa.value) || 0), dia: Math.max(0, Number(limiteDia.value) || 0) },
+        cache: usarCache.checked,
+        memoria: usarMemoria.checked,
       });
       dlg.close();
     });
     ajustarServico();
     void carregarModelos(false);
+  }
+
+  /**
+   * Guarda um fato sobre a unidade, se ele passar pelas travas da memória.
+   *
+   * Aparece na conversa mesmo quando é recusado: o usuário precisa ver o que o
+   * agente tentou aprender — inclusive para corrigir.
+   */
+  private async lembrar(fato: string): Promise<{ guardado: boolean; motivo?: string }> {
+    if (!this.config.memoria) return { guardado: false, motivo: "O usu\u00E1rio desligou a mem\u00F3ria nas configura\u00E7\u00F5es." };
+    const r = anotar(this.memoria, fato, "agente");
+    if (!r.ok) {
+      this.adicionar({ tipo: "tool", rotulo: `Mem\u00F3ria: n\u00E3o anotei \u2014 ${r.motivo}`, estado: "falha" });
+      return { guardado: false, motivo: r.motivo };
+    }
+    this.memoria = [...this.memoria, r.lembranca];
+    await guardarMemoria(this.memoria);
+    this.adicionar({ tipo: "tool", rotulo: `Aprendi: ${r.lembranca.texto}`, estado: "ok" });
+    return { guardado: true };
   }
 
   /**
@@ -1164,13 +1292,13 @@ class App {
     const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => t.efeito === "leitura" || t.nome === "skill_ler");
     let resposta = "";
     const auxiliar = new Motor({
-      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes }),
+      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes, cache: this.config.cache }),
       tools: new RegistroTools(soLeitura),
       privacidade: this.privacidade,
       sei: (op, args, s2) => this.ponte.executar(op, args, s2),
       limitePassos: 14,
       sistema: (tela) =>
-        `${promptSistema(tela, new Date(), this.config.instrucoes, this.skills)}
+        `${promptSistema(tela, new Date(), this.config.instrucoes, this.skills, blocoDeMemoria(this.memoria))}
 
 Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\u00E3o fala com o usu\u00E1rio.
 - S\u00F3 tem ferramentas de leitura. N\u00E3o prometa nem planeje escrita.
@@ -1191,7 +1319,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
         tarefas: () => undefined,
         uso: (u) => {
           // O gasto do auxiliar é gasto da conversa: soma no mesmo contador.
-          this.uso = { entrada: this.uso.entrada + u.entrada, saida: this.uso.saida + u.saida, custo: this.uso.custo + u.custo };
+          this.uso = { entrada: this.uso.entrada + u.entrada, saida: this.uso.saida + u.saida, custo: this.uso.custo + u.custo, cache: (this.uso.cache ?? 0) + (u.cache ?? 0) };
           this.mostrarUso();
         },
         aviso: () => undefined,
@@ -1605,13 +1733,14 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
   private criarMotor(mapa?: Pseudonimos): Motor {
     this.privacidade = mapa ?? new Pseudonimos({ nomes: this.config.nomes, cnpj: this.config.cnpj });
     return new Motor({
-      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes }),
+      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes, cache: this.config.cache }),
       tools: new RegistroTools([...TOOLS_SEI, ...toolsMotor(this.skills)]),
       ui: this.interfaceMotor(),
       privacidade: this.privacidade,
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
-      sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills),
+      sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills, blocoDeMemoria(this.memoria)),
       delegar: (tarefa, sinal) => this.delegar(tarefa, sinal),
+      lembrar: (fato) => this.lembrar(fato),
       regras: (passos) => {
         const v = avaliarRegras(this.regras, passos);
         return { bloqueios: v.bloqueios, avisos: v.avisos.map((a) => `${a.regra.mensagem} (regra "${a.regra.nome}")`), recado: recadoDoBloqueio(v) };
@@ -1629,6 +1758,14 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     }
     this.elEntrada.value = "";
     this.elEntrada.style.height = "auto";
+    const emReais = (d: number) => d * (this.cambio?.valor ?? 5.5);
+    const veredito = cabeMaisUma(this.config.limites, emReais(this.uso.custo), await gastoDeHoje());
+    if (!veredito.permite) {
+      this.adicionar({ tipo: "aviso", texto: veredito.motivo });
+      return;
+    }
+    if (veredito.aviso) this.adicionar({ tipo: "aviso", texto: veredito.aviso });
+    const custoAntes = this.uso.custo;
     const comecou = Date.now();
     this.ultimaResposta = null;
     const comAnexo = this.anexo ? `${t}\n\n[Anexo: ${this.anexo.nome}]\n${this.anexo.texto}` : t;
@@ -1650,6 +1787,9 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
       this.pensar(false);
       this.carimbarRodada(Date.now() - comecou);
       this.estadoEnvio();
+      // O teto do dia conta o que ESTA rodada custou, já em reais.
+      const gasto = this.uso.custo - custoAntes;
+      if (gasto > 0) await somarGastoDoDia(emReais(gasto));
       await this.salvarSessao();
     }
   }

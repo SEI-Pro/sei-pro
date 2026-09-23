@@ -23,7 +23,7 @@ export interface ResumoConversa {
   quando: number;
   /** Host do SEI em que a conversa aconteceu. */
   host?: string;
-  uso: { entrada: number; saida: number; custo: number };
+  uso: { entrada: number; saida: number; custo: number; cache?: number };
   mensagens: number;
 }
 

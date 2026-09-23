@@ -530,3 +530,6 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .skill.regra.bloquear { border-left: 3px solid var(--erro); }
 .skill.regra.avisar { border-left: 3px solid var(--atencao); }
 .campo > select[multiple] { font-size: 12px; padding: 4px; }
+
+.skill.lembranca .skill-texto span { font-size: 12.5px; }
+.skill.lembranca { border-left: 3px solid var(--ok); }

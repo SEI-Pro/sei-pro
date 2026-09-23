@@ -47,6 +47,8 @@ export interface OpcoesMotor {
   regras?: (passos: Array<{ tool: string; rotulo: string; args: Record<string, unknown> }>) => { bloqueios: unknown[]; avisos: string[]; recado: string };
   /** Roda um agente auxiliar de leitura com contexto próprio (ver painel/main.ts). */
   delegar?: (tarefa: string, sinal: AbortSignal) => Promise<string>;
+  /** Guarda um fato sobre a unidade (ver painel/memoria.ts). */
+  lembrar?: (fato: string) => Promise<{ guardado: boolean; motivo?: string }>;
   /** Lê a tela atual da aba do SEI. */
   tela?: (sinal: AbortSignal) => Promise<TelaAtual | null>;
   limitePassos?: number;
@@ -69,6 +71,11 @@ export interface TelaAtual {
 }
 
 const LIMITE_HISTORICO = 400_000; // caracteres (~100 mil tokens)
+/** A partir daqui, resumir o começo compensa o custo da chamada extra. */
+const LIMITE_COMPACTAR = 250_000;
+/** Rodadas recentes que nunca são resumidas: é nelas que está o pedido em curso. */
+const MANTER_INTACTAS = 8;
+export const MARCA_RESUMO = "[Resumo da conversa at\u00E9 aqui]";
 
 export class ErroMotor extends Error {}
 
@@ -128,6 +135,7 @@ export class Motor {
         return;
       }
       this.historico.push({ role: "user", content: this.o.privacidade.anonimizar(texto) });
+      await this.compactarSePreciso(sinal);
       const limite = this.o.limitePassos ?? 40;
       for (let passo = 0; passo < limite; passo += 1) {
         const resposta = await this.o.provedor.conversar(
@@ -140,6 +148,7 @@ export class Motor {
             entrada: this.usoTotal.entrada + resposta.uso.entrada,
             saida: this.usoTotal.saida + resposta.uso.saida,
             custo: this.usoTotal.custo + resposta.uso.custo,
+            cache: (this.usoTotal.cache ?? 0) + (resposta.uso.cache ?? 0),
           };
           this.o.ui.uso(this.usoTotal);
         }
@@ -182,6 +191,7 @@ export class Motor {
       pessoasVistas: (nomes) => this.o.privacidade.registrarPessoas(nomes),
       ui: this.o.ui,
       ...(this.o.delegar ? { delegar: this.o.delegar } : {}),
+      ...(this.o.lembrar ? { lembrar: this.o.lembrar } : {}),
       ...extra,
     };
   }
@@ -341,6 +351,64 @@ export class Motor {
   }
 
   /** Histórico enviado ao modelo, com resultados antigos resumidos quando o todo passa do limite. */
+  /**
+   * Resume o começo da conversa quando ela fica longa demais.
+   *
+   * Antes disto, o que havia era poda: resultados antigos de ferramenta viravam
+   * "[omitido]". Isso segura o tamanho, mas joga fora o que foi DECIDIDO — e o
+   * modelo passa a repetir perguntas já respondidas. Aqui o começo vira um
+   * resumo escrito pelo próprio modelo (uma chamada, sem ferramentas), e as
+   * últimas rodadas ficam intactas, porque é nelas que está o pedido em curso.
+   *
+   * O texto resumido JÁ está pseudonimizado: o resumo não devolve nome nenhum.
+   */
+  private async compactarSePreciso(sinal: AbortSignal): Promise<void> {
+    const tamanho = (ms: Mensagem[]) => ms.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 0), 0);
+    if (tamanho(this.historico) <= LIMITE_COMPACTAR) return;
+    // O corte cai sempre num pedido do usuário — separar uma chamada de
+    // ferramenta da sua resposta faria o provedor recusar o histórico.
+    // Procura-se o começo de rodada mais antigo que ainda preserve as últimas
+    // MANTER_INTACTAS mensagens; se a conversa for curta e gorda (três
+    // documentos enormes bastam), vale o começo da rodada atual.
+    const alvo = Math.max(0, this.historico.length - MANTER_INTACTAS);
+    let corte = -1;
+    for (let i = this.historico.length - 1; i >= 1; i -= 1) {
+      if (this.historico[i].role !== "user") continue;
+      corte = i;
+      if (i <= alvo) break;
+    }
+    if (corte < 2) return;
+    const antigas = this.historico.slice(0, corte);
+    const resumoAnterior = antigas.find((m) => typeof m.content === "string" && m.content.startsWith(MARCA_RESUMO));
+    const texto = antigas
+      .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content.slice(0, 4000) : "(chamada de ferramenta)"}`)
+      .join("\n")
+      .slice(-120_000);
+    try {
+      const r = await this.o.provedor.conversar(
+        {
+          mensagens: [
+            {
+              role: "system",
+              content:
+                "Voc\u00EA resume o in\u00EDcio de uma conversa de trabalho no SEI para que ela continue sem perder o essencial. Escreva em t\u00F3picos curtos: o que o usu\u00E1rio pediu, o que foi FEITO no SEI (com n\u00FAmeros de processo e de documento), o que ficou decidido e o que ainda falta. Preserve os r\u00F3tulos entre colchetes como est\u00E3o. N\u00E3o invente nada.",
+            },
+            { role: "user", content: `${resumoAnterior ? "Inclua tamb\u00E9m o que j\u00E1 estava resumido.\n" : ""}${texto}` },
+          ],
+          tools: [],
+        },
+        sinal,
+        () => undefined,
+      );
+      if (!r.texto.trim()) return;
+      this.historico = [{ role: "user", content: `${MARCA_RESUMO}\n${r.texto.trim()}` }, ...this.historico.slice(corte)];
+      this.o.ui.aviso("A conversa ficou longa: resumi o come\u00E7o para caber no contexto. O que foi feito e decidido continua valendo.");
+    } catch {
+      // Falhou (rede, limite do provedor): segue com a poda de sempre, que é
+      // pior mas não interrompe o trabalho de quem está usando.
+    }
+  }
+
   private compactado(): Mensagem[] {
     let total = this.historico.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 0), 0);
     if (total <= LIMITE_HISTORICO) return this.historico;

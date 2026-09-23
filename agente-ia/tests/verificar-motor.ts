@@ -227,6 +227,35 @@ export async function verificarMotor(): Promise<void> {
     checar("sem cartao quando nada muda", u.planos.length === 0);
   }
 
+  secao("compactacao: conversa longa");
+  {
+    const vistos: Mensagem[][] = [];
+    const gigante = "y".repeat(300_000);
+    // 1ª rodada: resposta enorme. 2ª: o começo deve chegar resumido.
+    const rodadas: Rodada[] = [
+      () => ({ texto: gigante, chamadas: [], fim: "stop" }),
+      () => ({ texto: "resumo: o usuario pediu X e foi feito Y", chamadas: [], fim: "stop" }),
+      () => ({ texto: "pronto", chamadas: [], fim: "stop" }),
+    ];
+    const interface_ = ui();
+    const m = new Motor({
+      provedor: provedor(rodadas, vistos),
+      tools: new RegistroTools([]),
+      privacidade: new Pseudonimos({ nomes: false, cnpj: false }),
+      sei: async () => ({}),
+      sistema: () => "sistema",
+      ui: interface_,
+    });
+    await m.enviar("primeiro pedido");
+    await m.enviar("segundo pedido");
+    const ultimo = vistos[vistos.length - 1];
+    const textoDoHistorico = ultimo.map((x) => (typeof x.content === "string" ? x.content : "")).join("\n");
+    checar("o gigante nao vai inteiro de novo", !textoDoHistorico.includes(gigante));
+    checar("o comeco virou resumo", textoDoHistorico.includes("Resumo da conversa"), textoDoHistorico.slice(0, 200));
+    checar("o usuario e avisado do resumo", interface_.avisos.some((a) => /resumi o come\u00E7o/i.test(a)), interface_.avisos);
+    checar("o pedido novo continua ali", textoDoHistorico.includes("segundo pedido"));
+  }
+
   secao("delegar: agente auxiliar");
   const delegarTool = [...TOOLS_MOTOR].find((t) => t.nome === "delegar")!;
   checar("e interna: nao escreve no SEI", delegarTool.efeito === "interna");

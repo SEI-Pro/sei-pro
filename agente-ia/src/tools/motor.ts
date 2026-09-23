@@ -64,6 +64,19 @@ export function toolsMotor(extras: SkillExtra[] = []): DefTool[] {
   }),
 
   definirTool({
+    nome: "memoria_anotar",
+    descricao:
+      "Guarda, para as PR\u00D3XIMAS conversas, algo est\u00E1vel sobre como esta unidade trabalha: prefer\u00EAncia de estilo, para onde certos documentos v\u00E3o, qual marcador a unidade usa para o qu\u00EA, jarg\u00E3o local. S\u00F3 anote o que o usu\u00E1rio DISSE ou corrigiu, e que valer\u00E1 de novo. NUNCA anote dado de processo, conte\u00FAdo de documento, nome de pessoa ou n\u00FAmero: isso se l\u00EA no SEI. Uma frase por anota\u00E7\u00E3o.",
+    parametros: s.objeto({ fato: s.texto({ max: 240, descricao: "A regra ou prefer\u00EAncia, em uma frase." }) }),
+    efeito: "interna",
+    rotulo: (a) => `Anotar na mem\u00F3ria: ${String(a.fato).slice(0, 60)}`,
+    executar: async (a, ctx) => {
+      if (!ctx.lembrar) return { erro: "Este painel n\u00E3o guarda mem\u00F3ria." };
+      return ctx.lembrar(String(a.fato));
+    },
+  }),
+
+  definirTool({
     nome: "delegar",
     descricao:
       "Entrega uma tarefa de LEITURA a um agente auxiliar, que trabalha com contexto pr\u00F3prio e devolve s\u00F3 o resultado. Use quando a tarefa exigir ler MUITO (dezenas de documentos, v\u00E1rios processos da caixa) e s\u00F3 o resumo importar para a conversa. O auxiliar N\u00C3O escreve no SEI, n\u00E3o v\u00EA esta conversa e n\u00E3o pode delegar de novo: escreva a tarefa inteira em uma frase, com os n\u00FAmeros e o que exatamente devolver. At\u00E9 3 tarefas por vez.",

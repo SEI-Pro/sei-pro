@@ -128,6 +128,14 @@ Quando o pedido implica mexer no processo, o agente **não executa**: ele monta 
 * **Assinar** pede o cargo e a sua senha do SEI no próprio cartão. A senha vai do painel direto para o SEI: ela **não** é enviada ao modelo de IA nem guardada;
 * **Recusar** pede, opcionalmente, o que ajustar — e o agente tenta de novo com a sua correção.
 
+### Memória da unidade
+
+Skills são o que **você escreve**. A memória é o que o agente **aprende** conversando: você corrige uma vez ("aqui o despacho termina com *Respeitosamente*") e ele leva isso para as próximas conversas.
+
+Fica tudo à vista: cada anotação aparece na conversa no momento em que é feita (*Aprendi: …*) e na lista em **Configuração → Memória da unidade**, com a data e quem anotou — o agente ou você. Cada uma se apaga num clique, e o interruptor **Deixar o agente aprender** desliga de vez.
+
+O que **não** entra: dado de processo, conteúdo de documento, número e nome de pessoa. Se o agente tentar anotar algo assim, a própria extensão recusa e mostra o motivo na conversa. Memória é sobre o jeito da unidade trabalhar; o resto se lê no SEI, que muda sem avisar — e, quando a memória contradisser o que o SEI mostra na hora, vale o SEI.
+
 ### Tarefas longas: o agente pede ajuda
 
 Quando o pedido exige **ler muito** — trinta documentos de um processo, vários processos da caixa —, o agente entrega essas leituras a **agentes auxiliares**, que trabalham em paralelo com contexto próprio e devolvem só a resposta. Na conversa aparece uma linha *Delegar N tarefas de leitura*.
@@ -192,6 +200,12 @@ Fica guardada **só a transcrição** — o que apareceu na tela. O histórico e
 O SEI Pro é gratuito e não cobra nada pelo agente. O custo é o do serviço de IA que você escolher, cobrado diretamente por ele. O painel mostra, no topo, quanto a conversa em curso consumiu — **em reais**, convertidos pela cotação do dia do dólar (PTAX do Banco Central; passando o mouse, aparece o valor original e a cotação usada). Nas configurações dá para desligar a conversão e ver em dólares. Quando o serviço não informa custo, o painel mostra tokens.
 
 Uma consulta simples costuma custar centavos de dólar. Ler documentos longos custa mais, porque o texto inteiro vai para o modelo.
+
+Três coisas seguram essa conta:
+
+* **Teto de gasto** — em **Configuração → Gasto** dá para definir um limite **por conversa** e outro **por dia**, em reais. Ao chegar perto (80%), o painel avisa; ao bater, ele para de aceitar perguntas e explica o que fazer. O limite diário soma todas as conversas e zera à meia-noite;
+* **Cache do serviço** — o trecho que se repete a cada pergunta (instruções, ferramentas, skills) é marcado para o provedor cobrar menos por ele. O medidor do topo mostra, ao passar o mouse, quantos tokens vieram do cache. Alguns modelos fazem isso sozinhos, outros ignoram; nenhum perde qualidade;
+* **Resumo automático** — quando a conversa fica muito longa, o agente resume o começo (o que foi feito, com os números, e o que ficou decidido) e segue com o resumo no lugar do texto inteiro. Ele avisa na conversa quando isso acontece. As últimas trocas nunca são resumidas.
 
 ### Como ativar
 

@@ -24,6 +24,8 @@ export interface Uso {
   saida: number;
   /** Custo em dólares informado pelo OpenRouter (`usage.cost`). */
   custo: number;
+  /** Tokens de entrada que vieram do cache do provedor (não foram reprocessados). */
+  cache?: number;
 }
 
 export interface RespostaLLM {

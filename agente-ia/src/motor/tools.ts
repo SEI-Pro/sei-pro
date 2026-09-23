@@ -27,6 +27,8 @@ export interface ContextoTool {
    * Devolve só o resultado — é isso que mantém a conversa principal curta.
    */
   delegar?(tarefa: string, sinal: AbortSignal): Promise<string>;
+  /** Guarda um fato sobre a unidade para as próximas conversas (ver painel/memoria.ts). */
+  lembrar?(fato: string): Promise<{ guardado: boolean; motivo?: string }>;
 }
 
 export interface EstadoConversa {
