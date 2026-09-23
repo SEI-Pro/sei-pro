@@ -21,6 +21,7 @@ import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
 import { duracao, formatarUso, h, icone, markdown } from "./dom";
 import * as historico from "./historico";
+import { sugestoesPara } from "./sugestoes";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
@@ -70,28 +71,6 @@ const PENSANDO = [
   "Burilando", "Lapidando", "Deduzindo", "Concatenando", "Elucubrando", "Garimpando",
 ];
 
-const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
-  {
-    rotulo: "Resumir este processo",
-    descricao: "objeto, partes, atos e situa\u00E7\u00E3o",
-    prompt: "Leia os documentos deste processo e fa\u00E7a um resumo: objeto, partes, principais atos em ordem e situa\u00E7\u00E3o atual.",
-  },
-  {
-    rotulo: "Pend\u00EAncias da unidade",
-    descricao: "por marcador, com o que est\u00E1 parado",
-    prompt: "Liste os processos da minha unidade agrupados por marcador e aponte os que parecem parados ou com prazo vencido.",
-  },
-  {
-    rotulo: "Documentos sem assinatura",
-    descricao: "no processo aberto",
-    prompt: "Neste processo, quais documentos ainda n\u00E3o foram assinados?",
-  },
-  {
-    rotulo: "Linguagem simples",
-    descricao: "explicar o documento na tela",
-    prompt: "Explique em linguagem simples o documento que estou vendo (ou o \u00FAltimo documento deste processo).",
-  },
-];
 
 /** Marca do agente: o robô do SEI Pro, o mesmo ícone que abre o painel no SEI. */
 const marca = (tamanho: number) =>
@@ -113,6 +92,9 @@ class App {
   private tarefas: Tarefa[] = [];
   private anexo: { nome: string; texto: string } | null = null;
   private idConversa = crypto.randomUUID();
+  /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
+  private tela: TelaAtual | null = null;
+  private chaveTela = "";
   /** Conversa antiga aberta para leitura (sem como continuar: ver `historico.ts`). */
   private arquivada: historico.ConversaSalva | null = null;
 
@@ -182,9 +164,13 @@ class App {
       arquivo.value = "";
     });
 
-    this.elMenu.replaceChildren(...ATALHOS.map((a) => h("button", { role: "menuitem", onclick: () => ((this.elMenu.hidden = true), void this.enviar(a.prompt)) }, a.rotulo)));
     sugerir.addEventListener("click", (ev) => {
       ev.stopPropagation();
+      if (this.elMenu.hidden) {
+        this.elMenu.replaceChildren(
+          ...sugestoesPara(this.tela, 8).map((a) => h("button", { role: "menuitem", onclick: () => ((this.elMenu.hidden = true), void this.enviar(a.prompt)) }, a.rotulo)),
+        );
+      }
       this.elMenu.hidden = !this.elMenu.hidden;
     });
     document.addEventListener("click", () => (this.elMenu.hidden = true));
@@ -274,8 +260,23 @@ class App {
     }, 1000);
   }
 
+  /**
+   * Lê a tela do SEI ao lado quando ela muda (aba ou título diferentes) e, se a
+   * conversa ainda não começou, redesenha as sugestões para combinarem com ela.
+   */
+  private async lerTelaDoSei(): Promise<void> {
+    const aba = this.ponte.atual();
+    const chave = aba ? `${aba.id}|${aba.contexto ?? aba.titulo}` : "";
+    if (chave === this.chaveTela) return;
+    this.chaveTela = chave;
+    this.tela = aba ? ((await this.ponte.executar("tela", {}).catch(() => null)) as TelaAtual | null) : null;
+    if (this.tela) this.tela.editores = this.ponte.editores();
+    if (!this.transcricao.length && !this.arquivada) this.redesenhar();
+  }
+
   private atualizarAba(): void {
     if (!this.elAba) return;
+    void this.lerTelaDoSei();
     const aba = this.ponte.atual();
     this.elAba.replaceChildren(
       h("span", { class: `ponto${aba ? " on" : ""}` }),
@@ -790,7 +791,7 @@ class App {
         ? h(
             "div",
             { class: "sugestoes" },
-            ...ATALHOS.map((a) =>
+            ...sugestoesPara(this.tela).map((a) =>
               h(
                 "button",
                 { class: "sugestao", onclick: () => void this.enviar(a.prompt) },

@@ -47,6 +47,8 @@ export interface OpcoesMotor {
 }
 
 export interface TelaAtual {
+  /** `acao` do controlador: que tela do SEI está aberta (procedimento_controlar, protocolo_pesquisar...). */
+  acao?: string;
   unidade?: string;
   usuario?: string;
   versao?: string;

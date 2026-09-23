@@ -50,6 +50,12 @@ export interface Apresentacao {
   papel: "sei" | "editor";
   /** Na janela do editor: nº SEI do documento aberto. */
   documento?: string;
+  /**
+   * Assinatura barata do que está na tela (ação, processo, documento aberto,
+   * quantos marcados). O painel relê a tela quando ela muda — e o título da
+   * aba NÃO muda ao abrir outro documento da mesma árvore.
+   */
+  contexto?: string;
 }
 
 export type MensagemAba = Resposta | Apresentacao;

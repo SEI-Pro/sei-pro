@@ -17,6 +17,8 @@ export interface AbaSei {
   foco: number;
   papel: "sei" | "editor";
   documento?: string;
+  /** Assinatura da tela (ver `Apresentacao.contexto`). */
+  contexto?: string;
   porta: chrome.runtime.Port;
 }
 
@@ -86,7 +88,7 @@ export class PontePainel {
     const msg = m as MensagemAba;
     if (msg.tipo === "ola") {
       const o = msg as Apresentacao;
-      Object.assign(aba, { host: o.host, visivel: o.visivel, foco: o.foco, titulo: o.titulo, papel: o.papel ?? "sei", documento: o.documento });
+      Object.assign(aba, { host: o.host, visivel: o.visivel, foco: o.foco, titulo: o.titulo, papel: o.papel ?? "sei", documento: o.documento, contexto: o.contexto });
       this.avisar();
       return;
     }

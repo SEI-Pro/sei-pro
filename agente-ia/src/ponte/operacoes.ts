@@ -34,6 +34,7 @@ import {
 import { assinarDocumento, enviarProcesso } from "@nucleo/dominio/tramitacao";
 import { pesquisar } from "@nucleo/dominio/pesquisa";
 import { cancelarAssinatura, cancelarDocumento, darCiencia, excluirDocumento } from "@nucleo/dominio/acoesDocumento";
+import { parametros } from "@nucleo/links/links";
 import { ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
@@ -85,6 +86,9 @@ export function lerTela(doc: Document, url: string): TelaAtual {
   } catch {
     /* tela sem cabeçalho (janela do editor, por exemplo) */
   }
+  // Qual tela do SEI está aberta (`acao` do controlador): é o que deixa o painel
+  // sugerir o que faz sentido ali — na caixa da unidade, num processo, na pesquisa.
+  tela.acao = parametros(url).get("acao") ?? undefined;
   const ifr = doc.querySelector<HTMLIFrameElement>("#ifrArvore");
   const docArvore = ifr?.contentDocument;
   if (docArvore?.documentElement) {
@@ -92,8 +96,22 @@ export function lerTela(doc: Document, url: string): TelaAtual {
       const arv = lerArvore({ url: docArvore.URL, status: 200, html: docArvore.documentElement.outerHTML, doc: docArvore });
       tela.processo = { protocolo: arv.protocolo, tipo: arv.tipo, nivel: arv.nivel };
       tela.sigiloso = arv.nivel === "sigiloso";
-      const vis = doc.querySelector<HTMLIFrameElement>("#ifrConteudoVisualizacao, #ifrVisualizacao")?.contentWindow?.location.href ?? "";
-      const idDoc = /[?&]id_documento=(\d+)/.exec(vis)?.[1];
+      // Qual documento está aberto à direita. No SEI 5 o visualizador é um
+      // iframe só; no SEI 4.1 o `ifrVisualizacao` fica ANINHADO dentro do
+      // `ifrConteudoVisualizacao`, e só o de dentro carrega o id_documento.
+      const enderecos: string[] = [];
+      const anotar = (j: Window | null | undefined) => {
+        try {
+          if (j?.location.href) enderecos.push(j.location.href);
+        } catch {
+          /* outro domínio: não interessa */
+        }
+      };
+      const conteudo = doc.querySelector<HTMLIFrameElement>("#ifrConteudoVisualizacao");
+      anotar(conteudo?.contentWindow);
+      anotar(conteudo?.contentDocument?.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentWindow);
+      anotar(doc.querySelector<HTMLIFrameElement>("#ifrVisualizacao")?.contentWindow);
+      const idDoc = enderecos.map((u) => /[?&]id_documento=(\d+)/.exec(u)?.[1]).find(Boolean);
       const d = idDoc ? arv.documentos.find((x) => x.id === idDoc) : undefined;
       if (d && !tela.sigiloso && d.nivel !== "sigiloso") tela.documento = { numero: d.numero, titulo: d.titulo };
     } catch {

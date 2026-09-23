@@ -23,6 +23,22 @@ declare global {
   }
 }
 
+/**
+ * Assinatura do que está na tela, só com leituras baratas de DOM: a tela
+ * inteira (`lerTela`) custa caro para ficar mandando a cada apresentação.
+ */
+function contextoDaTela(): string {
+  try {
+    const p = new URL(location.href).searchParams;
+    const vis = document.querySelector<HTMLIFrameElement>("#ifrConteudoVisualizacao, #ifrVisualizacao")?.contentWindow?.location.href ?? "";
+    const documento = /[?&]id_documento=(\d+)/.exec(vis)?.[1] ?? "";
+    const marcados = document.querySelectorAll("#tblProcessosRecebidos input:checked, #tblProcessosGerados input:checked, #tblProcessosDetalhado input:checked").length;
+    return [p.get("acao") ?? "", p.get("id_procedimento") ?? "", documento, marcados].join("|");
+  } catch {
+    return "";
+  }
+}
+
 /** Canal com o painel: porta, apresentação, reconexão e foco. Comum às telas do SEI e à janela do editor. */
 function abrirCanal(papel: "sei" | "editor", documento: string | undefined, executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>): void {
   const emCurso = new Map<string, AbortController>();
@@ -40,6 +56,7 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
       titulo: document.title,
       papel,
       documento,
+      contexto: contextoDaTela(),
     };
     try {
       porta.postMessage(ola);
