@@ -53,11 +53,29 @@ A chave fica guardada **só neste navegador**. O SEI Pro não tem servidor: as m
 | Serviço | Quando usar |
 | ------- | ----------- |
 | **OpenRouter** (padrão) | Caminho recomendado: um cadastro dá acesso aos modelos de vários fabricantes, com preço por modelo e custo por pergunta. O agente ainda exige que o provedor **não guarde nem treine** com o que recebe |
-| **Compatível com OpenAI** | Para quem já tem outro serviço: NVIDIA, Groq, um modelo rodando na própria máquina (Ollama) ou **um servidor do próprio órgão** — nesse caso o conteúdo não sai da rede interna |
+| **OpenAI**, **Google Gemini**, **Anthropic** | Para quem já tem conta direto com o fabricante: escolha o serviço, informe a chave e o modelo — o endereço já vem pronto |
+| **Outro serviço compatível** | NVIDIA, Groq, um modelo rodando na própria máquina (Ollama) ou **um servidor do próprio órgão** — nesse caso o conteúdo não sai da rede interna |
 
-Para o OpenRouter, crie a chave em [openrouter.ai/keys](https://openrouter.ai/keys) e adicione créditos. No modo compatível, informe o endereço da API (termina em `/v1`), a chave e o nome do modelo; o navegador vai pedir a sua autorização para falar com aquele endereço.
+Para o OpenRouter, crie a chave em [openrouter.ai/keys](https://openrouter.ai/keys) e adicione créditos. Nos demais, a chave é a do painel do próprio fabricante ([platform.openai.com](https://platform.openai.com/api-keys), [aistudio.google.com](https://aistudio.google.com/apikey) ou [console.anthropic.com](https://console.anthropic.com)); no serviço compatível, informe também o endereço da API (termina em `/v1`). Fora do OpenRouter, o navegador pede a sua autorização para o agente falar com aquele endereço, e o botão **Buscar modelos** preenche a lista do serviço.
 
 > **Nem todo modelo serve.** O agente trabalha chamando ferramentas, e só parte dos modelos sabe fazer isso. No OpenRouter a lista já vem filtrada. Fora dele, se o agente conversar mas não conseguir agir no SEI, troque de modelo.
+
+#### Avançado: controle fino e instruções suas
+
+No fim das configurações há a seção **Avançado**, fechada por padrão — quem não mexer nela continua com os valores que o agente já usa.
+
+| Campo | O que faz |
+| ----- | --------- |
+| **Temperatura** | 0 dá sempre a mesma resposta; acima de 1, mais criatividade e mais erro |
+| **Top P** | Corta a cauda das palavras improváveis. Mexa nisto **ou** na temperatura, não nos dois |
+| **Máximo de tokens na resposta** | Teto de tamanho da resposta; curto demais corta o texto no meio |
+| **Penalidade de frequência** | Desencoraja repetir as mesmas palavras |
+| **Penalidade de presença** | Empurra o modelo para assuntos novos |
+| **Instruções adicionais** | Preferências suas ou da sua unidade — estilo, formato, o que sempre citar |
+
+Campo em branco usa o padrão do serviço, e **Restaurar padrões** limpa todos. Se o modelo escolhido não aceitar um desses ajustes, o agente refaz o pedido sem ele em vez de falhar.
+
+As instruções adicionais entram no fim das instruções do agente e valem para estilo e formato. Elas **não** dispensam a sua aprovação antes de qualquer escrita no SEI, não liberam processo sigiloso e não fazem o agente pedir senha na conversa.
 
 ### Nada é alterado sem a sua aprovação
 
