@@ -38,7 +38,6 @@ import {
   sincronizarSkills,
   skillsCitadas,
   slugLivre,
-  urlCrua,
   type ColecaoSkills,
   type SkillUsuario,
 } from "./skills";
@@ -845,14 +844,6 @@ class App {
       sincronizarAgora.disabled = true;
       status.className = "status";
       status.textContent = "Conferindo os arquivos...";
-      // O clique é o gesto que permite pedir a permissão que faltar.
-      for (const sk of this.skills.filter((x) => x.url && x.sincronizar)) {
-        const origens = [`${new URL(urlCrua(sk.url ?? "")).origin}/*`];
-        await chrome.permissions
-          .contains({ origins: origens })
-          .then((tem) => tem || chrome.permissions.request({ origins: origens }))
-          .catch(() => false);
-      }
       const mudaram = await this.sincronizarSkills(true);
       const decolecao = await this.sincronizarColecoes(true);
       desenharSkills();
@@ -1079,10 +1070,10 @@ class App {
    */
   private async sincronizarSkills(forcar = false): Promise<string[]> {
     if (!this.skills.some((s) => s.url && s.sincronizar)) return [];
-    const { lista, mudaram } = await sincronizarSkills(this.skills, {
-      forcar,
-      autorizado: (origem) => chrome.permissions.contains({ origins: [`${origem}/*`] }).catch(() => false),
-    });
+    // Sem pedir permissão: o GitHub responde com CORS liberado, e pedir
+    // permissão fora de um clique trava esperando um diálogo que ninguém vê.
+    // Se o endereço do usuário não liberar, a falha vira `erroSync` na lista.
+    const { lista, mudaram } = await sincronizarSkills(this.skills, { forcar });
     if (JSON.stringify(lista) === JSON.stringify(this.skills)) return [];
     this.skills = lista;
     await guardarSkills(lista);
@@ -1106,12 +1097,6 @@ class App {
     let mexeu = false;
     for (const col of alvos) {
       if (!forcar && col.verificadaEm && agora - col.verificadaEm < INTERVALO_COLECAO) continue;
-      const origens = ["https://api.github.com/*", "https://raw.githubusercontent.com/*"];
-      const autorizado = await chrome.permissions
-        .contains({ origins: origens })
-        .then((tem) => tem || (forcar ? chrome.permissions.request({ origins: origens }) : false))
-        .catch(() => false);
-      if (!autorizado) continue;
       try {
         const baixadas = await baixarColecao(col.url);
         const r = mesclarColecao(this.skills, col, baixadas, agora);
@@ -1198,12 +1183,6 @@ class App {
       salvar.disabled = true;
       status.className = "status";
       status.textContent = "Buscando as skills...";
-      const origens = ["https://api.github.com/*", "https://raw.githubusercontent.com/*"];
-      const ok = await chrome.permissions
-        .contains({ origins: origens })
-        .then((tem) => tem || chrome.permissions.request({ origins: origens }))
-        .catch(() => false);
-      if (!ok) return erro("O navegador n\u00E3o autorizou o agente a falar com o GitHub.");
       const nova: ColecaoSkills = { id: colecao?.id ?? crypto.randomUUID(), nome: n, url: u, sincronizar: sincronizar.checked };
       try {
         const baixadas = await baixarColecao(u);
@@ -1216,7 +1195,11 @@ class App {
         aoFechar();
         dlg.close();
       } catch (e) {
-        return erro((e as Error).message);
+        return erro(
+          e instanceof TypeError
+            ? "N\u00E3o foi poss\u00EDvel falar com o GitHub (rede do \u00F3rg\u00E3o?). Confira se github.com est\u00E1 liberado."
+            : (e as Error).message,
+        );
       }
     });
   }
@@ -1282,17 +1265,6 @@ class App {
       }
       status.className = "status";
       status.textContent = "Buscando...";
-      const origem = new URL(urlCrua(endereco)).origin;
-      const origens = [`${origem}/*`];
-      const ok = await chrome.permissions
-        .contains({ origins: origens })
-        .then((tem) => tem || chrome.permissions.request({ origins: origens }))
-        .catch(() => false);
-      if (!ok) {
-        status.className = "status erro";
-        status.textContent = "O navegador n\u00E3o autorizou o agente a buscar nesse endere\u00E7o.";
-        return;
-      }
       try {
         const r = await baixarSkillSeMudou(endereco);
         const conteudo = r?.texto ?? "";
@@ -1308,7 +1280,10 @@ class App {
         status.textContent = `${conteudo.length.toLocaleString("pt-BR")} caracteres carregados.`;
       } catch (e) {
         status.className = "status erro";
-        status.textContent = (e as Error).message;
+        status.textContent =
+          e instanceof TypeError
+            ? "N\u00E3o foi poss\u00EDvel falar com esse endere\u00E7o (rede do \u00F3rg\u00E3o ou servidor sem libera\u00E7\u00E3o para o navegador)."
+            : (e as Error).message;
       }
     });
 

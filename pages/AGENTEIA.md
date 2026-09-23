@@ -106,6 +106,16 @@ Para não ter de lembrar de atualizar, ligue **Manter sincronizada com o GitHub*
 
 > As skills orientam o trabalho, mas **não** revogam as regras do agente: escrita no SEI continua passando pela sua aprovação, processo sigiloso continua fora e senha nunca é pedida na conversa.
 
+#### Skills da equipe
+
+Em vez de cada pessoa cadastrar as suas, a unidade pode manter as skills num **repositório público** e todo mundo apontar para a mesma pasta: **Configuração → Skills → Skills da equipe**, informando o endereço (`github.com/seu-orgao/seu-repo/tree/main/skills`).
+
+Cada arquivo `.md` da pasta vira uma skill — o título (`# Assim`) ou o `name:` do cabeçalho vira o nome, e o `README.md` fica de fora. Quem cuida do padrão edita o repositório; com **Manter sincronizada** ligado, cada pessoa recebe a atualização (a pasta é conferida a cada 12 horas).
+
+A coleção é um **espelho**: skill retirada da pasta sai do painel também, e skill da equipe não se edita no painel — aparece marcada como `equipe`. Suas skills próprias não são tocadas.
+
+Há dois modelos para copiar em [skills-exemplo/](https://github.com/SEI-Pro/sei-pro/tree/master/skills-exemplo): despacho de encaminhamento e nota técnica.
+
 Para preferências curtas que valem para **toda** conversa — tratamento, estilo, o que sempre citar —, use **Instruções adicionais**, na seção Avançado.
 
 ### Nada é alterado sem a sua aprovação

@@ -3,7 +3,7 @@
  * para o modelo quando o usuário chama `/slug`.
  */
 
-import { baixarSkill, comSkills, descricaoDoTexto, sincronizarSkills, skillsCitadas, slugificar, slugLivre, urlCrua, type SkillUsuario } from "../src/painel/skills";
+import { baixarColecao, baixarSkill, comSkills, descricaoDoTexto, mesclarColecao, partesDoGitHub, sincronizarSkills, skillsCitadas, slugificar, slugLivre, tituloDoMarkdown, urlCrua, type ColecaoSkills, type SkillUsuario } from "../src/painel/skills";
 import { promptSistema } from "../src/motor/prompt";
 import { toolsMotor } from "../src/tools/motor";
 import { checar, secao } from "./util";
@@ -82,6 +82,47 @@ export async function verificarSkills(): Promise<void> {
 
   const semPermissao = await sincronizarSkills([hospedada()], { buscar: respostaSync("versao nova").f, autorizado: async () => false });
   checar("sem permissao de host nao busca", semPermissao.lista[0].texto === "versao antiga" && !semPermissao.lista[0].verificadaEm);
+
+  secao("skills da equipe: pasta do GitHub");
+  checar("le dono, repo, branch e pasta", JSON.stringify(partesDoGitHub("https://github.com/orgao/skills/tree/main/unidade")) === JSON.stringify({ dono: "orgao", repo: "skills", ref: "main", pasta: "unidade" }));
+  checar("repositorio sem pasta tambem vale", partesDoGitHub("https://github.com/orgao/skills")?.pasta === "");
+  checar("endereco que nao e do GitHub e recusado", partesDoGitHub("https://exemplo.gov.br/skills") === null);
+  checar("titulo vem do frontmatter", tituloDoMarkdown("---\nname: Despacho de encaminhamento\n---\n\n# Outro") === "Despacho de encaminhamento");
+  checar("sem frontmatter, vem do titulo", tituloDoMarkdown("# Nota tecnica\n\ntexto") === "Nota tecnica");
+
+  const pasta = (arquivos: Array<{ name: string; conteudo: string }>) =>
+    (async (url: string) => {
+      const u = String(url);
+      if (u.startsWith("https://api.github.com/")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => arquivos.map((a) => ({ name: a.name, type: "file", download_url: `https://raw/${a.name}` })),
+        } as unknown as Response;
+      }
+      const achado = arquivos.find((a) => u.endsWith(a.name));
+      return { ok: true, status: 200, text: async () => achado?.conteudo ?? "" } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+  const baixadas = await baixarColecao("https://github.com/o/r/tree/main/skills", pasta([
+    { name: "README.md", conteudo: "# Leia-me" },
+    { name: "despacho.md", conteudo: "---\nname: Despacho\n---\n\nRegras do despacho." },
+    { name: "nota.md", conteudo: "# Nota tecnica\n\nRegras da nota." },
+    { name: "imagem.png", conteudo: "" },
+  ]));
+  checar("traz so os .md, sem o README", baixadas.map((b) => b.arquivo).join(",") === "despacho.md,nota.md", baixadas);
+  checar("nome sai do arquivo", baixadas[0].nome === "Despacho" && baixadas[1].nome === "Nota tecnica");
+
+  const colecao: ColecaoSkills = { id: "col1", nome: "Equipe", url: "https://github.com/o/r/tree/main/skills" };
+  const propria = skill("minha", "Minha skill");
+  const m1 = mesclarColecao([propria], colecao, baixadas);
+  checar("skills da equipe entram marcadas", m1.lista.filter((s) => s.colecao === "col1").length === 2 && m1.novas === 2);
+  checar("skill propria nao e tocada", m1.lista.some((s) => s.id === propria.id && !s.colecao));
+  const m2 = mesclarColecao(m1.lista, colecao, [baixadas[0]]);
+  checar("skill que saiu da pasta sai daqui", m2.lista.filter((s) => s.colecao === "col1").length === 1 && m2.removidas === 1);
+  const m3 = mesclarColecao(m1.lista, colecao, [{ ...baixadas[0], texto: "Regras novas." }, baixadas[1]]);
+  checar("texto mudado conta como atualizacao", m3.atualizadas === 1 && m3.novas === 0);
+  checar("o atalho da skill da equipe nao muda entre sincronizacoes", m3.lista.find((s) => s.id === "col1:despacho.md")?.slug === m1.lista.find((s) => s.id === "col1:despacho.md")?.slug);
 
   secao("skills: uso na conversa");
   const lista = [skill("despacho-encaminhamento", "Despacho de encaminhamento"), skill("nota-tecnica", "Nota tecnica")];
