@@ -64,6 +64,34 @@ export function toolsMotor(extras: SkillExtra[] = []): DefTool[] {
   }),
 
   definirTool({
+    nome: "delegar",
+    descricao:
+      "Entrega uma tarefa de LEITURA a um agente auxiliar, que trabalha com contexto pr\u00F3prio e devolve s\u00F3 o resultado. Use quando a tarefa exigir ler MUITO (dezenas de documentos, v\u00E1rios processos da caixa) e s\u00F3 o resumo importar para a conversa. O auxiliar N\u00C3O escreve no SEI, n\u00E3o v\u00EA esta conversa e n\u00E3o pode delegar de novo: escreva a tarefa inteira em uma frase, com os n\u00FAmeros e o que exatamente devolver. At\u00E9 3 tarefas por vez.",
+    parametros: s.objeto({
+      tarefas: s.lista(s.texto({ descricao: "Tarefa completa e independente, com os n\u00FAmeros e o formato do que devolver." }), { min: 1, max: 3 }),
+    }),
+    efeito: "interna",
+    rotulo: (a) => {
+      const n = (a.tarefas as string[]).length;
+      return n === 1 ? `Delegar: ${String((a.tarefas as string[])[0]).slice(0, 60)}` : `Delegar ${n} tarefas de leitura`;
+    },
+    executar: async (a, ctx) => {
+      if (!ctx.delegar) return { erro: "Este painel n\u00E3o tem agente auxiliar dispon\u00EDvel." };
+      const tarefas = (a.tarefas as string[]).slice(0, 3);
+      const respostas = await Promise.all(
+        tarefas.map(async (t) => {
+          try {
+            return { tarefa: t, resultado: await ctx.delegar!(t, ctx.sinal) };
+          } catch (e) {
+            return { tarefa: t, erro: (e as Error).message };
+          }
+        }),
+      );
+      return { respostas };
+    },
+  }),
+
+  definirTool({
     nome: "skill_ler",
     descricao: `Carrega instru\u00E7\u00F5es detalhadas sobre um assunto. Dispon\u00EDveis: ${disponiveis
       .map(([k, d]) => `"${k}" (${d})`)

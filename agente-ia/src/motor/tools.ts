@@ -22,6 +22,11 @@ export interface ContextoTool {
   ui: InterfaceMotor;
   /** Credenciais de assinatura aprovadas no plano (só em tools de assinatura). */
   assinatura?: { cargo: string; senha: string };
+  /**
+   * Delega uma tarefa de LEITURA a um agente auxiliar, com contexto próprio.
+   * Devolve só o resultado — é isso que mantém a conversa principal curta.
+   */
+  delegar?(tarefa: string, sinal: AbortSignal): Promise<string>;
 }
 
 export interface EstadoConversa {

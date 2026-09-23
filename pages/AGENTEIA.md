@@ -128,6 +128,14 @@ Quando o pedido implica mexer no processo, o agente **não executa**: ele monta 
 * **Assinar** pede o cargo e a sua senha do SEI no próprio cartão. A senha vai do painel direto para o SEI: ela **não** é enviada ao modelo de IA nem guardada;
 * **Recusar** pede, opcionalmente, o que ajustar — e o agente tenta de novo com a sua correção.
 
+### Tarefas longas: o agente pede ajuda
+
+Quando o pedido exige **ler muito** — trinta documentos de um processo, vários processos da caixa —, o agente entrega essas leituras a **agentes auxiliares**, que trabalham em paralelo com contexto próprio e devolvem só a resposta. Na conversa aparece uma linha *Delegar N tarefas de leitura*.
+
+Isso existe por dois motivos práticos: a conversa principal não fica entupida de texto que ninguém vai reler, e você não paga de novo por esse texto a cada pergunta seguinte.
+
+O auxiliar tem limites rígidos: **só ferramentas de leitura** (ele não escreve no SEI, não pede aprovação e não assina), não vê a conversa, não pode delegar de novo e trabalha por poucos passos. O gasto dele entra no mesmo contador, no topo do painel.
+
 ### Regras da unidade
 
 Há coisas que, no seu setor, o agente simplesmente não deve fazer — e isso não pode depender de o modelo lembrar de uma instrução. Em **Configuração → Regras da unidade** você escreve a regra, e quem a aplica é o **próprio SEI Pro**, antes de qualquer alteração:

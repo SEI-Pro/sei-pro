@@ -227,6 +227,32 @@ export async function verificarMotor(): Promise<void> {
     checar("sem cartao quando nada muda", u.planos.length === 0);
   }
 
+  secao("delegar: agente auxiliar");
+  const delegarTool = [...TOOLS_MOTOR].find((t) => t.nome === "delegar")!;
+  checar("e interna: nao escreve no SEI", delegarTool.efeito === "interna");
+  const pedidas: string[] = [];
+  const ctxComAuxiliar = {
+    sinal: new AbortController().signal,
+    delegar: async (t: string) => {
+      pedidas.push(t);
+      return `resposta de ${t}`;
+    },
+  } as never;
+  const r1 = (await delegarTool.executar({ tarefas: ["ler A", "ler B"] }, ctxComAuxiliar)) as { respostas: Array<{ tarefa: string; resultado?: string; erro?: string }> };
+  checar("uma resposta por tarefa", r1.respostas.length === 2 && r1.respostas[1].resultado === "resposta de ler B", r1);
+  checar("as tarefas vao como escritas", pedidas.join("|") === "ler A|ler B");
+  const r2 = (await delegarTool.executar({ tarefas: ["a", "b", "c", "d", "e"] }, ctxComAuxiliar)) as { respostas: unknown[] };
+  checar("no maximo 3 por vez", r2.respostas.length === 3);
+  const semAuxiliar = (await delegarTool.executar({ tarefas: ["x"] }, { sinal: new AbortController().signal } as never)) as { erro?: string };
+  checar("sem auxiliar disponivel, avisa em vez de quebrar", Boolean(semAuxiliar.erro));
+  const comFalha = (await delegarTool.executar({ tarefas: ["x"] }, {
+    sinal: new AbortController().signal,
+    delegar: async () => {
+      throw new Error("o auxiliar caiu");
+    },
+  } as never)) as { respostas: Array<{ erro?: string }> };
+  checar("falha do auxiliar volta como erro daquela tarefa", comFalha.respostas[0].erro === "o auxiliar caiu");
+
   secao("tools: contrato");
   checar("toda escrita tem previa", tools.todas().every((t) => t.efeito === "leitura" || t.efeito === "interna" || typeof t.previsualizar === "function"));
   checar("todo esquema e objeto", tools.todas().every((t) => t.parametros.type === "object"));

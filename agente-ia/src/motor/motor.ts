@@ -45,6 +45,8 @@ export interface OpcoesMotor {
    * oferece para aprovar.
    */
   regras?: (passos: Array<{ tool: string; rotulo: string; args: Record<string, unknown> }>) => { bloqueios: unknown[]; avisos: string[]; recado: string };
+  /** Roda um agente auxiliar de leitura com contexto próprio (ver painel/main.ts). */
+  delegar?: (tarefa: string, sinal: AbortSignal) => Promise<string>;
   /** Lê a tela atual da aba do SEI. */
   tela?: (sinal: AbortSignal) => Promise<TelaAtual | null>;
   limitePassos?: number;
@@ -112,9 +114,12 @@ export class Motor {
     this.controlador?.abort();
   }
 
-  async enviar(texto: string): Promise<void> {
+  /** `cancelar`: sinal de fora (o auxiliar morre junto com a rodada que o criou). */
+  async enviar(texto: string, cancelar?: AbortSignal): Promise<void> {
     if (this.controlador) throw new ErroMotor("O agente ainda est\u00E1 trabalhando no pedido anterior.");
     const controlador = (this.controlador = new AbortController());
+    cancelar?.addEventListener("abort", () => controlador.abort(), { once: true });
+    if (cancelar?.aborted) controlador.abort();
     const sinal = controlador.signal;
     try {
       const tela = this.o.tela ? await this.o.tela(sinal).catch(() => null) : null;
@@ -176,6 +181,7 @@ export class Motor {
       },
       pessoasVistas: (nomes) => this.o.privacidade.registrarPessoas(nomes),
       ui: this.o.ui,
+      ...(this.o.delegar ? { delegar: this.o.delegar } : {}),
       ...extra,
     };
   }

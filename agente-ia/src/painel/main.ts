@@ -1148,6 +1148,70 @@ class App {
   }
 
   /**
+   * Agente auxiliar para uma tarefa de leitura.
+   *
+   * O motivo de existir é o contexto: ler trinta documentos para responder uma
+   * pergunta enche a conversa principal de texto que ninguém vai reler — e que
+   * é pago de novo a cada rodada seguinte. O auxiliar lê no lugar dela e
+   * devolve só a resposta.
+   *
+   * Três limites, por segurança e por custo: ferramentas SÓ de leitura (ele
+   * não escreve no SEI nem pede aprovação), sem delegar de novo (nada de
+   * recursão), e poucos passos. A tabela de pseudônimos é a MESMA da conversa
+   * principal: [PESSOA_1] precisa ser a mesma pessoa nos dois lados.
+   */
+  private async delegar(tarefa: string, sinal: AbortSignal): Promise<string> {
+    const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => t.efeito === "leitura" || t.nome === "skill_ler");
+    let resposta = "";
+    const auxiliar = new Motor({
+      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo, ajustes: this.config.ajustes }),
+      tools: new RegistroTools(soLeitura),
+      privacidade: this.privacidade,
+      sei: (op, args, s2) => this.ponte.executar(op, args, s2),
+      limitePassos: 14,
+      sistema: (tela) =>
+        `${promptSistema(tela, new Date(), this.config.instrucoes, this.skills)}
+
+Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\u00E3o fala com o usu\u00E1rio.
+- S\u00F3 tem ferramentas de leitura. N\u00E3o prometa nem planeje escrita.
+- N\u00E3o pergunte nada: se faltar informa\u00E7\u00E3o, diga o que faltou na resposta.
+- Responda em UMA mensagem final, completa e objetiva, com os n\u00FAmeros (n\u00BA SEI, protocolo) que embasam cada afirma\u00E7\u00E3o. Quem vai ler \u00E9 outro agente, n\u00E3o uma pessoa.`,
+      tela: async (s2) => ({ ...((await this.ponte.executar("tela", {}, s2)) as TelaAtual), editores: this.ponte.editores() }),
+      ui: {
+        texto: (d) => (resposta += d),
+        fimDaResposta: () => undefined,
+        toolIniciada: (_id, _nome, rotulo) => this.mostrarProgressoAuxiliar(rotulo),
+        toolTerminada: () => undefined,
+        // Um auxiliar que pergunta ou pede aprovação travaria a conversa: aqui
+        // as respostas são "não" e a tarefa volta com o que faltou.
+        aprovarPlano: async () => ({ aprovado: false, motivo: "O auxiliar n\u00E3o escreve no SEI." }),
+        progressoPlano: () => undefined,
+        consentir: async () => false,
+        perguntar: async () => "Sem resposta: responda com o que conseguiu apurar.",
+        tarefas: () => undefined,
+        uso: (u) => {
+          // O gasto do auxiliar é gasto da conversa: soma no mesmo contador.
+          this.uso = { entrada: this.uso.entrada + u.entrada, saida: this.uso.saida + u.saida, custo: this.uso.custo + u.custo };
+          this.mostrarUso();
+        },
+        aviso: () => undefined,
+      },
+    });
+    try {
+      await auxiliar.enviar(tarefa, sinal);
+    } finally {
+      auxiliar.parar();
+    }
+    return resposta.trim() || "O auxiliar n\u00E3o conseguiu apurar nada.";
+  }
+
+  /** Mostra no indicador de trabalho o que o auxiliar está fazendo agora. */
+  private mostrarProgressoAuxiliar(rotulo: string): void {
+    const palavra = this.elPensando.querySelector(".palavra");
+    if (palavra) palavra.textContent = `Auxiliar: ${rotulo}`;
+  }
+
+  /**
    * Desfaz uma ação já aplicada no SEI, pela operação inversa.
    *
    * Vai direto pela ponte, sem passar pelo modelo: desfazer é decisão do
@@ -1547,6 +1611,7 @@ class App {
       privacidade: this.privacidade,
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
       sistema: (tela) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills),
+      delegar: (tarefa, sinal) => this.delegar(tarefa, sinal),
       regras: (passos) => {
         const v = avaliarRegras(this.regras, passos);
         return { bloqueios: v.bloqueios, avisos: v.avisos.map((a) => `${a.regra.mensagem} (regra "${a.regra.nome}")`), recado: recadoDoBloqueio(v) };
