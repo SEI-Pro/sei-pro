@@ -9,6 +9,7 @@
 
 import type { Etapa, Fluxo } from "../fluxos/modelo";
 import type { AndamentoModelo, DocumentoModelo } from "../fluxos/inferir";
+import type { MotivoSemSugestao } from "../fluxos/avaliar";
 
 /** Lista de textos num campo só: uma por linha lê melhor que separada por vírgula. */
 export const paraLinhas = (lista: string[] | undefined): string => (lista ?? []).join("\n");
@@ -94,4 +95,56 @@ export function andamentosDoHistorico(resposta: unknown): AndamentoModelo[] {
   return lista
     .filter((a): a is { data?: unknown; unidade?: unknown; descricao?: unknown } => Boolean(a) && typeof a === "object")
     .map((a) => ({ data: String(a.data ?? ""), unidade: typeof a.unidade === "string" ? a.unidade : undefined, descricao: String(a.descricao ?? "") }));
+}
+
+const ONDE = "O cartão aparece no painel do Agente de IA, no topo da conversa.";
+
+/**
+ * O que o Estúdio diz sobre o processo aberto na aba do SEI.
+ *
+ * É a resposta para "criei o fluxo, abri o processo e não apareceu nada". Cada
+ * silêncio da avaliação vira uma frase que diz O QUE FAZER: errou o tipo, o
+ * rito ainda não começou, já acabou, você mesmo silenciou — ou está certo, e o
+ * cartão está no painel. Uma tela muda deixa o usuário sem saber se errou ou se
+ * a ferramenta quebrou.
+ */
+export function textoDoDiagnostico(o: {
+  /** `undefined` com `temSugestao` = há cartão. */
+  motivo?: MotivoSemSugestao | "sem-aba" | "fluxo-desligado";
+  temSugestao?: boolean;
+  protocolo?: string;
+  tipo?: string;
+  /** Nome da etapa que o motivo cita (a que falta, a atual, a primeira, a ignorada). */
+  etapa?: string;
+  cumpridas?: number;
+  total?: number;
+}): string {
+  const onde = o.protocolo ? `Em ${o.protocolo}` : "No processo aberto";
+  const etapa = o.etapa ? `"${o.etapa}"` : "a próxima etapa";
+  if (o.temSugestao) {
+    const quantas = o.cumpridas !== undefined && o.total !== undefined ? ` (${o.cumpridas} de ${o.total} etapas cumpridas)` : "";
+    return `${onde}, este fluxo aponta ${etapa} como próxima providência${quantas}. ${ONDE}`;
+  }
+  switch (o.motivo) {
+    case "sem-aba":
+      return `Nenhuma aba do SEI conectada. Abra o SEI nesta janela para ver o que este fluxo diria do processo na tela.`;
+    case "fluxo-desligado":
+      return `Este fluxo está desligado, e fluxo desligado não sugere. Ligue-o aqui embaixo para testá-lo no processo aberto.`;
+    case "sem-processo":
+      return `A aba do SEI não tem processo aberto. Abra um processo para ver o que este fluxo diria dele. ${ONDE}`;
+    case "sigiloso":
+      return `O processo aberto é sigiloso, e o SEI Pro não atua em processo sigiloso.`;
+    case "nao-se-aplica":
+      return `Este fluxo NÃO se aplica ao processo aberto${o.protocolo ? ` (${o.protocolo})` : ""}${o.tipo ? `, do tipo "${o.tipo}"` : ""}. Confira "Quando este fluxo se aplica".`;
+    case "rito-nao-comecou":
+      return `${onde}, nada deste rito foi cumprido ainda: a primeira etapa é ${etapa}. A sugestão só vem depois que ela aparecer nos autos — o cartão mostra o documento anterior, e aqui não há nenhum.`;
+    case "rito-cumprido": {
+      const quantas = o.cumpridas !== undefined ? `${o.cumpridas}${o.total !== undefined ? ` de ${o.total}` : ""} etapa(s) cumprida(s)` : "o rito cumprido";
+      return `${onde}, este fluxo não tem lacuna: ${quantas}${o.etapa ? `, a última ${etapa}` : ""}. Nada a sugerir — é o que se espera de um processo que percorreu o rito.`;
+    }
+    case "ignorada":
+      return `${onde}, falta ${etapa}, mas você mandou ignorar essa etapa neste processo. Para vê-la de novo, apague o "ignorar" ou teste em outro processo.`;
+    default:
+      return `Não foi possível conferir o processo aberto agora. Recarregue esta página, ou recarregue a aba do SEI.`;
+  }
 }

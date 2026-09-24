@@ -151,12 +151,62 @@ export interface Sugestao {
  * o primeiro não deu é o caminho curto para o ruído.
  */
 export function escolherSugestao(fluxos: Fluxo[], processo: ProcessoNaTela, ignorados: Ignorados): Sugestao | null {
-  // Processo sigiloso está fora de todo o agente, e daqui também.
-  if (processo.sigiloso) return null;
-  const fluxo = fluxos.find((f) => f.ativo && aplicaAoProcesso(f, processo));
-  if (!fluxo) return null;
+  return diagnosticar(fluxos, processo, ignorados).sugestao;
+}
+
+/**
+ * Por que NÃO há sugestão.
+ *
+ * "Nada aconteceu" é o pior resultado possível: quem mapeou o rito, ligou o
+ * fluxo e abriu o processo não tem como saber se errou o tipo, se o rito já
+ * está cumprido ou se a ferramenta quebrou. Cada silêncio tem um motivo, e a
+ * tela sabe explicar cada um.
+ */
+export type MotivoSemSugestao =
+  /** Não há processo aberto na tela do SEI. */
+  | "sem-processo"
+  | "sigiloso"
+  /** Nenhum fluxo cadastrado, ou nenhum ligado. */
+  | "sem-fluxo-ligado"
+  /** Há fluxo ligado, mas nenhum casa este processo. */
+  | "nao-se-aplica"
+  /** O fluxo casa, mas nada dele foi cumprido ainda: sem etapa anterior não há cartão. */
+  | "rito-nao-comecou"
+  /** O fluxo casa e não falta nada. */
+  | "rito-cumprido"
+  /** A lacuna existe, mas o usuário mandou ignorá-la neste processo. */
+  | "ignorada";
+
+export interface Diagnostico {
+  sugestao: Sugestao | null;
+  /** Ausente quando há sugestão. */
+  motivo?: MotivoSemSugestao;
+  /** Fluxo que se aplica ao processo, mesmo quando não há sugestão. */
+  fluxo?: Fluxo;
+  avaliacao?: Avaliacao;
+  /** Em "rito-nao-comecou": a etapa que o fluxo espera primeiro. */
+  primeira?: Etapa;
+  /** Em "ignorada": a lacuna que existe mas está silenciada. */
+  lacunaIgnorada?: Lacuna;
+}
+
+export function diagnosticar(fluxos: Fluxo[], processo: ProcessoNaTela | null, ignorados: Ignorados): Diagnostico {
+  if (!processo) return { sugestao: null, motivo: "sem-processo" };
+  if (processo.sigiloso) return { sugestao: null, motivo: "sigiloso" };
+  const ligados = fluxos.filter((f) => f.ativo);
+  if (!ligados.length) return { sugestao: null, motivo: "sem-fluxo-ligado" };
+  const fluxo = ligados.find((f) => aplicaAoProcesso(f, processo));
+  if (!fluxo) return { sugestao: null, motivo: "nao-se-aplica" };
+
   const avaliacao = avaliarFluxo(fluxo, processo);
-  if (!avaliacao.lacuna) return null;
-  if (foiIgnorada(ignorados, processo.protocolo, avaliacao.lacuna.etapa.id)) return null;
-  return { fluxo, avaliacao, lacuna: avaliacao.lacuna };
+  if (!avaliacao.lacuna) {
+    // Sem nada cumprido o rito nem começou; com tudo cumprido, acabou. São
+    // silêncios diferentes, e o usuário precisa saber qual dos dois é.
+    const motivo = avaliacao.cumpridas.length ? "rito-cumprido" : "rito-nao-comecou";
+    return { sugestao: null, motivo, fluxo, avaliacao, ...(motivo === "rito-nao-comecou" ? { primeira: fluxo.etapas[0] } : {}) };
+  }
+  if (foiIgnorada(ignorados, processo.protocolo, avaliacao.lacuna.etapa.id)) {
+    return { sugestao: null, motivo: "ignorada", fluxo, avaliacao, lacunaIgnorada: avaliacao.lacuna };
+  }
+  return { sugestao: { fluxo, avaliacao, lacuna: avaliacao.lacuna }, fluxo, avaliacao };
 }

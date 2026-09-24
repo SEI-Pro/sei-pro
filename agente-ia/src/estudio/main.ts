@@ -18,12 +18,15 @@ import { h, icone } from "../painel/dom";
 import { PontePainel } from "../ponte/cliente";
 import { criarProvedor, MODELO_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
 import { inferirFluxo, type ProcessoModelo } from "../fluxos/inferir";
-import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "./campos";
+import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance, textoDoDiagnostico } from "./campos";
+import type { RespostaFluxo } from "../ponte/operacoes";
+import type { TelaAtual } from "../motor/motor";
 import {
   etapaNova,
   fluxoNovo,
   guardarFluxos,
   listarFluxos,
+  listarIgnorados,
   validarFluxo,
   CHAVE_FLUXOS,
   type Etapa,
@@ -61,6 +64,10 @@ class Estudio {
   /** Divergências e descartes da última inferência, para mostrar junto da proposta. */
   private notas: { divergencias: string[]; avisos: string[] } = { divergencias: [], avisos: [] };
   private elAba!: HTMLElement;
+  /** Bloco que explica, ao vivo, o que este fluxo diria do processo na tela. */
+  private elDiagnostico!: HTMLElement;
+  /** Estado já conferido: a aba se reapresenta a cada 5 s, e refazer a conta nessa cadência seria carga à toa. */
+  private chaveConferencia = "";
   private elLado!: HTMLElement;
   private elObra!: HTMLElement;
 
@@ -69,7 +76,10 @@ class Estudio {
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<ConfigIA> | undefined;
     this.config = { ...this.config, ...salvo };
     this.fluxos = await listarFluxos();
-    this.ponte.aoMudar(() => this.mostrarAba());
+    this.ponte.aoMudar(() => {
+      this.mostrarAba();
+      void this.conferirNaTela();
+    });
     // O painel também mexe nos fluxos ("não sugerir este fluxo" desliga um).
     // Enquanto há edição em curso, a tela NÃO se recarrega: perder o que a
     // pessoa está digitando por causa de um clique na outra janela seria pior
@@ -210,6 +220,7 @@ class Estudio {
     }
 
     const elPendencias = h("div", {});
+    this.elDiagnostico = h("div", {});
     const elSalvar = h("button", { class: "primario", onclick: () => void this.salvar() }, icone("check", 16), this.novo ? "Salvar fluxo" : "Salvar alterações");
     this.revalidar = () => {
       const faltam = validarFluxo(r);
@@ -277,6 +288,8 @@ class Estudio {
 
         elPendencias,
 
+        this.elDiagnostico,
+
         h(
           "div",
           { class: "acoes-obra" },
@@ -287,6 +300,50 @@ class Estudio {
       ),
     );
     this.revalidar();
+    void this.conferirNaTela(true);
+  }
+
+  /**
+   * O que ESTE fluxo diria do processo aberto na aba do SEI, agora.
+   *
+   * Existe porque a tela sem isto é muda: quem mapeia o rito, liga o fluxo,
+   * abre o processo e não vê nada não tem como saber se errou o tipo, se o rito
+   * já acabou ou se a ferramenta quebrou. Aqui o silêncio vira frase.
+   *
+   * Avalia SÓ o fluxo aberto na tela — no painel vale o primeiro fluxo ligado
+   * que se aplica, e a pergunta aqui é sobre este.
+   */
+  private async conferirNaTela(forcar = false): Promise<void> {
+    const r = this.rascunho;
+    if (!this.elDiagnostico || !r) return;
+    const aba = this.ponte.atual();
+    const chave = `${r.id}|${r.ativo}|${aba?.id ?? ""}|${aba?.contexto ?? ""}`;
+    if (!forcar && chave === this.chaveConferencia) return;
+    this.chaveConferencia = chave;
+    const mostrar = (texto: string, classe = "") => {
+      if (this.rascunho !== r) return; // trocou de fluxo enquanto a resposta vinha
+      this.elDiagnostico.replaceChildren(h("div", { class: `nota ${classe}` }, icone(classe === "atencao" ? "alerta" : "lampada", 15), h("span", {}, texto)));
+    };
+    // Fluxo desligado vem ANTES da aba: é sobre o que a pessoa está editando, e
+    // vale com ou sem SEI aberto.
+    if (!r.ativo) return mostrar(textoDoDiagnostico({ motivo: "fluxo-desligado" }), "atencao");
+    if (!aba) return mostrar(textoDoDiagnostico({ motivo: "sem-aba" }), "atencao");
+
+    const tela = (await this.ponte.executar("tela", {}).catch(() => null)) as TelaAtual | null;
+    const processo = tela?.processo?.protocolo;
+    if (!processo) return mostrar(textoDoDiagnostico({ motivo: "sem-processo" }), "atencao");
+
+    const resp = (await this.ponte
+      .executar("fluxo.avaliar", { processo, tipo: tela?.processo?.tipo, fluxos: [r], ignorados: await listarIgnorados(), unidade: tela?.unidade })
+      .catch(() => null)) as RespostaFluxo | null;
+    if (!resp) return mostrar(textoDoDiagnostico({}), "atencao");
+    const nome = (id?: string) => r.etapas.find((e) => e.id === id)?.nome;
+    const comum = { protocolo: resp.protocolo ?? processo, tipo: resp.tipo ?? tela?.processo?.tipo, cumpridas: resp.cumpridas, total: r.etapas.length };
+    if (resp.sugestao) return mostrar(textoDoDiagnostico({ ...comum, temSugestao: true, etapa: nome(resp.sugestao.etapaId) }));
+    mostrar(
+      textoDoDiagnostico({ ...comum, motivo: resp.motivo, etapa: nome(resp.etapaAtualId ?? resp.primeiraId ?? resp.etapaIgnoradaId) }),
+      resp.motivo === "rito-cumprido" ? "" : "atencao",
+    );
   }
 
   /**

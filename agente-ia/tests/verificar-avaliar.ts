@@ -7,7 +7,7 @@
  * estava lá ANTES da Nota Técnica não cumpre a etapa que vem depois dela.
  */
 
-import { avaliarFluxo, escolherSugestao, type DocumentoNaArvore, type ProcessoNaTela } from "../src/fluxos/avaliar";
+import { avaliarFluxo, diagnosticar, escolherSugestao, type DocumentoNaArvore, type ProcessoNaTela } from "../src/fluxos/avaliar";
 import { processoParaFluxo } from "../src/ponte/operacoes";
 import type { Arvore, DocumentoArvore } from "@nucleo/dominio/arvore";
 import { etapaNova, fluxoNovo, type Etapa, type Fluxo } from "../src/fluxos/modelo";
@@ -189,4 +189,46 @@ export function verificarProcessoDaArvore(): void {
 
   const links = processoParaFluxo(arvore([doc({})]));
   checar("nada de link assinado do SEI atravessa", !JSON.stringify(links).includes("infra_hash") && !("link" in links.documentos[0]));
+}
+
+/**
+ * Por que NÃO apareceu sugestão.
+ *
+ * "Nada aconteceu" é o pior resultado possível: o usuário mapeou o rito, ligou
+ * o fluxo, abriu o processo e não tem como saber se errou o tipo, se o rito já
+ * está cumprido ou se a ferramenta está quebrada. Cada silêncio precisa de um
+ * motivo que a tela saiba explicar.
+ */
+export function verificarDiagnostico(): void {
+  const NT = etapa("Nota Técnica", { documento: { tituloContem: ["Nota Técnica"] } });
+  const DESP = etapa("Despacho", { documento: { tituloContem: ["Despacho"] } });
+  const f = (p: Partial<Fluxo> = {}): Fluxo => ({ ...fluxoNovo("Rito"), ativo: true, etapas: [NT, DESP], ...p });
+  const proc = (docs: DocumentoNaArvore[], p: Partial<ProcessoNaTela> = {}): ProcessoNaTela => ({
+    protocolo: "1", tipo: "Contratação Direta", marcadores: [], unidade: "GESP-TESTE", documentos: docs, ...p,
+  });
+
+  secao("avaliar: por que nao apareceu sugestao");
+  checar("sem fluxo ligado", diagnosticar([f({ ativo: false })], proc([]), {}).motivo === "sem-fluxo-ligado");
+  checar("nenhum fluxo ligado se aplica", diagnosticar([f({ aplicaSe: { tipoProcessoContem: ["Gestão"] } })], proc([]), {}).motivo === "nao-se-aplica");
+  checar("processo sigiloso", diagnosticar([f()], proc([], { sigiloso: true }), {}).motivo === "sigiloso");
+
+  const naoComecou = diagnosticar([f()], proc([doc("Ofício 1")]), {});
+  checar("o rito nem comecou", naoComecou.motivo === "rito-nao-comecou", naoComecou.motivo);
+  checar("e ja diz qual fluxo se aplica", naoComecou.fluxo?.nome === "Rito");
+  checar("e qual etapa seria a primeira", naoComecou.primeira?.nome === "Nota Técnica", naoComecou.primeira?.nome);
+
+  const cumprido = diagnosticar([f()], proc([doc("Nota Técnica 1"), doc("Despacho 2")]), {});
+  checar("rito cumprido", cumprido.motivo === "rito-cumprido", cumprido.motivo);
+  checar("e diz em que etapa o processo esta", cumprido.avaliacao?.etapaAtual?.nome === "Despacho");
+
+  const comLacuna = diagnosticar([f()], proc([doc("Nota Técnica 1")]), {});
+  checar("com lacuna, nao ha motivo: ha sugestao", comLacuna.motivo === undefined && comLacuna.sugestao !== null);
+  checar("e a sugestao e a etapa que falta", comLacuna.sugestao?.lacuna.etapa.nome === "Despacho");
+
+  const ignorada = diagnosticar([f()], proc([doc("Nota Técnica 1")]), { "1": [{ etapaId: DESP.id, quando: 1 }] });
+  checar("lacuna ignorada naquele processo", ignorada.motivo === "ignorada", ignorada.motivo);
+  checar("e ainda diz qual etapa foi ignorada", ignorada.lacunaIgnorada?.etapa.nome === "Despacho");
+
+  checar("sem processo na tela", diagnosticar([f()], null, {}).motivo === "sem-processo");
+  checar("sem fluxo nenhum cadastrado", diagnosticar([], proc([]), {}).motivo === "sem-fluxo-ligado");
 }

@@ -50,7 +50,7 @@ import { extrairTextoPdf } from "./pdf";
 import { detalhesDaSugestao, textoDaSugestao } from "../fluxos/cartao";
 import { CHAVE_FLUXOS, comIgnorada, guardarFluxos, guardarIgnorados, listarFluxos, listarIgnorados, type Fluxo, type Ignorados } from "../fluxos/modelo";
 // `import type`: o esbuild descarta, e o bundle do painel nao ganha o sei-nucleo.
-import type { SugestaoDeFluxo } from "../ponte/operacoes";
+import type { RespostaFluxo, SugestaoDeFluxo } from "../ponte/operacoes";
 
 interface Config {
   /** Mostrar o gasto em reais, pela cotação do dia. */
@@ -469,11 +469,14 @@ class App {
   private async avaliarFluxos(): Promise<void> {
     const processo = this.tela?.processo?.protocolo;
     const vale = Boolean(processo) && !this.tela?.sigiloso && this.fluxos.some((f) => f.ativo);
-    this.sugestaoDeFluxo = vale
+    // `tipo` vai de graça (a tela já o tem) e poupa a busca da árvore quando
+    // nenhum fluxo ligado pode casar com um processo desse tipo.
+    const r = vale
       ? ((await this.ponte
-          .executar("fluxo.avaliar", { processo, fluxos: this.fluxos, ignorados: this.fluxosIgnorados, unidade: this.tela?.unidade })
-          .catch(() => null)) as SugestaoDeFluxo | null)
+          .executar("fluxo.avaliar", { processo, tipo: this.tela?.processo?.tipo, fluxos: this.fluxos, ignorados: this.fluxosIgnorados, unidade: this.tela?.unidade })
+          .catch(() => null)) as RespostaFluxo | null)
       : null;
+    this.sugestaoDeFluxo = r?.sugestao ?? null;
     this.desenharSugestaoDeFluxo();
   }
 

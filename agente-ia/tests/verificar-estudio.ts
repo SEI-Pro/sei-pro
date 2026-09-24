@@ -8,7 +8,7 @@
  * ao cartão prometendo um botão que não faz nada.
  */
 
-import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance } from "../src/estudio/campos";
+import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance, textoDoDiagnostico } from "../src/estudio/campos";
 import { etapaNova, fluxoNovo, type Fluxo } from "../src/fluxos/modelo";
 import { checar, secao } from "./util";
 
@@ -99,4 +99,48 @@ export function verificarHistoricoDoModelo(): void {
   checar("resposta vazia nao quebra", andamentosDoHistorico(undefined).length === 0 && andamentosDoHistorico(null).length === 0);
   checar("resposta inesperada nao quebra", andamentosDoHistorico({ erro: "x" }).length === 0 && andamentosDoHistorico("nada").length === 0);
   checar("item torto e descartado", andamentosDoHistorico({ andamentos: [null, 3, { data: "1", descricao: "ok" }] }).length === 1);
+}
+
+/**
+ * O que o Estúdio diz sobre o processo que está na tela.
+ *
+ * Esta é a resposta para a pergunta que o usuário fez olhando uma tela muda:
+ * "criei o fluxo, abri o processo, e não apareceu nada". Cada silêncio tem de
+ * virar uma frase que diga O QUE FAZER — errou o tipo, o rito já acabou, o
+ * processo nem começou, ou está certo e o cartão está no painel.
+ */
+export function verificarTextoDoDiagnostico(): void {
+  const t = (o: Parameters<typeof textoDoDiagnostico>[0]) => textoDoDiagnostico(o);
+
+  secao("estudio: o diagnostico da tela");
+  checar("sem aba manda abrir o SEI", /abra o SEI|aba do SEI/i.test(t({ motivo: "sem-aba" })));
+  checar("fluxo desligado diz que precisa ligar", /ligue|desligado/i.test(t({ motivo: "fluxo-desligado" })));
+  checar("sem processo manda abrir um processo", /abra um processo/i.test(t({ motivo: "sem-processo" })));
+  checar("sigiloso diz que nao atua", /sigiloso/i.test(t({ motivo: "sigiloso", protocolo: "1" })));
+
+  const naoAplica = t({ motivo: "nao-se-aplica", protocolo: "50300.1/2025-9", tipo: "Gestão de Pessoal" });
+  checar("nao-se-aplica cita o tipo do processo aberto", naoAplica.includes("Gestão de Pessoal"), naoAplica);
+  checar("e aponta onde corrigir", /quando este fluxo se aplica/i.test(naoAplica), naoAplica);
+
+  const naoComecou = t({ motivo: "rito-nao-comecou", protocolo: "P1", etapa: "Ordem de Serviço" });
+  checar("rito-nao-comecou cita a primeira etapa", naoComecou.includes("Ordem de Serviço"), naoComecou);
+  checar("e explica que o cartao so vem depois dela", /depois/i.test(naoComecou), naoComecou);
+
+  const cumprido = t({ motivo: "rito-cumprido", protocolo: "P1", etapa: "Termo de Arquivamento", cumpridas: 11, total: 11 });
+  checar("rito-cumprido diz que nao falta nada", /nada a sugerir|sem lacuna|não falta/i.test(cumprido), cumprido);
+  checar("e diz quantas etapas casaram", cumprido.includes("11"), cumprido);
+
+  const ignorada = t({ motivo: "ignorada", protocolo: "P1", etapa: "Despacho" });
+  checar("ignorada lembra que foi o usuario que silenciou", /ignorar|ignorou/i.test(ignorada), ignorada);
+
+  const boa = t({ temSugestao: true, protocolo: "P1", etapa: "Despacho de aprovação", cumpridas: 2, total: 3 });
+  checar("com sugestao, diz qual etapa falta", boa.includes("Despacho de aprovação"), boa);
+  checar("e diz ONDE o cartao aparece", /painel do Agente de IA/i.test(boa), boa);
+  checar("o protocolo aparece quando ha processo", boa.includes("P1"), boa);
+
+  secao("estudio: o diagnostico nao promete o que nao sabe");
+  for (const m of ["sem-aba", "fluxo-desligado", "sem-processo"] as const) {
+    checar(`"${m}" nao inventa protocolo`, !t({ motivo: m }).includes("undefined"), t({ motivo: m }));
+  }
+  checar("motivo desconhecido nao quebra", t({ motivo: undefined }).length > 0);
 }

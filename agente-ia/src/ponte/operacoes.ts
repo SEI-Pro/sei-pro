@@ -40,8 +40,8 @@ import { ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
 import type { TelaAtual } from "../motor/motor";
-import { escolherSugestao, type ProcessoNaTela } from "../fluxos/avaliar";
-import type { Fluxo, Ignorados } from "../fluxos/modelo";
+import { diagnosticar, type MotivoSemSugestao, type ProcessoNaTela } from "../fluxos/avaliar";
+import { contem, type Fluxo, type Ignorados } from "../fluxos/modelo";
 
 type Op = (sei: Sei, a: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>;
 
@@ -253,6 +253,48 @@ export interface SugestaoDeFluxo {
 }
 
 /**
+ * O que a ponte devolve em `fluxo.avaliar`.
+ *
+ * Quando não há sugestão, vem o MOTIVO. "Nada aconteceu" é o pior resultado
+ * possível: quem mapeou o rito, ligou o fluxo e abriu o processo não tem como
+ * saber se errou o tipo, se o rito já está cumprido ou se a ferramenta quebrou.
+ * O Estúdio usa isto para explicar o silêncio na própria tela.
+ */
+export interface RespostaFluxo {
+  sugestao: SugestaoDeFluxo | null;
+  /** Ausente quando há sugestão. */
+  motivo?: MotivoSemSugestao;
+  protocolo?: string;
+  tipo?: string;
+  /** Fluxo que se aplica ao processo, mesmo sem sugestão. */
+  fluxoId?: string;
+  /** "rito-cumprido": última etapa cumprida. */
+  etapaAtualId?: string;
+  /** "rito-nao-comecou": etapa que o fluxo espera primeiro. */
+  primeiraId?: string;
+  /** "ignorada": etapa que falta, mas está silenciada neste processo. */
+  etapaIgnoradaId?: string;
+  cumpridas?: number;
+}
+
+/**
+ * Algum fluxo ligado ainda PODE casar com um processo deste tipo?
+ *
+ * O tipo vem da tela, de graça. Um fluxo que declara tipos e não casa nenhum
+ * está descartado sem ler a árvore — sem isto, uma unidade com um fluxo de PAF
+ * buscaria a árvore de todo processo que abrisse, de qualquer tipo. Fluxo sem
+ * critério de tipo não dá para descartar: esse manda buscar.
+ */
+function podeCasarPeloTipo(fluxos: Fluxo[], tipo: string | undefined): boolean {
+  // Tela sem tipo é DESCONHECIDO, não "nenhum": aí não se descarta nada.
+  if (!tipo) return true;
+  return fluxos.some((f) => {
+    const tipos = f.aplicaSe.tipoProcessoContem;
+    return !tipos?.length || tipos.some((t) => contem(tipo, t));
+  });
+}
+
+/**
  * Avalia os fluxos do usuário contra um processo.
  *
  * BUSCA A ÁRVORE COMPLETA (`sei.arvore`, com as pastas abertas) em vez de ler o
@@ -262,31 +304,53 @@ export interface SugestaoDeFluxo {
  * O fluxo não sugeria nada, sem avisar — e uma ferramenta que lê o processo
  * pela metade não cumpre o papel dela. (Decisão do autor, 23/09/2026.)
  *
- * A carga fica contida por três coisas: só o painel do agente aberto dispara
- * isto; só há busca quando a unidade tem fluxo ligado E há processo na tela; e o
- * `sei.arvore` guarda o que buscou por 30 s, então reabrir o mesmo processo não
- * vira outra requisição.
+ * A carga fica contida por quatro coisas: só o painel do agente aberto dispara
+ * isto; só há busca quando há processo na tela E a unidade tem fluxo ligado; o
+ * tipo da tela já descarta fluxo que não pode casar; e o `sei.arvore` guarda o
+ * que buscou por 30 s.
  *
  * A saída é REDUZIDA a ids e texto: nenhum link assinado nem `infra_hash`
  * atravessa a ponte.
  */
-const avaliarFluxo: Op = async (sei, a, sinal) => {
+const avaliarFluxo: Op = async (sei, a, sinal): Promise<RespostaFluxo> => {
   const fluxos = (a.fluxos as Fluxo[]) ?? [];
   const processo = txt(a.processo);
-  // Nada a fazer: nem gasta a requisição.
-  if (!processo || !fluxos.some((f) => f.ativo)) return null;
+  const tipoDaTela = txt(a.tipo);
+  if (!processo) return { sugestao: null, motivo: "sem-processo" };
+  const ligados = fluxos.filter((f) => f.ativo);
+  if (!ligados.length) return { sugestao: null, motivo: "sem-fluxo-ligado" };
+  if (!podeCasarPeloTipo(ligados, tipoDaTela)) return { sugestao: null, motivo: "nao-se-aplica", tipo: tipoDaTela };
+
   const arv = await sei.arvore(processo, { sinal });
-  if (arv.nivel === "sigiloso") return null;
-  const sugestao = escolherSugestao(fluxos, processoParaFluxo(arv, txt(a.unidade)), (a.ignorados as Ignorados) ?? {});
-  if (!sugestao) return null;
-  return {
+  const d = diagnosticar(ligados, processoParaFluxo(arv, txt(a.unidade)), (a.ignorados as Ignorados) ?? {});
+  const comum: RespostaFluxo = {
+    sugestao: null,
     protocolo: arv.protocolo,
-    fluxoId: sugestao.fluxo.id,
-    etapaId: sugestao.lacuna.etapa.id,
-    etapaAnteriorId: sugestao.lacuna.etapaAnterior.id,
-    anterior: { numero: sugestao.lacuna.anterior.numero, titulo: sugestao.lacuna.anterior.titulo, assinado: sugestao.lacuna.anterior.assinado },
-    cumpridas: sugestao.avaliacao.cumpridas.map((c) => ({ etapaId: c.etapa.id, numero: c.documento.numero, titulo: c.documento.titulo })),
-  } satisfies SugestaoDeFluxo;
+    tipo: arv.tipo,
+    ...(d.fluxo ? { fluxoId: d.fluxo.id } : {}),
+    ...(d.avaliacao ? { cumpridas: d.avaliacao.cumpridas.length } : {}),
+  };
+  if (!d.sugestao) {
+    return {
+      ...comum,
+      motivo: d.motivo,
+      ...(d.avaliacao?.etapaAtual ? { etapaAtualId: d.avaliacao.etapaAtual.id } : {}),
+      ...(d.primeira ? { primeiraId: d.primeira.id } : {}),
+      ...(d.lacunaIgnorada ? { etapaIgnoradaId: d.lacunaIgnorada.etapa.id } : {}),
+    };
+  }
+  const { fluxo, avaliacao, lacuna } = d.sugestao;
+  return {
+    ...comum,
+    sugestao: {
+      protocolo: arv.protocolo,
+      fluxoId: fluxo.id,
+      etapaId: lacuna.etapa.id,
+      etapaAnteriorId: lacuna.etapaAnterior.id,
+      anterior: { numero: lacuna.anterior.numero, titulo: lacuna.anterior.titulo, assinado: lacuna.anterior.assinado },
+      cumpridas: avaliacao.cumpridas.map((c) => ({ etapaId: c.etapa.id, numero: c.documento.numero, titulo: c.documento.titulo })),
+    },
+  };
 };
 
 function bytesParaBase64(b: Uint8Array): string {
