@@ -152,6 +152,10 @@ dist/icons/menu/fluxos.svg  ícone do botão na barra do SEI
   O que continua limitando a carga: só com o painel aberto; só quando há processo na tela **e** a
   unidade tem fluxo ligado; e o cache de 30 s por processo do `sei-nucleo`, então reabrir o mesmo
   processo não vira outra requisição.
+
+  Custo medido no SEI 5 de produção da ANTAQ, contando as chamadas a `controlador.php` da aba:
+  **2 requisições** na primeira vez que um processo é avaliado (`localizar` + `abrirArvore`), **0**
+  nas três avaliações seguintes dentro dos 30 s, e **0** com o fluxo desligado.
 - **Cartão**: no painel, alimentado pela ponte.
 - **Ponto no ícone**: no content script, na barra do SEI (mesmo lugar do ícone do agente).
 - **Estúdio**: página própria, conversa com a aba do SEI pela mesma ponte (para ler processos
