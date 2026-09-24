@@ -554,6 +554,60 @@ const sanitizeHTML = (html) => DOMPurify.sanitize(html, {
     ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|chrome-extension|moz-extension):|[^a-z]|[a-z+\-.]+(?:[^a-z+\-.:]|$))/i
 });
 
+// === INICIO SEI PRO DOM ===
+// Portao unico de insercao de HTML da extensao. Existe por causa da rejeicao da AMO de
+// 17/06/2025 ("Unsanitized DOM injection"): toda marcacao gerada pela extensao passa por
+// aqui, e nenhuma acao viaja mais em atributo on*.
+//
+// POR QUE NAO BASTA CHAMAR sanitizeHTML NOS PONTOS DE INSERCAO. O DOMPurify parseia o
+// fragmento fora do elemento-pai, e o parser de HTML descarta <tr>, <td> e <tbody> que nao
+// estejam dentro de uma tabela: "<tr><td>a</td></tr>" volta como "a". Medido com o
+// purify.min.js 3.2.5 desta pasta. sanitizarFragmentoPro embrulha antes e desembrulha depois.
+var SEIPRO_PURIFY_CONFIG = {
+    // 'target' ja era necessario ao sanitizeHTML; 'accesskey' aparece em 33 pontos da
+    // extensao (a marca de "selecionar tudo" do SEI) e o DOMPurify o remove por padrao.
+    ADD_ATTR: ['target', 'accesskey'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|chrome-extension|moz-extension):|[^a-z]|[a-z+\-.]+(?:[^a-z+\-.:]|$))/i
+};
+
+// Tag inicial do fragmento -> abertura que o parser precisa para nao descartar o conteudo.
+var ENVELOPES_PRO = {
+    tr: '<table>', tbody: '<table>', thead: '<table>', tfoot: '<table>', colgroup: '<table>',
+    td: '<table><tr>', th: '<table><tr>',
+    option: '<select>', optgroup: '<select>',
+    li: '<ul>', dt: '<dl>', dd: '<dl>'
+};
+
+function avisarPro(msg, detalhe) {
+    try { console.warn('[SEIPro] ' + msg, detalhe === undefined ? '' : detalhe); } catch (e) {}
+}
+
+function erroPro(msg, detalhe) {
+    try { console.error('[SEIPro] ' + msg, detalhe === undefined ? '' : detalhe); } catch (e) {}
+}
+
+// Sanitiza um fragmento respeitando o contexto de parsing que ele exige.
+function sanitizarFragmentoPro(html, doc) {
+    doc = doc || document;
+    if (html === null || html === undefined) return '';
+    var texto = String(html);
+    var achadoTag = /^\s*<\s*([a-zA-Z][\w-]*)/.exec(texto);
+    var tag = achadoTag ? achadoTag[1].toLowerCase() : '';
+    var abre = ENVELOPES_PRO[tag];
+    if (!abre) return DOMPurify.sanitize(texto, SEIPRO_PURIFY_CONFIG);
+    // '<table><tr>' -> '</tr></table>'
+    var fecha = abre.match(/[a-z]+/g).reverse().map(function (t) { return '</' + t + '>'; }).join('');
+    var limpo = DOMPurify.sanitize(abre + texto + fecha, SEIPRO_PURIFY_CONFIG);
+    var caixa = doc.createElement('div');
+    caixa.innerHTML = limpo;
+    // O parser insere <tbody> sozinho, entao a profundidade do desembrulho nao e fixa:
+    // acha-se o primeiro elemento da tag original e devolve-se o conteudo do pai dele.
+    var achado = caixa.querySelector(tag);
+    if (!achado || !achado.parentNode) return '';
+    return achado.parentNode.innerHTML;
+}
+// === FIM SEI PRO DOM ===
+
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
 function normalizeHTML(html) {
     return String(html).replace(/\s+/g, ' ').trim();
