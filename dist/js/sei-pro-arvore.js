@@ -2655,6 +2655,47 @@ function initNumericDocsPro(loop = true) {
         });
     }
 }
+// Destaca na arvore os documentos gerados na unidade atual que ainda nao foram assinados. O SEI ja pinta
+// de #cc9e80 o documento nao assinado de OUTRA unidade (no desabilitado); o da propria unidade fica igual
+// aos assinados. A unidade geradora vem da acao UNIDADE_GERADORA (#anchorUG<id>, SEI 4.0+; no 3.x nao
+// existe e a funcao nao marca nada) e a assinatura, da acao ASSINATURA (#anchorA<id>). So entram os
+// documentos do editor (interno e circular): externo e formulario nao se assinam por aqui, e o cancelado
+// troca de icone. Refaz do zero a cada chamada: a arvore recarrega depois de assinar e ao abrir pasta.
+function initDestacarNaoAssinadosPro() {
+    if ($('head').find('style[data-style="seipro-naoassinados"]').length == 0) {
+        $('head').append("<style type='text/css' data-style='seipro-naoassinados'> "
+            +"   #divArvore a.naoAssinadoPro > span[id^='span'] { "
+            +"      box-shadow: inset 2px 0 0 rgba(214, 150, 20, .75);"
+            +"      border-radius: 3px;"
+            +"      padding: 1px 6px 1px 7px;"
+            +"      transition: background .2s ease;"
+            +"    } "
+            // Selecionado: o SEI pinta o texto de branco sobre o fundo dele; o fundo ambar cobriria esse fundo
+            // e o nome sumiria. O selecionado fica so com o filete.
+            +"   #divArvore a.naoAssinadoPro > span[id^='span']:not(.infraArvoreNoSelecionado) { background: rgba(234, 170, 40, .5); } "
+            +"   #divArvore a.naoAssinadoPro:hover > span[id^='span']:not(.infraArvoreNoSelecionado) { background: rgba(234, 170, 40, .6); } "
+            +"   body.dark-mode #divArvore a.naoAssinadoPro > span[id^='span'] { box-shadow: inset 2px 0 0 rgba(240, 190, 80, .8); } "
+            +"   body.dark-mode #divArvore a.naoAssinadoPro > span[id^='span']:not(.infraArvoreNoSelecionado) { background: rgba(240, 190, 80, .16); } "
+            +"</style>");
+    }
+    var sigla = (typeof parent.siglaUnidadeAtual !== 'undefined' && parent.siglaUnidadeAtual) ? parent.siglaUnidadeAtual.trim().toUpperCase() : '';
+    $('#divArvore a.naoAssinadoPro').removeClass('naoAssinadoPro').each(function(){
+        if ($(this).data('naoAssinadoTitlePro') !== undefined) $(this).attr('title', $(this).data('naoAssinadoTitlePro'));
+    });
+    if (!sigla) return;
+    $('#divArvore a[id^="anchorUG"]').each(function(){
+        if ($(this).text().trim().toUpperCase() !== sigla) return;
+        var id = this.id.replace('anchorUG', '');
+        if (document.getElementById('anchorA'+id)) return;
+        var icone = $('#icon'+id).attr('src') || '';
+        if (!/documento_(interno|circular)/.test(icone)) return;
+        var doc = $('#anchor'+id);
+        if (!doc.length) return;
+        var title = doc.attr('title') || '';
+        doc.data('naoAssinadoTitlePro', title).addClass('naoAssinadoPro')
+           .attr('title', (title ? title+' \u2014 ' : '')+'Pendente de assinatura na unidade '+parent.siglaUnidadeAtual.trim());
+    });
+}
 function getSumDocsPasta(loop) {
     if (parent.getOptionsPro('sumDocsPasta')) {
         return parent.getOptionsPro('sumDocsPasta');
@@ -2845,6 +2886,9 @@ function initSeiProArvore(loop = true) {
     }
     if (typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('numerar_documentos') ) { 
         initNumericDocsPro();
+    }
+    if (typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('destacarnaoassinados') ) {
+        initDestacarNaoAssinadosPro();
     }
     if (
         (typeof parent.initAtividadesProcesso === 'function' || typeof parent.initAtividadesProcesso !== 'undefined') && 

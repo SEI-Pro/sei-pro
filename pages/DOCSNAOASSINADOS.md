@@ -37,6 +37,17 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 * O aviso não impede o envio: a decisão continua sendo sua.
 * Em processos com muitos documentos, a conferência pode levar alguns segundos.
 
+### Destacar na árvore os documentos não assinados
+
+Para não depender da tela de envio, o SEI Pro também pode **destacar na árvore do processo** os documentos que a sua unidade criou e ainda não assinou. O nome do documento ganha um fundo âmbar suave, com um filete na lateral, e ao passar o mouse aparece *Pendente de assinatura na unidade*. Quando o documento é assinado, a árvore recarrega e o destaque some.
+
+O destaque não se confunde com a cor que o próprio SEI já usa: o nome em marrom-claro indica documento **de outra unidade** ainda não assinado, que você não consegue abrir.
+
+A função vem **desligada** de fábrica. Para ativar, vá às [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Árvore e Visualização de Documentos**, opção **Destacar na árvore os documentos da unidade ainda não assinados**.
+
+* Valem os mesmos critérios do alerta: documentos **gerados no SEI** (não os externos) e **criados pela sua unidade**.
+* Funciona no SEI 4 e no SEI 5. No SEI 3, a árvore não informa a unidade que gerou o documento, e nada é destacado.
+
 ## Próximo item
 
 > [Numerar documentos na árvore do processo](../pages/NUMERARDOCSARVORE.md)
