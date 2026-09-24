@@ -653,6 +653,112 @@ function estiloPro(doc, chave, css, posicao) {
     else casa.appendChild(el);
     return el;
 }
+
+// Eventos que podem carregar acao em data-spro-<evento>.
+var EVENTOS_ACAO_PRO = ['click', 'change', 'input', 'blur', 'focus', 'keyup', 'keydown',
+    'keypress', 'submit', 'dblclick', 'contextmenu', 'paste', 'mouseenter', 'mouseleave'];
+
+// Resolve "fn", "parent.fn" ou "top.a.b" andando no objeto. Sem eval, sem new Function.
+// Devolve tambem o dono, para que a chamada preserve o 'this' que o onclick tinha:
+// "parent.fn(x)" chamava com this = parent, e "fn(x)" com this = window.
+function resolverAcaoPro(nome, win) {
+    if (!/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(String(nome))) return null;
+    var partes = String(nome).split('.');
+    var dono = win, atual = win;
+    for (var i = 0; i < partes.length; i++) {
+        if (atual === null || atual === undefined) return null;
+        dono = atual;
+        try { atual = atual[partes[i]]; } catch (e) { return null; } // iframe de outra origem
+    }
+    return (typeof atual === 'function') ? { fn: atual, dono: dono } : null;
+}
+
+// Sem data-spro-args, o argumento e o proprio elemento: cobre fn(this) e fn() de uma vez,
+// porque o JavaScript ignora argumento a mais. Devolve null quando o JSON esta quebrado.
+function argumentosAcaoPro(el, ev) {
+    var bruto = el.getAttribute('data-spro-args');
+    if (bruto === null) return [el];
+    var lista;
+    try { lista = JSON.parse(bruto); } catch (e) { avisarPro('argumentos invalidos', bruto); return null; }
+    if (!(lista instanceof Array)) lista = [lista];
+    var saida = [];
+    for (var i = 0; i < lista.length; i++) {
+        if (lista[i] === '$el') saida.push(el);
+        else if (lista[i] === '$ev') saida.push(ev);
+        else saida.push(lista[i]);
+    }
+    return saida;
+}
+
+// So ancora sem destino real. Prevenir sempre mataria link de navegacao legitima.
+function devePrevenirPro(el) {
+    if (!el || el.tagName !== 'A') return false;
+    var href = el.getAttribute('href');
+    return href === null || href === '' || href === '#' || /^javascript:/i.test(href);
+}
+
+function dispararAcaoPro(el, ev, atributo) {
+    var nome = el.getAttribute(atributo) || '';
+    var win = (el.ownerDocument && el.ownerDocument.defaultView) || window;
+    var alvo = resolverAcaoPro(nome, win);
+    if (!alvo) { avisarPro('acao inexistente: ' + nome, el); return; }
+    var args = argumentosAcaoPro(el, ev);
+    if (args === null) return;
+    if (devePrevenirPro(el)) ev.preventDefault();
+    try { alvo.fn.apply(alvo.dono, args); }
+    catch (e) { erroPro('erro na acao ' + nome, e); }
+}
+
+function mostrarTipPro(el) {
+    var texto = el.getAttribute('data-spro-tip') || '';
+    var win = (el.ownerDocument && el.ownerDocument.defaultView) || window;
+    try {
+        if (el.hasAttribute('data-spro-tip-el')) {
+            if (typeof win._infraTooltipMostrar === 'function') win._infraTooltipMostrar(el, texto);
+        } else if (typeof win.infraTooltipMostrar === 'function') {
+            win.infraTooltipMostrar(texto);
+        }
+    } catch (e) {}
+}
+
+function ocultarTipPro(el) {
+    var win = (el && el.ownerDocument && el.ownerDocument.defaultView) || window;
+    try { if (typeof win.infraTooltipOcultar === 'function') win.infraTooltipOcultar(); } catch (e) {}
+}
+
+// Instala UM despachante por documento, por delegacao a partir do proprio documento --
+// o que cobre tambem o que for inserido depois.
+//
+// SO O MUNDO DA PAGINA INSTALA. Este arquivo roda em duas copias (content script no mundo
+// isolado e $.getScript no mundo da pagina); um despachante em cada mundo dispararia toda
+// acao DUAS VEZES. E as funcoes do SEI (infraTooltipMostrar) e dos demais modulos so
+// existem no mundo da pagina, entao e la que a resolucao tem de acontecer.
+function installActionsPro(doc) {
+    doc = doc || document;
+    var raiz = doc.documentElement;
+    if (!raiz) return false;
+    if (raiz.getAttribute('data-spro-actions') === 'sim') return true;
+    if (isCopiaIsoladaPro()) return false;
+    var $doc = $(doc);
+    for (var i = 0; i < EVENTOS_ACAO_PRO.length; i++) {
+        (function (evento) {
+            var atributo = 'data-spro-' + evento;
+            $doc.on(evento + '.sproAcoes', '[' + atributo + ']', function (e) {
+                dispararAcaoPro(this, e, atributo);
+            });
+        })(EVENTOS_ACAO_PRO[i]);
+    }
+    $doc.on('mouseover.sproAcoes', '[data-spro-tip]', function () { mostrarTipPro(this); });
+    $doc.on('mouseout.sproAcoes', '[data-spro-tip]', function () { ocultarTipPro(this); });
+    raiz.setAttribute('data-spro-actions', 'sim');
+    return true;
+}
+
+// O despachante do documento principal sobe junto com o arquivo, para que marcacao
+// inserida pela copia isolada tambem encontre quem a atenda.
+if (typeof isCopiaIsoladaPro === 'function' && !isCopiaIsoladaPro()) {
+    try { installActionsPro(document); } catch (e) {}
+}
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
