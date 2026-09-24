@@ -606,6 +606,53 @@ function sanitizarFragmentoPro(html, doc) {
     if (!achado || !achado.parentNode) return '';
     return achado.parentNode.innerHTML;
 }
+
+// Insere HTML com sanitizacao. E o unico caminho permitido: o verificador
+// tools/check-dom-injection.mjs reprova .html()/.innerHTML em arquivo ja convertido.
+// Devolve o jQuery do alvo, como .html()/.append()/.after(), para ser drop-in.
+function htmlPro(alvo, html, modo) {
+    var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
+    if (!$alvo.length) { avisarPro('htmlPro: alvo inexistente', alvo); return $alvo; }
+    var doc = $alvo[0].ownerDocument || document;
+    var texto = (html === null || html === undefined) ? '' : String(html);
+    var limpo;
+    if (typeof DOMPurify === 'undefined' || !DOMPurify || typeof DOMPurify.sanitize !== 'function') {
+        // O purify entra por $.getScript, de forma assincrona. Cair para HTML cru aqui
+        // derrotaria o proposito do portao, entao texto puro passa e marcacao nao.
+        if (/[<&]/.test(texto)) { avisarPro('htmlPro: DOMPurify ausente, insercao abortada', texto.slice(0, 80)); return $alvo; }
+        limpo = texto;
+    } else {
+        limpo = sanitizarFragmentoPro(texto, doc);
+    }
+    switch (modo || 'html') {
+        case 'append':  $alvo.append(limpo); break;
+        case 'prepend': $alvo.prepend(limpo); break;
+        case 'before':  $alvo.before(limpo); break;
+        case 'after':   $alvo.after(limpo); break;
+        case 'replace': $alvo.replaceWith(limpo); break;
+        default:        $alvo.html(limpo);
+    }
+    if (typeof installActionsPro === 'function') installActionsPro(doc);
+    return $alvo;
+}
+
+// Bloco <style> por DOM API. O DOMPurify remove <style> do fragmento, e a config
+// permissiva que o deixaria passar enfraqueceria o argumento perante a AMO; como sao
+// poucos pontos, eles constroem o elemento em vez de injetar marcacao.
+function estiloPro(doc, chave, css, posicao) {
+    doc = doc || document;
+    if (!/^[\w-]+$/.test(String(chave))) { avisarPro('estiloPro: chave invalida', chave); return null; }
+    var anterior = doc.querySelector('style[data-style="' + chave + '"]');
+    if (anterior && anterior.parentNode) anterior.parentNode.removeChild(anterior);
+    var el = doc.createElement('style');
+    el.setAttribute('type', 'text/css');
+    el.setAttribute('data-style', chave);
+    el.textContent = String(css);
+    var casa = doc.head || doc.documentElement;
+    if (posicao === 'prepend' && casa.firstChild) casa.insertBefore(el, casa.firstChild);
+    else casa.appendChild(el);
+    return el;
+}
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
