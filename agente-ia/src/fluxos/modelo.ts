@@ -34,6 +34,12 @@ export interface Fluxo {
   modelos?: Array<{ protocolo: string; quando: number }>;
   origem: "manual" | "inferido" | "colecao";
   atualizadoEm: number;
+  /** Coleção da equipe de onde veio (ver `colecao.ts`). */
+  colecao?: string;
+  /** Endereço do arquivo `.md` na pasta da equipe. */
+  url?: string;
+  /** O `.md` como veio, para saber se o arquivo mudou na próxima sincronia. */
+  textoOrigem?: string;
 }
 
 export interface Etapa {

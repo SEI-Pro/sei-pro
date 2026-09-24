@@ -17,6 +17,8 @@ import { verificarOpFluxoAvaliar } from "./verificar-op-fluxo";
 import { verificarDepoisDaEscrita } from "./verificar-depois-escrita";
 import { verificarEstilosDoEditor } from "./verificar-estilos";
 import { verificarSimilares } from "./verificar-similares";
+import { verificarFluxoMarkdown } from "./verificar-fluxo-md";
+import { verificarColecaoDeFluxos } from "./verificar-colecao-fluxos";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -46,4 +48,6 @@ await verificarOpFluxoAvaliar();
 verificarDepoisDaEscrita();
 verificarEstilosDoEditor();
 verificarSimilares();
+await verificarFluxoMarkdown();
+verificarColecaoDeFluxos();
 resumo();

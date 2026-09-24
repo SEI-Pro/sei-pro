@@ -20,6 +20,12 @@ import { criarProvedor, MODELO_PADRAO, type Ajustes, type Servico } from "../mot
 import { inferirFluxo, type ProcessoModelo } from "../fluxos/inferir";
 import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance, textoDoDiagnostico } from "./campos";
 import type { RespostaFluxo } from "../ponte/operacoes";
+import { paraMarkdown } from "../fluxos/markdown";
+import { guardarColecoesDeFluxos, listarColecoesDeFluxos, mesclarColecaoDeFluxos, type ColecaoFluxos } from "../fluxos/colecao";
+// As duas funções de GitHub são as MESMAS das coleções de skills do agente: uma
+// pasta do GitHub é uma pasta do GitHub, e duplicar o tratamento de limite de
+// consultas e de 404 daria dois lugares para corrigir o mesmo erro.
+import { baixarColecao, partesDoGitHub, slugificar } from "../painel/skills";
 import type { TelaAtual } from "../motor/motor";
 import {
   etapaNova,
@@ -47,6 +53,9 @@ interface ConfigIA {
 
 const CHAVE_CONFIG = "agenteIA_config";
 
+/** A pasta da equipe é conferida com folga: a API do GitHub limita por hora. */
+const INTERVALO_COLECAO = 6 * 60 * 60 * 1000;
+
 const SEM_CHAVE = "Isto precisa do Agente de IA configurado: abra o painel do agente e informe a chave do serviço de IA.";
 
 const ORIGEM: Record<Fluxo["origem"], string> = { manual: "escrito à mão", inferido: "aprendido de processo modelo", colecao: "coleção da equipe" };
@@ -56,6 +65,7 @@ class Estudio {
   private readonly ponte = new PontePainel();
   private config: ConfigIA = { servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, modeloAuxiliar: "", ajustes: {}, cache: true };
   private fluxos: Fluxo[] = [];
+  private colecoes: ColecaoFluxos[] = [];
   /** Cópia em edição do fluxo escolhido. `null` = nada aberto. */
   private rascunho: Fluxo | null = null;
   /** O rascunho ainda não está na lista salva (proposta ou fluxo novo). */
@@ -76,6 +86,7 @@ class Estudio {
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<ConfigIA> | undefined;
     this.config = { ...this.config, ...salvo };
     this.fluxos = await listarFluxos();
+    this.colecoes = await listarColecoesDeFluxos();
     this.ponte.aoMudar(() => {
       this.mostrarAba();
       void this.conferirNaTela();
@@ -98,6 +109,7 @@ class Estudio {
       ev.returnValue = "";
     });
     this.montar();
+    void this.sincronizarColecoes();
   }
 
   // --------------------------------------------------------------- estrutura
@@ -113,6 +125,7 @@ class Estudio {
         { class: "topo" },
         marca,
         h("span", { class: "marca" }, h("strong", {}, "Estúdio de Fluxo"), h("span", {}, "SEI Pro")),
+        h("button", { class: "plana", onclick: () => this.abrirColecoes() }, icone("baixar", 15), "Cole\u00E7\u00E3o da equipe"),
         h("button", { class: "plana", onclick: () => this.aprenderDeModelo() }, icone("faisca", 15), "Aprender de processo modelo"),
         h("button", { class: "primario", onclick: () => this.abrir(fluxoNovo("Novo fluxo"), true) }, icone("mais", 16), "Novo fluxo"),
       ),
@@ -247,6 +260,9 @@ class Estudio {
         { class: "obra-caixa" },
         titulo,
         h("div", { class: "ajuda" }, `Origem: ${ORIGEM[r.origem]}.`, r.modelos?.length ? ` Processos modelo: ${r.modelos.map((m) => m.protocolo).join(", ")}.` : ""),
+        r.colecao
+          ? h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, "Este fluxo vem da pasta da equipe. O que voc\u00EA editar aqui ser\u00E1 SUBSTITU\u00CDDO na pr\u00F3xima sincroniza\u00E7\u00E3o \u2014 para mudar de verdade, edite o arquivo no GitHub. Ligar ou desligar, sim, \u00E9 decis\u00E3o sua e se mant\u00E9m."))
+          : null,
 
         ...this.notasDaProposta(),
 
@@ -294,6 +310,7 @@ class Estudio {
           "div",
           { class: "acoes-obra" },
           h("label", { class: "linha-switch espaco" }, h("input", { type: "checkbox", class: "switch", ...(r.ativo ? { checked: true } : {}), change: (ev: Event) => this.mudar((x) => (x.ativo = (ev.target as HTMLInputElement).checked)) }), h("span", {}, "Ligado", h("small", {}, "Só fluxo ligado sugere no painel do agente."))),
+          h("button", { class: "plana", title: "Baixar este fluxo como .md, para colocar na pasta da equipe no GitHub", onclick: () => this.exportar(r) }, icone("baixar", 15), "Exportar .md"),
           this.novo ? null : h("button", { class: "perigo", onclick: () => void this.excluir(r.id) }, icone("lixeira", 15), "Excluir"),
           elSalvar,
         ),
@@ -301,6 +318,112 @@ class Estudio {
     );
     this.revalidar();
     void this.conferirNaTela(true);
+  }
+
+  /** Baixa o fluxo como `.md`, no formato que a pasta da equipe usa. */
+  private exportar(f: Fluxo): void {
+    const url = URL.createObjectURL(new Blob([paraMarkdown(f)], { type: "text/markdown;charset=utf-8" }));
+    const a = h("a", { href: url, download: `${slugificar(f.nome) || "fluxo"}.md` });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    // Sem revogar, o Blob fica na memória da página até ela fechar.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+
+  /**
+   * Busca os `.md` das pastas da equipe e mescla.
+   *
+   * Silenciosa de propósito: roda ao abrir a página, e falha de rede do órgão
+   * não pode virar erro na cara de quem só queria editar um fluxo. O que deu
+   * errado fica guardado na coleção (`erroSync`) e aparece na tela dela.
+   */
+  private async sincronizarColecoes(forcar = false): Promise<void> {
+    const agora = Date.now();
+    let mudou = false;
+    for (const c of this.colecoes) {
+      if (c.sincronizar === false) continue;
+      if (!forcar && c.verificadaEm && agora - c.verificadaEm < INTERVALO_COLECAO) continue;
+      try {
+        const baixados = await baixarColecao(c.url);
+        const r = mesclarColecaoDeFluxos(this.fluxos, c, baixados, agora);
+        this.fluxos = r.lista;
+        Object.assign(c, { verificadaEm: agora, quantos: baixados.length, erroSync: r.avisos.join(" \u00B7 ") || undefined });
+        mudou = true;
+      } catch (e) {
+        Object.assign(c, { verificadaEm: agora, erroSync: (e as Error).message });
+      }
+    }
+    if (mudou) await guardarFluxos(this.fluxos);
+    await guardarColecoesDeFluxos(this.colecoes);
+    this.desenhar();
+  }
+
+  /** Pastas do GitHub de onde os fluxos da equipe vêm. */
+  private abrirColecoes(): void {
+    const estado = h("div", { class: "status" });
+    const corpo = h("div", { class: "skills" });
+    const campo = h("input", { type: "text", placeholder: "https://github.com/org/repo/tree/main/fluxos" });
+    const nome = h("input", { type: "text", placeholder: "Nome da equipe" });
+    const desenhar = () =>
+      corpo.replaceChildren(
+        ...(this.colecoes.length
+          ? this.colecoes.map((c) =>
+              h(
+                "div",
+                { class: "skill colecao" },
+                h(
+                  "div",
+                  { class: "skill-texto" },
+                  h("strong", {}, c.nome),
+                  h("small", {}, c.url),
+                  h("small", { class: c.erroSync ? "falha" : "origem" }, c.erroSync ?? `${c.quantos ?? 0} fluxo(s) na \u00FAltima busca`),
+                ),
+                h("button", { class: "icone pequeno", title: "Remover esta cole\u00E7\u00E3o (os fluxos dela tamb\u00E9m saem)", onclick: () => void this.removerColecao(c.id, desenhar) }, icone("lixeira", 14)),
+              ),
+            )
+          : [h("div", { class: "ajuda" }, "Nenhuma pasta cadastrada. Aponte uma pasta do GitHub com um arquivo .md por fluxo \u2014 use \"Exportar .md\" para gerar o primeiro.")]),
+      );
+    desenhar();
+    const acrescentar = h("button", { class: "primario" }, icone("mais", 15), "Acrescentar");
+    acrescentar.addEventListener("click", async () => {
+      if (!partesDoGitHub(campo.value)) {
+        estado.className = "status erro";
+        estado.replaceChildren(icone("alerta", 14), "Informe o endere\u00E7o de uma PASTA do GitHub (github.com/dono/repo/tree/branch/pasta).");
+        return;
+      }
+      this.colecoes = [...this.colecoes, { id: crypto.randomUUID(), nome: nome.value.trim() || "Equipe", url: campo.value.trim(), sincronizar: true }];
+      await guardarColecoesDeFluxos(this.colecoes);
+      campo.value = "";
+      nome.value = "";
+      estado.className = "status";
+      estado.replaceChildren(icone("relogio", 14), "Buscando\u2026");
+      await this.sincronizarColecoes(true);
+      desenhar();
+      estado.className = "status ok";
+      estado.replaceChildren(icone("check", 14), "Pronto.");
+    });
+
+    this.modal({
+      titulo: "Cole\u00E7\u00E3o de fluxos da equipe",
+      corpo: [
+        h("div", { class: "ajuda" }, "Uma pasta do GitHub com um arquivo .md por fluxo. A extens\u00E3o busca de tempos em tempos: o que a equipe publica manda nos fluxos da cole\u00E7\u00E3o, e o que voc\u00EA escreveu \u00E0 m\u00E3o continua seu. Fluxo que chega de fora nasce DESLIGADO."),
+        corpo,
+        h("div", { class: "campo" }, h("label", {}, "Nova pasta"), nome, campo),
+      ],
+      acoes: [estado, h("button", { class: "plana", onclick: () => void this.sincronizarColecoes(true).then(desenhar) }, icone("baixar", 15), "Sincronizar agora"), acrescentar],
+    });
+  }
+
+  private async removerColecao(id: string, aoFechar: () => void): Promise<void> {
+    const c = this.colecoes.find((x) => x.id === id);
+    if (!c || !confirm(`Remover a cole\u00E7\u00E3o "${c.nome}"? Os fluxos que vieram dela saem junto; os seus ficam.`)) return;
+    this.colecoes = this.colecoes.filter((x) => x.id !== id);
+    this.fluxos = (await listarFluxos()).filter((f) => f.colecao !== id);
+    if (this.rascunho?.colecao === id) this.rascunho = null;
+    await Promise.all([guardarColecoesDeFluxos(this.colecoes), guardarFluxos(this.fluxos)]);
+    aoFechar();
+    this.desenhar();
   }
 
   /**
