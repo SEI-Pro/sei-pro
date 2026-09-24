@@ -62,16 +62,54 @@ $.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
 var sfpEmCursoPro = !!window.sfpPedidoPaginaPro || !!document.querySelector('script[src*="/js/sei-functions-pro.js"]');
 if ((typeof loadFunctionsPro === 'undefined' || window.name != '') && !sfpEmCursoPro) { window.sfpPedidoPaginaPro = true; $.getScript(getUrlExtension("js/sei-functions-pro.js")); }
 
+// O tooltip do SEI vive no mundo da PAGINA; este arquivo e content script, roda no mundo
+// ISOLADO, onde o despachante data-spro-* nao e instalado (um despachante em cada mundo
+// dispararia toda acao duas vezes). Por isso aqui a ligacao e por clausura: nao depende de
+// despachante nenhum nem da ordem de carregamento.
+function ligarTooltipIsoladoPro(el, texto) {
+    if (!el) return;
+    el.addEventListener('mouseover', function () {
+        try { if (typeof infraTooltipMostrar === 'function') infraTooltipMostrar(texto); } catch (e) {}
+    });
+    el.addEventListener('mouseout', function () {
+        try { if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar(); } catch (e) {}
+    });
+}
+// Marcacao 100% constante e sem sanitizador: construida por DOM API.
+//
+// POR QUE NAO htmlPro AQUI. init.js e carregado por 12 manifests, e no bloco do editor
+// (acao=editor_montar) ele vem SEM sei-functions-pro.js -- htmlPro/estiloPro nao existem
+// naquele contexto. E divIconsLoginPro E alcancavel la: loadConfigPro roda tambem no ramo
+// do editor e, para quem tem Base de Dados configurada, chama esta funcao. Depender do
+// helper faria os icones sumirem na janela do editor, so para esses usuarios.
+function criarIconeBarraPro(id, classeIcone, dicaTooltip, dicaAtributo) {
+    var a = document.createElement('a');
+    a.id = id;
+    a.href = '#';
+    a.setAttribute('data-tippy-content', dicaAtributo);
+    a.style.display = 'none';
+    var i = document.createElement('i');
+    i.className = classeIcone;
+    a.appendChild(i);
+    ligarTooltipIsoladoPro(a, dicaTooltip);
+    return a;
+}
 function divIconsLoginPro() {
-    var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
-                            +'  <a id="authorizeButtonPro" href="#" data-tippy-content="Conectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-off brancoColor"></i></a>'
-                            +'  <a id="signoutButtonPro" href="#" data-tippy-content="Desconectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectado! Clique para desconectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-on brancoColor"></i></a>'
-                            +'</div>';
+    var destino = null;
     if ($(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').length > 0) {
-        $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(html_initLogin);
+        destino = $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD');
     } else if ($('#divInfraBarraSistemaPadraoD').length > 0) {
-        $('#divInfraBarraSistemaPadraoD').append(html_initLogin);
+        destino = $('#divInfraBarraSistemaPadraoD');
     }
+    if (!destino || !destino.length) return;
+    var caixa = document.createElement('div');
+    caixa.className = 'infraAcaoBarraSistema sheetsLoginPro';
+    caixa.style.display = 'inline-block';
+    caixa.appendChild(criarIconeBarraPro('authorizeButtonPro', 'fas fa-toggle-off brancoColor',
+        'Conectar Base de Dados (SeiPro)', 'Conectar Base de Dados (SeiPro)'));
+    caixa.appendChild(criarIconeBarraPro('signoutButtonPro', 'fas fa-toggle-on brancoColor',
+        'Conectado! Clique para desconectar Base de Dados (SeiPro)', 'Desconectar Base de Dados (SeiPro)'));
+    destino[0].appendChild(caixa);
 }
 function classBodyPro() {
     if (typeof getParamsUrlPro === 'function') {
@@ -271,43 +309,57 @@ function loadFontIcons(elementTo, target = $('html')) {
             href: getUrlExtension("css/fontawesome.pro.min.css") 
         }).appendTo(target.find(elementTo));
         
-        var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="5">'+
-                            '    @font-face {\n'+
-                            '       font-family: "Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 900;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
-                            '   }\n'+
-                            '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 400;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
-                            '   }\n'+
-                            (iconBoxSlim ?
-                            '   @font-face { \n'+
-                            '       font-family: "Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 300;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url('+pathExtension+'webfonts/pro/fa-light-300.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-light-300.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-light-300.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n'+
-                            '   }\n'+
-                            '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 Duotone\";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 900;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot?#iefix) format(\"embedded-opentype\"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n'+
-                            '   }\n'
-                            : '')
-                            '</style>';
-        target.find('head').append(htmlStyleFont);
+        // O CSS deixa de ser marcacao: vira texto dentro de um <style> construido por DOM
+        // API. O DOMPurify remove <style> de um fragmento, e afrouxar a config so por causa
+        // disto enfraqueceria o argumento perante a AMO. De quebra some um defeito antigo --
+        // faltava um "+" antes do '</style>', entao o bloco era injetado SEM tag de
+        // fechamento e so funcionava porque o parser a fecha sozinha no fim do fragmento.
+        var cssPro = `
+    @font-face {
+       font-family: "Font Awesome 5 Pro";
+       font-style: normal;
+       font-weight: 900;
+       font-display: block;
+       src: url(${pathExtension}webfonts/pro/fa-solid-900.eot) !important;
+       src: url(${pathExtension}webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(${pathExtension}webfonts/pro/fa-solid-900.woff2) format("woff2"),url(${pathExtension}webfonts/pro/fa-solid-900.woff) format("woff"),url(${pathExtension}webfonts/pro/fa-solid-900.ttf) format("truetype"),url(${pathExtension}webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;
+   }
+   @font-face {
+       font-family: "Font Awesome 5 Pro";
+       font-style: normal;
+       font-weight: 400;
+       font-display: block;
+       src: url(${pathExtension}webfonts/pro/fa-regular-400.eot) !important;
+       src: url(${pathExtension}webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(${pathExtension}webfonts/pro/fa-regular-400.woff2) format("woff2"),url(${pathExtension}webfonts/pro/fa-regular-400.woff) format("woff"),url(${pathExtension}webfonts/pro/fa-regular-400.ttf) format("truetype"),url(${pathExtension}webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;
+   }
+` + (iconBoxSlim ? `
+   @font-face {
+       font-family: "Font Awesome 5 Pro";
+       font-style: normal;
+       font-weight: 300;
+       font-display: block;
+       src: url(${pathExtension}webfonts/pro/fa-light-300.eot) !important;
+       src: url(${pathExtension}webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url(${pathExtension}webfonts/pro/fa-light-300.woff2) format("woff2"), url(${pathExtension}webfonts/pro/fa-light-300.woff) format("woff"), url(${pathExtension}webfonts/pro/fa-light-300.ttf) format("truetype"), url(${pathExtension}webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important;
+   }
+   @font-face {
+       font-family: "Font Awesome 5 Duotone";
+       font-style: normal;
+       font-weight: 900;
+       font-display: block;
+       src: url(${pathExtension}webfonts/pro/fa-duotone-900.eot) !important;
+       src: url(${pathExtension}webfonts/pro/fa-duotone-900.eot?#iefix) format("embedded-opentype"), url(${pathExtension}webfonts/pro/fa-duotone-900.woff2) format("woff2"), url(${pathExtension}webfonts/pro/fa-duotone-900.woff) format("woff"), url(${pathExtension}webfonts/pro/fa-duotone-900.ttf) format("truetype"), url(${pathExtension}webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important;
+   }
+` : '');
+        // Mesmo motivo de divIconsLoginPro: este arquivo pode rodar sem o bloco do
+        // sei-functions-pro.js, entao o <style> tambem e construido por DOM API, sem helper.
+        var casaEstilo = target.find(elementTo);
+        if (casaEstilo.length) {
+            var elEstilo = document.createElement('style');
+            elEstilo.setAttribute('type', 'text/css');
+            elEstilo.setAttribute('data-style', 'seipro-fonticon');
+            elEstilo.setAttribute('data-index', '5');
+            elEstilo.textContent = cssPro;
+            casaEstilo[0].appendChild(elEstilo);
+        }
     }
 }
 function loadStylePro(url, elementTo) {

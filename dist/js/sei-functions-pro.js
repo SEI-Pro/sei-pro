@@ -639,14 +639,31 @@ function htmlPro(alvo, html, modo) {
 // Bloco <style> por DOM API. O DOMPurify remove <style> do fragmento, e a config
 // permissiva que o deixaria passar enfraqueceria o argumento perante a AMO; como sao
 // poucos pontos, eles constroem o elemento em vez de injetar marcacao.
-function estiloPro(doc, chave, css, posicao) {
-    doc = doc || document;
+// Resolve o Document a partir de um Document, de um elemento ou de um objeto jQuery de
+// qualquer dos dois. Existe por um caso real: loadFontIcons recebe
+// $('#ifrVisualizacao').contents(), que e o proprio Document do iframe -- e
+// document.ownerDocument e null, entao resolver so por ownerDocument mandaria o CSS para o
+// documento do topo, em silencio.
+function documentoDePro(alvo) {
+    if (!alvo) return document;
+    if (alvo.jquery) alvo = alvo[0];
+    if (!alvo) return document;
+    if (alvo.nodeType === 9) return alvo;
+    return alvo.ownerDocument || document;
+}
+
+function estiloPro(alvo, chave, css, opcoes) {
+    var doc = documentoDePro(alvo);
+    opcoes = opcoes || {};
+    var posicao = opcoes.posicao;
     if (!/^[\w-]+$/.test(String(chave))) { avisarPro('estiloPro: chave invalida', chave); return null; }
     var anterior = doc.querySelector('style[data-style="' + chave + '"]');
     if (anterior && anterior.parentNode) anterior.parentNode.removeChild(anterior);
     var el = doc.createElement('style');
     el.setAttribute('type', 'text/css');
     el.setAttribute('data-style', chave);
+    // Marca de qual copia do loadFontIcons criou o bloco (ha cinco, uma por init*).
+    if (opcoes.indice !== undefined && opcoes.indice !== null) el.setAttribute('data-index', String(opcoes.indice));
     el.textContent = String(css);
     var casa = doc.head || doc.documentElement;
     if (posicao === 'prepend' && casa.firstChild) casa.insertBefore(el, casa.firstChild);
