@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><svg width="100%" height="100%" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
   <g>
-    <!-- Tres etapas empilhadas e as setas entre elas: o rito, de cima para baixo. -->
+    <!-- Placa de rua com duas setas: uma para a direita, outra para a esquerda. -->
+    <!-- O rito tem bifurcacao, e e isso que a ferramenta mapeia. -->
     <!-- Icone PROPRIO com cor propria, como o das Ferramentas de PDF. Os botoes -->
     <!-- vizinhos da barra usam GIF 1x1 mais um <i> do Font Awesome com -->
     <!-- `color: #fff` inline, que vence a regra do tema. No SEI 4.1+/5, cuja -->
@@ -9,10 +10,14 @@
     <!-- ATENCAO: comentario de XML nao aceita dois hifens seguidos. Dois hifens -->
     <!-- aqui dentro quebram o documento inteiro, e o navegador mostra imagem -->
     <!-- quebrada, sem nada no console. -->
-    <rect x="232" y="96" width="560" height="196" rx="62" style="fill:#4a7dff;"/>
-    <rect x="232" y="414" width="560" height="196" rx="62" style="fill:#6b74f7;"/>
-    <rect x="232" y="732" width="560" height="196" rx="62" style="fill:#8f6ef0;"/>
-    <path d="M512,292L512,414" style="fill:none;stroke:#939ea7;stroke-width:44px;stroke-linecap:round;"/>
-    <path d="M512,610L512,732" style="fill:none;stroke:#939ea7;stroke-width:44px;stroke-linecap:round;"/>
+
+    <!-- Poste, atras das placas: aparece acima, entre e abaixo delas. -->
+    <rect x="442" y="62" width="140" height="900" rx="54" style="fill:#939ea7;"/>
+
+    <!-- Placa de cima, apontando para a DIREITA. -->
+    <path d="M240,168L798,168L952,308L798,448L240,448C208,448 182,422 182,390L182,226C182,194 208,168 240,168Z" style="fill:#4a7dff;"/>
+
+    <!-- Placa de baixo, apontando para a ESQUERDA. -->
+    <path d="M784,614L226,614L72,754L226,894L784,894C816,894 842,868 842,836L842,672C842,640 816,614 784,614Z" style="fill:#8f6ef0;"/>
   </g>
 </svg>

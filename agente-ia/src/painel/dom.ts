@@ -151,11 +151,12 @@ const ICONES: Record<string, Forma[]> = {
   clipe: [["path", { d: "M20.5 11.5l-8.4 8.4a5.3 5.3 0 0 1-7.5-7.5l7.8-7.8a3.5 3.5 0 0 1 5 5l-7.8 7.8a1.8 1.8 0 0 1-2.5-2.5l7.4-7.4" }]],
   setaCima: [["path", { d: "M12 19V6" }], ["path", { d: "M6 12l6-6 6 6" }]],
   setaBaixo: [["path", { d: "M12 5v13" }], ["path", { d: "M18 12l-6 6-6-6" }]],
+  // Placa de rua com duas setas, uma para cada lado: o rito tem bifurcação.
+  // Mesmo desenho do ícone do botão na barra do SEI (icons/menu/fluxos.svg).
   fluxo: [
-    ["rect", { x: "6", y: "3", width: "12", height: "4.6", rx: "1.6" }],
-    ["rect", { x: "6", y: "16.4", width: "12", height: "4.6", rx: "1.6" }],
-    ["path", { d: "M12 7.6v8.8" }],
-    ["path", { d: "M9.6 13.6 12 16.4l2.4-2.8" }],
+    ["path", { d: "M12 2.6v18.8" }],
+    ["path", { d: "M5.4 5.2h10.2l2.6 2.2-2.6 2.2H5.4z" }],
+    ["path", { d: "M18.6 13.4H8.4l-2.6 2.2 2.6 2.2h10.2z" }],
   ],
   parar: [["rect", { x: "7", y: "7", width: "10", height: "10", rx: "2", fill: "currentColor", stroke: "none" }]],
   escudo: [["path", { d: "M12 21.5c4.7-2 7.5-5.4 7.5-9.6V5.5L12 2.5 4.5 5.5v6.4c0 4.2 2.8 7.6 7.5 9.6z" }], ["path", { d: "M9.2 12.2l2 2 3.6-3.9" }]],
