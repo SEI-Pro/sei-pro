@@ -1821,8 +1821,11 @@ function changeDocumentoRelacionado(this_) {
     var _parent = _this.closest('table');
     var _id_documento_sei = _parent.find('[data-key="id_documento_sei"]');
     var _documento_sei = _parent.find('[data-key="documento_sei"]');
-    if (_id_documento_sei.length) _id_documento_sei.val(_this.find('option:selected').attr('data_id_documento_sei'));
-    if (_documento_sei.length) _documento_sei.val(_this.find('option:selected').attr('data_nr_sei'));
+    // Os nomes usam hifen porque o DOMPurify remove atributo que nao seja data-* de verdade,
+    // e o select de prescricoes chega aqui montado como marcacao sanitizada. Esta funcao e
+    // compartilhada pelos dois selects, entao os dois emissores tem de usar a mesma forma.
+    if (_id_documento_sei.length) _id_documento_sei.val(_this.find('option:selected').attr('data-id-documento-sei'));
+    if (_documento_sei.length) _documento_sei.val(_this.find('option:selected').attr('data-nr-sei'));
 }
 function updateSelectConcluirProjetoEtapa() {
 	var docsArray = dadosProcessoPro.listDocumentos;
@@ -1830,12 +1833,12 @@ function updateSelectConcluirProjetoEtapa() {
 	select.empty().append($('<option/>'));
     $.each(docsArray, function (index, valueSelect) {
         select.append($('<option/>', { 
-            data_id_documento_sei: valueSelect.id_protocolo,
+            'data-id-documento-sei': valueSelect.id_protocolo,
             value : valueSelect.documento+' ('+valueSelect.nr_sei+')',
             text : valueSelect.documento+' ('+valueSelect.nr_sei+')',
-			data_nr_sei : valueSelect.nr_sei,
-			data_assinatura : valueSelect.data_assinatura,
-			data_documento : valueSelect.documento
+			'data-nr-sei' : valueSelect.nr_sei,
+			'data-assinatura' : valueSelect.data_assinatura,
+			'data-documento' : valueSelect.documento
         })).chosen("destroy").chosen({
             placeholder_text_single: ' ',
             no_results_text: 'Nenhum resultado encontrado',

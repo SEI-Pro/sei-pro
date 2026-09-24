@@ -655,7 +655,11 @@ function updateRefsTags(iframe) {
         var anchor = iframe.find('.legis[data-ref="'+dataRef+'"] a');
         var textRef = getNameRef(anchor, iframe, this_).trim();
         if (  typeof textRef !== 'undefined' && textRef != '' ) { 
-            this_.text(textRef).removeClass('error');
+            // NAO e .text(): getNameRef (linha 525) devolve ' do <strong>caput</strong>'
+            // quando o inciso e do caput, e .text() mostraria as tags na cara do usuario,
+            // dentro do texto da norma. Marcacao constante da extensao + texto tirado do
+            // proprio documento -- passa pelo portao, que preserva o <strong>.
+            htmlPro(this_, textRef).removeClass('error');
             this_.closest('a').attr('href', '#'+anchor.attr('name')).attr('data-cke-saved-href', '#'+anchor.attr('name'));
         } else { 
             this_.addClass('error');

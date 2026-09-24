@@ -632,7 +632,7 @@ function htmlPro(alvo, html, modo) {
         case 'replace': $alvo.replaceWith(limpo); break;
         default:        $alvo.html(limpo);
     }
-    if (typeof installActionsPro === 'function') installActionsPro(doc);
+    if (typeof installActionsPro === 'function' && !installActionsPro(doc)) cobrarDespachantePro(doc);
     return $alvo;
 }
 
@@ -672,6 +672,10 @@ function estiloPro(alvo, chave, css, opcoes) {
 }
 
 // Eventos que podem carregar acao em data-spro-<evento>.
+// Quanto se espera pela copia da pagina antes de reclamar que o documento ficou sem
+// despachante. E generoso de proposito: a copia da pagina entra por $.getScript, assincrono.
+var ATRASO_AVISO_DESPACHANTE_PRO = 4000;
+
 var EVENTOS_ACAO_PRO = ['click', 'change', 'input', 'blur', 'focus', 'keyup', 'keydown',
     'keypress', 'submit', 'dblclick', 'contextmenu', 'paste', 'mouseenter', 'mouseleave'];
 
@@ -750,6 +754,26 @@ function ocultarTipPro(el) {
 // isolado e $.getScript no mundo da pagina); um despachante em cada mundo dispararia toda
 // acao DUAS VEZES. E as funcoes do SEI (infraTooltipMostrar) e dos demais modulos so
 // existem no mundo da pagina, entao e la que a resolucao tem de acontecer.
+// A spec previa a copia isolada "assumir" o despachante quando a da pagina nao instalasse.
+// Nao da: a isolada nao enxerga as funcoes dos modulos nem o infraTooltipMostrar nativo do
+// SEI -- ela despacharia para o vazio. O que se pode garantir e que a falha nao seja
+// silenciosa. Cenario real em que isso acontece: duas instalacoes do SEI Pro ativas, com a
+// politica de seguranca barrando o $.getScript do mundo da pagina.
+function cobrarDespachantePro(doc) {
+    var raiz = doc && doc.documentElement;
+    if (!raiz || raiz.getAttribute('data-spro-cobranca') === 'sim') return;
+    raiz.setAttribute('data-spro-cobranca', 'sim');
+    setTimeout(function () {
+        try {
+            if (raiz.getAttribute('data-spro-actions') === 'sim') return;
+            if (!doc.querySelector('[data-spro-click],[data-spro-change],[data-spro-tip]')) return;
+            avisarPro('documento sem despachante: as acoes do SEI Pro nao vao responder nesta tela. ' +
+                'A copia do mundo da pagina nao chegou a carregar (politica de seguranca ou duas ' +
+                'instalacoes da extensao ativas).', (doc.location && doc.location.href) || '');
+        } catch (e) {}
+    }, ATRASO_AVISO_DESPACHANTE_PRO);
+}
+
 function installActionsPro(doc) {
     doc = doc || document;
     var raiz = doc.documentElement;

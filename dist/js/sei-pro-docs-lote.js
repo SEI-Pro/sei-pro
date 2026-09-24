@@ -36,7 +36,7 @@ var docsLote_docAnalysis = async (protocolo, nrTxtPadrao) => {
     dynamicFields = [];
 
     if (!$('#loaderAnalysis')[0]) { //So o loader renderiza se ja nao existir
-        htmlPro($('#dialogBoxDocLote'), `<div id='loaderAnalysis' style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`);
+        htmlPro($('#dialogBoxDocLote'), `<div id='loaderAnalysis' style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`, 'append');
         $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled'); //Desabilita Botao OK ate o carregamento
     }
 
@@ -67,8 +67,8 @@ var docsLote_fillModelAnalysis = async (matches, selectedDoc, txtModelo = false)
     selectedModel = selectedDoc;
     dynamicFields = matches.map((field) => field.trim());
 
-    htmlPro($('#dialogBoxDocLote'), `<div id='fieldList'></div>`);
-    htmlPro($('#fieldList'), `<p class="textAnalysis"><i class='fas fa-${txtModelo ? 'keyboard' : 'file-alt'} cinzaColor'></i> ${txtModelo ? 'Texto Padr\u00E3o' : 'Documento'} : ${selectedDoc.nome}</p>`)
+    htmlPro($('#dialogBoxDocLote'), `<div id='fieldList'></div>`, 'append');
+    htmlPro($('#fieldList'), `<p class="textAnalysis"><i class='fas fa-${txtModelo ? 'keyboard' : 'file-alt'} cinzaColor'></i> ${txtModelo ? 'Texto Padr\u00E3o' : 'Documento'} : ${selectedDoc.nome}</p>`, 'append')
     if (txtModelo) {
         $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
         
@@ -82,7 +82,7 @@ var docsLote_fillModelAnalysis = async (matches, selectedDoc, txtModelo = false)
             <p class="textAnalysis">
                 <select style="width:300px" id="tipoDocumentoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposDocumentos}</select>
             </p>
-            `);
+            `, 'append');
         
         $('#tipoDocumentoSelect').chosen({
             placeholder_text_single: ' ', 
@@ -110,11 +110,11 @@ var docsLote_fillModelAnalysis = async (matches, selectedDoc, txtModelo = false)
             lista += `<li>${field.replaceAll('#', '')}</li>\n`
         })
         lista += '</ul>';
-        htmlPro($('#fieldList'), `<p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\u00E2micos detectados:</p>`)
+        htmlPro($('#fieldList'), `<p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\u00E2micos detectados:</p>`, 'append')
         htmlPro($('#fieldList'), lista, 'append');
         if (!txtModelo) $("#btnConfirmAnalysis").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
     } else {
-        htmlPro($('#fieldList'), `<small class="noFieldsError">N\u00E3o foi identificado nenhum campo din\u00E2mico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padr\u00E3o ##nome do campo##.</small>`)
+        htmlPro($('#fieldList'), `<small class="noFieldsError">N\u00E3o foi identificado nenhum campo din\u00E2mico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padr\u00E3o ##nome do campo##.</small>`, 'append')
     }
     centralizeDialogBox(dialogBoxPro);
 
@@ -137,7 +137,7 @@ var docsLote_detectEncodingCSV = () => {
 var docsLote_CSVAnalysis = (file) => {
     $('#fieldListCSV').remove();
     //So renderiza se ja nno existir
-    if (!$('#loaderAnalysisCSV')[0]) htmlPro($('#dialogBoxDocLote'), `<div id='loaderAnalysisCSV' style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`);
+    if (!$('#loaderAnalysisCSV')[0]) htmlPro($('#dialogBoxDocLote'), `<div id='loaderAnalysisCSV' style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`, 'append');
 
     Papa.parse(file, {
         header: true,
@@ -158,8 +158,8 @@ var docsLote_fillCSVAnalysis = (parseData, filename) => {
     if (typeof CSVData[0] !== 'undefined' && CSVData[0] !== null) {
         CSVHeaders = Object.keys(CSVData[0]).filter(Boolean); // Rearranjo para remover cabecalhos vazios
 
-        htmlPro($('#dialogBoxDocLote'), `<div id='fieldListCSV'></div>`)
-        htmlPro($('#fieldListCSV'), `<p class="textAnalysis"><i class='fas fa-file-csv azulColor'></i> Arquivo: ${filename}</p>`)
+        htmlPro($('#dialogBoxDocLote'), `<div id='fieldListCSV'></div>`, 'append')
+        htmlPro($('#fieldListCSV'), `<p class="textAnalysis"><i class='fas fa-file-csv azulColor'></i> Arquivo: ${filename}</p>`, 'append')
         if (CSVHeaders.length) {
             let lista = `<ul class="textAnalysis" style="max-height: 250px;overflow-y: auto;">\n`;
                 CSVHeaders.forEach((field) => {
@@ -169,7 +169,7 @@ var docsLote_fillCSVAnalysis = (parseData, filename) => {
             htmlPro($('#fieldListCSV'), `
                 <p class="textAnalysis dFielTitle"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${CSVData.length}</p>
                 <p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Cabe\u00E7alhos detectados:</p>
-                ${lista}`);
+                ${lista}`, 'append');
             $("#btnConfirmAnalysis").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
         } else {
             docsLote_printFieldError();
@@ -180,7 +180,7 @@ var docsLote_fillCSVAnalysis = (parseData, filename) => {
 }
 
 var docsLote_printFieldError = () => {
-    htmlPro($('#dialogBoxDocLote'), `<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\u00E3o foi identificado nenhum cabe\u00E7alho no arquivo enviado. <br><br>\uD83E\uDD14 Verifique se a planilha n\u00E3o est\u00E1 vazia.</p>`);
+    htmlPro($('#dialogBoxDocLote'), `<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\u00E3o foi identificado nenhum cabe\u00E7alho no arquivo enviado. <br><br>\uD83E\uDD14 Verifique se a planilha n\u00E3o est\u00E1 vazia.</p>`, 'append');
     $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
 }
 var docsLote_printDataCrossing = async () => {

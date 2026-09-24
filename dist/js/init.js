@@ -62,18 +62,18 @@ $.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
 var sfpEmCursoPro = !!window.sfpPedidoPaginaPro || !!document.querySelector('script[src*="/js/sei-functions-pro.js"]');
 if ((typeof loadFunctionsPro === 'undefined' || window.name != '') && !sfpEmCursoPro) { window.sfpPedidoPaginaPro = true; $.getScript(getUrlExtension("js/sei-functions-pro.js")); }
 
-// O tooltip do SEI vive no mundo da PAGINA; este arquivo e content script, roda no mundo
-// ISOLADO, onde o despachante data-spro-* nao e instalado (um despachante em cada mundo
-// dispararia toda acao duas vezes). Por isso aqui a ligacao e por clausura: nao depende de
-// despachante nenhum nem da ordem de carregamento.
+// O tooltip do SEI (infraTooltipMostrar) e funcao NATIVA da pagina e so existe no mundo da
+// PAGINA. Este arquivo e content script, roda no mundo ISOLADO: uma clausura daqui que
+// chamasse infraTooltipMostrar resolveria o nome no escopo errado, nao acharia nada e nao
+// faria nada -- em silencio, porque o typeof nem chega a lancar. (Era o que o onmouseover=
+// antigo escondia: atributo inline executa no mundo da pagina, nao neste.)
+//
+// A saida e declarar a dica em data-spro-tip e deixar o despachante do mundo da pagina
+// atender. A delegacao e no documento, entao funciona mesmo se o atributo for posto antes
+// de o despachante existir -- e este mesmo arquivo injeta o sei-functions-pro.js na pagina.
 function ligarTooltipIsoladoPro(el, texto) {
     if (!el) return;
-    el.addEventListener('mouseover', function () {
-        try { if (typeof infraTooltipMostrar === 'function') infraTooltipMostrar(texto); } catch (e) {}
-    });
-    el.addEventListener('mouseout', function () {
-        try { if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar(); } catch (e) {}
-    });
+    el.setAttribute('data-spro-tip', texto);
 }
 // Marcacao 100% constante e sem sanitizador: construida por DOM API.
 //
