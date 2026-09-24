@@ -12789,6 +12789,24 @@ function appendIconFerramentasPdf(loop = true) {
     // cada navegacao deixa mais uma viva e nenhuma morre.
     if (loop) { reagendarIconeBarraPro('appendIconFerramentasPdf', appendIconFerramentasPdf); }
 }
+// Estudio de Fluxo na barra de acoes DENTRO do processo. O icone da tela de
+// Controle de Processos (sei-pro.js) nao alcanca aqui: esta barra vive no
+// #divArvoreAcoes do iframe da visualizacao, que recarrega a cada clique na
+// arvore -- por isso o reagendamento, como nos outros icones desta barra.
+function insertIconEstudioFluxo() {
+    waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconEstudioFluxo);
+}
+function appendIconEstudioFluxo(loop = true) {
+    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var titulo = 'Est\u00FAdio de Fluxo';
+    var htmlIconEstudioFluxo =  '<a href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" id="iconEstudioFluxo" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\',\''+titulo+'\');">'+
+                                '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="'+titulo+'" title="'+titulo+'">'+
+                                '</a>';
+    if (ifrVisualizacao.find('#iconEstudioFluxo').length == 0) {
+        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconEstudioFluxo);
+    }
+    if (loop) { reagendarIconeBarraPro('appendIconEstudioFluxo', appendIconEstudioFluxo); }
+}
 function insertIconCompareDocs() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconCompareDocs);
 }
