@@ -2,6 +2,18 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.1.2
+23/09/2026
+
+Versão de correção da cópia de tabelas.
+
+- **Copiar uma tabela do SEI e colar fora dele** — no Teams, no Word, num e-mail — deixa de trazer um fundo cinza atrás do texto. Esse cinza vinha da própria extensão: dentro do SEI ele é invisível, mas ia junto na cópia, e o Teams ainda o transformava em realce palavra por palavra
+- A cópia agora sai limpa. Ficam só as colunas com conteúdo, com bordas simples: sem a barra *Baixar / Copiar / Pesquisar*, sem a linha de pesquisa, sem as caixas de seleção e sem a coluna de ações, que fora do SEI aparecia como um punhado de imagens quebradas
+- Se você pesquisou dentro da tabela antes de copiar, vai **o que está na tela** — as linhas escondidas pelo filtro não são mais copiadas
+- Colando em **Excel** ou em editor de texto simples, o conteúdo chega em colunas. Antes chegava o código HTML da tabela
+
+Vale para todas as tabelas em que o SEI Pro oferece o botão *Copiar*: blocos de assinatura, favoritos, processos e documentos em lote, histórico de processos e resultado de pesquisa.
+
 ### Versão 2.1.1
 23/09/2026
 

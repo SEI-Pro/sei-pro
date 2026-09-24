@@ -7204,10 +7204,13 @@ function copyToClipboard(text) {
     document.execCommand("copy");
     $temp.remove();
 }
-function copyToClipboardHTML(str) {
+function copyToClipboardHTML(str, plain) {
+  // Sem o segundo parametro o texto puro recebia a marcacao HTML inteira: quem colava em
+  // editor de texto simples (ou no Excel) via as tags em vez do conteudo.
+  var strPlain = (typeof plain === 'string' && plain !== '') ? plain : str;
   function listener(e) {
     e.clipboardData.setData("text/html", str);
-    e.clipboardData.setData("text/plain", str);
+    e.clipboardData.setData("text/plain", strPlain);
     e.preventDefault();
   }
   document.addEventListener("copy", listener);
@@ -10351,12 +10354,77 @@ function downloadTablePro(this_) {
         _this.find('i').attr('class',data.icon);
     }, 1500);
 }
+// Texto de uma celula, sem o espaco rigido do SEI e sem as quebras de indentacao do HTML.
+function getTextoCelulaPro(celula) {
+    return celula.text().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+}
+// A tabela na tela carrega marcas que so fazem sentido dentro do SEI: o fundo cinza que o
+// setTableSorter escreve inline na table (invisivel no SEI, porque as celulas tem fundo
+// proprio, mas fora dele vaza atras do conteudo -- o editor do Teams ainda propaga esse fundo
+// para os nos de texto e ele vira realce palavra por palavra), a barra de botoes do SEI Pro
+// que fica dentro do thead, a linha de filtros do tablesorter, as caixas de selecao e os
+// icones de acao (src relativo, que fora do SEI e imagem quebrada). A copia sai so com o
+// conteudo textual, como o botao Baixar ja faz no CSV, e com bordas minimas inline para
+// chegar legivel em quem nao tem o CSS do SEI (Teams, Word, e-mail).
+function getTableCopyPro(table) {
+    var clone = table.clone(false);
+        clone.find('.notCopy, .filterIfraTable, .filterTablePro, .filterTableHistory, tr.tablesorter-filter-row, .tablesorter-resizer, script, style').remove();
+        // tr.filtered: linha escondida pela pesquisa do tablesorter. Copia o que esta na tela.
+        clone.find('tr.filtered').remove();
+        clone.find('input, select, textarea, button, img, svg').remove();
+        // Icone Font Awesome e uma tag vazia; <i> com texto e italico do conteudo e fica.
+        clone.find('i').each(function(){ if ($(this).text().trim() === '') { $(this).remove(); } });
+    // Os links do SEI sao relativos e levam o hash da sessao: fora do SEI nao abrem nada.
+    clone.find('a').each(function(){ $(this).replaceWith(document.createTextNode($(this).text())); });
+    clone.find('*').addBack().each(function(){
+        for (var i = this.attributes.length - 1; i >= 0; i--) {
+            var nomeAttr = this.attributes[i].name;
+            if (nomeAttr !== 'colspan' && nomeAttr !== 'rowspan') { this.removeAttribute(nomeAttr); }
+        }
+    });
+
+    // Sem os controles e os icones sobram colunas sem dado nenhum (selecao, Acoes). O titulo
+    // nao conta para esse teste: e justamente a coluna "Acoes" que tem cabecalho e corpo vazio.
+    var linhas = clone.find('tr');
+    var linhasDados = linhas.filter(function(){ return $(this).children('td').length > 0; });
+    var temSpan = clone.find('td[colspan], th[colspan], td[rowspan], th[rowspan]').length > 0;
+    if (!temSpan && linhasDados.length > 0) {
+        var totalColunas = 0;
+        linhas.each(function(){ totalColunas = Math.max(totalColunas, $(this).children('td, th').length); });
+        for (var coluna = totalColunas - 1; coluna >= 0; coluna--) {
+            var colunaVazia = true;
+            linhasDados.each(function(){
+                var celula = $(this).children('td, th').eq(coluna);
+                if (celula.length > 0 && getTextoCelulaPro(celula) !== '') { colunaVazia = false; return false; }
+            });
+            if (colunaVazia) { linhas.each(function(){ $(this).children('td, th').eq(coluna).remove(); }); }
+        }
+    }
+
+    // Sem fundo no cabecalho de proposito: e justamente o background que vira realce na colagem.
+    var estiloCelula = 'border: 1px solid #b0b0b0; padding: 4px 8px; vertical-align: top; text-align: left;';
+    clone.attr('style', 'border-collapse: collapse; font-family: Arial, Helvetica, sans-serif; font-size: 10pt;');
+    clone.find('caption').attr('style', 'text-align: left; font-weight: bold; padding: 0 0 4px 0;');
+    clone.find('td').attr('style', estiloCelula + ' font-weight: normal;');
+    clone.find('th').attr('style', estiloCelula + ' font-weight: bold;');
+
+    var cloneTexto = clone.clone();
+        cloneTexto.find('br').replaceWith(document.createTextNode(' '));
+    var linhasTexto = [];
+    cloneTexto.find('tr').each(function(){
+        var celulas = [];
+        $(this).children('td, th').each(function(){ celulas.push(getTextoCelulaPro($(this))); });
+        if (celulas.length > 0) { linhasTexto.push(celulas.join('\t')); }
+    });
+
+    return { html: clone[0].outerHTML.replace(/&nbsp;/g, ' '), texto: linhasTexto.join('\r\n') };
+}
 function copyTablePro(this_) {
     var _this = $(this_);
     var table = _this.closest('table');
     var data = _this.data();
-    var htmlTable = table.clone(true).find('.notCopy').remove().end()[0].outerHTML;
-    copyToClipboardHTML(htmlTable);
+    var copia = getTableCopyPro(table);
+    copyToClipboardHTML(copia.html, copia.texto);
     _this.find('.text').text('Copiado...');
     _this.find('i').attr('class','fas fa-thumbs-up');
     setTimeout(function(){ 
