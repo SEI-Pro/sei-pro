@@ -35,7 +35,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                                 (checkCapacidade('update_prescricao') ? 
                                 '            <tr>'+
                                 '                <th colspan="8" style="text-align: right;">'+
-                                '                    <a class="newLink addConfigItem" onclick="dialogSavePrescricao(this)" style="cursor: pointer; margin: 5px 5px 15px 5px;display: inline-block;">'+
+                                '                    <a class="newLink addConfigItem" data-spro-click="dialogSavePrescricao" style="cursor: pointer; margin: 5px 5px 15px 5px;display: inline-block;">'+
                                 '                        <i class="fas fa-plus-circle cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
                                 '                        Adicionar nova prescri\u00E7\u00E3o'+
                                 '                    </a>'+
@@ -77,12 +77,20 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
 
                             if (!p.suspensao) totalDecorrido = totalDecorrido+_diffDays;
 
-                        var modalDocEntrega = (p.id_procedimento) ? "openDialogDoc({title: '"+p.documento_relacionado+"', id_procedimento: '"+p.id_procedimento+"', id_documento: '"+p.id_documento_sei+"'})" : '';
+                        // A acao ia montada como texto de onclick, com o nome do documento concatenado dentro.
+                        // Agora vai em data-spro-args, serializada e escapada por argsPro.
+                        var modalDocEntrega = (p.id_procedimento)
+                            ? 'data-spro-click="openDialogDoc" data-spro-args="' + argsPro({
+                                  title: p.documento_relacionado,
+                                  id_procedimento: p.id_procedimento,
+                                  id_documento: p.id_documento_sei
+                              }) + '"'
+                            : '';
                         htmlBox +=  '           <tr>'+
                                     '              <td align="left">'+(p.suspensao ? 'Suspensivo' : p.nome_prescricao)+'</td>'+
                                     '              <td align="center">'+(p.suspensao ? '-' : prazo)+'</td>'+
                                     '              <td align="left">'+
-                                    '                   <a class="newLink '+(p.id_procedimento ? 'bLink' : '')+'" style="text-decoration: underline;cursor: pointer;" onclick="'+modalDocEntrega+'" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();">'+
+                                    '                   <a class="newLink '+(p.id_procedimento ? 'bLink' : '')+'" style="text-decoration: underline;cursor: pointer;" '+modalDocEntrega+' data-spro-tip="Visualiza\u00E7\u00E3o r\u00E1pida">'+
                                     '                       '+(p.id_procedimento ? '<i class="fas fa-file-signature azulColor" style="padding-right: 5px;"></i>' : '')+(p.documento_relacionado ? p.documento_relacionado : '-')+
                                     '                       '+(p.id_procedimento ? '<i class="fas fa-eye bLink" style="font-size: 80%;vertical-align: top;margin-left: 5px;"></i>' : '')+
                                     '                   </a>'+
@@ -93,10 +101,10 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                                     '              <td align="left">'+htmlDuration+'</td>'+
                                     '              <td align="center">'+
                                     (checkCapacidade('delete_prescricao') && i == prescricao.length-1 && !p.key_prescricao ? 
-                                    '                   <a class="newLink removePresc" style="cursor: pointer;float: right;margin: 0 !important;font-size: 1em;" data-id_prescricao="'+p.id_prescricao+'" onclick="removePrescicao(this)"><i class="fas fa-trash-alt cinzaColor"></i></a>'+
+                                    '                   <a class="newLink removePresc" style="cursor: pointer;float: right;margin: 0 !important;font-size: 1em;" data-id_prescricao="'+p.id_prescricao+'" data-spro-click="removePrescicao"><i class="fas fa-trash-alt cinzaColor"></i></a>'+
                                     '' : '')+
                                     (checkCapacidade('edit_prescricao') && !p.key_prescricao ? 
-                                    '                   <a class="newLink editPresc" style="cursor: pointer;float: right;margin: 0 !important;font-size: 1em;" data-id_prescricao="'+p.id_prescricao+'" onclick="dialogSavePrescricao(this)"><i class="fas fa-edit cinzaColor"></i></a>'+
+                                    '                   <a class="newLink editPresc" style="cursor: pointer;float: right;margin: 0 !important;font-size: 1em;" data-id_prescricao="'+p.id_prescricao+'" data-spro-click="dialogSavePrescricao"><i class="fas fa-edit cinzaColor"></i></a>'+
                                     '' : '')+
                                     '              </td>'+
                                     '           </tr>';
@@ -121,7 +129,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                         (checkCapacidade('update_prescricao') ? 
                         '            <tr>'+
                         '                <th colspan="8" style="text-align: right;">'+
-                        '                    <a class="newLink addConfigItem" onclick="dialogSavePrescricao(this)" style="cursor: pointer; margin: 5px 5px 15px 5px;display: inline-block;">'+
+                        '                    <a class="newLink addConfigItem" data-spro-click="dialogSavePrescricao" style="cursor: pointer; margin: 5px 5px 15px 5px;display: inline-block;">'+
                         '                        <i class="fas fa-plus-circle cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
                         '                        Adicionar nova prescri\u00E7\u00E3o'+
                         '                    </a>'+
@@ -137,8 +145,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
             htmlBox +=  '</div>';
 
             resetDialogBoxPro('dialogBoxPro');
-            dialogBoxPro = $('#dialogBoxPro')
-                .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+            dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div class="dialogBoxDiv">${htmlBox}</div>`)
                 .dialog({
                     title: 'Gerenciar prescri\u00E7\u00F5es do processo',
                     width: 980,
@@ -152,11 +159,22 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
             });
     }
 }
+// Os dois handlers abaixo existiam como duas chamadas dentro de um mesmo onchange=. Uma
+// acao por atributo e o contrato do despachante, entao a dupla virou uma funcao nomeada --
+// que e tambem onde a ordem das duas chamadas fica documentada.
+function changeDocumentoRelacionadoEAssinatura(this_) {
+    changeDocumentoRelacionado(this_);
+    changeDocumentoDtAssinatura(this_);
+}
+function checkCamposEDtAssinatura(this_) {
+    checkThisAtivRequiredFields(this_);
+    checkDtAssinatura(this_);
+}
 function changeDocumentoDtAssinatura(this_) {
     var _this = $(this_);
     var _parent = _this.closest('table');
     var _data_inicio = _parent.find('[data-key="data_inicio"]');
-    if (_data_inicio.length) _data_inicio.val(_this.find('option:selected').attr('data_assinatura'));  
+    if (_data_inicio.length) _data_inicio.val(_this.find('option:selected').attr('data-assinatura'));  
     checkAtivRequiredFields(this_, 'mark');
     checkDtAssinatura(_data_inicio[0]);
 }
@@ -244,7 +262,7 @@ function changeSelectDocsPrescricao(this_) {
 	var _this = $(this_);
     var value = _this.val() != '' ? valueTipoPrescricao(_this.val()) : false;
     var optionsDocSEI = optionSelectDocsPrescricao(value);
-        _this.closest('table').find('[data-key="documento_relacionado"]').html('<option>&nbsp;</option>'+optionsDocSEI).chosen("destroy").chosen({
+        htmlPro(_this.closest('table').find('[data-key="documento_relacionado"]'), '<option>&nbsp;</option>' + optionsDocSEI).chosen("destroy").chosen({
             placeholder_text_single: ' ',
             no_results_text: 'Nenhum resultado encontrado',
             normalize_search_text: function(text) {
@@ -265,7 +283,7 @@ function optionSelectDocsPrescricao(value) {
         : false;
     var optionsDocSEI = $.map(listDocumentos, function(v){
                             var disabled = listDocumentosPermitidos && !listDocumentosPermitidos.some(function(d) { return v.nome_documento.indexOf(d) >= 0; }) ? 'disabled' : '';
-                            return '<option data_id_documento_sei="'+v.id_documento+'" data_nr_sei="'+v.nr_sei+'" data_assinatura="'+moment(v.data_assinatura, 'DD/MM/YYYY').format('YYYY-MM-DDTHH:mm')+'" '+(value && typeof value.id_documento_sei !== 'undefined' && disabled == '' && v.id_documento.toString() == value.id_documento_sei.toString() ? 'selected' : '')+' '+disabled+' >'+v.nome_documento+' ('+v.nr_sei+')'+'</option>'
+                            return '<option data-id-documento-sei="'+v.id_documento+'" data-nr-sei="'+v.nr_sei+'" data-assinatura="'+moment(v.data_assinatura, 'DD/MM/YYYY').format('YYYY-MM-DDTHH:mm')+'" '+(value && typeof value.id_documento_sei !== 'undefined' && disabled == '' && v.id_documento.toString() == value.id_documento_sei.toString() ? 'selected' : '')+' '+disabled+' >'+v.nome_documento+' ('+v.nr_sei+')'+'</option>'
                         }).join('');
     return optionsDocSEI;
 }
@@ -295,10 +313,10 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
                                 return '<option value="'+v.id_tipo_prescricao+'" '+(value && value.id_tipo_prescricao == v.id_tipo_prescricao ? 'selected' : '')+'>'+v.nome_prescricao+'</option>'
                             }
                         }).join('');
-    var htmlSelectTipoPresc = '<select id="presc_tipo_prescricao" class="requiredSelect" data-key="id_tipo_prescricao" onchange="changeSelectDocsPrescricao(this);" required>'+(countTiposPresc > 1 ? '<option>&nbsp;</option>' : '')+''+optionsTiposPresc+'</select>';
+    var htmlSelectTipoPresc = '<select id="presc_tipo_prescricao" class="requiredSelect" data-key="id_tipo_prescricao" data-spro-change="changeSelectDocsPrescricao" required>'+(countTiposPresc > 1 ? '<option>&nbsp;</option>' : '')+''+optionsTiposPresc+'</select>';
     
     var optionsDocSEI = optionSelectDocsPrescricao(value);
-    var htmlSelectDocSEI = '<select id="presc_documento_relacionado" class="requiredSelect" onchange="changeDocumentoRelacionado(this); changeDocumentoDtAssinatura(this);" data-key="documento_relacionado" required><option>&nbsp;</option>'+optionsDocSEI+'</select>';
+    var htmlSelectDocSEI = '<select id="presc_documento_relacionado" class="requiredSelect" data-spro-change="changeDocumentoRelacionadoEAssinatura" data-key="documento_relacionado" required><option>&nbsp;</option>'+optionsDocSEI+'</select>';
 
     var htmlBox =   '<div id="boxPrescricao" class="atividadeWork" data-prescricao="'+(value ? value.id_prescricao : 0)+'">'+
                     '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
@@ -325,14 +343,14 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
                     '               <label for="presc_data_inicio"><i class="iconPopup iconSwitch fas fa-calendar cinzaColor" style="float: initial;"></i>Data:</label>'+
                     '           </td>'+
                     '           <td class="required date">'+
-                    '               <input type="datetime-local" id="presc_data_inicio" onchange="checkThisAtivRequiredFields(this);checkDtAssinatura(this);" data-key="data_inicio" value="'+(value ? moment(value.data_inicio,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : 0)+'" min="'+(dataMin || '')+'" '+(value && value.data_fim != '0000-00-00 00:00:00' ? 'max="'+moment(value.data_fim,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm')+'"' : '')+' required>'+
+                    '               <input type="datetime-local" id="presc_data_inicio" data-spro-change="checkCamposEDtAssinatura" data-key="data_inicio" value="'+(value ? moment(value.data_inicio,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : 0)+'" min="'+(dataMin || '')+'" '+(value && value.data_fim != '0000-00-00 00:00:00' ? 'max="'+moment(value.data_fim,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm')+'"' : '')+' required>'+
                     '           </td>'+
                     '      </tr>'+
                     '      <tr style="height: 40px;">'+
                     '          <td colspan="2" style="vertical-align: bottom; text-align: left;" class="label">'+
                     '               <label for="presc_suspende_contagem"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor"></i> Suspender a contagem prescricional?</label>'+
                     '              <div class="infraAncoraSigla" style="float: right;">'+
-                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="infraLinkOrgao singleOptionConfig" id="presc_suspende_contagem" data-key="suspende_contagem" tabindex="0" '+(value && value.suspensao ? 'checked' : '')+'>'+
+                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" data-spro-change="changeOptionsSavePrescricao" class="infraLinkOrgao singleOptionConfig" id="presc_suspende_contagem" data-key="suspende_contagem" tabindex="0" '+(value && value.suspensao ? 'checked' : '')+'>'+
                     '                  <label class="infraAreaDados" for="presc_suspende_contagem"></label>'+
                     '              </div>'+
                     '          </td>'+
@@ -341,7 +359,7 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
                     '          <td colspan="2" style="vertical-align: bottom; text-align: left;" class="label">'+
                     '               <label for="presc_transito_julgado"><i class="iconPopup iconSwitch fas fa-times-circle cinzaColor"></i> Encerrar a contagem prescricional? (tr\u00E2nsito em julgado)</label>'+
                     '              <div class="infraAncoraSigla" style="float: right;">'+
-                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="infraLinkOrgao singleOptionConfig" id="presc_transito_julgado" data-key="transito_julgado" tabindex="0">'+
+                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" data-spro-change="changeOptionsSavePrescricao" class="infraLinkOrgao singleOptionConfig" id="presc_transito_julgado" data-key="transito_julgado" tabindex="0">'+
                     '                  <label class="infraAreaDados" for="presc_transito_julgado"></label>'+
                     '              </div>'+
                     '          </td>'+
@@ -360,8 +378,7 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
                         }}];
                     
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div class="dialogBoxDiv">${htmlBox}</div>`)
             .dialog({
                 width: 700,
                 title: 'Adicionar nova prescri\u00E7\u00E3o',

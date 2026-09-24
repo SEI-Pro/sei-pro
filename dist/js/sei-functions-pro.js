@@ -861,6 +861,21 @@ function reescreverDocumentoPro(alvo, html, modo) {
     }
     return $alvo;
 }
+
+// Monta o valor de data-spro-args a partir dos argumentos, ja escapado para caber num
+// atributo HTML entre aspas duplas.
+//
+// POR QUE NAO ESCREVER O JSON A MAO NO TEMPLATE. O valor e JSON (que usa aspas duplas)
+// dentro de um atributo (que tambem usa aspas duplas), e os dados vem do SEI: um nome de
+// documento com aspas fecha o atributo, e um com "<" pode fechar a tag. Uso:
+//     `<a data-spro-click="abrirDoc" data-spro-args="${argsPro(id, nome)}">`
+function argsPro() {
+    var lista = Array.prototype.slice.call(arguments);
+    var json;
+    try { json = JSON.stringify(lista); } catch (e) { avisarPro('argsPro: valor nao serializavel', e); return '[]'; }
+    return json.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+               .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+}
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
