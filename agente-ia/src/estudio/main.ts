@@ -209,6 +209,21 @@ class Estudio {
     this.desenhar();
   }
 
+  /**
+   * Fecha o editor e volta à tela inicial do estúdio.
+   *
+   * Sem isto só se saía de um fluxo abrindo outro: quem entrou para conferir
+   * um fluxo ficava preso na edição dele.
+   */
+  private voltarParaLista(): void {
+    if (this.sujo && !confirm("Você tem alterações não salvas neste fluxo. Descartar?")) return;
+    this.rascunho = null;
+    this.novo = false;
+    this.sujo = false;
+    this.notas = { divergencias: [], avisos: [] };
+    this.desenhar();
+  }
+
   // ------------------------------------------------------------------ editor
 
   private mudar(f: (r: Fluxo) => void): void {
@@ -259,6 +274,7 @@ class Estudio {
       h(
         "div",
         { class: "obra-caixa" },
+        h("button", { class: "plana voltar-lista", onclick: () => this.voltarParaLista() }, icone("setaEsquerda", 15), "Voltar"),
         titulo,
         h("div", { class: "ajuda" }, `Origem: ${ORIGEM[r.origem]}.`, r.modelos?.length ? ` Processos modelo: ${r.modelos.map((m) => m.protocolo).join(", ")}.` : ""),
         r.colecao

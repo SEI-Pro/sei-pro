@@ -569,6 +569,10 @@ dialog.modal[open]::backdrop { background: rgba(12, 16, 24, .42); backdrop-filte
 .estudio .obra { overflow-y: auto; padding: var(--e4) var(--e4) var(--e5); }
 .obra-caixa { max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--e4); }
 .obra-caixa h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.02em; }
+/* Sair do editor sem precisar abrir outro fluxo. `align-self` porque a
+   obra-caixa e flex-column: sem isso o botao estica na largura toda. */
+.obra-caixa .voltar-lista { align-self: flex-start; margin-bottom: calc(var(--e4) * -1 + 2px); padding-left: 0; opacity: .85; }
+.obra-caixa .voltar-lista:hover { opacity: 1; }
 .item-fluxo { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 8px 10px; text-align: left; width: 100%; }
 .item-fluxo:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
 .item-fluxo.atual { border-color: var(--acento); background: var(--acento-suave); }

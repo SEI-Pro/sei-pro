@@ -151,6 +151,7 @@ const ICONES: Record<string, Forma[]> = {
   clipe: [["path", { d: "M20.5 11.5l-8.4 8.4a5.3 5.3 0 0 1-7.5-7.5l7.8-7.8a3.5 3.5 0 0 1 5 5l-7.8 7.8a1.8 1.8 0 0 1-2.5-2.5l7.4-7.4" }]],
   setaCima: [["path", { d: "M12 19V6" }], ["path", { d: "M6 12l6-6 6 6" }]],
   setaBaixo: [["path", { d: "M12 5v13" }], ["path", { d: "M18 12l-6 6-6-6" }]],
+  setaEsquerda: [["path", { d: "M19 12H5" }], ["path", { d: "M12 19l-7-7 7-7" }]],
   // Placa de rua com duas setas, uma para cada lado: o rito tem bifurcação.
   // Mesmo desenho do ícone do botão na barra do SEI (icons/menu/fluxos.svg).
   fluxo: [
