@@ -15,6 +15,8 @@ import { verificarDom } from "./verificar-dom";
 import { verificarPonte } from "./verificar-ponte";
 import { verificarOpFluxoAvaliar } from "./verificar-op-fluxo";
 import { verificarDepoisDaEscrita } from "./verificar-depois-escrita";
+import { verificarEstilosDoEditor } from "./verificar-estilos";
+import { verificarSimilares } from "./verificar-similares";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -42,4 +44,6 @@ verificarDom();
 verificarPonte();
 await verificarOpFluxoAvaliar();
 verificarDepoisDaEscrita();
+verificarEstilosDoEditor();
+verificarSimilares();
 resumo();

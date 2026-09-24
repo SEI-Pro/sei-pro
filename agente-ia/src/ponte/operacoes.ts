@@ -20,7 +20,7 @@ import {
   type AlteracaoDocumento,
   type NovoDocumento,
 } from "@nucleo/dominio/documento";
-import { editarConteudo, textoDoHtml } from "@nucleo/dominio/editor";
+import { abrirEditor, editarConteudo, textoDoHtml, type EditorDocumento } from "@nucleo/dominio/editor";
 import { andamentos, type TipoHistorico } from "@nucleo/dominio/historico";
 import { listarOpcoes, type ListaOpcoes } from "@nucleo/dominio/opcoes";
 import { alterarProcesso, concluirProcesso, consultarProcesso, reabrirProcesso, type AlteracaoProcesso } from "@nucleo/dominio/processo";
@@ -33,7 +33,7 @@ import {
   registrarAndamento,
 } from "@nucleo/dominio/acoesProcesso";
 import { assinarDocumento, enviarProcesso } from "@nucleo/dominio/tramitacao";
-import { pesquisar } from "@nucleo/dominio/pesquisa";
+import { pesquisar, type ResultadoPesquisa } from "@nucleo/dominio/pesquisa";
 import { cancelarAssinatura, cancelarDocumento, darCiencia, excluirDocumento } from "@nucleo/dominio/acoesDocumento";
 import { parametros } from "@nucleo/links/links";
 import { ErroSei } from "@nucleo/sessao/erros";
@@ -41,7 +41,7 @@ import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
 import type { TelaAtual } from "../motor/motor";
 import { diagnosticar, type MotivoSemSugestao, type ProcessoNaTela } from "../fluxos/avaliar";
-import { contem, type Fluxo, type Ignorados } from "../fluxos/modelo";
+import { contem, normalizar, type Fluxo, type Ignorados } from "../fluxos/modelo";
 
 type Op = (sei: Sei, a: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>;
 
@@ -390,7 +390,62 @@ export const OPERACOES: Record<string, Op> = {
     return { ...meta, conteudo: { forma: "arquivo", tipo, nome, base64: bytesParaBase64(bytes) } };
   },
 
-  "documento.criar": (sei, a, sinal) => criarDocumento(sei, String(a.processo), a.novo as NovoDocumento, { aplicar: aplicar(a), sinal }),
+  /**
+   * Cria e, quando aplicado, devolve junto o CATÁLOGO DE ESTILOS do documento
+   * recém-criado — que é o que o modelo precisa para escrever o conteúdo com a
+   * formatação daquele órgão. Ler os estilos é cortesia: se falhar, a criação
+   * (que já deu certo no SEI) volta assim mesmo.
+   */
+  "documento.criar": async (sei, a, sinal) => {
+    const r = await criarDocumento(sei, String(a.processo), a.novo as NovoDocumento, { aplicar: aplicar(a), sinal });
+    const numero = r.dados?.numero;
+    if (!r.aplicado || !numero) return r;
+    const estilos = await estilosDoDocumento(sei, numero, sinal).catch(() => null);
+    return estilos ? { ...r, dados: { ...r.dados }, estilos } : r;
+  },
+
+  "documento.estilos": async (sei, a, sinal) => estilosDoDocumento(sei, String(a.numero), sinal),
+
+  /**
+   * Documentos do mesmo tipo para o agente aprender estrutura e linguagem.
+   *
+   * Duas buscas: uma restrita ao mesmo tipo de processo e outra ampla. A
+   * restrita sozinha devolveria pouco em unidade nova; a ampla sozinha
+   * devolveria Despacho de férias para quem escreve Despacho de fiscalização.
+   * A ordenação junta as duas (ver `ordenarSimilares`).
+   */
+  "documentos.similares": async (sei, a, sinal) => {
+    const tipoDocumento = String(a.tipo_documento ?? "").trim();
+    if (!tipoDocumento) throw new ErroSei("ARGUMENTO_INVALIDO", "Informe o tipo de documento a procurar.");
+    const tipoProcesso = txt(a.tipo_processo) ?? "";
+    const limite = Math.min(Number(a.limite ?? 6), 20);
+    const buscar = (tp?: string) =>
+      pesquisar(sei, { em: "documentos", tipoDocumento, tipoProcesso: tp, limite: 40 }, sinal).then((r) => r.resultados).catch(() => [] as ResultadoPesquisa[]);
+    const doTipo = tipoProcesso ? await buscar(tipoProcesso) : [];
+    const gerais = await buscar(undefined);
+    const { usuario } = sei.contexto();
+    const ordenados = ordenarSimilares([...doTipo, ...gerais], {
+      login: usuario.login,
+      nome: usuario.nome,
+      tipoProcesso,
+      excluirProcesso: txt(a.excluir_processo),
+    });
+    return {
+      total: ordenados.length,
+      usuario: usuario.login,
+      candidatos: ordenados.slice(0, limite).map((r) => ({
+        processo: r.protocolo,
+        tipoProcesso: r.tipoProcesso,
+        documento: r.documento?.numero ?? "",
+        tipo: r.documento?.tipo ?? "",
+        unidade: r.unidade,
+        usuario: r.usuario,
+        data: r.data,
+        meu: r.meu === true,
+        mesmoTipoProcesso: r.mesmoTipoProcesso === true,
+      })),
+    };
+  },
   "documento.alterar": (sei, a, sinal) => alterarDocumento(sei, String(a.numero), a.alteracao as AlteracaoDocumento, { aplicar: aplicar(a), sinal }),
   "documento.editar": (sei, a, sinal) =>
     editarConteudo(sei, String(a.numero), { html: String(a.html), modo: a.modo as "substituir" | "acrescentar" | undefined, secao: txt(a.secao) }, { aplicar: aplicar(a), sinal }),
@@ -420,6 +475,87 @@ export async function executarOperacao(sei: Sei, op: string, args: Record<string
   const f = OPERACOES[op];
   if (!f) throw new ErroSei("ARGUMENTO_INVALIDO", `Opera\u00E7\u00E3o desconhecida: ${op}`);
   return f(sei, args, sinal);
+}
+
+/**
+ * Estilos de parágrafo que o editor daquele documento oferece, seção a seção.
+ *
+ * Lista fixa NÃO serve: o conjunto de estilos é configurável por órgão e por
+ * seção do modelo, e o SEI ignora em silêncio a classe que não existe — o
+ * documento sai sem formatação e ninguém vê erro nenhum.
+ *
+ * ABRE O EDITOR do documento para ler a configuração (é de lá que a lista sai).
+ * No caminho normal isso não custa nada a mais: quem vai escrever abriria o
+ * editor logo em seguida.
+ */
+async function estilosDoDocumento(sei: Sei, numero: string, sinal: AbortSignal) {
+  const d = await localizarDocumento(sei, numero, { sinal });
+  return resumoEstilos(await abrirEditor(sei, d, sinal), d.documento.numero);
+}
+
+function resumoEstilos(ed: EditorDocumento, numero: string) {
+  return {
+    documento: numero,
+    editor: ed.tipo,
+    secoes: ed.secoes
+      .filter((sec) => !sec.somenteLeitura)
+      .map((sec) => ({
+        secao: sec.nome,
+        titulo: sec.titulo,
+        ...(sec.principal ? { principal: true } : {}),
+        ...(sec.estiloPadrao ? { estiloPadrao: sec.estiloPadrao } : {}),
+        estilos: sec.estilos.map((e) => e.classe),
+      })),
+  };
+}
+
+/** Um candidato a documento parecido, já classificado. */
+export interface Similar extends ResultadoPesquisa {
+  /** Gerado ou assinado pelo usuário que está pedindo. */
+  meu?: boolean;
+  mesmoTipoProcesso?: boolean;
+}
+
+/** "10/09/2026 14:30" → número comparável. Data vazia vai para o fim. */
+function quando(data: string): number {
+  const m = /(\d{2})\/(\d{2})\/(\d{4})/.exec(data);
+  return m ? Number(`${m[3]}${m[2]}${m[1]}`) : 0;
+}
+
+/**
+ * Ordena os candidatos a "documento parecido".
+ *
+ * A ordem É a regra de negócio, e foi pedida assim: mesmo TIPO DE PROCESSO
+ * primeiro (é o que faz o documento se parecer de verdade — um Despacho de
+ * fiscalização não se parece com um Despacho de férias), depois os do próprio
+ * usuário, depois os mais recentes.
+ *
+ * O SEI não devolve o assinante na pesquisa, só o usuário que gerou. Quem
+ * assinou sem gerar não é reconhecido aqui; o agente confere ao ler o
+ * documento, onde as assinaturas aparecem.
+ */
+export function ordenarSimilares(
+  itens: ResultadoPesquisa[],
+  o: { login: string; nome: string; tipoProcesso: string; excluirProcesso?: string },
+): Similar[] {
+  const meuLogin = normalizar(o.login);
+  const meuNome = normalizar(o.nome);
+  // Compara por PALAVRA: "pedro.soares.junior" não é "pedro.soares".
+  const souEu = (usuario: string) => {
+    const partes = normalizar(usuario).split(/[^a-z0-9._-]+/).filter(Boolean);
+    return Boolean(meuLogin) && (partes.includes(meuLogin) || (Boolean(meuNome) && normalizar(usuario).startsWith(meuNome)));
+  };
+  const vistos = new Set<string>();
+  const saida: Similar[] = [];
+  for (const r of itens) {
+    if (o.excluirProcesso && r.protocolo === o.excluirProcesso) continue;
+    const chave = `${r.protocolo}|${r.documento?.numero ?? ""}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    saida.push({ ...r, meu: souEu(r.usuario), mesmoTipoProcesso: Boolean(o.tipoProcesso) && contem(r.tipoProcesso, o.tipoProcesso) });
+  }
+  const peso = (x: Similar) => (x.mesmoTipoProcesso ? 2 : 0) + (x.meu ? 1 : 0);
+  return saida.sort((a, b) => peso(b) - peso(a) || quando(b.data) - quando(a.data));
 }
 
 /** O que a tela do SEI deve mostrar depois de uma escrita do agente. */

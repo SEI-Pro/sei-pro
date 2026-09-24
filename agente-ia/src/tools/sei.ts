@@ -655,9 +655,34 @@ export const TOOLS_SEI: DefTool[] = [
   }),
 
   definirTool({
+    nome: "documento_estilos",
+    descricao:
+      "Catálogo dos estilos de parágrafo que o editor oferece NESTE documento, seção a seção, NESTE órgão. Use ANTES de escrever conteúdo com documento_editar: o conjunto de estilos é configurado por órgão e por seção, e o SEI IGNORA EM SILÊNCIO a classe que não existe — o documento sai sem formatação e ninguém vê erro. Escreva só com as classes que esta ferramenta devolver. (documento_criar já devolve o catálogo do documento que acabou de criar: nesse caso não precisa chamar de novo.) Abre o editor do documento para ler a configuração.",
+    parametros: s.objeto({ numero: s.texto({ descricao: "Nº SEI do documento." }) }),
+    efeito: "leitura",
+    rotulo: (a) => `Estilos disponíveis em ${String(a.numero)}`,
+    executar: (a, ctx) => ctx.sei("documento.estilos", a),
+  }),
+
+  definirTool({
+    nome: "documentos_similares",
+    descricao:
+      "Procura documentos do MESMO TIPO já existentes no órgão, para o agente aprender a estrutura e a linguagem antes de escrever. Prioriza os do mesmo tipo de processo e os gerados pelo próprio usuário. Devolve só a lista; para ver o texto, leia um ou dois com documento_ler. PERGUNTE AO USUÁRIO (ferramenta perguntar) antes de usar: a busca varre o órgão e abre documentos de outras unidades.",
+    parametros: s.objeto({
+      tipo_documento: s.texto({ descricao: "Nome do tipo (Despacho, Ofício, Nota Técnica...)." }),
+      "tipo_processo?": s.texto({ descricao: "Tipo do processo em que o documento vai entrar; prioriza os semelhantes." }),
+      "excluir_processo?": s.texto({ descricao: "Protocolo do processo em que você vai escrever, para não se citar." }),
+      "limite?": s.inteiro({ min: 1, max: 20, descricao: "Padrão 6." }),
+    }),
+    efeito: "leitura",
+    rotulo: (a) => `Procurar ${String(a.tipo_documento)} parecidos`,
+    executar: (a, ctx) => ctx.sei("documentos.similares", a),
+  }),
+
+  definirTool({
     nome: "documento_criar",
     descricao:
-      "Cria documentos internos (Despacho, Of\u00EDcio, Nota T\u00E9cnica...) em processos abertos na unidade, j\u00E1 com o conte\u00FAdo do corpo em HTML do SEI (ver skill 'redacao-oficial'). Aceita v\u00E1rios itens: \u00E9 o 'documentos em lote'. Devolve o n\u00BA SEI de cada documento criado. Nunca assina.",
+      "Cria documentos internos (Despacho, Of\u00EDcio, Nota T\u00E9cnica...) em processos abertos na unidade, j\u00E1 com o conte\u00FAdo do corpo em HTML do SEI (ver skill 'redacao-oficial'). Aceita v\u00E1rios itens: \u00E9 o 'documentos em lote'. Devolve o n\u00BA SEI de cada documento criado E o cat\u00E1logo de estilos do editor daquele documento (campo `estilos`), que \u00E9 o que voc\u00EA deve usar ao escrever o conte\u00FAdo com documento_editar. Nunca assina.",
     parametros: s.objeto({
       itens: s.lista(
         s.objeto({
@@ -668,7 +693,7 @@ export const TOOLS_SEI: DefTool[] = [
           "nome_arvore?": s.texto({ max: 50 }),
           "nivel?": NIVEL,
           "hipotese?": s.texto(),
-          "conteudo_html?": s.texto({ descricao: "Corpo do documento em par\u00E1grafos HTML com as classes de estilo do SEI." }),
+          "conteudo_html?": s.texto({ descricao: "Corpo do documento em par\u00E1grafos HTML. Use s\u00F3 as classes que documento_estilos devolver para este \u00F3rg\u00E3o; se ainda n\u00E3o as consultou, deixe em branco e escreva depois com documento_editar." }),
           "documento_modelo?": s.texto({ descricao: "N\u00BA SEI de um documento para usar como texto inicial." }),
           "texto_padrao?": s.texto({ descricao: "Nome de um texto padr\u00E3o da unidade." }),
         }),

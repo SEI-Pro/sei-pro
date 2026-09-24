@@ -33,6 +33,20 @@ import { ErroSei } from "../sessao/erros";
 import type { Pagina } from "../sessao/http";
 import type { Sei } from "../sei";
 
+/**
+ * Um estilo de parágrafo que o editor oferece NESTA seção, NESTE órgão.
+ *
+ * O conjunto é configurável por órgão e por seção do modelo: lista fixa acerta
+ * no órgão de quem a escreveu e erra em silêncio nos outros — o SEI ignora a
+ * classe que não existe, e o documento sai sem formatação nenhuma.
+ */
+export interface EstiloEditor {
+  /** Como o SEI o chama na barra de estilos. */
+  nome: string;
+  /** Classe CSS a usar no `<p class="...">`. */
+  classe: string;
+}
+
 export interface SecaoEditor {
   /** `txaEditor_N`. */
   nome: string;
@@ -40,6 +54,10 @@ export interface SecaoEditor {
   somenteLeitura: boolean;
   principal: boolean;
   html: string;
+  /** Estilos permitidos nesta seção. Vazio quando o órgão não configurou nenhum. */
+  estilos: EstiloEditor[];
+  /** Estilo que o SEI aplica sozinho a um parágrafo novo, quando há um. */
+  estiloPadrao?: string;
 }
 
 export interface EditorDocumento {
@@ -73,6 +91,31 @@ interface ConfigCk5 {
   initialData?: Record<string, string>;
   rootsAttributes?: Record<string, { somenteLeitura?: boolean; principal?: boolean; label?: string }>;
   sei?: { urlSalvar?: string; versao?: unknown; siglaUnidade?: string };
+  /**
+   * `setConfiguracao('estilo.itens', ...)` do SEI vira objeto ANINHADO (chave
+   * pontuada, ver `InfraEditorCK5.php`), então a lista chega aqui.
+   */
+  estilo?: {
+    itens?: Array<{ nome?: string; classeCss?: string; permitidoEm?: string[] }>;
+    estiloPadrao?: Record<string, string>;
+  };
+}
+
+/**
+ * Classes válidas de uma seção do CK4.
+ *
+ * O `EditorCk4RN.php` escreve, em cada `CKEDITOR.replace`,
+ * `stylesheetParser_validSelectors: /^(p)\.(A|B|C)$/i` com as classes daquela
+ * seção. É a única lista que o editor daquele órgão de fato aceita.
+ */
+function estilosCk4(cfg: string): EstiloEditor[] {
+  const m = /stylesheetParser_validSelectors"?\s*:\s*\/\^\(p\)\\\.\(([^)]*)\)\$\/i/.exec(cfg);
+  if (!m) return [];
+  return m[1]
+    .split("|")
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .map((classe) => ({ nome: classe, classe }));
 }
 
 /** Analisa a página `editor_montar` (CK4 ou CK5). Não faz requisição. */
@@ -84,6 +127,8 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
     const cfg = json ? (JSON.parse(json) as ConfigCk5) : null;
     if (!cfg?.initialData || !cfg.sei?.urlSalvar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Configura\u00E7\u00E3o do editor CK5 n\u00E3o reconhecida.");
     const attrs = cfg.rootsAttributes ?? {};
+    const itens = cfg.estilo?.itens ?? [];
+    const padrao = cfg.estilo?.estiloPadrao ?? {};
     return {
       tipo: "ck5",
       pagina,
@@ -94,6 +139,11 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
         somenteLeitura: Boolean(attrs[nome]?.somenteLeitura),
         principal: Boolean(attrs[nome]?.principal),
         html: conteudo,
+        // Sem `permitidoEm` o estilo vale em qualquer seção (ver EditorCk5RN).
+        estilos: itens
+          .filter((i) => (i.classeCss ?? i.nome) && (!i.permitidoEm?.length || i.permitidoEm.includes(nome)))
+          .map((i) => ({ nome: i.nome ?? i.classeCss ?? "", classe: i.classeCss ?? i.nome ?? "" })),
+        ...(padrao[nome] ? { estiloPadrao: padrao[nome] } : {}),
       })),
     };
   }
@@ -110,6 +160,7 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
       somenteLeitura: /"readOnly":true/.test(cfg),
       principal: false,
       html: t.textContent ?? "",
+      estilos: estilosCk4(cfg),
     };
   });
   // CK4 não marca a seção principal: é o corpo ("Corpo do Texto"), senão a última editável.
