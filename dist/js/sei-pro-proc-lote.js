@@ -163,8 +163,7 @@ var procLoteModalConfig = (valores = {}) => {
         <div id="procLoteErro"></div>`;
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(`<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Processos em lote - Configura\u00E7\u00E3o (1/3)',
             width: 620,
@@ -210,8 +209,7 @@ var procLote_montarConfig = async (valores) => {
         const tipos = await getTypeSEI('processos');
         if (!tipos || !tipos.length) throw new Error('n\u00E3o foi poss\u00EDvel carregar os tipos de processo');
 
-        $('#procLoteTipoSelect')
-            .html('<option value="">&nbsp;</option>' + $.map(tipos, function (v) {
+        htmlPro($('#procLoteTipoSelect'), '<option value="">&nbsp;</option>' + $.map(tipos, function (v) {
                 return `<option value="${v.id}">${v.name}</option>`;
             }).join(''))
             .val(valores.idTipo || '')
@@ -247,12 +245,12 @@ var procLote_selecionarTipo = async (idTipo, hipoteseSelecionada) => {
 
     if (!idTipo) {
         procLote_travarAvancar(true);
-        $('#procLoteHipotese').html('<option value="">selecione a hip\u00F3tese legal</option>');
+        htmlPro($('#procLoteHipotese'), '<option value="">selecione a hip\u00F3tese legal</option>');
         return;
     }
 
     procLote_travarAvancar(true);
-    $('#procLoteHipotese').html('<option value="">carregando hip\u00F3teses legais...</option>');
+    htmlPro($('#procLoteHipotese'), '<option value="">carregando hip\u00F3teses legais...</option>');
 
     try {
         const dados = await procLote_carregarFormTipo(idTipo);
@@ -263,7 +261,7 @@ var procLote_selecionarTipo = async (idTipo, hipoteseSelecionada) => {
         procLote_travarAvancar(false);
     } catch (e) {
         if (seq !== procLote_seqTipo) return;
-        $('#procLoteHipotese').html('<option value="">nenhuma hip\u00F3tese legal dispon\u00EDvel</option>');
+        htmlPro($('#procLoteHipotese'), '<option value="">nenhuma hip\u00F3tese legal dispon\u00EDvel</option>');
         procLote_mostrarErro(procLote_mensagemErro(e));
     }
 };
@@ -376,7 +374,9 @@ var procLote_pintarHipoteses = (selecionada) => {
         ? procLote_form.opcoesHipotese
         : '<option value="">nenhuma hip\u00F3tese legal dispon\u00EDvel</option>';
 
-    sel.html(opcoes);
+    // opcoesHipotese vem da resposta AJAX do SEI: e marcacao montada com dado de fora,
+    // entao vai pelo portao.
+    htmlPro(sel, opcoes);
 
     // A resposta do SEI traz um <option value="null"> (o "primeiro item" que o
     // SEI Pro pede como null e o PHP devolve como a string "null"). Se ficasse,
@@ -385,7 +385,7 @@ var procLote_pintarHipoteses = (selecionada) => {
         const v = $(this).val();
         return (typeof v === 'undefined' || v === 'null');
     }).remove();
-    if (!sel.find('option[value=""]').length) sel.prepend('<option value="">&nbsp;</option>');
+    if (!sel.find('option[value=""]').length) htmlPro(sel, '<option value="">&nbsp;</option>', 'prepend');
 
     if (selecionada) sel.val(selecionada);
 
@@ -485,7 +485,7 @@ var procLote_travarAvancar = (travar) => {
 };
 
 var procLote_mostrarErro = (texto) => {
-    $('#procLoteErro').html(`<p class="noFieldsError" style="color: #E46E64; font-size: 9pt; margin-top: 8px;"><i class="fas fa-exclamation-triangle vermelhoColor"></i> ${texto}</p>`);
+    htmlPro($('#procLoteErro'), `<p class="noFieldsError" style="color: #E46E64; font-size: 9pt; margin-top: 8px;"><i class="fas fa-exclamation-triangle vermelhoColor"></i> ${texto}</p>`);
 };
 
 var procLote_limparErro = () => {
@@ -522,8 +522,7 @@ var procLoteModalConfirmacao = (param) => {
         </div>`;
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(`<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Processos em lote - Confirma\u00E7\u00E3o (2/3)',
             width: 620,
@@ -579,8 +578,7 @@ var procLoteModalExecucao = (param) => {
         </div>`;
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(`<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div id="dialogBoxProcLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Processos em lote - Criando (3/3)',
             width: 460,
@@ -742,11 +740,11 @@ var procLoteModalResultado = (param) => {
     const interrompido = procLote_criados.length < total;
 
     var htmlBotoes = `<div class="btn-group filterTablePro notCopy" role="group" style="margin: 10px 0;">
-                        <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">
+                        <button type="button" data-spro-click="downloadTablePro" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">
                             <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>
                             <span class="text">Baixar</span>
                         </button>
-                        <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">
+                        <button type="button" data-spro-click="copyTablePro" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">
                             <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>
                             <span class="text">Copiar</span>
                         </button>
@@ -787,15 +785,14 @@ var procLoteModalResultado = (param) => {
                     </p>`;
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(`<div id="dialogBoxProcLote" class="dialogBoxDiv">${resumo}${contagem}${htmlTabela}</div>`)
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), `<div id="dialogBoxProcLote" class="dialogBoxDiv">${resumo}${contagem}${htmlTabela}</div>`)
         .dialog({
             title: 'Processos em lote - Resultado',
             width: 850,
             height: 520,
             maxHeight: (window.innerHeight * 0.9),
             open: () => {
-                $('#tableProcLoteResult').find('thead').prepend(htmlBotoes);
+                htmlPro($('#tableProcLoteResult').find('thead'), htmlBotoes, 'prepend');
             },
             buttons: [{
                 text: "Fechar",
