@@ -759,6 +759,63 @@ function installActionsPro(doc) {
 if (typeof isCopiaIsoladaPro === 'function' && !isCopiaIsoladaPro()) {
     try { installActionsPro(document); } catch (e) {}
 }
+
+// Varre o DOM e diz se todo data-spro-* aponta para funcao que existe. E o que substitui
+// "clicar em tudo para ver se ligou": roda no console da pagina depois de abrir cada tela.
+function auditActionsPro() {
+    var docs = [], vistos = [];
+    (function coletar(doc, nivel) {
+        if (!doc || nivel > 4) return;
+        for (var v = 0; v < vistos.length; v++) if (vistos[v] === doc) return;
+        vistos.push(doc);
+        docs.push(doc);
+        var ifrs = doc.getElementsByTagName('iframe');
+        for (var i = 0; i < ifrs.length; i++) {
+            try { coletar(ifrs[i].contentDocument, nivel + 1); } catch (e) {} // outra origem
+        }
+    })(document, 0);
+
+    var res = { total: 0, orfaos: [], semDespachante: [], documentos: docs.length };
+    // Lista POSITIVA: so data-spro-<evento> e acao. Uma lista de exclusao teria de perseguir
+    // toda marca nova -- e ja falhava com duas: data-spro-actions (a marca do proprio
+    // despachante, no <html>) e data-spro-visualizacao (de isCopiaResponsavelVisualizacaoPro),
+    // que apareciam como acao orfa chamada "sim"/"pagina" em TODA tela do SEI.
+    var acaoValida = {};
+    for (var k = 0; k < EVENTOS_ACAO_PRO.length; k++) acaoValida['data-spro-' + EVENTOS_ACAO_PRO[k]] = 1;
+    for (var d = 0; d < docs.length; d++) {
+        var doc = docs[d];
+        var win = doc.defaultView || window;
+        var nesteDoc = 0;
+        var todos = doc.querySelectorAll('*');
+        for (var e = 0; e < todos.length; e++) {
+            var el = todos[e], attrs = el.attributes;
+            for (var a = 0; a < attrs.length; a++) {
+                var nomeAttr = attrs[a].name;
+                if (!acaoValida[nomeAttr]) continue;
+                nesteDoc++;
+                res.total++;
+                if (!resolverAcaoPro(attrs[a].value, win)) {
+                    res.orfaos.push({
+                        documento: (doc.location && doc.location.href) || '?',
+                        atributo: nomeAttr,
+                        nome: attrs[a].value,
+                        html: el.outerHTML.slice(0, 120)
+                    });
+                }
+            }
+        }
+        if (nesteDoc > 0 && doc.documentElement.getAttribute('data-spro-actions') !== 'sim') {
+            res.semDespachante.push((doc.location && doc.location.href) || '?');
+        }
+    }
+    try {
+        console.log('[SEIPro] auditoria: ' + res.total + ' acoes em ' + res.documentos +
+            ' documento(s), ' + res.orfaos.length + ' orfa(s), ' +
+            res.semDespachante.length + ' documento(s) sem despachante');
+        if (res.orfaos.length && console.table) console.table(res.orfaos);
+    } catch (x) {}
+    return res;
+}
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
