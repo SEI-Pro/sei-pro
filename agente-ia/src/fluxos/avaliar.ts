@@ -2,8 +2,9 @@
  * Fluxo × árvore do processo: em que etapa o processo está e o que falta.
  *
  * FUNÇÃO PURA, sem rede. Recebe o fluxo e a árvore JÁ LIDA e devolve a
- * posição. Roda no content script, sobre a árvore que já está na tela — não
- * existe requisição ao SEI por causa desta avaliação.
+ * posição. Roda no content script, sobre a árvore COMPLETA que a operação
+ * `fluxo.avaliar` busca (e guarda em cache) — não sobre a que está na tela, que
+ * num processo com pastas vem pela metade.
  *
  * A ordem da árvore é CRONOLÓGICA. É por isso que "veio depois" aqui é
  * POSIÇÃO, e não data: o percurso caminha por um ponteiro que só anda para a

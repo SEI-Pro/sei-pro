@@ -461,15 +461,17 @@ class App {
   /**
    * O processo da tela tem lacuna em algum fluxo mapeado?
    *
-   * A conta é feita na aba do SEI, sobre a árvore que já está lá: nenhuma
-   * requisição ao SEI nasce disto. E nem a mensagem sai quando a unidade não
-   * tem fluxo ligado — quem não usa o Estúdio não paga nada por ele.
+   * A conta é feita na aba do SEI, que busca a árvore COMPLETA do processo (com
+   * as pastas abertas). Nem a mensagem sai quando não há processo na tela ou
+   * quando a unidade não tem fluxo ligado: quem não usa o Estúdio não paga nada
+   * por ele, e a árvore buscada fica 30 s em cache na aba.
    */
   private async avaliarFluxos(): Promise<void> {
-    const vale = Boolean(this.tela?.processo) && !this.tela?.sigiloso && this.fluxos.some((f) => f.ativo);
+    const processo = this.tela?.processo?.protocolo;
+    const vale = Boolean(processo) && !this.tela?.sigiloso && this.fluxos.some((f) => f.ativo);
     this.sugestaoDeFluxo = vale
       ? ((await this.ponte
-          .executar("fluxo.avaliar", { fluxos: this.fluxos, ignorados: this.fluxosIgnorados, unidade: this.tela?.unidade })
+          .executar("fluxo.avaliar", { processo, fluxos: this.fluxos, ignorados: this.fluxosIgnorados, unidade: this.tela?.unidade })
           .catch(() => null)) as SugestaoDeFluxo | null)
       : null;
     this.desenharSugestaoDeFluxo();

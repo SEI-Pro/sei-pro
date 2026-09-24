@@ -202,7 +202,7 @@ class Estudio {
           "div",
           { class: "obra-caixa" },
           h("div", { class: "vazio" }, h("h2", {}, "Escreva o rito da sua unidade"), h("p", {}, "O SEI Pro passa a dizer em que etapa cada processo está e a sugerir a próxima providência — no painel do agente, sempre como sugestão.")),
-          h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, "A detecção é 100% local, sobre a árvore do processo aberto na tela. Nada do conteúdo dos autos sai do navegador sem o seu clique.")),
+          h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, "A detecção é 100% local: a comparação entre o fluxo e a árvore do processo é feita no seu navegador. Nada do conteúdo dos autos sai daqui sem o seu clique.")),
           h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, "Precedente não é norma: um fluxo aprendido de processo modelo é a leitura do que foi feito, não do que deveria ser. Revise antes de ligar.")),
         ),
       );

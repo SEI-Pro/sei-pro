@@ -14,7 +14,7 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { avaliarNaTela, executarOperacao, lerTela, marcarAvisoDeFluxo } from "./operacoes";
+import { executarOperacao, lerTela, marcarAvisoDeFluxo } from "./operacoes";
 import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
@@ -216,12 +216,11 @@ function iniciar(): void {
     }
   };
 
-  // `tela`, `fluxo.avaliar` e `fluxo.aviso` só mexem no DOM vivo: nenhuma
-  // requisição ao SEI nasce delas, e por isso ficam fora do despacho de
-  // operações do núcleo.
+  // `tela` e `fluxo.aviso` só mexem no DOM vivo, e por isso ficam fora do
+  // despacho de operações do núcleo. `fluxo.avaliar` NÃO: ele busca a árvore
+  // completa, então é uma operação do núcleo como as outras.
   abrirCanal("sei", undefined, (op, args, sinal) => {
     if (op === "tela") return Promise.resolve(lerTela(document, location.href));
-    if (op === "fluxo.avaliar") return Promise.resolve(avaliarNaTela(document, args));
     if (op === "fluxo.aviso") return Promise.resolve(avisoDeFluxo(args.tem === true));
     return executarOperacao(sei, op, args, sinal);
   // Painel fechado, porta caída: o ponto TEM de sair. Sem isso ele seguiria

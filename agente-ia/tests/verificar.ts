@@ -13,6 +13,7 @@ import { verificarEstudio, verificarHistoricoDoModelo, verificarMetadadosDoModel
 import { verificarCartaoDeFluxo } from "./verificar-cartao";
 import { verificarDom } from "./verificar-dom";
 import { verificarPonte } from "./verificar-ponte";
+import { verificarOpFluxoAvaliar } from "./verificar-op-fluxo";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -35,4 +36,5 @@ verificarHistoricoDoModelo();
 verificarCartaoDeFluxo();
 verificarDom();
 verificarPonte();
+await verificarOpFluxoAvaliar();
 resumo();

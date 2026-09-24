@@ -127,10 +127,12 @@ export function lerTela(doc: Document, url: string): TelaAtual {
 }
 
 /**
- * A árvore que JÁ está na tela, lida do iframe vivo.
+ * A árvore que JÁ está na tela, lida do iframe vivo, sem requisição.
  *
- * Sem requisição ao SEI: com 220 mil instalações, buscar a árvore de novo a
- * cada processo aberto seria carga desnecessária no SEI do órgão.
+ * Serve ao `lerTela` (que só precisa saber QUE processo está aberto). NÃO serve
+ * para avaliar fluxo: o SEI só carrega o conteúdo de uma pasta quando o usuário
+ * a abre, então num processo com pastas isto devolve a árvore pela metade — ver
+ * a operação `fluxo.avaliar`.
  */
 export function arvoreNaTela(doc: Document): Arvore | null {
   const docArvore = doc.querySelector<HTMLIFrameElement>("#ifrArvore")?.contentDocument;
@@ -251,17 +253,31 @@ export interface SugestaoDeFluxo {
 }
 
 /**
- * Avalia os fluxos do usuário contra o processo aberto na tela.
+ * Avalia os fluxos do usuário contra um processo.
  *
- * Só o painel chama isto, e o painel só existe aberto: quem não usa o agente
- * não paga nada por esta funcionalidade. A saída é REDUZIDA a ids e texto —
- * nenhum link assinado nem `infra_hash` atravessa a ponte.
+ * BUSCA A ÁRVORE COMPLETA (`sei.arvore`, com as pastas abertas) em vez de ler o
+ * iframe da tela. O desenho original lia o DOM vivo para não gerar requisição
+ * nenhuma; a prova em campo derrubou a regra: num Procedimento de Fiscalização
+ * real da ANTAQ, com seis pastas, a árvore recém-carregada tem 16 dos 111 nós.
+ * O fluxo não sugeria nada, sem avisar — e uma ferramenta que lê o processo
+ * pela metade não cumpre o papel dela. (Decisão do autor, 23/09/2026.)
+ *
+ * A carga fica contida por três coisas: só o painel do agente aberto dispara
+ * isto; só há busca quando a unidade tem fluxo ligado E há processo na tela; e o
+ * `sei.arvore` guarda o que buscou por 30 s, então reabrir o mesmo processo não
+ * vira outra requisição.
+ *
+ * A saída é REDUZIDA a ids e texto: nenhum link assinado nem `infra_hash`
+ * atravessa a ponte.
  */
-export function avaliarNaTela(doc: Document, args: Record<string, unknown>): SugestaoDeFluxo | null {
-  const arv = arvoreNaTela(doc);
-  if (!arv) return null;
-  const fluxos = (args.fluxos as Fluxo[]) ?? [];
-  const sugestao = escolherSugestao(fluxos, processoParaFluxo(arv, txt(args.unidade)), (args.ignorados as Ignorados) ?? {});
+const avaliarFluxo: Op = async (sei, a, sinal) => {
+  const fluxos = (a.fluxos as Fluxo[]) ?? [];
+  const processo = txt(a.processo);
+  // Nada a fazer: nem gasta a requisição.
+  if (!processo || !fluxos.some((f) => f.ativo)) return null;
+  const arv = await sei.arvore(processo, { sinal });
+  if (arv.nivel === "sigiloso") return null;
+  const sugestao = escolherSugestao(fluxos, processoParaFluxo(arv, txt(a.unidade)), (a.ignorados as Ignorados) ?? {});
   if (!sugestao) return null;
   return {
     protocolo: arv.protocolo,
@@ -270,8 +286,8 @@ export function avaliarNaTela(doc: Document, args: Record<string, unknown>): Sug
     etapaAnteriorId: sugestao.lacuna.etapaAnterior.id,
     anterior: { numero: sugestao.lacuna.anterior.numero, titulo: sugestao.lacuna.anterior.titulo, assinado: sugestao.lacuna.anterior.assinado },
     cumpridas: sugestao.avaliacao.cumpridas.map((c) => ({ etapaId: c.etapa.id, numero: c.documento.numero, titulo: c.documento.titulo })),
-  };
-}
+  } satisfies SugestaoDeFluxo;
+};
 
 function bytesParaBase64(b: Uint8Array): string {
   let s = "";
@@ -403,6 +419,8 @@ export const OPERACOES: Record<string, Op> = {
       sinal,
     ),
   opcoes: (sei, a, sinal) => listarOpcoes(sei, a.lista as ListaOpcoes, String(a.processo), { filtro: txt(a.filtro), sinal }),
+
+  "fluxo.avaliar": avaliarFluxo,
 };
 
 export async function executarOperacao(sei: Sei, op: string, args: Record<string, unknown>, sinal: AbortSignal): Promise<unknown> {

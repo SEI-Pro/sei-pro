@@ -136,10 +136,22 @@ dist/icons/menu/fluxos.svg  ícone do botão na barra do SEI
 
 ### 6.1 Onde cada coisa roda
 
-- **Avaliação** (`avaliar.ts`): no **content script**, que já tem a sessão e a árvore. Só é
-  disparada quando o painel do agente está aberto (`CHAVE_ABERTURA`, que a ponte já mantém) —
-  com 220 mil instalações, uma requisição por processo aberto para quem não usa o agente seria
-  carga desnecessária no SEI do órgão.
+- **Avaliação** (`avaliar.ts`): no **content script**, que já tem a sessão. Só é disparada
+  quando o painel do agente está aberto (`CHAVE_ABERTURA`, que a ponte já mantém) — com 220 mil
+  instalações, carga por processo aberto para quem não usa o agente seria desnecessária no SEI
+  do órgão.
+
+  **REVISÃO de 23/09/2026 (decisão do autor, depois do teste em produção).** O desenho original
+  dizia que a avaliação leria a árvore JÁ RENDERIZADA na tela, sem requisição nenhuma. Não
+  funciona: o SEI só carrega o conteúdo de uma pasta quando o usuário a abre. Num Procedimento
+  de Fiscalização real da ANTAQ (50300.014788/2023-20), com seis pastas, a árvore recém-carregada
+  tem **16 dos 111 nós** — e o fluxo não sugeria nada, em silêncio. Como a ferramenta não cumpre
+  o papel dela lendo o processo pela metade, a regra foi flexibilizada: a operação
+  `fluxo.avaliar` **busca a árvore completa** (`sei.arvore`, com `abrir_pastas=1`).
+
+  O que continua limitando a carga: só com o painel aberto; só quando há processo na tela **e** a
+  unidade tem fluxo ligado; e o cache de 30 s por processo do `sei-nucleo`, então reabrir o mesmo
+  processo não vira outra requisição.
 - **Cartão**: no painel, alimentado pela ponte.
 - **Ponto no ícone**: no content script, na barra do SEI (mesmo lugar do ícone do agente).
 - **Estúdio**: página própria, conversa com a aba do SEI pela mesma ponte (para ler processos
