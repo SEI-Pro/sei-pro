@@ -15,6 +15,17 @@ Versão que ensina a extensão o **rito da sua unidade** — e o agente a escrev
 - **O agente aprende com os seus documentos.** Antes de escrever, ele pergunta se você quer que procure documentos parecidos seus para seguir a estrutura e a linguagem. Se sim, procura os do **mesmo tipo**, priorizando os do mesmo tipo de processo e os gerados por você, e lê um ou dois antes de redigir
 - **O agente não apaga mais o conteúdo do documento em silêncio.** Ao escrever, ele podia gravar um corpo em branco: o SEI aceita isso sem reclamar e responde como se tudo tivesse dado certo, então o documento ficava só com cabeçalho e signatário e o agente anunciava sucesso. Agora conteúdo em branco é recusado antes de ir para o SEI, e o agente só diz que gravou depois de reler o documento e confirmar o que ficou lá
 - **Documento criado aparece na hora.** Ao criar um documento, a árvore do processo é recarregada e o documento novo abre no visualizador — antes ele existia no SEI e não aparecia na tela até você recarregar à mão. Ao alterar o conteúdo de um documento, o visualizador também é atualizado
+### Versão 2.1.2
+23/09/2026
+
+Versão de correção da cópia de tabelas.
+
+- **Copiar uma tabela do SEI e colar fora dele** — no Teams, no Word, num e-mail — deixa de trazer um fundo cinza atrás do texto. Esse cinza vinha da própria extensão: dentro do SEI ele é invisível, mas ia junto na cópia, e o Teams ainda o transformava em realce palavra por palavra
+- A cópia agora sai limpa. Ficam só as colunas com conteúdo, com bordas simples: sem a barra *Baixar / Copiar / Pesquisar*, sem a linha de pesquisa, sem as caixas de seleção e sem a coluna de ações, que fora do SEI aparecia como um punhado de imagens quebradas
+- Se você pesquisou dentro da tabela antes de copiar, vai **o que está na tela** — as linhas escondidas pelo filtro não são mais copiadas
+- Colando em **Excel** ou em editor de texto simples, o conteúdo chega em colunas. Antes chegava o código HTML da tabela
+
+Vale para todas as tabelas em que o SEI Pro oferece o botão *Copiar*: blocos de assinatura, favoritos, processos e documentos em lote, histórico de processos e resultado de pesquisa.
 
 ### Versão 2.1.1
 23/09/2026
