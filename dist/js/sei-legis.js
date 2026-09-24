@@ -90,8 +90,8 @@ function removeEnum(iframe) {
     iframe.find('p').not('[data-comment="true"]').each(function(){ 
         if ( !$(this).find('.legis').length ) {
             randRef = randomString(16);
-            $(this).html($(this).html().replace(/&nbsp;/g, ' '));
-            $(this).html($(this).html().replace(/\u200B/g, ' '));
+            reescreverDocumentoPro($(this), $(this).html().replace(/&nbsp;/g, ' '));
+            reescreverDocumentoPro($(this), $(this).html().replace(/\u200B/g, ' '));
             var text = $(this).html();
             var textSearch = $(this).text().trim().split(' ');
 			if ( textSearch.length > 1 ) {
@@ -103,69 +103,69 @@ function removeEnum(iframe) {
                 if ( textNormalize1 == 'anexo' ){
                     var textReplace = ( typeof textSearch[1] !== 'undefined' ) ? textSearch[0]+' '+textSearch[1] : textSearch[0]; 
                     text = text.replace(textReplace, '<span contenteditable="false" class="legis auto anexo" data-ref="'+randRef+'">anexo.</span>');
-                    $(this).html(text);
+                    reescreverDocumentoPro($(this), text);
                 }
 				if ( textNormalize1 == 'titulo' && (romanToInt(textSearch[1].toString()) > 0) ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto tit" data-ref="'+randRef+'">TIT.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ( textNormalize1 == 'capitulo' && (romanToInt(textSearch[1].toString()) > 0) ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto cap" data-ref="'+randRef+'">CAP.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ( textNormalize1 == 'secao' && (romanToInt(textSearch[1].toString()) > 0) ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto sec" data-ref="'+randRef+'">Sec.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
                 if ( textNormalize1 == 'subsecao' && (romanToInt(textSearch[1].toString()) > 0) ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto sub" data-ref="'+randRef+'">Sub.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ((textSearch[0].toLowerCase().indexOf('art') !== -1) && (textSearch[1].match(/\d+/g) != null)){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto art" data-ref="'+randRef+'">Art.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ((textSearch[0].toLowerCase().indexOf('\u00A7') !== -1) && (textSearch[1].match(/\d+/g) != null)){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto par" data-ref="'+randRef+'">\u00A7</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ((textSearch[0].toLowerCase().indexOf('\u00A7') !== -1) && (textSearch[0].match(/\d+/g) != null)){
 					var textReplace = textSearch[0];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto par" data-ref="'+randRef+'">\u00A7</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ((textSearch[0].toLowerCase().indexOf('\u00A7') !== -1) && (textSearch[0].match(/\d+/g) != null)){
 					var textReplace = textSearch[0];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto par" data-ref="'+randRef+'">\u00A7</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ( textNormalize == 'paragrafo unico' || textNormalize == 'par unico' ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto par" data-ref="'+randRef+'">\u00A7</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ((romanToInt(textSearch[0].toString()) > 0 && textSearch[1].toString() == '-') || 
 					(romanToInt(textSearch[0].toString()) > 0 && textSearch[1].toString() == '\u2014')
 				   ){
 					var textReplace = textSearch[0]+' '+textSearch[1];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto inc" data-ref="'+randRef+'">Inc.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 				if ( textSearch[0].toString().slice(-1) == '\u0029' && textSearch[0].toString().charAt(0) != '\u0028' ) {
 					var textReplace = textSearch[0];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto alin" data-ref="'+randRef+'">Alin.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
                 if ( textSearch[0].toString().slice(-1) == '.' && $.isNumeric(textSearch[0].toString().charAt(0)) ) {
 					var textReplace = textSearch[0];
 					text = text.replace(textReplace, '<span contenteditable="false" class="legis auto item" data-ref="'+randRef+'">Item.</span>');
-					$(this).html(text);
+					reescreverDocumentoPro($(this), text);
 				}
 			}
         }
@@ -174,7 +174,8 @@ function removeEnum(iframe) {
 function undoRemoveEnum(iframe) {
     iframe.find('.legis.auto').each(function(){ 
         var textOld = $(this).attr('data-old-text').hexEncode().hexDecode();
-        $(this).after(textOld);
+        // Conteudo do proprio documento voltando ao lugar (desfaz a numeracao), nao dado externo.
+        reescreverDocumentoPro($(this), textOld, 'after');
         $(this).remove();
     });
 }
@@ -191,7 +192,8 @@ function removeAllLegis() {
         var iframe = $(this).contents();
         iframe.find('.legis').each(function(){ 
             var text = $(this).text();
-            $(this).after(text);
+            // e texto, nao marcacao: no de texto evita que o jQuery reparseie como HTML.
+            $(this).after(document.createTextNode(text));
             $(this).remove();
         });
     });
@@ -199,16 +201,16 @@ function removeAllLegis() {
 
 function cleanLegis(iframe) {
     iframe.find('p').not('[data-comment="true"]').each(function(){ 
-        $(this).find('.legis.anexo').html('anexo.');
-        $(this).find('.legis.tit').html('tit.');
-        $(this).find('.legis.cap').html('cap.');
-        $(this).find('.legis.sec').html('sec.');
-        $(this).find('.legis.sub').html('sub.');
-        $(this).find('.legis.art').html('art.');
-        $(this).find('.legis.par').html('\u00A7');
-        $(this).find('.legis.inc').html('inc.');
-        $(this).find('.legis.alin').html('alin.');
-        $(this).find('.legis.item').html('item.');
+        $(this).find('.legis.anexo').text('anexo.');
+        $(this).find('.legis.tit').text('tit.');
+        $(this).find('.legis.cap').text('cap.');
+        $(this).find('.legis.sec').text('sec.');
+        $(this).find('.legis.sub').text('sub.');
+        $(this).find('.legis.art').text('art.');
+        $(this).find('.legis.par').text('\u00A7');
+        $(this).find('.legis.inc').text('inc.');
+        $(this).find('.legis.alin').text('alin.');
+        $(this).find('.legis.item').text('item.');
     });
 }
 function getAnexoUnico(iframe) {
@@ -216,7 +218,7 @@ function getAnexoUnico(iframe) {
     if ( anexo.length == 1 ) {
         var text = anexo.html();
             text = text.replace('ANEXO I', 'ANEXO \u00DANICO');
-            anexo.html(text);
+            reescreverDocumentoPro(anexo, text);
     }
 }
 function getParUnico(iframe) {
@@ -225,7 +227,7 @@ function getParUnico(iframe) {
         var art = $(this).find('a').attr('data-art');
         if ( !iframe.find('a[name=art'+art+'\u00A72]').length ) {
             text = text.replace('\u00A7 1\u00BA', 'Par\u00E1grafo \u00FAnico.');
-            $(this).html(text);
+            reescreverDocumentoPro($(this), text);
             $(this).find('a').attr('data-parunico','true');
         }
     });
@@ -295,8 +297,8 @@ function updateLegis(iframe) {
     iframe.find('p').not('[data-comment="true"]').each(function(){ 
         var this_ = $(this);
             alertDisp = '';
-            this_.html(this_.html().replace(/&nbsp;/g, ' '));
-            this_.html(this_.html().replace(/\u200B/g, ' '));
+            reescreverDocumentoPro(this_, this_.html().replace(/&nbsp;/g, ' '));
+            reescreverDocumentoPro(this_, this_.html().replace(/\u200B/g, ' '));
         var text = this_.html();
         var textSearch = this_.text().trim().split(' ')[0];
         var textSearchFull = this_.text().trim();
@@ -313,7 +315,7 @@ function updateLegis(iframe) {
                     value = ( value.toString().slice(-1) == '.' ) ? value.toString().slice(0, -1) : value;
                 var resultRef = ( this_.find('.legis.refext:contains("'+value+'")').length ) ? '@'+value : '<span class="legis refext">@'+value+'</span>';
                     text = text.replace('@'+value, resultRef);
-                    this_.html(text);
+                    reescreverDocumentoPro(this_, text);
             });
         }
         if ( textSearch.toLowerCase().indexOf('anexo.') !== -1) {
@@ -325,7 +327,7 @@ function updateLegis(iframe) {
             linkAnchor = '<a name="anexo'+ordAnex.toLowerCase()+'" data-anexo="'+ordAnex.toLowerCase()+'"></a>';
             resultAnex = ( $(this).find('.legis.anexo').length ) ? linkAnchor+'ANEXO '+ordAnex : '<span contenteditable="false" class="legis anexo" data-ref="'+randRef+'">'+linkAnchor+'ANEXO '+ordAnex+'</span>';
             text = text.replace(textSearch, resultAnex);
-            $(this).html(text).attr('class',classParag);
+            reescreverDocumentoPro($(this), text).attr('class',classParag);
             iAnex++;
 			iTit = 0; iCap = 0; iSec = 0; iSub = 0; iArt = 0; iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
         }
@@ -337,7 +339,7 @@ function updateLegis(iframe) {
             linkAnchor = '<a name="titulo'+ordTit.toLowerCase()+'" data-tit="'+ordTit.toLowerCase()+'"></a>';
             resultTit = ( $(this).find('.legis.tit').length ) ? linkAnchor+'T\u00CDTULO '+ordTit : '<span contenteditable="false" class="legis tit" data-ref="'+randRef+'">'+linkAnchor+'T\u00CDTULO '+ordTit+'</span>';
             text = text.replace(textSearch, resultTit);
-            $(this).html(text).attr('class',classParag);
+            reescreverDocumentoPro($(this), text).attr('class',classParag);
             iTit++;
             iCap = 0; iSec = 0; iSub = 0;
         }
@@ -350,7 +352,7 @@ function updateLegis(iframe) {
                                       : '<a name="capitulo'+ordCap.toLowerCase()+'" data-cap="'+ordCap.toLowerCase()+'"></a>';
             resultCap = ( $(this).find('.legis.cap').length ) ? linkAnchor+'CAP\u00CDTULO '+ordCap : '<span contenteditable="false" class="legis cap" data-ref="'+randRef+'">'+linkAnchor+'CAP\u00CDTULO '+ordCap+'</span>';
             text = text.replace(textSearch, resultCap);
-            $(this).html(text).attr('class',classParag);
+            reescreverDocumentoPro($(this), text).attr('class',classParag);
             iCap++;
             iSec = 0; iSub = 0;
         }
@@ -364,7 +366,7 @@ function updateLegis(iframe) {
             resultSec = ( $(this).find('.legis.sec').length ) ? linkAnchor+'Se\u00E7\u00E3o '+ordSec : '<span contenteditable="false" class="legis sec" data-ref="'+randRef+'">'+linkAnchor+'Se\u00E7\u00E3o '+ordSec+'</span>';
             resultSecBold = ( $(this).find('strong').length ) ? resultSec : '<strong>'+resultSec+'<strong>';
             text = text.replace(textSearch, resultSecBold);
-            $(this).html(text).attr('class',classParag);
+            reescreverDocumentoPro($(this), text).attr('class',classParag);
             iSec++;
         }
         if ( textSearch.toLowerCase().indexOf('sub.') !== -1) {
@@ -377,7 +379,7 @@ function updateLegis(iframe) {
             resultSub = ( $(this).find('.legis.sub').length ) ? linkAnchor+'Subse\u00E7\u00E3o '+ordSub : '<span contenteditable="false" class="legis sub" data-ref="'+randRef+'">'+linkAnchor+'Subse\u00E7\u00E3o '+ordSub+'</span>';
             resultSubBold = ( $(this).find('strong').length ) ? resultSub : '<strong>'+resultSub+'<strong>';
             text = text.replace(textSearch, resultSubBold);
-            $(this).html(text).attr('class',classParag);
+            reescreverDocumentoPro($(this), text).attr('class',classParag);
             iSub++;
         }
         if ( textSearch.toLowerCase().indexOf('art.') !== -1) {
@@ -391,7 +393,7 @@ function updateLegis(iframe) {
 			alertDisp = checkText($(this), resultArt, 'art');
             spaceBlank = ( ($(this).text().replace('art.', '').trim()) == '' ) ? '&nbsp;' : '';
             text = text.replace(textSearch, resultArt);
-            $(this).html(text+spaceBlank).attr('class',classParag);
+            reescreverDocumentoPro($(this), text + spaceBlank).attr('class',classParag);
             iArt++;
             iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
 
@@ -408,7 +410,7 @@ function updateLegis(iframe) {
 			alertDisp = checkText($(this), resultPar, 'par');
             spaceBlank = ( ($(this).text().replace('\u00A7', '').trim()) == '' ) ? '&nbsp;' : '';
             text = text.replace(textSearch, resultPar);
-            $(this).html(text+spaceBlank).attr('class',classParag);
+            reescreverDocumentoPro($(this), text + spaceBlank).attr('class',classParag);
             iPar++;
             iInc = 0; iAlin = 0; letterAlin = '';
         }
@@ -424,7 +426,7 @@ function updateLegis(iframe) {
 			alertDisp = checkText($(this), resultInc, 'inc');
             spaceBlank = ( ($(this).text().replace('inc.', '').trim()) == '' ) ? '&nbsp;' : '';
             text = text.replace(textSearch, resultInc);
-            $(this).html(text+spaceBlank).attr('class',classParag);
+            reescreverDocumentoPro($(this), text + spaceBlank).attr('class',classParag);
             iInc++;
             iAlin = 0; letterAlin = '';
         }
@@ -440,7 +442,7 @@ function updateLegis(iframe) {
 			alertDisp = checkText($(this), resultAlin, 'alin');
             spaceBlank = ( ($(this).text().replace('alin.', '').trim()) == '' ) ? '&nbsp;' : '';
             text = text.replace(textSearch, resultAlin);
-            $(this).html(text+spaceBlank).attr('class',classParag);
+            reescreverDocumentoPro($(this), text + spaceBlank).attr('class',classParag);
             iAlin++; 
             iItem = 0; letterAlin = '';
         }
@@ -455,19 +457,18 @@ function updateLegis(iframe) {
 			alertDisp = checkText($(this), resultItem, 'item');
             spaceBlank = ( ($(this).text().replace('item.', '').trim()) == '' ) ? '&nbsp;' : '';
             text = text.replace(textSearch, resultItem);
-            $(this).html(text+spaceBlank).attr('class',classParag);
+            reescreverDocumentoPro($(this), text + spaceBlank).attr('class',classParag);
             iItem++;
         }
-        var htmlAlert = '<span contenteditable="false" class="tooltips" style="display:none" data-text-tip="'+alertDisp+'"></span>';
+        var htmlAlert = `<span contenteditable="false" class="tooltips" style="display:none" data-text-tip="${alertDisp}"></span>`;
 		if ( alertDisp != '' && $(this).find('span.ignoretip').length == 0 ) { 
             $(this).find('span.legis')
                 .attr('contenteditable', 'false')
                 .find('span.tooltips')
                 .remove();
-            $(this).find('span.legis')
-                .eq(0)
-                .addClass('alert')
-                .prepend(htmlAlert)
+            // O marcador de alerta tambem carrega contenteditable="false" e entra no
+            // documento editado: pelo portao o atributo cairia e o usuario apagaria o alerta.
+            reescreverDocumentoPro($(this).find('span.legis').eq(0).addClass('alert'), htmlAlert, 'prepend')
                 .off('mouseover')
                 .off('mouseout')
                 .on('dblclick', function(e) { ignoreTooltips($(this)) })
@@ -507,10 +508,10 @@ function showTooltips(this_) {
     var ignoretip = '<span class="ignoretext">dois cliques para ignorar alerta</span>';
     var tip = $(this_).find('span.tooltips').attr('data-text-tip');
         tip = getCodTip(tip);
-        $(this_).find('span.tooltips').html(tip+ignoretip).show();
+        htmlPro($(this_).find('span.tooltips'), tip + ignoretip).show();
 }
 function hideTooltips(this_) {
-    $(this_).find('span.tooltips').html('').hide();
+    $(this_).find('span.tooltips').empty().hide();
 }
 function getNameRef(anchor, iframe, this_) {
     var arrayResult = [];
@@ -573,7 +574,8 @@ function getNameRef(anchor, iframe, this_) {
 function getRefsTags(iframe) {
     iframe.find('.legis.error').each(function(){ 
         var textLink = $(this).text();
-        $(this).after(textLink);
+        // e texto, nao marcacao: no de texto evita que o jQuery reparseie como HTML.
+        $(this).after(document.createTextNode(textLink));
         $(this).remove();
     });
     iframe.find('p').not('[data-comment="true"]').each(function(){ 
@@ -590,11 +592,11 @@ function getRefsTags(iframe) {
                     var refArt = anchor.closest('span.legis').attr('data-ref');
                     var resultRef = '<a href="#'+refTag+'"><span contenteditable="false" class="legis ref" data-anchor="'+refArt+'">'+textRef+'</span></a>';
                     text = text.replace('#'+value, resultRef);
-                    this_.html(text);
+                    reescreverDocumentoPro(this_, text);
                 } else {
                     var resultRef = '<span contenteditable="true" class="legis ref error">#'+value+'</span>';
                     text = text.replace('#'+value, resultRef);
-                    this_.html(text);
+                    reescreverDocumentoPro(this_, text);
                 }
             });
         }
@@ -633,8 +635,10 @@ function updateRefsLegis(iframe, data) {
             var legisData = jmespath.search(data, "[?SiglaNorma=='"+dataValue_+"']");
             console.log(dataValue_, legisData, data);
             var nomeLegis = ( legisData.length > 0 && legisData[0].NomeNorma ) ? ' ('+legisData[0].NomeNorma+')' : '';
-            var htmlLegis = ( legisData.length > 0 ) ? '<a href="'+legisData[0].Link+'" target="_blank">'+legisData[0].DescNormaFull+nomeLegis.trim()+'</a>' : text;
-                this_.html(htmlLegis);
+            // Dado vindo do servico de legislacao (Link, DescNormaFull, NomeNorma) virando
+            // marcacao: e a unica injecao de dado externo do arquivo, e por isso vai pelo portao.
+            var htmlLegis = ( legisData.length > 0 ) ? `<a href="${legisData[0].Link}" target="_blank">${legisData[0].DescNormaFull}${nomeLegis.trim()}</a>` : text;
+                htmlPro(this_, htmlLegis);
             if ( legisData.length > 0 ) { 
                 this_.attr('data-refext',dataValue).removeClass('error').addClass('refok'); 
             } else { 
@@ -651,7 +655,7 @@ function updateRefsTags(iframe) {
         var anchor = iframe.find('.legis[data-ref="'+dataRef+'"] a');
         var textRef = getNameRef(anchor, iframe, this_).trim();
         if (  typeof textRef !== 'undefined' && textRef != '' ) { 
-            this_.html(textRef).removeClass('error');
+            this_.text(textRef).removeClass('error');
             this_.closest('a').attr('href', '#'+anchor.attr('name')).attr('data-cke-saved-href', '#'+anchor.attr('name'));
         } else { 
             this_.addClass('error');

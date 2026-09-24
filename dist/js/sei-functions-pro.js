@@ -816,6 +816,34 @@ function auditActionsPro() {
     } catch (x) {}
     return res;
 }
+
+// Reescreve o conteudo de um elemento QUE JA ESTA no documento aberto no editor, a partir
+// do conteudo dele mesmo. NAO sanitiza -- e de proposito, e a diferenca importa:
+//
+//   htmlPro              dado que ENTRA na pagina (vem de um servico, de outra aba, do
+//                        usuario) e vira marcacao. Sanitiza. E o caminho da regra da AMO.
+//   reescreverDocumentoPro  o texto do PROPRIO usuario saindo do documento e voltando,
+//                        com marcacao constante da extensao no meio (os marcadores de
+//                        numeracao da Legistica). Nao ha dado externo virando marcacao.
+//
+// Sanitizar aqui nao aumentaria a seguranca e apagaria em silencio o que o DOMPurify nao
+// reconhece do documento do usuario, a comecar pelo contenteditable="false" dos
+// marcadores -- que existe justamente para o usuario nao apagar o marcador sem querer.
+// Perder conteudo de documento e pior do que qualquer coisa que isto evitaria.
+function reescreverDocumentoPro(alvo, html, modo) {
+    var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
+    if (!$alvo.length) { avisarPro('reescreverDocumentoPro: alvo inexistente', alvo); return $alvo; }
+    var texto = (html === null || html === undefined) ? '' : String(html);
+    switch (modo || 'html') {
+        case 'append':  $alvo.append(texto); break;
+        case 'prepend': $alvo.prepend(texto); break;
+        case 'before':  $alvo.before(texto); break;
+        case 'after':   $alvo.after(texto); break;
+        case 'replace': $alvo.replaceWith(texto); break;
+        default:        $alvo.html(texto);
+    }
+    return $alvo;
+}
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
