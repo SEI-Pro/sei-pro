@@ -20,7 +20,7 @@ import { criarProvedor, MODELO_PADRAO, type Ajustes, type Servico } from "../mot
 import { inferirFluxo, type ProcessoModelo } from "../fluxos/inferir";
 import { andamentosDoHistorico, comAcao, comDesvio, deLinhas, metadadosDaArvore, numerosDeProcesso, paraLinhas, resumoDoAlcance, textoDoDiagnostico } from "./campos";
 import type { RespostaFluxo } from "../ponte/operacoes";
-import { paraMarkdown } from "../fluxos/markdown";
+import { deMarkdown, paraMarkdown } from "../fluxos/markdown";
 import { guardarColecoesDeFluxos, listarColecoesDeFluxos, mesclarColecaoDeFluxos, type ColecaoFluxos } from "../fluxos/colecao";
 // As duas funções de GitHub são as MESMAS das coleções de skills do agente: uma
 // pasta do GitHub é uma pasta do GitHub, e duplicar o tratamento de limite de
@@ -125,6 +125,7 @@ class Estudio {
         { class: "topo" },
         marca,
         h("span", { class: "marca" }, h("strong", {}, "Estúdio de Fluxo"), h("span", {}, "SEI Pro")),
+        this.botaoImportar(),
         h("button", { class: "plana", onclick: () => this.abrirColecoes() }, icone("baixar", 15), "Cole\u00E7\u00E3o da equipe"),
         h("button", { class: "plana", onclick: () => this.aprenderDeModelo() }, icone("faisca", 15), "Aprender de processo modelo"),
         h("button", { class: "primario", onclick: () => this.abrir(fluxoNovo("Novo fluxo"), true) }, icone("mais", 16), "Novo fluxo"),
@@ -318,6 +319,38 @@ class Estudio {
     );
     this.revalidar();
     void this.conferirNaTela(true);
+  }
+
+  /**
+   * Abre um `.md` do computador como rascunho.
+   *
+   * Contraparte do "Exportar .md": sem isto, o arquivo que alguém te manda por
+   * e-mail (ou que você acabou de exportar) só entrava publicando numa pasta do
+   * GitHub — caminho longo demais para conferir um fluxo. Entra como RASCUNHO e
+   * desligado: nada é salvo antes de você olhar.
+   */
+  private botaoImportar(): HTMLElement {
+    const arquivo = h("input", { type: "file", accept: ".md,.markdown,text/markdown", class: "sr-only" });
+    arquivo.addEventListener("change", async () => {
+      const f = arquivo.files?.[0];
+      arquivo.value = "";
+      if (!f) return;
+      try {
+        const lido = deMarkdown(await f.text());
+        if (this.sujo && !confirm("Voc\u00EA tem altera\u00E7\u00F5es n\u00E3o salvas. Substituir pelo fluxo do arquivo?")) return;
+        // Veio de arquivo solto, não de pasta sincronizada: é fluxo do usuário,
+        // e editar aqui não vai ser substituído por sincronia nenhuma.
+        this.rascunho = { ...lido, origem: "manual", colecao: undefined, url: undefined, textoOrigem: undefined };
+        this.novo = true;
+        this.sujo = true;
+        this.notas = { divergencias: [], avisos: [] };
+        this.desenhar();
+      } catch (e) {
+        alert(`N\u00E3o deu para ler "${f.name}": ${(e as Error).message}`);
+      }
+    });
+    const botao = h("button", { class: "plana", title: "Abrir um fluxo .md do computador", onclick: () => arquivo.click() }, icone("setaCima", 15), "Importar .md");
+    return h("span", { class: "com-botao" }, botao, arquivo);
   }
 
   /** Baixa o fluxo como `.md`, no formato que a pasta da equipe usa. */
