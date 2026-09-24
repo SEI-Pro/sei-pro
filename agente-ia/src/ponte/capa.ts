@@ -208,7 +208,7 @@ export function mostrarFaixaNaBarra(raiz: Document, cartao: CartaoDaCapa | null,
       // A moldura e a do SEI (mesma sombra e mesmo raio das caixas dele); o
       // fundo ambar e nosso, para a sugestao se destacar do documento.
       "display:flex;align-items:center;gap:10px;flex-wrap:wrap;clear:both;margin:10px 0 8px;" +
-        "padding:10px 10px 0px 10px;border-radius:5px;" +
+        "padding:10px;border-radius:5px;" +
         "box-shadow:0 0.125rem 0.5rem rgba(0, 0, 0, .3), 0 0.0625rem 0.125rem rgba(0, 0, 0, .2);" +
         "background:#fff8ef;color:#1a1e27;font-family:inherit;font-size:12px;line-height:1.35;",
     );
