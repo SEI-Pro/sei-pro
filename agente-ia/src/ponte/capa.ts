@@ -19,6 +19,7 @@ import type { CartaoDaCapa } from "../fluxos/cartao";
 
 const MARCA_AVISO = "spro-aviso-fluxo";
 const MARCA_CARTAO = "spro-cartao-fluxo";
+const MARCA_FAIXA = "spro-faixa-fluxo";
 const MARCA_ESTILO = "spro-estilo-fluxo";
 const AVISO_NO_TITULO = " — há uma sugestão de fluxo para este processo";
 
@@ -32,6 +33,10 @@ function documentos(raiz: Document, nivel = 3): Document[] {
   const achados = [raiz];
   if (nivel <= 0) return achados;
   for (const f of raiz.querySelectorAll("iframe")) {
+    // `frmCheckerProcessoPro` e um iframe OCULTO do proprio SEI Pro, que
+    // duplica os nomes da tela: desenhar nele e trabalho perdido, e o cartao
+    // fica num lugar onde ninguem clica.
+    if (f.id === "frmCheckerProcessoPro" || (f as HTMLIFrameElement).name === "frmCheckerProcessoPro") continue;
     let dentro: Document | null = null;
     try {
       dentro = (f as HTMLIFrameElement).contentDocument;
@@ -117,9 +122,11 @@ export interface AcoesDaCapa {
 
 /**
  * Cartão de sugestão no alto da capa do processo (`#capaProcessoPro`, desenhada
- * pelo legado). `null` remove.
+ * pelo legado). `null` remove. Devolve `true` se desenhou em algum documento —
+ * é o que diz à faixa da barra que ela não precisa repetir a mesma sugestão.
  */
-export function mostrarCartaoNaCapa(raiz: Document, cartao: CartaoDaCapa | null, acoes?: AcoesDaCapa): void {
+export function mostrarCartaoNaCapa(raiz: Document, cartao: CartaoDaCapa | null, acoes?: AcoesDaCapa): boolean {
+  let desenhou = false;
   for (const doc of documentos(raiz)) {
     let capa: HTMLElement | null = null;
     try {
@@ -168,6 +175,63 @@ export function mostrarCartaoNaCapa(raiz: Document, cartao: CartaoDaCapa | null,
 
     el.append(titulo, texto, lista, acoesEl);
     capa.prepend(el);
+    desenhou = true;
+  }
+  return desenhou;
+}
+
+/**
+ * Faixa estreita entre a barra de ações e o visualizador. `null` remove.
+ *
+ * Por que existe, além do cartão da capa: abrindo o processo pelo número, o SEI
+ * cai direto num DOCUMENTO, e a capa (`#capaProcessoPro`) nem chega a ser
+ * desenhada — a sugestão ficava só na bolinha do robô, que não diz o que é. A
+ * faixa acompanha a barra de ações, que existe em qualquer documento aberto.
+ */
+export function mostrarFaixaNaBarra(raiz: Document, cartao: CartaoDaCapa | null, acoes?: AcoesDaCapa): void {
+  for (const doc of documentos(raiz)) {
+    let barra: HTMLElement | null = null;
+    try {
+      barra = doc.querySelector<HTMLElement>("#divArvoreAcoes");
+    } catch {
+      continue;
+    }
+    if (!barra) continue;
+    doc.getElementById(MARCA_FAIXA)?.remove();
+    if (!cartao) continue;
+
+    const el = doc.createElement("div");
+    el.id = MARCA_FAIXA;
+    el.setAttribute("role", "status");
+    el.setAttribute(
+      "style",
+      "display:flex;align-items:center;gap:10px;flex-wrap:wrap;clear:both;margin:6px 0 8px;padding:7px 12px;" +
+        "border:1px solid #e8710a;border-left-width:4px;border-radius:8px;background:#fff8ef;color:#1a1e27;" +
+        "font-family:inherit;font-size:12px;line-height:1.35;",
+    );
+
+    const texto = doc.createElement("span");
+    texto.setAttribute("style", "flex:1 1 320px;min-width:0;");
+    const forte = doc.createElement("strong");
+    forte.setAttribute("style", "color:#96600a;");
+    forte.append(doc.createTextNode(`${cartao.titulo}: `));
+    texto.append(forte, doc.createTextNode(cartao.resumo));
+
+    const botao = (rotulo: string, primario: boolean, aoClicar?: () => void) => {
+      const b = doc.createElement("button");
+      b.type = "button";
+      b.append(doc.createTextNode(rotulo));
+      b.setAttribute(
+        "style",
+        `font:inherit;cursor:pointer;white-space:nowrap;padding:4px 10px;border-radius:7px;border:1px solid ${primario ? "transparent" : "#ccd2dd"};` +
+          `background:${primario ? "#3367d6" : "#fff"};color:${primario ? "#fff" : "#596072"};`,
+      );
+      if (aoClicar) b.addEventListener("click", aoClicar);
+      return b;
+    };
+
+    el.append(texto, botao(cartao.acaoPrincipal, true, acoes?.abrirAgente), botao(cartao.acaoIgnorar, false, acoes?.ignorar));
+    barra.insertAdjacentElement("afterend", el);
   }
 }
 

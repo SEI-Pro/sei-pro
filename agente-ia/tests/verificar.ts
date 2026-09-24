@@ -20,6 +20,7 @@ import { verificarSimilares } from "./verificar-similares";
 import { verificarFluxoMarkdown } from "./verificar-fluxo-md";
 import { verificarColecaoDeFluxos } from "./verificar-colecao-fluxos";
 import { verificarEditarConteudo } from "./verificar-editar-conteudo";
+import { verificarFaixaDeFluxo } from "./verificar-faixa";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -52,4 +53,5 @@ verificarSimilares();
 await verificarFluxoMarkdown();
 verificarColecaoDeFluxos();
 await verificarEditarConteudo();
+verificarFaixaDeFluxo();
 resumo();

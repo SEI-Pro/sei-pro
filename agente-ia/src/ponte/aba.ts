@@ -15,7 +15,7 @@ import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
 import { alvoParaMostrar, executarOperacao, lerTela, type RespostaFluxo } from "./operacoes";
-import { abrirNoVisualizador, marcarAvisoDeFluxo, mostrarCartaoNaCapa, recarregarArvore } from "./capa";
+import { abrirNoVisualizador, marcarAvisoDeFluxo, mostrarCartaoNaCapa, mostrarFaixaNaBarra, recarregarArvore } from "./capa";
 import { cartaoDaCapa } from "../fluxos/cartao";
 import { CHAVE_FLUXOS, CHAVE_IGNORADOS, comIgnorada, type Fluxo, type Ignorados } from "../fluxos/modelo";
 import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
@@ -346,7 +346,9 @@ function vigiarFluxo(sei: Sei): void {
   /** Repõe o que o legado apaga ao redesenhar a capa e a barra (a cada 1,5 s). */
   const pintar = () => {
     marcarAvisoDeFluxo(document, cartao !== null);
-    mostrarCartaoNaCapa(document, cartao, {
+    // Duas telas, o mesmo cartão: a capa só existe quando o processo abre nela,
+    // e abrir pelo número cai num documento — aí quem fala é a faixa da barra.
+    const acoesDoCartao = {
       abrirAgente: abrirPainel,
       ignorar: () => {
         void (async () => {
@@ -357,7 +359,11 @@ function vigiarFluxo(sei: Sei): void {
           pintar();
         })();
       },
-    });
+    };
+    // A faixa é o lugar que SEMPRE existe; com a capa aberta, o cartão grande
+    // já diz tudo e repetir na faixa seria a mesma frase duas vezes na tela.
+    const naCapa = mostrarCartaoNaCapa(document, cartao, acoesDoCartao);
+    mostrarFaixaNaBarra(document, naCapa ? null : cartao, acoesDoCartao);
   };
   setInterval(pintar, 2000);
 

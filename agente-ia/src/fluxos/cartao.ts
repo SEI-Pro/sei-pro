@@ -44,9 +44,23 @@ export function detalhesDaSugestao(s: DadosDoCartao): string[] {
 export interface CartaoDaCapa {
   titulo: string;
   texto: string;
+  /** Uma linha, para a faixa estreita acima do visualizador. */
+  resumo: string;
   etapas: string[];
   acaoPrincipal: string;
   acaoIgnorar: string;
+}
+
+/**
+ * A sugestão em uma linha.
+ *
+ * A faixa fica entre a barra de ações e o documento, onde não cabe o texto
+ * inteiro: diz a etapa que falta e quanto do rito já andou, no condicional,
+ * como o cartão grande.
+ */
+export function resumoDaSugestao(s: DadosDoCartao): string {
+  const total = s.cumpridas.length + 1;
+  return `${s.etapa} pode ser a próxima providência — ${s.cumpridas.length} de ${total} etapas do rito já estão na árvore.`;
 }
 
 /**
@@ -63,6 +77,7 @@ export function cartaoDaCapa(s: DadosDoCartao): CartaoDaCapa {
   return {
     titulo: `Fluxo: ${s.fluxo}`,
     texto: textoDaSugestao(s),
+    resumo: resumoDaSugestao(s),
     etapas: detalhesDaSugestao(s),
     acaoPrincipal: "Abrir o Agente de IA",
     acaoIgnorar: "Ignorar neste processo",
