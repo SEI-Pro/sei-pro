@@ -12799,7 +12799,7 @@ function insertIconEstudioFluxo() {
 function appendIconEstudioFluxo(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var titulo = 'Est\u00FAdio de Fluxo';
-    var htmlIconEstudioFluxo =  '<a href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" id="iconEstudioFluxo" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\',\''+titulo+'\');">'+
+    var htmlIconEstudioFluxo =  '<a href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" id="iconEstudioFluxo" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\')" tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconEstudioFluxo').length == 0) {
