@@ -738,7 +738,7 @@ export const TOOLS_SEI: DefTool[] = [
   escritaEmLote({
     nome: "documento_editar",
     descricao:
-      "Substitui (ou acrescenta ao fim) o conte\u00FAdo do corpo de documentos internos N\u00C3O assinados, em HTML do SEI. Documento assinado \u00E9 recusado (editar cancelaria a assinatura).",
+      "Substitui (ou acrescenta ao fim) o conte\u00FAdo do corpo de documentos internos N\u00C3O assinados, em HTML do SEI. Documento assinado \u00E9 recusado (editar cancelaria a assinatura). Conte\u00FAdo em branco (`<p>&nbsp;</p>`, s\u00F3 espa\u00E7o) \u00E9 RECUSADO: substituir apaga a se\u00E7\u00E3o, e o SEI aceita isso calado. Escreva o texto inteiro do documento.",
     parametros: s.objeto({
       documentos: DOCUMENTOS,
       conteudo_html: s.texto({ min: 1 }),

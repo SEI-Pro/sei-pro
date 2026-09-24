@@ -19,6 +19,7 @@ import { verificarEstilosDoEditor } from "./verificar-estilos";
 import { verificarSimilares } from "./verificar-similares";
 import { verificarFluxoMarkdown } from "./verificar-fluxo-md";
 import { verificarColecaoDeFluxos } from "./verificar-colecao-fluxos";
+import { verificarEditarConteudo } from "./verificar-editar-conteudo";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -50,4 +51,5 @@ verificarEstilosDoEditor();
 verificarSimilares();
 await verificarFluxoMarkdown();
 verificarColecaoDeFluxos();
+await verificarEditarConteudo();
 resumo();

@@ -217,6 +217,21 @@ export function textoDoHtml(html: string): string {
   return (doc.body?.textContent ?? "").replace(/[ \t\u00A0]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
+/**
+ * O conteúdo diz alguma coisa?
+ *
+ * `<p>&nbsp;</p>`, `<p></p>`, `<br>` e espaço em branco APAGAM a seção: o SEI
+ * aceita, responde 200 com versão nova e o documento fica só com cabeçalho e
+ * signatário (medido no SEI 5.0.4 da ANTAQ). Imagem, tabela e traço valem como
+ * conteúdo mesmo sem texto — um corpo pode ser só uma imagem.
+ */
+function temConteudo(html: string): boolean {
+  return textoDoHtml(html).length > 0 || /<\s*(img|table|figure|hr)\b/i.test(html);
+}
+
+/** Texto comparável: é o que sobrevive à normalização do SEI (entidades, `\r\n`). */
+const assinaturaDoTexto = (html: string) => textoDoHtml(html).replace(/\s+/g, " ").trim();
+
 export interface EdicaoConteudo {
   /** HTML a gravar (parágrafos com as classes de estilo do SEI). */
   html: string;
@@ -235,6 +250,12 @@ export async function editarConteudo(sei: Sei, numero: string, e: EdicaoConteudo
     : ed.secoes.find((s) => s.principal);
   if (!alvo) throw new ErroSei("ARGUMENTO_INVALIDO", `Se\u00E7\u00E3o n\u00E3o encontrada. Se\u00E7\u00F5es: ${ed.secoes.map((s) => s.titulo).join(", ")}`);
   if (alvo.somenteLeitura) throw new ErroSei("ARGUMENTO_INVALIDO", `A se\u00E7\u00E3o "${alvo.titulo}" \u00E9 somente leitura.`);
+  if (!temConteudo(e.html)) {
+    throw new ErroSei(
+      "ARGUMENTO_INVALIDO",
+      `O conte\u00FAdo enviado est\u00E1 em branco: gravar isso APAGARIA a se\u00E7\u00E3o "${alvo.titulo}" do documento ${d.documento.numero}. Escreva o texto do documento (par\u00E1grafos HTML com as classes de estilo do SEI).`,
+    );
+  }
   const novo = e.modo === "acrescentar" ? `${alvo.html}\n${e.html}` : e.html;
   const resumir = (h: string) => textoDoHtml(h).slice(0, 400);
   const base: ResultadoEscrita = {
@@ -246,5 +267,38 @@ export async function editarConteudo(sei: Sei, numero: string, e: EdicaoConteudo
   if (!op.aplicar) return base;
   await salvar(sei, ed, { [alvo.nome]: novo }, op.sinal);
   sei.invalidar(d.arvore.idProcedimento);
+  await conferirGravacao(sei, ed, alvo, novo, d.documento.numero, op.sinal);
   return { ...base, aplicado: true, resumo: `Conte\u00FAdo do documento ${d.documento.numero} gravado.` };
+}
+
+/**
+ * Relê a seção na fonte antes de dizer "gravado".
+ *
+ * O `salvar` só sabe que o SEI respondeu 200 com um `versao` — e ele responde
+ * exatamente isso ao apagar uma seção. Custa uma requisição por escrita
+ * aplicada, e é a diferença entre "gravado" ser verdade ou ser mentira: sem
+ * isso, o agente anuncia sucesso sobre um documento que ficou vazio.
+ */
+async function conferirGravacao(
+  sei: Sei,
+  ed: EditorDocumento,
+  alvo: SecaoEditor,
+  novo: string,
+  numero: string,
+  sinal?: AbortSignal,
+): Promise<void> {
+  const depois = lerEditor(await sei.http.obter(ed.pagina.url, { sinal }));
+  const gravada = depois.secoes.find((s) => s.nome === alvo.nome);
+  if (!gravada || !temConteudo(gravada.html)) {
+    throw new ErroSei(
+      "SEI_VALIDACAO",
+      `O SEI aceitou a grava\u00E7\u00E3o, mas a se\u00E7\u00E3o "${alvo.titulo}" do documento ${numero} ficou VAZIA. O conte\u00FAdo anterior foi perdido: reescreva o texto do documento.`,
+    );
+  }
+  if (assinaturaDoTexto(gravada.html) === assinaturaDoTexto(alvo.html) && assinaturaDoTexto(novo) !== assinaturaDoTexto(alvo.html)) {
+    throw new ErroSei(
+      "SEI_VALIDACAO",
+      `O SEI aceitou a grava\u00E7\u00E3o, mas a se\u00E7\u00E3o "${alvo.titulo}" do documento ${numero} continua como estava: o conte\u00FAdo enviado foi descartado.`,
+    );
+  }
 }
