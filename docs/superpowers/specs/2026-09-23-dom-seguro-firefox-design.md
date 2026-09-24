@@ -111,6 +111,15 @@ htmlPro(alvo, html, modo)      // modo: 'html' | 'append' | 'prepend' | 'before'
 - **Retorna o jQuery do alvo**, como fazem `.html()`, `.append()` e `.after()` — é drop-in, o
   encadeamento existente continua valendo.
 
+Duas fronteiras, para não haver dúvida na conversão:
+
+- **`htmlPro` é só para string.** Inserção de objeto jQuery ou de nó já construído
+  (`$alvo.append($outro)`) não passa pelo helper e fica como está — não há HTML sendo parseado
+  ali, e o `check-dom-injection` não a acusa.
+- **Texto é `.text()`, não `htmlPro`.** Sempre que o conteúdo inserido for texto puro — o caso de
+  `sei-legis.js:652`, `this_.html(textRef)` — a conversão correta é `.text()`, não sanitizar uma
+  string de HTML. Sanitizar texto e inseri-lo como HTML continua sendo injeção de HTML.
+
 ### 4.2 O que ele faz, em ordem
 
 1. **Escolhe o contexto de parsing** farejando a primeira tag do fragmento, com o alvo como
