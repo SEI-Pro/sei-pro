@@ -170,3 +170,63 @@ export function mostrarCartaoNaCapa(raiz: Document, cartao: CartaoDaCapa | null,
     capa.prepend(el);
   }
 }
+
+/**
+ * Recarrega a árvore do processo (iframe da esquerda) e espera ela voltar.
+ *
+ * Recarrega pelo PRÓPRIO endereço do iframe, que o SEI já assinou. Montar um
+ * `controlador.php` à mão derruba a sessão do usuário — é a armadilha mais cara
+ * desta base.
+ */
+export function recarregarArvore(raiz: Document, prazo = 15000): Promise<Document | null> {
+  const ifr = raiz.querySelector<HTMLIFrameElement>("#ifrArvore");
+  const janela = ifr?.contentWindow;
+  if (!ifr || !janela) return Promise.resolve(null);
+  return new Promise((ok) => {
+    let fechado = false;
+    const fim = () => {
+      if (fechado) return;
+      fechado = true;
+      ifr.removeEventListener("load", fim);
+      ok(ifr.contentDocument ?? null);
+    };
+    ifr.addEventListener("load", fim, { once: true });
+    // Se o `load` não vier (rede do órgão, iframe trocado), não travar a espera.
+    setTimeout(fim, prazo);
+    try {
+      janela.location.reload();
+    } catch {
+      fim();
+    }
+  });
+}
+
+/**
+ * Abre um documento no visualizador (iframe da direita) CLICANDO no nó da
+ * árvore: `#anchor<id_documento>`, com `target="ifrConteudoVisualizacao"`.
+ *
+ * É o caminho do usuário, e usa o link que o SEI acabou de assinar. Quando só
+ * se tem o nº SEI, o nó é achado pelo rótulo — a árvore escreve o número entre
+ * parênteses ("Despacho 1234567 (3103633)" tem os dois).
+ *
+ * Tenta algumas vezes: a árvore carrega o conteúdo das pastas em seguida, e o
+ * nó do documento pode ainda não estar no DOM.
+ */
+export async function abrirNoVisualizador(raiz: Document, alvo: { id?: string; numero?: string }, tentativas = 6): Promise<boolean> {
+  for (let i = 0; i < tentativas; i += 1) {
+    const doc = raiz.querySelector<HTMLIFrameElement>("#ifrArvore")?.contentDocument;
+    const no =
+      (alvo.id ? doc?.getElementById(`anchor${alvo.id}`) : null) ??
+      (alvo.numero
+        ? [...(doc?.querySelectorAll<HTMLAnchorElement>('#divArvore a[target="ifrConteudoVisualizacao"]') ?? [])].find((a) =>
+            (a.textContent ?? "").includes(alvo.numero!),
+          )
+        : null);
+    if (no) {
+      no.click();
+      return true;
+    }
+    await new Promise((r) => setTimeout(r, 900));
+  }
+  return false;
+}

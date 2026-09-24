@@ -14,6 +14,7 @@ import { verificarCartaoDaCapa, verificarCartaoDeFluxo } from "./verificar-carta
 import { verificarDom } from "./verificar-dom";
 import { verificarPonte } from "./verificar-ponte";
 import { verificarOpFluxoAvaliar } from "./verificar-op-fluxo";
+import { verificarDepoisDaEscrita } from "./verificar-depois-escrita";
 import { resumo } from "./util";
 
 await verificarMotor();
@@ -40,4 +41,5 @@ verificarCartaoDaCapa();
 verificarDom();
 verificarPonte();
 await verificarOpFluxoAvaliar();
+verificarDepoisDaEscrita();
 resumo();

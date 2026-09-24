@@ -14,8 +14,8 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { executarOperacao, lerTela, type RespostaFluxo } from "./operacoes";
-import { marcarAvisoDeFluxo, mostrarCartaoNaCapa } from "./capa";
+import { alvoParaMostrar, executarOperacao, lerTela, type RespostaFluxo } from "./operacoes";
+import { abrirNoVisualizador, marcarAvisoDeFluxo, mostrarCartaoNaCapa, recarregarArvore } from "./capa";
 import { cartaoDaCapa } from "../fluxos/cartao";
 import { CHAVE_FLUXOS, CHAVE_IGNORADOS, comIgnorada, type Fluxo, type Ignorados } from "../fluxos/modelo";
 import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
@@ -210,9 +210,13 @@ function iniciar(): void {
   // `tela` só mexe no DOM vivo, e por isso fica fora do despacho de operações do
   // núcleo. `fluxo.avaliar` NÃO: ele busca a árvore completa, então é uma
   // operação do núcleo como as outras.
-  abrirCanal("sei", undefined, (op, args, sinal) => {
-    if (op === "tela") return Promise.resolve(lerTela(document, location.href));
-    return executarOperacao(sei, op, args, sinal);
+  abrirCanal("sei", undefined, async (op, args, sinal) => {
+    if (op === "tela") return lerTela(document, location.href);
+    const r = await executarOperacao(sei, op, args, sinal);
+    // A tela acompanha a escrita, mas DEPOIS de responder: o painel não espera
+    // o recarregamento da árvore para mostrar que o documento foi criado.
+    void acompanharNaTela(op, args, r);
+    return r;
   });
   instalarEntradaNoMenu();
   vigiarFluxo(sei);
@@ -289,6 +293,28 @@ function instalarEntradaNoMenu(): void {
   }
   li.append(a);
   lista.append(li);
+}
+
+/**
+ * Depois de o agente escrever: a tela do SEI mostra o que aconteceu.
+ *
+ * Criar documento pela ponte deixava a árvore velha — o documento existia no
+ * SEI e não aparecia até alguém recarregar à mão. Aqui a árvore é relida e o
+ * documento novo abre no visualizador, como se a pessoa tivesse clicado nele.
+ *
+ * Nunca estoura: se a árvore não voltar ou o nó não aparecer, o SEI fica como
+ * estava. Uma cortesia de tela não pode virar erro em cima de uma escrita que
+ * DEU CERTO.
+ */
+async function acompanharNaTela(op: string, args: Record<string, unknown>, resultado: unknown): Promise<void> {
+  try {
+    const alvo = alvoParaMostrar(op, args, resultado);
+    if (!alvo) return;
+    if (alvo.recarregarArvore) await recarregarArvore(document);
+    await abrirNoVisualizador(document, alvo);
+  } catch {
+    /* a escrita no SEI já deu certo; o resto é enfeite */
+  }
 }
 
 /**

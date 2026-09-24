@@ -421,3 +421,42 @@ export async function executarOperacao(sei: Sei, op: string, args: Record<string
   if (!f) throw new ErroSei("ARGUMENTO_INVALIDO", `Opera\u00E7\u00E3o desconhecida: ${op}`);
   return f(sei, args, sinal);
 }
+
+/** O que a tela do SEI deve mostrar depois de uma escrita do agente. */
+export interface AlvoNaTela {
+  /** id interno do documento (o nó da árvore é `#anchor<id>`). */
+  id?: string;
+  /** nº SEI, quando o id interno não é conhecido. */
+  numero?: string;
+  /** A árvore mudou de conteúdo e precisa ser relida. */
+  recarregarArvore: boolean;
+}
+
+/**
+ * Decide se a tela do SEI muda depois de uma escrita, e em que documento.
+ *
+ * Criar documento pela ponte deixava a árvore velha: o documento existia no SEI
+ * e não aparecia na tela até alguém recarregar à mão. Editar o conteúdo tinha o
+ * problema irmão — a árvore já estava certa, mas o visualizador seguia
+ * mostrando o texto antigo (ou vazio, no documento recém-nascido).
+ *
+ * O que ESTA função guarda é o "quando não": prévia não mexe na tela (nada foi
+ * ao SEI), escrita não aplicada não mexe, e operação que não é de documento não
+ * mexe. Recarregar a árvore por engano faz o usuário perder a pasta que tinha
+ * aberto.
+ */
+export function alvoParaMostrar(op: string, args: Record<string, unknown>, resultado: unknown): AlvoNaTela | null {
+  const r = resultado as { aplicado?: boolean; dados?: Record<string, string> } | null;
+  if (!r || typeof r !== "object" || r.aplicado !== true) return null;
+  if (op === "documento.criar") {
+    const id = r.dados?.idDocumento;
+    return id ? { id, recarregarArvore: true } : null;
+  }
+  if (op === "documento.editar") {
+    const numero = txt(args.numero);
+    // A árvore não muda ao editar conteúdo: recarregá-la fecharia as pastas que
+    // o usuário abriu, de graça.
+    return numero ? { numero, recarregarArvore: false } : null;
+  }
+  return null;
+}
