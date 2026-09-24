@@ -10,7 +10,7 @@ import { verificarFluxosModelo, verificarFluxosRevisao } from "./verificar-fluxo
 import { verificarAvaliarFluxo, verificarDiagnostico, verificarProcessoDaArvore } from "./verificar-avaliar";
 import { verificarInferirFluxo } from "./verificar-inferir";
 import { verificarEstudio, verificarHistoricoDoModelo, verificarMetadadosDoModelo, verificarTextoDoDiagnostico } from "./verificar-estudio";
-import { verificarCartaoDeFluxo } from "./verificar-cartao";
+import { verificarCartaoDaCapa, verificarCartaoDeFluxo } from "./verificar-cartao";
 import { verificarDom } from "./verificar-dom";
 import { verificarPonte } from "./verificar-ponte";
 import { verificarOpFluxoAvaliar } from "./verificar-op-fluxo";
@@ -36,6 +36,7 @@ verificarMetadadosDoModelo();
 verificarHistoricoDoModelo();
 verificarTextoDoDiagnostico();
 verificarCartaoDeFluxo();
+verificarCartaoDaCapa();
 verificarDom();
 verificarPonte();
 await verificarOpFluxoAvaliar();

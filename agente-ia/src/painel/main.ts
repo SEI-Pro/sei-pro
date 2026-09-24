@@ -480,11 +480,6 @@ class App {
     this.desenharSugestaoDeFluxo();
   }
 
-  /** Ponto discreto no ícone do agente, na barra do SEI. */
-  private avisarAbaDoFluxo(tem: boolean): void {
-    void this.ponte.executar("fluxo.aviso", { tem }).catch(() => undefined);
-  }
-
   private desenharSugestaoDeFluxo(): void {
     if (!this.elFluxo) return;
     const s = this.sugestaoDeFluxo;
@@ -493,7 +488,6 @@ class App {
     if (!s || !fluxo || !etapa) {
       this.elFluxo.hidden = true;
       this.elFluxo.replaceChildren();
-      this.avisarAbaDoFluxo(false);
       return;
     }
     const nomeDaEtapa = (id: string) => fluxo.etapas.find((e) => e.id === id)?.nome ?? id;
@@ -510,7 +504,6 @@ class App {
       this.sugestaoDeFluxo = null;
       this.elFluxo.hidden = true;
       this.elFluxo.replaceChildren();
-      this.avisarAbaDoFluxo(false);
       if (aviso) this.adicionar({ tipo: "aviso", texto: aviso });
     };
 
@@ -558,7 +551,6 @@ class App {
         ),
       ),
     );
-    this.avisarAbaDoFluxo(true);
   }
 
   private async ignorarEtapa(protocolo: string, etapaId: string): Promise<void> {

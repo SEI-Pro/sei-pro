@@ -39,3 +39,32 @@ export function detalhesDaSugestao(s: DadosDoCartao): string[] {
     `${s.cumpridas.length + 1}. ${s.etapa}: falta`,
   ];
 }
+
+/** O mesmo cartão, para a CAPA do processo (montado pelo content script). */
+export interface CartaoDaCapa {
+  titulo: string;
+  texto: string;
+  etapas: string[];
+  acaoPrincipal: string;
+  acaoIgnorar: string;
+}
+
+/**
+ * Conteúdo do cartão da capa.
+ *
+ * O texto é LITERALMENTE o mesmo do cartão do painel: são duas telas, uma só
+ * promessa. Duas redações divergiriam na primeira correção feita num lado só.
+ *
+ * O botão principal abre o Agente de IA em vez de prometer a minuta: escrever
+ * documento é do agente, com o cartão de aprovação dele. A capa é a página do
+ * SEI, e nada que nasce ali pode parecer uma ação do próprio SEI.
+ */
+export function cartaoDaCapa(s: DadosDoCartao): CartaoDaCapa {
+  return {
+    titulo: `Fluxo: ${s.fluxo}`,
+    texto: textoDaSugestao(s),
+    etapas: detalhesDaSugestao(s),
+    acaoPrincipal: "Abrir o Agente de IA",
+    acaoIgnorar: "Ignorar neste processo",
+  };
+}

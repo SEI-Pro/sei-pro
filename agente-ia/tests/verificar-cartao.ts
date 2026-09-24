@@ -8,7 +8,7 @@
  * de fazer.
  */
 
-import { detalhesDaSugestao, textoDaSugestao } from "../src/fluxos/cartao";
+import { cartaoDaCapa, detalhesDaSugestao, textoDaSugestao } from "../src/fluxos/cartao";
 import { checar, secao } from "./util";
 
 const SUG = {
@@ -51,4 +51,23 @@ export function verificarCartaoDeFluxo(): void {
   });
   checar("preserva a ordem das cumpridas", tres[0].includes("Nota Técnica 55") && tres[1].includes("Parecer 9"));
   checar("numera as etapas", /^1\./.test(tres[0]) && /^2\./.test(tres[1]));
+}
+
+/**
+ * O cartão que vai para a CAPA do processo, dentro da página do SEI.
+ *
+ * Mesma promessa do cartão do painel (estrutura, condicional, nada de
+ * conteúdo), mas montado por um lado diferente: o content script. O que se
+ * testa aqui é o conteúdo — texto, etapas e o que cada botão promete —, para o
+ * cartão da capa não passar a dizer coisa diferente do cartão do painel.
+ */
+export function verificarCartaoDaCapa(): void {
+  secao("cartao: o da capa do processo");
+  const c = cartaoDaCapa(SUG);
+  checar("o titulo nomeia o fluxo", c.titulo === 'Fluxo: Contrato de transição', c.titulo);
+  checar("o texto e o MESMO do cartao do painel", c.texto === textoDaSugestao(SUG));
+  checar("lista as etapas cumpridas e a que falta", c.etapas.length === 2 && /falta/i.test(c.etapas[1]));
+  checar("o botao principal abre o agente", /Agente de IA/.test(c.acaoPrincipal), c.acaoPrincipal);
+  checar("e o outro botao ignora neste processo", /ignorar/i.test(c.acaoIgnorar), c.acaoIgnorar);
+  checar("nada promete criar documento sem passar pelo agente", !/criar|assinar|enviar/i.test(c.acaoPrincipal + c.acaoIgnorar));
 }

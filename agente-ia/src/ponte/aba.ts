@@ -14,7 +14,10 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { executarOperacao, lerTela, marcarAvisoDeFluxo } from "./operacoes";
+import { executarOperacao, lerTela, type RespostaFluxo } from "./operacoes";
+import { marcarAvisoDeFluxo, mostrarCartaoNaCapa } from "./capa";
+import { cartaoDaCapa } from "../fluxos/cartao";
+import { CHAVE_FLUXOS, CHAVE_IGNORADOS, comIgnorada, type Fluxo, type Ignorados } from "../fluxos/modelo";
 import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
@@ -204,30 +207,15 @@ function iniciar(): void {
     return cache.pagina;
   };
   const sei = new Sei(location.href, paginaViva);
-  // O legado redesenha os ícones da barra a cada 1,5 s e leva o ponto de aviso
-  // junto: enquanto o aviso vale, ele precisa ser reposto.
-  let repor: ReturnType<typeof setInterval> | null = null;
-  const avisoDeFluxo = (tem: boolean) => {
-    marcarAvisoDeFluxo(document, tem);
-    if (tem && !repor) repor = setInterval(() => marcarAvisoDeFluxo(document, true), 2000);
-    if (!tem && repor) {
-      clearInterval(repor);
-      repor = null;
-    }
-  };
-
-  // `tela` e `fluxo.aviso` só mexem no DOM vivo, e por isso ficam fora do
-  // despacho de operações do núcleo. `fluxo.avaliar` NÃO: ele busca a árvore
-  // completa, então é uma operação do núcleo como as outras.
+  // `tela` só mexe no DOM vivo, e por isso fica fora do despacho de operações do
+  // núcleo. `fluxo.avaliar` NÃO: ele busca a árvore completa, então é uma
+  // operação do núcleo como as outras.
   abrirCanal("sei", undefined, (op, args, sinal) => {
     if (op === "tela") return Promise.resolve(lerTela(document, location.href));
-    if (op === "fluxo.aviso") return Promise.resolve(avisoDeFluxo(args.tem === true));
     return executarOperacao(sei, op, args, sinal);
-  // Painel fechado, porta caída: o ponto TEM de sair. Sem isso ele seguiria
-  // sendo reposto a cada 2 s, para sempre, anunciando uma sugestão que não
-  // existe mais e que ninguém consegue abrir.
-  }, () => avisoDeFluxo(false));
+  });
   instalarEntradaNoMenu();
+  vigiarFluxo(sei);
 }
 
 /**
@@ -301,6 +289,108 @@ function instalarEntradaNoMenu(): void {
   }
   li.append(a);
   lista.append(li);
+}
+
+/**
+ * O Estúdio de Fluxo dentro da página do SEI: cartão na capa do processo e
+ * bolinha no ícone do Agente de IA.
+ *
+ * Roda AQUI, e não no painel, porque o cartão da capa precisa aparecer para
+ * quem está lendo o processo — exigir o painel aberto para ver um aviso que
+ * mora na página do SEI não faria sentido.
+ *
+ * Quem não usa o Estúdio não paga nada: sem fluxo LIGADO no `chrome.storage`,
+ * a função sai antes de tocar no SEI.
+ */
+function vigiarFluxo(sei: Sei): void {
+  let ultimo = "";
+  let emCurso = false;
+  let cartao: ReturnType<typeof cartaoDaCapa> | null = null;
+  let protocoloAtual = "";
+  let etapaAtual = "";
+
+  const ler = async <T,>(chave: string, vazio: T): Promise<T> => {
+    try {
+      return ((await chrome.storage.local.get(chave))?.[chave] as T) ?? vazio;
+    } catch {
+      return vazio;
+    }
+  };
+
+  /** Repõe o que o legado apaga ao redesenhar a capa e a barra (a cada 1,5 s). */
+  const pintar = () => {
+    marcarAvisoDeFluxo(document, cartao !== null);
+    mostrarCartaoNaCapa(document, cartao, {
+      abrirAgente: abrirPainel,
+      ignorar: () => {
+        void (async () => {
+          const mapa = await ler<Ignorados>(CHAVE_IGNORADOS, {});
+          await chrome.storage.local.set({ [CHAVE_IGNORADOS]: comIgnorada(mapa, protocoloAtual, etapaAtual) }).catch(() => undefined);
+          cartao = null;
+          ultimo = "";
+          pintar();
+        })();
+      },
+    });
+  };
+  setInterval(pintar, 2000);
+
+  const conferir = async () => {
+    if (emCurso) return;
+    const tela = lerTela(document, location.href);
+    const protocolo = tela.processo?.protocolo ?? "";
+    const fluxos = await ler<Fluxo[]>(CHAVE_FLUXOS, []);
+    const ligados = Array.isArray(fluxos) ? fluxos.filter((f) => f.ativo) : [];
+    // A assinatura inclui os fluxos: mexer no Estúdio precisa refazer a conta.
+    const chave = `${protocolo}|${tela.sigiloso ? "s" : ""}|${ligados.map((f) => `${f.id}:${f.atualizadoEm}`).join(",")}`;
+    if (chave === ultimo) return;
+    ultimo = chave;
+    if (!protocolo || tela.sigiloso || !ligados.length) {
+      cartao = null;
+      pintar();
+      return;
+    }
+    emCurso = true;
+    try {
+      const r = (await executarOperacao(
+        sei,
+        "fluxo.avaliar",
+        { processo: protocolo, tipo: tela.processo?.tipo, fluxos: ligados, ignorados: await ler<Ignorados>(CHAVE_IGNORADOS, {}), unidade: tela.unidade },
+        new AbortController().signal,
+      )) as RespostaFluxo;
+      const s = r.sugestao;
+      const fluxo = s ? ligados.find((f) => f.id === s.fluxoId) : undefined;
+      const nome = (id: string) => fluxo?.etapas.find((e) => e.id === id)?.nome ?? id;
+      cartao =
+        s && fluxo
+          ? cartaoDaCapa({
+              fluxo: fluxo.nome,
+              etapa: nome(s.etapaId),
+              etapaAnterior: nome(s.etapaAnteriorId),
+              anterior: s.anterior,
+              cumpridas: s.cumpridas.map((c) => ({ etapa: nome(c.etapaId), numero: c.numero, titulo: c.titulo })),
+            })
+          : null;
+      protocoloAtual = protocolo;
+      etapaAtual = s?.etapaId ?? "";
+    } catch {
+      // Processo sem permissão, sessão caída, rede do órgão: o cartão some, e o
+      // SEI segue igual. Nada disto pode estourar na tela de quem só quer ler.
+      cartao = null;
+    } finally {
+      emCurso = false;
+      pintar();
+    }
+  };
+
+  void conferir();
+  setInterval(() => void conferir(), 5000);
+  chrome.storage.onChanged.addListener((mud, area) => {
+    if (area === "local" && (mud[CHAVE_FLUXOS] || mud[CHAVE_IGNORADOS])) {
+      ultimo = "";
+      void conferir();
+    }
+  });
 }
 
 iniciar();
