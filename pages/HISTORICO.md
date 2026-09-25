@@ -2,6 +2,16 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.2.1
+24/09/2026
+
+Versão de acerto do [Estúdio de Fluxo](../pages/FLUXOS.md), com o mesmo dia de vida da 2.2.
+
+- **A sugestão do fluxo aparece mesmo quando você abre o processo pelo número.** O cartão só sabia morar na capa; quem chega pela pesquisa rápida cai direto num documento, e a capa nem é desenhada — a sugestão ficava só na bolinha do ícone do robô, que pisca sem dizer o que é. Agora, quando não há capa na tela, a mesma sugestão aparece numa faixa estreita entre a barra de ações e o documento: a etapa que falta, quanto do rito já andou e os dois botões de sempre
+- **O Estúdio de Fluxo também na barra de ações dentro do processo.** O ícone existia só na tela de Controle de Processos; agora fica ao lado do Agente de IA enquanto você lê os autos
+- **Botão *Voltar* no editor de fluxo.** Antes só se saía de um fluxo abrindo outro: quem entrava para conferir ficava preso na edição. O botão avisa se houver alteração não salva
+- Detalhes de acabamento: a faixa usa a moldura do SEI (mesma sombra e mesmos cantos das caixas dele) e o ícone do Estúdio passou a responder ao mouse como os vizinhos da barra
+
 ### Versão 2.2
 24/09/2026
 
