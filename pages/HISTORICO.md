@@ -2,6 +2,16 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.2.2
+25/09/2026
+
+Versão de bastidor: o principal aqui não se vê na tela, e é o que abre caminho para a extensão voltar à loja do Firefox.
+
+- **Novo** — [destaque dos documentos da sua unidade ainda não assinados](../pages/DOCSNAOASSINADOS.md), sugestão do grupo SEI Lab: na árvore, o documento que a própria unidade produziu e ainda não assinou ficava idêntico aos assinados, e a única conferência era o aviso na hora de enviar o processo. Agora ele ganha fundo âmbar com um filete lateral — cor escolhida para não se confundir com a que o SEI já usa no não assinado de *outra* unidade. Vem desligado; ative em Configurações
+- **Os ícones de ajuda das Configurações voltaram a funcionar.** Eles apontavam para um endereço que, dentro da extensão, não existe — clicar não levava a lugar nenhum. Agora abrem a documentação em seipro.app
+- **A extensão passou a construir sua interface por um caminho único**, que higieniza todo o HTML antes de inserir na página e tira as ações de dentro dos atributos do HTML. É exigência da loja do Firefox, que recusou a extensão por isso, e vale também para quem usa o Chrome: é uma camada a menos por onde conteúdo de terceiros poderia virar código. **Sem mudança de funcionamento** — os cinco arquivos convertidos nesta etapa foram percorridos um a um no SEI 4.1.5 e no SEI 5
+- De passagem, três defeitos antigos que ninguém via: um bloco de estilos era injetado sem a tag de fechamento, uma caixa de diálogo abria uma marcação e fechava outra, e três atributos de dados eram gravados com um nome que o navegador não reconhece como tal
+
 ### Versão 2.2.1
 24/09/2026
 
