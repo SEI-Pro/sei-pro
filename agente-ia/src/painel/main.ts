@@ -47,6 +47,10 @@ import {
   type SkillUsuario,
 } from "./skills";
 import { extrairTextoPdf } from "./pdf";
+import { detalhesDaSugestao, textoDaSugestao } from "../fluxos/cartao";
+import { CHAVE_FLUXOS, comIgnorada, guardarFluxos, guardarIgnorados, listarFluxos, listarIgnorados, type Fluxo, type Ignorados } from "../fluxos/modelo";
+// `import type`: o esbuild descarta, e o bundle do painel nao ganha o sei-nucleo.
+import type { RespostaFluxo, SugestaoDeFluxo } from "../ponte/operacoes";
 
 interface Config {
   /** Mostrar o gasto em reais, pela cotação do dia. */
@@ -177,6 +181,11 @@ class App {
   /** Perguntas que o agente faz sozinho de tempos em tempos. */
   private rotinas: Rotina[] = [];
 
+  /** Fluxos mapeados no Estúdio de Fluxo, e o que o usuário mandou não sugerir. */
+  private fluxos: Fluxo[] = [];
+  private fluxosIgnorados: Ignorados = {};
+  private sugestaoDeFluxo: SugestaoDeFluxo | null = null;
+
   /** Tela do SEI ao lado, para as sugestões combinarem com o que o usuário vê. */
   private tela: TelaAtual | null = null;
   private chaveTela = "";
@@ -190,6 +199,7 @@ class App {
   private elAba!: HTMLElement;
   private elCusto!: HTMLElement;
   private elTarefas!: HTMLElement;
+  private elFluxo!: HTMLElement;
   private elEntrada!: HTMLTextAreaElement;
   private elEnviar!: HTMLButtonElement;
   private elAnexo!: HTMLElement;
@@ -211,9 +221,18 @@ class App {
     this.regras = await listarRegras();
     this.memoria = await listarMemoria();
     this.rotinas = await listarRotinas();
+    this.fluxos = await listarFluxos();
+    this.fluxosIgnorados = await listarIgnorados();
     void this.sincronizarSkills();
     void this.sincronizarColecoes();
     this.ponte.aoMudar(() => this.atualizarAba());
+    // O Estúdio de Fluxo é outra página: quando o usuário salva um fluxo lá, o
+    // painel precisa passar a usá-lo sem esperar um recarregamento.
+    chrome.storage.onChanged.addListener((mud, area) => {
+      if (area !== "local" || !mud[CHAVE_FLUXOS]) return;
+      this.fluxos = (mud[CHAVE_FLUXOS].newValue as Fluxo[]) ?? [];
+      void this.avaliarFluxos();
+    });
     await this.telaConversa();
     void this.atualizarCambio();
     void historico.podar(this.config.dias).catch(() => undefined);
@@ -227,6 +246,7 @@ class App {
     this.elAba = h("span", { class: "aba" });
     this.elCusto = h("span", { class: "custo", title: "Gasto desta conversa (o servi\u00E7o de IA informa o custo; sem isso, os tokens)" });
     this.elTarefas = h("div", { class: "tarefas", hidden: true });
+    this.elFluxo = h("div", { class: "aviso-fluxo", hidden: true });
     this.elConversa = h("div", { class: "conversa", role: "log", "aria-live": "polite" });
     this.elEntrada = h("textarea", { rows: "2", placeholder: "Pe\u00E7a algo sobre o SEI...", "aria-label": "Mensagem" });
     this.elEnviar = h("button", { class: "enviar" });
@@ -321,6 +341,7 @@ class App {
         h("span", { class: "selo-privacidade", title: PRIVACIDADE }, icone("escudo", 13), "protegido"),
       ),
       this.elTarefas,
+      this.elFluxo,
       this.elConversa,
       h(
         "div",
@@ -432,6 +453,119 @@ class App {
     this.tela = aba ? ((await this.ponte.executar("tela", {}).catch(() => null)) as TelaAtual | null) : null;
     if (this.tela) this.tela.editores = this.ponte.editores();
     if (!this.transcricao.length && !this.arquivada) this.redesenhar();
+    await this.avaliarFluxos();
+  }
+
+  // ------------------------------------------------------------- Estúdio de Fluxo
+
+  /**
+   * O processo da tela tem lacuna em algum fluxo mapeado?
+   *
+   * A conta é feita na aba do SEI, que busca a árvore COMPLETA do processo (com
+   * as pastas abertas). Nem a mensagem sai quando não há processo na tela ou
+   * quando a unidade não tem fluxo ligado: quem não usa o Estúdio não paga nada
+   * por ele, e a árvore buscada fica 30 s em cache na aba.
+   */
+  private async avaliarFluxos(): Promise<void> {
+    const processo = this.tela?.processo?.protocolo;
+    const vale = Boolean(processo) && !this.tela?.sigiloso && this.fluxos.some((f) => f.ativo);
+    // `tipo` vai de graça (a tela já o tem) e poupa a busca da árvore quando
+    // nenhum fluxo ligado pode casar com um processo desse tipo.
+    const r = vale
+      ? ((await this.ponte
+          .executar("fluxo.avaliar", { processo, tipo: this.tela?.processo?.tipo, fluxos: this.fluxos, ignorados: this.fluxosIgnorados, unidade: this.tela?.unidade })
+          .catch(() => null)) as RespostaFluxo | null)
+      : null;
+    this.sugestaoDeFluxo = r?.sugestao ?? null;
+    this.desenharSugestaoDeFluxo();
+  }
+
+  private desenharSugestaoDeFluxo(): void {
+    if (!this.elFluxo) return;
+    const s = this.sugestaoDeFluxo;
+    const fluxo = s ? this.fluxos.find((f) => f.id === s.fluxoId) : undefined;
+    const etapa = fluxo?.etapas.find((e) => e.id === s!.etapaId);
+    if (!s || !fluxo || !etapa) {
+      this.elFluxo.hidden = true;
+      this.elFluxo.replaceChildren();
+      return;
+    }
+    const nomeDaEtapa = (id: string) => fluxo.etapas.find((e) => e.id === id)?.nome ?? id;
+    const dados = {
+      fluxo: fluxo.nome,
+      etapa: etapa.nome,
+      etapaAnterior: nomeDaEtapa(s.etapaAnteriorId),
+      anterior: s.anterior,
+      cumpridas: s.cumpridas.map((c) => ({ etapa: nomeDaEtapa(c.etapaId), numero: c.numero, titulo: c.titulo })),
+    };
+
+    const detalhes = h("ul", { class: "pendencias detalhes-fluxo", hidden: true }, ...detalhesDaSugestao(dados).map((l) => h("li", {}, l)));
+    const fechar = (aviso?: string) => {
+      this.sugestaoDeFluxo = null;
+      this.elFluxo.hidden = true;
+      this.elFluxo.replaceChildren();
+      if (aviso) this.adicionar({ tipo: "aviso", texto: aviso });
+    };
+
+    const preparar = h(
+      "button",
+      {
+        class: "primario",
+        disabled: !etapa.acao,
+        title: etapa.acao
+          ? this.config.chave
+            ? etapa.acao.titulo
+            : "A minuta precisa do Agente de IA configurado: o clique abre a configuração."
+          : `A etapa "${etapa.nome}" não tem pedido ao agente. Defina um no Estúdio de Fluxo para este botão funcionar.`,
+        onclick: () => {
+          const pedido = etapa.acao?.pedido;
+          if (!pedido) return;
+          fechar();
+          void this.enviar(pedido);
+        },
+      },
+      icone("faisca", 15),
+      etapa.acao?.titulo ?? "Preparar",
+    );
+
+    this.elFluxo.hidden = false;
+    this.elFluxo.replaceChildren(
+      h(
+        "div",
+        { class: "cartao fluxo" },
+        h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("fluxo", 15)), h("h4", {}, `Fluxo: ${fluxo.nome}`)),
+        h("div", { class: "sub" }, textoDaSugestao(dados)),
+        detalhes,
+        h(
+          "div",
+          { class: "acoes" },
+          preparar,
+          h("button", { class: "plana", onclick: () => (detalhes.hidden = !detalhes.hidden) }, icone("olho", 15), "Ver detalhes"),
+          h(
+            "button",
+            { class: "plana", title: `Não sugerir esta etapa em ${s.protocolo}`, onclick: () => void this.ignorarEtapa(s.protocolo, etapa.id) },
+            icone("olhoCorte", 15),
+            "Ignorar neste processo",
+          ),
+          h("button", { class: "plana", title: `Desligar o fluxo "${fluxo.nome}"`, onclick: () => void this.desligarFluxo(fluxo.id, fluxo.nome) }, icone("fechar", 15), "Não sugerir este fluxo"),
+        ),
+      ),
+    );
+  }
+
+  private async ignorarEtapa(protocolo: string, etapaId: string): Promise<void> {
+    this.fluxosIgnorados = comIgnorada(this.fluxosIgnorados, protocolo, etapaId);
+    await guardarIgnorados(this.fluxosIgnorados);
+    this.sugestaoDeFluxo = null;
+    this.desenharSugestaoDeFluxo();
+  }
+
+  private async desligarFluxo(id: string, nome: string): Promise<void> {
+    if (!confirm(`Desligar o fluxo "${nome}"? Ele para de sugerir em todos os processos. Dá para ligar de novo no Estúdio de Fluxo.`)) return;
+    this.fluxos = this.fluxos.map((f) => (f.id === id ? { ...f, ativo: false, atualizadoEm: Date.now() } : f));
+    await guardarFluxos(this.fluxos);
+    this.sugestaoDeFluxo = null;
+    this.desenharSugestaoDeFluxo();
   }
 
   /** Busca a cotação do dia (uma vez por sessão, com cache de 6 h no storage). */

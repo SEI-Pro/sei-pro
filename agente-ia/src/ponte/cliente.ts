@@ -6,7 +6,7 @@
  * foco por último e está visível, e mostra qual é. O usuário pode fixar outra.
  */
 
-import { CANAL, CHAVE_ABERTURA, ehDoCanal, prazoDe, type Apresentacao, type MensagemAba, type Pedido } from "./protocolo";
+import { CANAL, CHAVE_ABERTURA, ehDoCanal, prazoDe, type Abertura, type Apresentacao, type MensagemAba, type Pedido } from "./protocolo";
 
 export interface AbaSei {
   id: number;
@@ -36,6 +36,12 @@ export class PontePainel {
   private readonly abas = new Map<number, AbaSei>();
   private readonly pendentes = new Map<string, { ok: (v: unknown) => void; erro: (e: Error) => void; aba: AbaSei }>();
   private janela = -1;
+  /**
+   * Id desta INSTÂNCIA de página. O painel e o Estúdio de Fluxo são páginas
+   * diferentes da mesma extensão, e a aba do SEI precisa saber que apareceu
+   * mais uma para lhe abrir porta (ver `precisaConectar`).
+   */
+  private readonly abridor = crypto.randomUUID();
   private fixada: number | null = null;
   private ouvintes: Array<() => void> = [];
 
@@ -69,7 +75,7 @@ export class PontePainel {
       this.avisar();
     });
     // Avisa as abas que o painel abriu (e renova, para abas que carregarem depois).
-    const anunciar = () => chrome.storage.local.set({ [CHAVE_ABERTURA]: Date.now() }).catch(() => undefined);
+    const anunciar = () => chrome.storage.local.set({ [CHAVE_ABERTURA]: { id: this.abridor, quando: Date.now() } satisfies Abertura }).catch(() => undefined);
     await anunciar();
     setInterval(anunciar, 60_000);
     addEventListener("pagehide", () => void chrome.storage.local.remove(CHAVE_ABERTURA).catch(() => undefined));

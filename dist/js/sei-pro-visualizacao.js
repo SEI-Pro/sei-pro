@@ -47,6 +47,9 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconAIActions === 'function' && parent.restrictConfigValue('ferramentasia')) {
         parent.insertIconAIActions();
     }
+    if (typeof parent.insertIconEstudioFluxo === 'function' && parent.restrictConfigValue('estudiofluxo')) {
+        parent.insertIconEstudioFluxo();
+    }
     if (typeof parent.insertNewIcons === 'function' && typeof parent.insertNewIcons !== 'undefined') {
         parent.insertNewIcons();
     }

@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "2.1.1",
+  "version": "2.2.1",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://seipro.app",
   "icons": {
@@ -499,6 +499,9 @@
         "css/images/marker-shadow.png",
         "config_hosts.json",
         "html/options.html",
+        "html/fluxos.html",
+        "js/estudio/estudio.js",
+        "icons/menu/fluxos.svg",
         "vendor/ferramentas-pdf/tesseract/worker.min.js",
         "vendor/ferramentas-pdf/tesseract/core/tesseract-core-simd-lstm.wasm.js",
         "vendor/ferramentas-pdf/tesseract/lang/por.traineddata.gz",

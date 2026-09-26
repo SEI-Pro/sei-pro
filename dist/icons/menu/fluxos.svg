@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg width="100%" height="100%" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g>
+    <!-- Placa de rua com duas setas: uma para a direita, outra para a esquerda. -->
+    <!-- O rito tem bifurcacao, e e isso que a ferramenta mapeia. -->
+    <!-- Icone PROPRIO com cor propria, como o das Ferramentas de PDF. Os botoes -->
+    <!-- vizinhos da barra usam GIF 1x1 mais um <i> do Font Awesome com -->
+    <!-- `color: #fff` inline, que vence a regra do tema. No SEI 4.1+/5, cuja -->
+    <!-- barra de acoes tem fundo BRANCO, esse icone fica branco sobre branco e -->
+    <!-- some, sem erro nenhum. -->
+    <!-- ATENCAO: comentario de XML nao aceita dois hifens seguidos. Dois hifens -->
+    <!-- aqui dentro quebram o documento inteiro, e o navegador mostra imagem -->
+    <!-- quebrada, sem nada no console. -->
+
+    <!-- Poste, atras das placas: aparece acima, entre e abaixo delas. -->
+    <rect x="442" y="62" width="140" height="900" rx="54" style="fill:#939ea7;"/>
+
+    <!-- Placa de cima, apontando para a DIREITA. -->
+    <path d="M240,168L798,168L952,308L798,448L240,448C208,448 182,422 182,390L182,226C182,194 208,168 240,168Z" style="fill:#4a7dff;"/>
+
+    <!-- Placa de baixo, apontando para a ESQUERDA. -->
+    <path d="M784,614L226,614L72,754L226,894L784,894C816,894 842,868 842,836L842,672C842,640 816,614 784,614Z" style="fill:#8f6ef0;"/>
+  </g>
+</svg>

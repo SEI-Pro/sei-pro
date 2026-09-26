@@ -33,6 +33,20 @@ import { ErroSei } from "../sessao/erros";
 import type { Pagina } from "../sessao/http";
 import type { Sei } from "../sei";
 
+/**
+ * Um estilo de parágrafo que o editor oferece NESTA seção, NESTE órgão.
+ *
+ * O conjunto é configurável por órgão e por seção do modelo: lista fixa acerta
+ * no órgão de quem a escreveu e erra em silêncio nos outros — o SEI ignora a
+ * classe que não existe, e o documento sai sem formatação nenhuma.
+ */
+export interface EstiloEditor {
+  /** Como o SEI o chama na barra de estilos. */
+  nome: string;
+  /** Classe CSS a usar no `<p class="...">`. */
+  classe: string;
+}
+
 export interface SecaoEditor {
   /** `txaEditor_N`. */
   nome: string;
@@ -40,6 +54,10 @@ export interface SecaoEditor {
   somenteLeitura: boolean;
   principal: boolean;
   html: string;
+  /** Estilos permitidos nesta seção. Vazio quando o órgão não configurou nenhum. */
+  estilos: EstiloEditor[];
+  /** Estilo que o SEI aplica sozinho a um parágrafo novo, quando há um. */
+  estiloPadrao?: string;
 }
 
 export interface EditorDocumento {
@@ -73,6 +91,31 @@ interface ConfigCk5 {
   initialData?: Record<string, string>;
   rootsAttributes?: Record<string, { somenteLeitura?: boolean; principal?: boolean; label?: string }>;
   sei?: { urlSalvar?: string; versao?: unknown; siglaUnidade?: string };
+  /**
+   * `setConfiguracao('estilo.itens', ...)` do SEI vira objeto ANINHADO (chave
+   * pontuada, ver `InfraEditorCK5.php`), então a lista chega aqui.
+   */
+  estilo?: {
+    itens?: Array<{ nome?: string; classeCss?: string; permitidoEm?: string[] }>;
+    estiloPadrao?: Record<string, string>;
+  };
+}
+
+/**
+ * Classes válidas de uma seção do CK4.
+ *
+ * O `EditorCk4RN.php` escreve, em cada `CKEDITOR.replace`,
+ * `stylesheetParser_validSelectors: /^(p)\.(A|B|C)$/i` com as classes daquela
+ * seção. É a única lista que o editor daquele órgão de fato aceita.
+ */
+function estilosCk4(cfg: string): EstiloEditor[] {
+  const m = /stylesheetParser_validSelectors"?\s*:\s*\/\^\(p\)\\\.\(([^)]*)\)\$\/i/.exec(cfg);
+  if (!m) return [];
+  return m[1]
+    .split("|")
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .map((classe) => ({ nome: classe, classe }));
 }
 
 /** Analisa a página `editor_montar` (CK4 ou CK5). Não faz requisição. */
@@ -84,6 +127,8 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
     const cfg = json ? (JSON.parse(json) as ConfigCk5) : null;
     if (!cfg?.initialData || !cfg.sei?.urlSalvar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Configura\u00E7\u00E3o do editor CK5 n\u00E3o reconhecida.");
     const attrs = cfg.rootsAttributes ?? {};
+    const itens = cfg.estilo?.itens ?? [];
+    const padrao = cfg.estilo?.estiloPadrao ?? {};
     return {
       tipo: "ck5",
       pagina,
@@ -94,6 +139,11 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
         somenteLeitura: Boolean(attrs[nome]?.somenteLeitura),
         principal: Boolean(attrs[nome]?.principal),
         html: conteudo,
+        // Sem `permitidoEm` o estilo vale em qualquer seção (ver EditorCk5RN).
+        estilos: itens
+          .filter((i) => (i.classeCss ?? i.nome) && (!i.permitidoEm?.length || i.permitidoEm.includes(nome)))
+          .map((i) => ({ nome: i.nome ?? i.classeCss ?? "", classe: i.classeCss ?? i.nome ?? "" })),
+        ...(padrao[nome] ? { estiloPadrao: padrao[nome] } : {}),
       })),
     };
   }
@@ -110,6 +160,7 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
       somenteLeitura: /"readOnly":true/.test(cfg),
       principal: false,
       html: t.textContent ?? "",
+      estilos: estilosCk4(cfg),
     };
   });
   // CK4 não marca a seção principal: é o corpo ("Corpo do Texto"), senão a última editável.
@@ -166,6 +217,21 @@ export function textoDoHtml(html: string): string {
   return (doc.body?.textContent ?? "").replace(/[ \t\u00A0]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 
+/**
+ * O conteúdo diz alguma coisa?
+ *
+ * `<p>&nbsp;</p>`, `<p></p>`, `<br>` e espaço em branco APAGAM a seção: o SEI
+ * aceita, responde 200 com versão nova e o documento fica só com cabeçalho e
+ * signatário (medido no SEI 5.0.4 da ANTAQ). Imagem, tabela e traço valem como
+ * conteúdo mesmo sem texto — um corpo pode ser só uma imagem.
+ */
+function temConteudo(html: string): boolean {
+  return textoDoHtml(html).length > 0 || /<\s*(img|table|figure|hr)\b/i.test(html);
+}
+
+/** Texto comparável: é o que sobrevive à normalização do SEI (entidades, `\r\n`). */
+const assinaturaDoTexto = (html: string) => textoDoHtml(html).replace(/\s+/g, " ").trim();
+
 export interface EdicaoConteudo {
   /** HTML a gravar (parágrafos com as classes de estilo do SEI). */
   html: string;
@@ -184,6 +250,12 @@ export async function editarConteudo(sei: Sei, numero: string, e: EdicaoConteudo
     : ed.secoes.find((s) => s.principal);
   if (!alvo) throw new ErroSei("ARGUMENTO_INVALIDO", `Se\u00E7\u00E3o n\u00E3o encontrada. Se\u00E7\u00F5es: ${ed.secoes.map((s) => s.titulo).join(", ")}`);
   if (alvo.somenteLeitura) throw new ErroSei("ARGUMENTO_INVALIDO", `A se\u00E7\u00E3o "${alvo.titulo}" \u00E9 somente leitura.`);
+  if (!temConteudo(e.html)) {
+    throw new ErroSei(
+      "ARGUMENTO_INVALIDO",
+      `O conte\u00FAdo enviado est\u00E1 em branco: gravar isso APAGARIA a se\u00E7\u00E3o "${alvo.titulo}" do documento ${d.documento.numero}. Escreva o texto do documento (par\u00E1grafos HTML com as classes de estilo do SEI).`,
+    );
+  }
   const novo = e.modo === "acrescentar" ? `${alvo.html}\n${e.html}` : e.html;
   const resumir = (h: string) => textoDoHtml(h).slice(0, 400);
   const base: ResultadoEscrita = {
@@ -195,5 +267,38 @@ export async function editarConteudo(sei: Sei, numero: string, e: EdicaoConteudo
   if (!op.aplicar) return base;
   await salvar(sei, ed, { [alvo.nome]: novo }, op.sinal);
   sei.invalidar(d.arvore.idProcedimento);
+  await conferirGravacao(sei, ed, alvo, novo, d.documento.numero, op.sinal);
   return { ...base, aplicado: true, resumo: `Conte\u00FAdo do documento ${d.documento.numero} gravado.` };
+}
+
+/**
+ * Relê a seção na fonte antes de dizer "gravado".
+ *
+ * O `salvar` só sabe que o SEI respondeu 200 com um `versao` — e ele responde
+ * exatamente isso ao apagar uma seção. Custa uma requisição por escrita
+ * aplicada, e é a diferença entre "gravado" ser verdade ou ser mentira: sem
+ * isso, o agente anuncia sucesso sobre um documento que ficou vazio.
+ */
+async function conferirGravacao(
+  sei: Sei,
+  ed: EditorDocumento,
+  alvo: SecaoEditor,
+  novo: string,
+  numero: string,
+  sinal?: AbortSignal,
+): Promise<void> {
+  const depois = lerEditor(await sei.http.obter(ed.pagina.url, { sinal }));
+  const gravada = depois.secoes.find((s) => s.nome === alvo.nome);
+  if (!gravada || !temConteudo(gravada.html)) {
+    throw new ErroSei(
+      "SEI_VALIDACAO",
+      `O SEI aceitou a grava\u00E7\u00E3o, mas a se\u00E7\u00E3o "${alvo.titulo}" do documento ${numero} ficou VAZIA. O conte\u00FAdo anterior foi perdido: reescreva o texto do documento.`,
+    );
+  }
+  if (assinaturaDoTexto(gravada.html) === assinaturaDoTexto(alvo.html) && assinaturaDoTexto(novo) !== assinaturaDoTexto(alvo.html)) {
+    throw new ErroSei(
+      "SEI_VALIDACAO",
+      `O SEI aceitou a grava\u00E7\u00E3o, mas a se\u00E7\u00E3o "${alvo.titulo}" do documento ${numero} continua como estava: o conte\u00FAdo enviado foi descartado.`,
+    );
+  }
 }

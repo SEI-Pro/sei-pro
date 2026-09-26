@@ -14,8 +14,11 @@
 import { comoErroSei, ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { Sei } from "@nucleo/sei";
-import { executarOperacao, lerTela } from "./operacoes";
-import { CANAL, CHAVE_ABERTURA, ehDoCanal, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
+import { alvoParaMostrar, executarOperacao, lerTela, type RespostaFluxo } from "./operacoes";
+import { abrirNoVisualizador, marcarAvisoDeFluxo, mostrarCartaoNaCapa, mostrarFaixaNaBarra, recarregarArvore } from "./capa";
+import { cartaoDaCapa } from "../fluxos/cartao";
+import { CHAVE_FLUXOS, CHAVE_IGNORADOS, comIgnorada, type Fluxo, type Ignorados } from "../fluxos/modelo";
+import { abridorDe, CANAL, CHAVE_ABERTURA, ehDoCanal, precisaConectar, type Apresentacao, type MensagemPainel, type Resposta } from "./protocolo";
 
 declare global {
   interface Window {
@@ -40,7 +43,12 @@ function contextoDaTela(): string {
 }
 
 /** Canal com o painel: porta, apresentação, reconexão e foco. Comum às telas do SEI e à janela do editor. */
-function abrirCanal(papel: "sei" | "editor", documento: string | undefined, executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>): void {
+function abrirCanal(
+  papel: "sei" | "editor",
+  documento: string | undefined,
+  executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>,
+  aoCairAPorta?: () => void,
+): void {
   const emCurso = new Map<string, AbortController>();
   let porta: chrome.runtime.Port | null = null;
   let ultimoFoco = document.hasFocus() ? Date.now() : 0;
@@ -107,6 +115,7 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
         void chrome.runtime.lastError;
         porta = null;
         for (const c of emCurso.values()) c.abort();
+        aoCairAPorta?.();
       });
       p.onMessage.addListener((m: unknown) => {
         if (ehDoCanal(m)) void atender(m as MensagemPainel);
@@ -117,23 +126,38 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
     }
   }
 
-  const painelAberto = async () => {
+  /** Páginas da extensão já servidas por uma conexão desta aba. */
+  const servidos = new Set<string>();
+  const marcarServido = (valor: unknown) => {
+    const quem = abridorDe(valor);
+    if (quem) servidos.add(quem);
+  };
+  const avisoAberto = async () => {
     try {
-      const v = await chrome.storage.local.get(CHAVE_ABERTURA);
-      return Boolean(v?.[CHAVE_ABERTURA]);
+      return (await chrome.storage.local.get(CHAVE_ABERTURA))?.[CHAVE_ABERTURA];
     } catch {
-      return false;
+      return undefined;
     }
   };
+  const atenderAviso = (valor: unknown) => {
+    if (!precisaConectar(valor, Boolean(porta), servidos)) return;
+    // Trocar a porta no meio de uma operação a mataria com "a aba foi
+    // recarregada": quem chegou agora espera o fim do que está em curso.
+    if (porta && emCurso.size) return;
+    conectar(Boolean(porta));
+    marcarServido(valor);
+  };
 
-  // O painel reescreve a chave de tempos em tempos para alcançar abas que
-  // carregaram depois dele. Quem já tem porta viva NÃO reconecta: trocar a
-  // porta no meio de uma operação a mataria com "a aba foi recarregada".
+  // O painel e o Estúdio reescrevem a chave de tempos em tempos, para alcançar
+  // abas que carregaram depois deles.
   chrome.storage.onChanged.addListener((mud, area) => {
-    if (area === "local" && mud[CHAVE_ABERTURA]?.newValue && !porta) conectar();
+    if (area === "local" && mud[CHAVE_ABERTURA]) atenderAviso(mud[CHAVE_ABERTURA].newValue);
   });
-  void painelAberto().then((sim) => sim && conectar());
-  setInterval(() => (porta ? apresentar() : void painelAberto().then((sim) => sim && conectar())), 5000);
+  void avisoAberto().then(atenderAviso);
+  setInterval(() => {
+    if (porta) apresentar();
+    void avisoAberto().then(atenderAviso);
+  }, 5000);
 
   const marcarFoco = () => {
     ultimoFoco = Date.now();
@@ -183,8 +207,19 @@ function iniciar(): void {
     return cache.pagina;
   };
   const sei = new Sei(location.href, paginaViva);
-  abrirCanal("sei", undefined, (op, args, sinal) => (op === "tela" ? Promise.resolve(lerTela(document, location.href)) : executarOperacao(sei, op, args, sinal)));
+  // `tela` só mexe no DOM vivo, e por isso fica fora do despacho de operações do
+  // núcleo. `fluxo.avaliar` NÃO: ele busca a árvore completa, então é uma
+  // operação do núcleo como as outras.
+  abrirCanal("sei", undefined, async (op, args, sinal) => {
+    if (op === "tela") return lerTela(document, location.href);
+    const r = await executarOperacao(sei, op, args, sinal);
+    // A tela acompanha a escrita, mas DEPOIS de responder: o painel não espera
+    // o recarregamento da árvore para mostrar que o documento foi criado.
+    void acompanharNaTela(op, args, r);
+    return r;
+  });
   instalarEntradaNoMenu();
+  vigiarFluxo(sei);
 }
 
 /**
@@ -258,6 +293,136 @@ function instalarEntradaNoMenu(): void {
   }
   li.append(a);
   lista.append(li);
+}
+
+/**
+ * Depois de o agente escrever: a tela do SEI mostra o que aconteceu.
+ *
+ * Criar documento pela ponte deixava a árvore velha — o documento existia no
+ * SEI e não aparecia até alguém recarregar à mão. Aqui a árvore é relida e o
+ * documento novo abre no visualizador, como se a pessoa tivesse clicado nele.
+ *
+ * Nunca estoura: se a árvore não voltar ou o nó não aparecer, o SEI fica como
+ * estava. Uma cortesia de tela não pode virar erro em cima de uma escrita que
+ * DEU CERTO.
+ */
+async function acompanharNaTela(op: string, args: Record<string, unknown>, resultado: unknown): Promise<void> {
+  try {
+    const alvo = alvoParaMostrar(op, args, resultado);
+    if (!alvo) return;
+    if (alvo.recarregarArvore) await recarregarArvore(document);
+    await abrirNoVisualizador(document, alvo);
+  } catch {
+    /* a escrita no SEI já deu certo; o resto é enfeite */
+  }
+}
+
+/**
+ * O Estúdio de Fluxo dentro da página do SEI: cartão na capa do processo e
+ * bolinha no ícone do Agente de IA.
+ *
+ * Roda AQUI, e não no painel, porque o cartão da capa precisa aparecer para
+ * quem está lendo o processo — exigir o painel aberto para ver um aviso que
+ * mora na página do SEI não faria sentido.
+ *
+ * Quem não usa o Estúdio não paga nada: sem fluxo LIGADO no `chrome.storage`,
+ * a função sai antes de tocar no SEI.
+ */
+function vigiarFluxo(sei: Sei): void {
+  let ultimo = "";
+  let emCurso = false;
+  let cartao: ReturnType<typeof cartaoDaCapa> | null = null;
+  let protocoloAtual = "";
+  let etapaAtual = "";
+
+  const ler = async <T,>(chave: string, vazio: T): Promise<T> => {
+    try {
+      return ((await chrome.storage.local.get(chave))?.[chave] as T) ?? vazio;
+    } catch {
+      return vazio;
+    }
+  };
+
+  /** Repõe o que o legado apaga ao redesenhar a capa e a barra (a cada 1,5 s). */
+  const pintar = () => {
+    marcarAvisoDeFluxo(document, cartao !== null);
+    // Duas telas, o mesmo cartão: a capa só existe quando o processo abre nela,
+    // e abrir pelo número cai num documento — aí quem fala é a faixa da barra.
+    const acoesDoCartao = {
+      abrirAgente: abrirPainel,
+      ignorar: () => {
+        void (async () => {
+          const mapa = await ler<Ignorados>(CHAVE_IGNORADOS, {});
+          await chrome.storage.local.set({ [CHAVE_IGNORADOS]: comIgnorada(mapa, protocoloAtual, etapaAtual) }).catch(() => undefined);
+          cartao = null;
+          ultimo = "";
+          pintar();
+        })();
+      },
+    };
+    // A faixa é o lugar que SEMPRE existe; com a capa aberta, o cartão grande
+    // já diz tudo e repetir na faixa seria a mesma frase duas vezes na tela.
+    const naCapa = mostrarCartaoNaCapa(document, cartao, acoesDoCartao);
+    mostrarFaixaNaBarra(document, naCapa ? null : cartao, acoesDoCartao);
+  };
+  setInterval(pintar, 2000);
+
+  const conferir = async () => {
+    if (emCurso) return;
+    const tela = lerTela(document, location.href);
+    const protocolo = tela.processo?.protocolo ?? "";
+    const fluxos = await ler<Fluxo[]>(CHAVE_FLUXOS, []);
+    const ligados = Array.isArray(fluxos) ? fluxos.filter((f) => f.ativo) : [];
+    // A assinatura inclui os fluxos: mexer no Estúdio precisa refazer a conta.
+    const chave = `${protocolo}|${tela.sigiloso ? "s" : ""}|${ligados.map((f) => `${f.id}:${f.atualizadoEm}`).join(",")}`;
+    if (chave === ultimo) return;
+    ultimo = chave;
+    if (!protocolo || tela.sigiloso || !ligados.length) {
+      cartao = null;
+      pintar();
+      return;
+    }
+    emCurso = true;
+    try {
+      const r = (await executarOperacao(
+        sei,
+        "fluxo.avaliar",
+        { processo: protocolo, tipo: tela.processo?.tipo, fluxos: ligados, ignorados: await ler<Ignorados>(CHAVE_IGNORADOS, {}), unidade: tela.unidade },
+        new AbortController().signal,
+      )) as RespostaFluxo;
+      const s = r.sugestao;
+      const fluxo = s ? ligados.find((f) => f.id === s.fluxoId) : undefined;
+      const nome = (id: string) => fluxo?.etapas.find((e) => e.id === id)?.nome ?? id;
+      cartao =
+        s && fluxo
+          ? cartaoDaCapa({
+              fluxo: fluxo.nome,
+              etapa: nome(s.etapaId),
+              etapaAnterior: nome(s.etapaAnteriorId),
+              anterior: s.anterior,
+              cumpridas: s.cumpridas.map((c) => ({ etapa: nome(c.etapaId), numero: c.numero, titulo: c.titulo })),
+            })
+          : null;
+      protocoloAtual = protocolo;
+      etapaAtual = s?.etapaId ?? "";
+    } catch {
+      // Processo sem permissão, sessão caída, rede do órgão: o cartão some, e o
+      // SEI segue igual. Nada disto pode estourar na tela de quem só quer ler.
+      cartao = null;
+    } finally {
+      emCurso = false;
+      pintar();
+    }
+  };
+
+  void conferir();
+  setInterval(() => void conferir(), 5000);
+  chrome.storage.onChanged.addListener((mud, area) => {
+    if (area === "local" && (mud[CHAVE_FLUXOS] || mud[CHAVE_IGNORADOS])) {
+      ultimo = "";
+      void conferir();
+    }
+  });
 }
 
 iniciar();

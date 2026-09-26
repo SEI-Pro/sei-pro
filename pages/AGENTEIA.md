@@ -234,4 +234,4 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 
 ## Próximo item
 
-> [Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](../pages/CERTIDAOSIGILO.md)
+> [Estúdio de Fluxo](../pages/FLUXOS.md)

@@ -2,6 +2,41 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.2.1
+24/09/2026
+
+Versão de acerto do [Estúdio de Fluxo](../pages/FLUXOS.md), com o mesmo dia de vida da 2.2.
+
+- **A sugestão do fluxo aparece mesmo quando você abre o processo pelo número.** O cartão só sabia morar na capa; quem chega pela pesquisa rápida cai direto num documento, e a capa nem é desenhada — a sugestão ficava só na bolinha do ícone do robô, que pisca sem dizer o que é. Agora, quando não há capa na tela, a mesma sugestão aparece numa faixa estreita entre a barra de ações e o documento: a etapa que falta, quanto do rito já andou e os dois botões de sempre
+- **O Estúdio de Fluxo também na barra de ações dentro do processo.** O ícone existia só na tela de Controle de Processos; agora fica ao lado do Agente de IA enquanto você lê os autos
+- **Botão *Voltar* no editor de fluxo.** Antes só se saía de um fluxo abrindo outro: quem entrava para conferir ficava preso na edição. O botão avisa se houver alteração não salva
+- Detalhes de acabamento: a faixa usa a moldura do SEI (mesma sombra e mesmos cantos das caixas dele) e o ícone do Estúdio passou a responder ao mouse como os vizinhos da barra
+
+### Versão 2.2
+24/09/2026
+
+Versão que ensina a extensão o **rito da sua unidade** — e o agente a escrever no padrão dela.
+
+- **Novo** — [Estúdio de Fluxo](../pages/FLUXOS.md): todo mundo na unidade sabe que a Nota Técnica costuma ser seguida de um Despacho de aprovação, e que um Ofício-MINUTA assinado vira Ofício expedido. Só que esse conhecimento não está escrito em lugar nenhum: mora na cabeça de quem tem tempo de casa. Agora dá para escrevê-lo. Você mapeia a sequência de documentos que um tipo de processo percorre, e o SEI Pro passa a dizer **em que etapa cada processo está** e a sugerir qual costuma ser a próxima providência — num cartão que aparece na capa do processo e no painel do agente, com um ponto no ícone do robô. Você aceita, adia ou recusa; aceitar manda o agente preparar a minuta, que continua passando pela sua aprovação
+- *Aprender de um processo modelo*: se um processo já percorreu o rito inteiro, aponte o número e o Estúdio propõe o fluxo. Ele lê da árvore apenas os **títulos dos documentos na ordem**, a unidade, se estão assinados e o histórico — o conteúdo dos documentos **não** é lido nem enviado — e separa etapa do rito de documento acessório (anexo, comprovante, e-mail). Com dois ou três processos ele fica bem melhor, e diz o que divergiu entre eles. A proposta vem **desligada**, para você conferir e corrigir: precedente não é norma
+- *Fluxos da equipe*: em vez de cada pessoa mapear o seu, a unidade mantém os fluxos numa pasta de repositório público e todo mundo aponta para ela, com sincronização — igual às skills. Os arquivos são `.md` que se leem e se editam no próprio GitHub, com histórico e revisão. Qualquer fluxo pode ser exportado em `.md` com um clique, e um `.md` que alguém te mandar abre direto do computador como rascunho. Há um modelo pronto em [fluxos-exemplo](https://github.com/SEI-Pro/sei-pro/tree/master/fluxos-exemplo)
+- *A tela explica o silêncio*: se você mapeou o fluxo, ligou e não apareceu sugestão, o Estúdio diz por quê — o fluxo não se aplica àquele tipo de processo, o rito ainda não começou, já está cumprido, ou você mesmo mandou ignorar aquela etapa naquele processo
+- **O agente escreve com os estilos do SEU órgão.** Antes de escrever o conteúdo, ele consulta os estilos que o editor daquele documento realmente oferece e usa só aqueles. Parece detalhe e não é: a lista de estilos é configurada por órgão e por seção do modelo, e o SEI **ignora em silêncio** a classe que não existe — o documento saía sem formatação nenhuma e ninguém via erro
+- **O agente aprende com os seus documentos.** Antes de escrever, ele pergunta se você quer que procure documentos parecidos seus para seguir a estrutura e a linguagem. Se sim, procura os do **mesmo tipo**, priorizando os do mesmo tipo de processo e os gerados por você, e lê um ou dois antes de redigir
+- **O agente não apaga mais o conteúdo do documento em silêncio.** Ao escrever, ele podia gravar um corpo em branco: o SEI aceita isso sem reclamar e responde como se tudo tivesse dado certo, então o documento ficava só com cabeçalho e signatário e o agente anunciava sucesso. Agora conteúdo em branco é recusado antes de ir para o SEI, e o agente só diz que gravou depois de reler o documento e confirmar o que ficou lá
+- **Documento criado aparece na hora.** Ao criar um documento, a árvore do processo é recarregada e o documento novo abre no visualizador — antes ele existia no SEI e não aparecia na tela até você recarregar à mão. Ao alterar o conteúdo de um documento, o visualizador também é atualizado
+### Versão 2.1.2
+23/09/2026
+
+Versão de correção da cópia de tabelas.
+
+- **Copiar uma tabela do SEI e colar fora dele** — no Teams, no Word, num e-mail — deixa de trazer um fundo cinza atrás do texto. Esse cinza vinha da própria extensão: dentro do SEI ele é invisível, mas ia junto na cópia, e o Teams ainda o transformava em realce palavra por palavra
+- A cópia agora sai limpa. Ficam só as colunas com conteúdo, com bordas simples: sem a barra *Baixar / Copiar / Pesquisar*, sem a linha de pesquisa, sem as caixas de seleção e sem a coluna de ações, que fora do SEI aparecia como um punhado de imagens quebradas
+- Se você pesquisou dentro da tabela antes de copiar, vai **o que está na tela** — as linhas escondidas pelo filtro não são mais copiadas
+- Colando em **Excel** ou em editor de texto simples, o conteúdo chega em colunas. Antes chegava o código HTML da tabela
+
+Vale para todas as tabelas em que o SEI Pro oferece o botão *Copiar*: blocos de assinatura, favoritos, processos e documentos em lote, histórico de processos e resultado de pesquisa.
+
 ### Versão 2.1.1
 23/09/2026
 
