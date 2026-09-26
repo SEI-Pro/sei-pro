@@ -4,7 +4,7 @@
  * `fetch` é substituído por um que grava o que recebeu.
  */
 
-import { criarProvedor, enderecoDoServico, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO } from "../src/motor/provedor";
+import { criarProvedor, enderecoDoServico, lerSSE, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO } from "../src/motor/provedor";
 import { promptSistema } from "../src/motor/prompt";
 import type { PedidoLLM } from "../src/motor/tipos";
 import { checar, secao } from "./util";
@@ -88,6 +88,53 @@ export async function verificarProvedor(): Promise<void> {
     renomeia.chamadas.length === 2 && !("max_tokens" in renomeia.chamadas[1].corpo) && renomeia.chamadas[1].corpo.max_completion_tokens === 700,
     renomeia.chamadas[1]?.corpo,
   );
+
+  /**
+   * O provedor pode deixar a conexão aberta sem `[DONE]` e sem mais dados
+   * (visto em captura de rede do OpenRouter). Antes disso aqui, `read()` ficava
+   * pendurado para sempre: painel em "pensando" eterno e rodada que não fecha.
+   */
+  secao("provedor: stream que para no meio");
+  const streamParado = (textoParcial: string) => {
+    let entregou = false;
+    let cancelado = false;
+    const corpo = new ReadableStream<Uint8Array>({
+      pull(c) {
+        if (entregou) return new Promise<void>(() => undefined); // silêncio para sempre
+        entregou = true;
+        c.enqueue(new TextEncoder().encode(`data: {"choices":[{"delta":{"content":${JSON.stringify(textoParcial)}}}]}\n\n`));
+      },
+      cancel() {
+        cancelado = true;
+      },
+    });
+    return { corpo, foiCancelado: () => cancelado };
+  };
+
+  const parado = streamParado("Comecei a responder");
+  const recebido: string[] = [];
+  let erroStream = "";
+  try {
+    for await (const p of lerSSE(parado.corpo, 80)) recebido.push(String(p.choices?.[0]?.delta?.content ?? ""));
+  } catch (e) {
+    erroStream = (e as Error).name;
+  }
+  checar("desiste do silencio em vez de pendurar", erroStream === "ErroStreamParado", erroStream);
+  checar("entrega o que chegou antes de parar", recebido.join("") === "Comecei a responder", recebido);
+  checar("solta o corpo da resposta", parado.foiCancelado());
+
+  const provedorParado = espiao([]);
+  (provedorParado as { f: typeof fetch }).f = (async () => {
+    const s2 = streamParado("Texto parcial");
+    return { ok: true, status: 200, text: async () => "", body: s2.corpo } as unknown as Response;
+  }) as unknown as typeof fetch;
+  const resposta = await criarProvedor({ servico: "openrouter", chave: "k", fetch: provedorParado.f, silencioMaximo: 80 }).conversar(
+    PEDIDO,
+    new AbortController().signal,
+    () => {},
+  );
+  checar("a rodada termina com o texto parcial", resposta.texto === "Texto parcial" && resposta.interrompida === true, resposta);
+  checar("e sem ferramenta pela metade", resposta.chamadas.length === 0 && resposta.fim === "parado");
 
   secao("provedor: catalogo de modelos");
   const modelos = espiao([{ status: 200, corpo: '{"data":[{"id":"models/gemini-2.5-flash"},{"id":"models/gemini-2.5-pro"}]}' }]);

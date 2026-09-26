@@ -31,8 +31,10 @@ export interface Uso {
 export interface RespostaLLM {
   texto: string;
   chamadas: ChamadaTool[];
-  fim: "stop" | "tool_calls" | "length" | "error" | string;
+  fim: "stop" | "tool_calls" | "length" | "error" | "parado" | string;
   uso?: Uso;
+  /** O provedor parou no meio: o texto é parcial e não há ferramenta a executar. */
+  interrompida?: boolean;
 }
 
 export interface PedidoLLM {

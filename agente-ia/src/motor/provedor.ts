@@ -41,13 +41,44 @@ interface Pedaco {
   error?: { message?: string; code?: number | string };
 }
 
+/** O provedor parou de responder no meio do stream (ver `SILENCIO_MAXIMO`). */
+export class ErroStreamParado extends Error {
+  constructor() {
+    super("O servi\u00E7o de IA parou de responder no meio da resposta. O que chegou at\u00E9 aqui foi mantido.");
+    this.name = "ErroStreamParado";
+  }
+}
+
 /** Lê um corpo SSE e entrega cada `data:` já como objeto. Ignora comentários (`: OPENROUTER PROCESSING`). */
-export async function* lerSSE(corpo: ReadableStream<Uint8Array>): AsyncGenerator<Pedaco> {
+/**
+ * Silêncio que faz desistir do stream.
+ *
+ * O provedor pode deixar a conexão aberta sem mandar `[DONE]` nem mais nada —
+ * visto em captura de rede do OpenRouter. Sem isto, `read()` fica pendurado
+ * para sempre: o painel mostra "pensando" eternamente e a rodada nunca fecha.
+ * O relógio reinicia a cada PEDAÇO recebido, inclusive os comentários de
+ * keep-alive, para não matar modelo lento que ainda está trabalhando.
+ */
+export const SILENCIO_MAXIMO = 90_000;
+
+export async function* lerSSE(corpo: ReadableStream<Uint8Array>, silencioMaximo = SILENCIO_MAXIMO): AsyncGenerator<Pedaco> {
   const leitor = corpo.getReader();
   const dec = new TextDecoder();
   let buffer = "";
   for (;;) {
-    const { value, done } = await leitor.read();
+    let relogio: ReturnType<typeof setTimeout> | undefined;
+    const semResposta = new Promise<"silencio">((ok) => {
+      relogio = setTimeout(() => ok("silencio"), silencioMaximo);
+    });
+    const leitura = await Promise.race([leitor.read(), semResposta]);
+    clearTimeout(relogio);
+    if (leitura === "silencio") {
+      // Larga o corpo pendurado e devolve o que já chegou: o texto parcial é
+      // melhor que um painel travado, e o motor precisa poder seguir.
+      await leitor.cancel().catch(() => undefined);
+      throw new ErroStreamParado();
+    }
+    const { value, done } = leitura;
     if (done) break;
     buffer += dec.decode(value, { stream: true });
     let fim: number;
@@ -220,6 +251,8 @@ export interface OpcoesProvedor {
   ajustes?: Ajustes;
   /** Marcação de cache de prompt (padrão: ligada). */
   cache?: boolean;
+  /** Silêncio tolerado no meio do stream, em ms (ver `SILENCIO_MAXIMO`). Para testes. */
+  silencioMaximo?: number;
   /** Para testes. */
   fetch?: typeof fetch;
 }
@@ -388,7 +421,15 @@ export function criarProvedor(o: OpcoesProvedor): Provedor {
         }
         if (!r.ok || !r.body) throw new Error(mensagemDeErro(r.status, await r.text(), servico));
         const acc = new Acumulador();
-        for await (const pedaco of lerSSE(r.body)) acc.somar(pedaco, aoTexto);
+        try {
+          for await (const pedaco of lerSSE(r.body, o.silencioMaximo)) acc.somar(pedaco, aoTexto);
+        } catch (e) {
+          if (!(e instanceof ErroStreamParado)) throw e;
+          // Chamada de ferramenta pela metade não se executa: os argumentos
+          // podem estar cortados no meio do JSON. Texto parcial, sim, vale.
+          const parcial = acc.resposta();
+          return { ...parcial, chamadas: [], fim: "parado", interrompida: true };
+        }
         return acc.resposta();
       }
     },

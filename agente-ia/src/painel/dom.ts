@@ -46,11 +46,20 @@ function emLinha(texto: string): Node[] {
 }
 
 /** Markdown enxuto (parágrafos, títulos, listas, tabelas) para nós do DOM. */
+/** Cabeçalho de tabela seguido da linha separadora — só isso é tabela. */
+function ehTabela(linhas: string[], i: number): boolean {
+  return /^\s*\|.*\|\s*$/.test(linhas[i] ?? "") && /^\s*\|[\s:|-]+\|\s*$/.test(linhas[i + 1] ?? "");
+}
+
 export function markdown(texto: string): DocumentFragment {
   const frag = document.createDocumentFragment();
   const linhas = texto.replace(/\r/g, "").split("\n");
   let i = 0;
   while (i < linhas.length) {
+    // Rede de segurança: o texto vem do modelo, chega em pedaços e é
+    // redesenhado a cada fragmento. Se algum ramo deixar de consumir a linha,
+    // é melhor perder a formatação dela do que travar a thread do painel.
+    const indiceAntes = i;
     const l = linhas[i];
     if (!l.trim()) {
       i += 1;
@@ -62,7 +71,7 @@ export function markdown(texto: string): DocumentFragment {
       i += 1;
       continue;
     }
-    if (/^\s*\|.*\|\s*$/.test(l) && /^\s*\|[\s:|-]+\|\s*$/.test(linhas[i + 1] ?? "")) {
+    if (ehTabela(linhas, i)) {
       const cel = (x: string) => x.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
       const tabela = h("table", {}, h("tr", {}, ...cel(l).map((c) => h("th", {}, ...emLinha(c)))));
       i += 2;
@@ -86,7 +95,12 @@ export function markdown(texto: string): DocumentFragment {
       continue;
     }
     const par: string[] = [];
-    while (i < linhas.length && linhas[i].trim() && !/^#{1,6}\s|^\s*(?:[-*\u2022]|\d+[.)])\s|^\s*\|/.test(linhas[i])) {
+    // Para em título, item de lista ou tabela DE VERDADE. Antes parava em
+    // qualquer linha começando com "|", e uma linha assim que não fosse tabela
+    // válida não era consumida por ninguém: o índice ficava parado e o laço
+    // rodava para sempre, congelando o painel inteiro. Acontecia toda vez que
+    // uma tabela chegava pela metade no streaming.
+    while (i < linhas.length && linhas[i].trim() && !/^#{1,6}\s|^\s*(?:[-*\u2022]|\d+[.)])\s/.test(linhas[i]) && !ehTabela(linhas, i)) {
       par.push(linhas[i]);
       i += 1;
     }
@@ -96,6 +110,7 @@ export function markdown(texto: string): DocumentFragment {
       p.append(...emLinha(x));
     });
     frag.append(p);
+    if (i === indiceAntes) i += 1;
   }
   return frag;
 }

@@ -63,8 +63,16 @@ const CHAVE = "agenteIA_skills";
 /** De quanto em quanto tempo uma skill sincronizada volta a perguntar ao GitHub. */
 export const INTERVALO_SYNC = 6 * 60 * 60 * 1000;
 
-/** Teto por skill: instrução longa demais engole o contexto (e o dinheiro) da conversa. */
-export const LIMITE_SKILL = 20_000;
+/**
+ * Teto por skill: instrução longa demais engole o contexto (e o dinheiro) da
+ * conversa. Eram 20 mil, e o corte era SILENCIOSO — uma skill real de 26 mil
+ * caracteres (SOG/ANTAQ) perdia o final, justamente onde ficam os exemplos, e
+ * ninguém ficava sabendo. Hoje o teto é maior e passar dele é erro explícito.
+ */
+export const LIMITE_SKILL = 40_000;
+
+/** Tamanho em que as skills eram cortadas antes de 25/09/2026. */
+export const CORTE_ANTIGO = 20_000;
 
 export async function listarSkills(): Promise<SkillUsuario[]> {
   try {
@@ -143,7 +151,13 @@ export async function baixarSkillSeMudou(
   if (!texto.trim()) throw new Error("O arquivo está vazio.");
   // O mesmo trim do campo de texto: sem isso, a primeira sincronização acharia
   // que mudou só por causa da quebra de linha do fim do arquivo.
-  return { texto: texto.trim().slice(0, LIMITE_SKILL), etag: r.headers?.get?.("ETag") ?? undefined };
+  const limpo = texto.trim();
+  if (limpo.length > LIMITE_SKILL) {
+    throw new Error(
+      `O arquivo tem ${limpo.length.toLocaleString("pt-BR")} caracteres e o limite é ${LIMITE_SKILL.toLocaleString("pt-BR")}. Divida em skills menores por assunto — instrução gigante também confunde o modelo.`,
+    );
+  }
+  return { texto: limpo, etag: r.headers?.get?.("ETag") ?? undefined };
 }
 
 /** Baixa o conteúdo agora, sem perguntar se mudou (o botão "Buscar do GitHub"). */
@@ -188,7 +202,12 @@ export async function sincronizarSkills(
     }
     if (o.autorizado && !(await o.autorizado(origem))) continue;
     try {
-      const r = await baixarSkillSeMudou(sk.url, sk.etag, buscar);
+      // Quem sincronizou antes de 25/09/2026 pode ter uma cópia cortada em
+      // exatamente 20 mil caracteres, COM etag válido: perguntar "mudou?"
+      // receberia 304 e a cópia truncada ficaria aqui para sempre. Nesse caso
+      // a pergunta não se faz — baixa-se o arquivo inteiro de novo.
+      const suspeitaDeCorte = sk.texto.length === CORTE_ANTIGO;
+      const r = await baixarSkillSeMudou(sk.url, suspeitaDeCorte ? undefined : sk.etag, buscar);
       if (!r) {
         nova[i] = { ...sk, verificadaEm: agora, erroSync: undefined };
         continue;
@@ -287,12 +306,22 @@ export async function baixarColecao(
   const arquivos = itens.filter((i) => i.type === "file" && /\.mdx?$/i.test(i.name) && !/^readme\.mdx?$/i.test(i.name) && i.download_url);
   if (!arquivos.length) throw new Error("Nenhum arquivo .md nessa pasta.");
   const skills: Array<{ arquivo: string; nome: string; texto: string }> = [];
+  const recusados: string[] = [];
   for (const a of arquivos.slice(0, 30)) {
     const conteudo = await buscar(a.download_url as string, { headers: { Accept: "text/plain, */*" } });
     if (!conteudo.ok) continue;
-    const texto = (await conteudo.text()).trim().slice(0, LIMITE_SKILL);
+    const texto = (await conteudo.text()).trim();
     if (!texto) continue;
+    // Arquivo grande demais não entra pela metade: a coleção avisa qual é.
+    if (texto.length > LIMITE_SKILL) {
+      recusados.push(`${a.name} (${texto.length.toLocaleString("pt-BR")} caracteres)`);
+      continue;
+    }
     skills.push({ arquivo: a.name, nome: tituloDoMarkdown(texto) || a.name.replace(/\.mdx?$/i, "").replace(/[-_]+/g, " "), texto });
+  }
+  // Pasta inteira grande demais: antes isso passava truncado e em silêncio.
+  if (!skills.length && recusados.length) {
+    throw new Error(`Nenhum arquivo coube no limite de ${LIMITE_SKILL.toLocaleString("pt-BR")} caracteres: ${recusados.join(", ")}.`);
   }
   return skills;
 }

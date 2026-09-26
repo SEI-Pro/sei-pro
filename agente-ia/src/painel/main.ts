@@ -2642,5 +2642,5 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
 const app = new App();
 // Diagnóstico: acessível só no console desta página da extensão (o SEI não a enxerga).
 Object.defineProperty(window, "agenteIA", { value: app });
-Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico, inversaDe } });
+Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico, inversaDe, markdown } });
 void app.iniciar();

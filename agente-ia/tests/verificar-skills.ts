@@ -3,7 +3,7 @@
  * para o modelo quando o usuário chama `/slug`.
  */
 
-import { baixarColecao, baixarSkill, comSkills, descricaoDoTexto, mesclarColecao, partesDoGitHub, sincronizarSkills, skillsCitadas, slugificar, slugLivre, tituloDoMarkdown, urlCrua, type ColecaoSkills, type SkillUsuario } from "../src/painel/skills";
+import { baixarColecao, baixarSkill, CORTE_ANTIGO, LIMITE_SKILL, comSkills, descricaoDoTexto, mesclarColecao, partesDoGitHub, sincronizarSkills, skillsCitadas, slugificar, slugLivre, tituloDoMarkdown, urlCrua, type ColecaoSkills, type SkillUsuario } from "../src/painel/skills";
 import { promptSistema } from "../src/motor/prompt";
 import { toolsMotor } from "../src/tools/motor";
 import { checar, secao } from "./util";
@@ -35,6 +35,19 @@ export async function verificarSkills(): Promise<void> {
   erro = "";
   await baixarSkill("https://raw.githubusercontent.com/o/r/main/x.md", resposta("Not Found", 404)).catch((e) => (erro = (e as Error).message));
   checar("404 explica o que conferir", /não encontrado/i.test(erro), erro);
+
+  /**
+   * Skill real do SOG/ANTAQ: 26.366 caracteres. Com o teto antigo de 20 mil, o
+   * arquivo era cortado em SILÊNCIO e o final — onde ficam os exemplos — nunca
+   * chegava ao modelo. Hoje passa inteiro, e o que não couber é erro dito.
+   */
+  secao("skills: tamanho");
+  const grande = "x".repeat(26_366);
+  checar("skill de 26 mil caracteres passa inteira", (await baixarSkill("https://raw.githubusercontent.com/o/r/main/a.md", resposta(grande))).length === 26_366);
+  erro = "";
+  await baixarSkill("https://raw.githubusercontent.com/o/r/main/a.md", resposta("y".repeat(LIMITE_SKILL + 1))).catch((e) => (erro = (e as Error).message));
+  checar("acima do limite vira erro explicito", /limite/i.test(erro) && /divida/i.test(erro), erro);
+  checar("e o erro diz os dois tamanhos", erro.includes("40.001") && erro.includes("40.000"), erro);
 
   secao("skills: sincronizacao com o GitHub");
   const respostaSync = (corpo: string, status = 200, etag?: string) => {
@@ -70,6 +83,16 @@ export async function verificarSkills(): Promise<void> {
   const igual = await sincronizarSkills([hospedada({ etag: 'W/"abc"' })], { buscar: comEtag.f });
   checar("304 mantem o texto e nao avisa mudanca", igual.lista[0].texto === "versao antiga" && !igual.mudaram.length);
   checar("pergunta com If-None-Match", comEtag.chamadas[0]?.["If-None-Match"] === 'W/"abc"', comEtag.chamadas[0]);
+
+  // Cópia cortada no limite antigo + etag válido: perguntar "mudou?" traria 304
+  // e o texto truncado ficaria aqui para sempre.
+  const cortada = respostaSync("conteudo completo", 200, 'W/"novo"');
+  const migrada = await sincronizarSkills([hospedada({ texto: "z".repeat(CORTE_ANTIGO), etag: 'W/"antigo"' })], { buscar: cortada.f });
+  checar("copia truncada baixa de novo, sem If-None-Match", cortada.chamadas[0]?.["If-None-Match"] === undefined, cortada.chamadas[0]);
+  checar("e o texto completo substitui o cortado", migrada.lista[0].texto === "conteudo completo");
+  const normal = respostaSync("", 304);
+  await sincronizarSkills([hospedada({ texto: "tamanho comum", etag: 'W/"antigo"' })], { buscar: normal.f });
+  checar("skill de tamanho normal continua perguntando com etag", normal.chamadas[0]?.["If-None-Match"] === 'W/"antigo"', normal.chamadas[0]);
 
   const cedo = await sincronizarSkills([hospedada({ verificadaEm: Date.now() - 60_000 })], { buscar: respostaSync("versao nova").f });
   checar("dentro do intervalo nao consulta de novo", cedo.lista[0].texto === "versao antiga");

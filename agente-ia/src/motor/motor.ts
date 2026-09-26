@@ -155,6 +155,9 @@ export class Motor {
         this.historico.push({ role: "assistant", content: resposta.texto || null, ...(resposta.chamadas.length ? { tool_calls: resposta.chamadas } : {}) });
         if (!resposta.chamadas.length) {
           if (resposta.fim === "length") this.o.ui.aviso("A resposta foi cortada pelo limite do modelo.");
+          if (resposta.interrompida) {
+            this.o.ui.aviso("O servi\u00E7o de IA parou de responder no meio da resposta. O que chegou at\u00E9 aqui est\u00E1 acima; pergunte de novo se faltou algo.");
+          }
           return;
         }
         const resultados = await this.executarChamadas(resposta.chamadas, sinal);
