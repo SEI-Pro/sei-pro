@@ -5,8 +5,11 @@
 ### Versão 2.2.2
 25/09/2026
 
-Versão de bastidor: o principal aqui não se vê na tela, e é o que abre caminho para a extensão voltar à loja do Firefox.
+Uma correção importante no Agente de IA e a fundação que abre caminho para a extensão voltar à loja do Firefox.
 
+- **O painel do Agente de IA travava ao responder com tabelas.** Quem usa uma skill que pede resposta em quadro via a janela congelar por completo — sem clique, sem rolagem, sem fechar. A causa: a resposta é desenhada enquanto chega, e uma tabela que ainda não chegou inteira fazia o leitor de texto rodar em círculos. Agradecimento a Marcus Tavares (SOG/ANTAQ), que reportou e rastreou o problema
+- **Skills grandes não são mais cortadas em silêncio.** O limite era de 20 mil caracteres e o que passasse disso sumia sem aviso — junto com o final do arquivo, onde costumam estar os exemplos. Agora cabem 40 mil, o que não couber é avisado na tela, e quem já tinha uma skill cortada recebe o arquivo completo na próxima sincronização
+- **Resposta que trava no meio agora termina.** Se o serviço de IA para de responder sem encerrar a conexão, o agente espera 90 segundos, mantém o que já chegou e avisa — em vez de ficar "pensando" para sempre
 - **Novo** — [destaque dos documentos da sua unidade ainda não assinados](../pages/DOCSNAOASSINADOS.md), sugestão do grupo SEI Lab: na árvore, o documento que a própria unidade produziu e ainda não assinou ficava idêntico aos assinados, e a única conferência era o aviso na hora de enviar o processo. Agora ele ganha fundo âmbar com um filete lateral — cor escolhida para não se confundir com a que o SEI já usa no não assinado de *outra* unidade. Vem desligado; ative em Configurações
 - **Os ícones de ajuda das Configurações voltaram a funcionar.** Eles apontavam para um endereço que, dentro da extensão, não existe — clicar não levava a lugar nenhum. Agora abrem a documentação em seipro.app
 - **A extensão passou a construir sua interface por um caminho único**, que higieniza todo o HTML antes de inserir na página e tira as ações de dentro dos atributos do HTML. É exigência da loja do Firefox, que recusou a extensão por isso, e vale também para quem usa o Chrome: é uma camada a menos por onde conteúdo de terceiros poderia virar código. **Sem mudança de funcionamento** — os cinco arquivos convertidos nesta etapa foram percorridos um a um no SEI 4.1.5 e no SEI 5
