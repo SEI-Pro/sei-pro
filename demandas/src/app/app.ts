@@ -112,13 +112,22 @@ export async function montarApp(deps: DepsApp): Promise<AppMontado> {
     estado.escopo !== "eu" && estado.tabelas.some((t) => t.vis === "unidade" && t.tabela === "d" && t.faixa === "bloqueio");
 
   // ---------- ações ----------
+  // Exceção ao abrir o diálogo não pode ser engolida pelo `void`: o usuário veria o menu fechar e nada mais.
   const abrirNova = async () => {
-    const r = await abrirDialogoDemanda(contextoDeDialogos(deps), { vis: estado.escopo === "eu" ? "eu" : "unidade" });
-    if (r) await atualizar();
+    try {
+      const r = await abrirDialogoDemanda(contextoDeDialogos(deps), { vis: estado.escopo === "eu" ? "eu" : "unidade" });
+      if (r) await atualizar();
+    } catch (e) {
+      avisarErro(e);
+    }
   };
   const editar = async (alvo: DemandaNaTela) => {
-    const r = await abrirDialogoDemanda(contextoDeDialogos(deps), { demanda: alvo });
-    if (r) await atualizar();
+    try {
+      const r = await abrirDialogoDemanda(contextoDeDialogos(deps), { demanda: alvo });
+      if (r) await atualizar();
+    } catch (e) {
+      avisarErro(e);
+    }
   };
   const arquivarAntigas = () => {
     const c = deps.colaboracao;

@@ -329,7 +329,7 @@ export function abrirDialogoDemanda(c: ContextoDialogo, o: { demanda?: DemandaNa
       caixaProcessos.append(el);
       pintarSigilo();
     };
-    for (const v of atual?.processos ?? []) adicionarProcesso(v);
+    // As linhas dos processos já existentes só se criam depois de `processosSecao` (mais abaixo): `pintarSigilo` a usa.
 
     // Quem vê.
     const cartoes = h(
@@ -377,6 +377,7 @@ export function abrirDialogoDemanda(c: ContextoDialogo, o: { demanda?: DemandaNa
         h("button", { type: "button", class: "spro-botao", onclick: () => adicionarProcesso() }, icone("mais", 14), "Adicionar processo"),
       ),
     );
+    for (const v of atual?.processos ?? []) adicionarProcesso(v);
     pintarChecklist();
 
     const corpoMais = h(

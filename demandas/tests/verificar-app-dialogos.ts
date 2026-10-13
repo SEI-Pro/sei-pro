@@ -267,6 +267,46 @@ export async function verificarAppDialogos(): Promise<void> {
     );
   }
 
+  secao("dialogo da demanda: EDITAR uma demanda que ja tem processo (regressao da 2.9: o dialogo nem abria)");
+  {
+    const t = appDeTeste();
+    const criada = await t.repos.unidade.criar({
+      titulo: "Com processos",
+      prazo: "2026-10-20",
+      distribuidaEm: "2026-10-01",
+      processos: [
+        { protocolo: "26.0.000135872-2", idProcedimento: "77" },
+        { protocolo: "26.0.000145655-4" },
+        { protocolo: "", sigiloso: true },
+      ],
+    });
+    const alvo = naTela(criada, "unidade", HOJE);
+    let abriu = false;
+    let erro: unknown = null;
+    const p = abrir(t, { demanda: alvo });
+    p.catch((e) => {
+      erro = e;
+    });
+    await tique(15);
+    abriu = !!t.doc.querySelector("dialog[open]");
+    checar("o dialogo abre (nao lanca ReferenceError por processosSecao antes da declaracao)", abriu && erro === null, String(erro));
+    checar("as linhas de processo vem preenchidas", dlg(t).querySelectorAll(".dem-processo-linha").length === 3);
+    checar("o resumo da secao conta os processos", texto(dlg(t).querySelector('[data-secao="processos"] .dem-sec-res')) === "3");
+    checar("a dica de sigilo aparece com um vinculo sigiloso", !(dlg(t).querySelector(".dem-dica-sigilo") as HTMLElement).hidden);
+    digitar(campo(t, "titulo"), "Com processos (editado)");
+    botao(dlg(t), "Gravar")!.click();
+    await tique(15);
+    const gravada = (await t.repos.unidade.dados()).find((d) => d.id === criada.id);
+    checar(
+      "grava o titulo e mantem os 3 processos",
+      gravada?.titulo === "Com processos (editado)" &&
+        gravada.processos.length === 3 &&
+        gravada.processos[0]?.protocolo === "26.0.000135872-2" &&
+        gravada.processos[0]?.idProcedimento === "77",
+      JSON.stringify(gravada?.processos),
+    );
+  }
+
   secao("dialogo da demanda: processos");
   {
     const t = appDeTeste({
