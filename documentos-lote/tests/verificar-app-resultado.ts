@@ -245,17 +245,28 @@ export async function verificarAppResultado(): Promise<void> {
     const tsvF = resultadoComoTexto(linhasF, colunasDoResultado(lf)).split("\n")[2] ?? "";
     igual("cópia: a de fora sem processo_destino (a coluna da planilha fica)", tsvF.split("\t").slice(0, 5), ["Fora", "Bia", "", P2, ""]);
     const cn = config({ destino: { tipo: "novo-processo", idTipoProcesso: "100", especificacao: "x" } });
-    const n = lote(cn, registros(3), [
+    const LINKP = `https://${HOST}/sei/controlador.php?acao=procedimento_trabalhar&id_procedimento=77`;
+    const n = lote(cn, registros(6), [
       { ...criada(1), processo: "PN1" },
       { situacao: "erro", erro: "Falha", processo: "PN2" },
       { situacao: "pendente", processo: "PN3" },
+      { situacao: "pendente", linkProcesso: LINKP },
+      { situacao: "pendente" },
+      { situacao: "fora", erro: "Nome na árvore vazio" },
     ]);
     const coln = colunasDoResultado(n).find((x) => x.titulo === "processo_destino")?.chave ?? "";
+    const linhasN = linhasDoResultado(n);
     igual(
-      "novo processo: o criado pela linha (mesmo com o documento falho); pendente vazia",
-      linhasDoResultado(n).map((x) => x.campos[coln]),
-      ["PN1", "PN2", ""],
+      "novo processo: o processo criado aparece (criada, erro e pendente com processo); sem processo, vazio",
+      linhasN.map((x) => x.campos[coln]),
+      ["PN1", "PN2", "PN3", LINKP, "", ""],
     );
+    const csvN = resultadoComoCsv(linhasN, colunasDoResultado(n)).split("\r\n");
+    checar("CSV: a pendente com processo criado leva o número", (csvN[3] ?? "").startsWith("Pendente;Pessoa 3;Cargo 3;PN3;"), csvN[3]);
+    checar("CSV: a pendente sem processo fica vazia", (csvN[5] ?? "").startsWith("Pendente;Pessoa 5;Cargo 5;;"), csvN[5]);
+    const tsvN = resultadoComoTexto(linhasN, colunasDoResultado(n)).split("\n");
+    igual("cópia: a pendente com processo criado leva o número", tsvN[3]?.split("\t")[3], "PN3");
+    igual("cópia: a de fora sem processo fica vazia", tsvN[6]?.split("\t")[3], "");
   }
 
   secao("execução: linha de novo processo que já tem o processo pula o criarProcesso");
