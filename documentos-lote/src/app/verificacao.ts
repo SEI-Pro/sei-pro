@@ -368,7 +368,7 @@ export class TelaVerificacao implements TelaEtapa {
       "td",
       {},
       h("strong", {}, consultando ? "Verificando..." : ROTULO_STATUS[r.status]),
-      // Uma linha só, com reticências (a linha da tabela não muda de altura): o texto inteiro no title.
+      // Até duas linhas (a altura reservada da linha da tabela); mais longa, corta: o texto inteiro no title.
       !consultando && r.mensagem && r.status !== "ok" ? h("small", { class: "dl-dica", title: r.mensagem }, ` ${r.mensagem}`) : null,
       this.avisoAbrir.has(numero) ? h("small", { class: "dl-erro-abrir" }, ` ${this.avisoAbrir.get(numero)}`) : null,
     );

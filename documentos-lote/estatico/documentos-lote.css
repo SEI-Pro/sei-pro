@@ -479,8 +479,10 @@ table.dl-tabela-verificacao {
 .dl-tabela-verificacao th:nth-child(4) {
   width: 340px;
 }
+/* Altura de linha reservada em TODOS os estados ("Verificando...", Ok, com problema): status + DUAS linhas de
+   mensagem (~61px por linha com o padding), para a tabela e a janela nao mudarem de altura. */
 .dl-tabela-verificacao td {
-  height: 34px;
+  height: 49px;
 }
 .dl-tabela-verificacao td.dl-processo {
   white-space: nowrap;
@@ -494,12 +496,14 @@ table.dl-tabela-verificacao {
 .dl-tabela-verificacao td:nth-child(3) {
   overflow-wrap: anywhere;
 }
-/* A mensagem do status numa linha so, com reticencias (o texto inteiro no title): toda linha tem a mesma altura
-   (status + 1 linha de mensagem, os 34px acima), em "Verificando..." e no resultado. */
+/* A mensagem do status cabe nas duas linhas reservadas acima; mais longa que isso, corta na 2a linha (limite de
+   seguranca; o texto inteiro no title). */
 .dl-tabela-verificacao td small.dl-dica {
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 /* A linha de progresso continua ocupando o lugar quando some: a tabela nao sobe e desce. O !important vence o
    [hidden] { display: none !important } do base.css; a regra e mais especifica. */
