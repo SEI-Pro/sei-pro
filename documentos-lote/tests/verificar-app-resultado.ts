@@ -7,7 +7,7 @@
 
 import { type Area, areaMemoria } from "@comum/armazenamento/area";
 import { OP_RESTAURADO } from "@comum/ui/modalIframe";
-import { resultadoComoCsv } from "@comum/ui/tabelaResultado";
+import { resultadoComoCsv, resultadoComoTexto } from "@comum/ui/tabelaResultado";
 import { fecharJanela, tratadoresDoApp } from "@dl/app/app";
 import { ROTULO_COLUNA_NOME } from "@dl/app/cruzamento";
 import { ExecucaoDocumentos, MENSAGEM_EM_VOO, resumoDoLote, TelaExecucao } from "@dl/app/execucao";
@@ -184,9 +184,15 @@ export async function verificarAppResultado(): Promise<void> {
       return col ? (linhas[k]?.campos[col.chave] ?? "") : "?";
     };
     igual(
-      "processo de destino (tela) em todas",
-      [0, 1, 4].map((k) => c(k, "processo_destino")),
+      "processo de destino (tela) na criada, na com erro e na incerta",
+      [0, 1, 2].map((k) => c(k, "processo_destino")),
       [PROTOCOLO, PROTOCOLO, PROTOCOLO],
+    );
+    // A ajuda: processo_destino é "o processo em que o documento foi criado". Fora e pendente não criaram nada.
+    igual(
+      "processo de destino vazio na de fora e na pendente",
+      [3, 4].map((k) => c(k, "processo_destino")),
+      ["", ""],
     );
     igual("nome do documento gerado (tipo + nome na árvore, como o legado)", c(0, "nome_documento_gerado"), "Ofício Ana");
     igual("número SEI gerado", c(0, "numero_sei_gerado"), "0001");
@@ -217,16 +223,38 @@ export async function verificarAppResultado(): Promise<void> {
     const l = lote(cc, [{ nome: "Ana", cargo: "", proc: P1 }], [criada(1)]);
     const col = colunasDoResultado(l).find((x) => x.titulo === "processo_destino")?.chave ?? "";
     igual("coluna: o número da linha", linhasDoResultado(l)[0]?.campos[col], P1);
+    const lf = lote(
+      cc,
+      [
+        { nome: "Ana", cargo: "", proc: P1 },
+        { nome: "Bia", cargo: "", proc: P2 },
+        { nome: "Caio", cargo: "", proc: P3 },
+        { nome: "Duda", cargo: "", proc: P3 },
+      ],
+      [criada(1), { situacao: "fora", erro: "Não aberto na unidade" }, { situacao: "pendente" }, { situacao: "erro", erro: "Falha" }],
+    );
+    const linhasF = linhasDoResultado(lf);
+    igual(
+      "coluna: de fora e pendente sem processo_destino; criada e erro com",
+      linhasF.map((x) => x.campos[col]),
+      [P1, "", "", P3],
+    );
+    const csvF = resultadoComoCsv(linhasF, colunasDoResultado(lf));
+    const linhaFora = csvF.split("\r\n")[2] ?? "";
+    checar("CSV: a de fora não leva o processo em processo_destino", linhaFora.startsWith(`Fora;Bia;;${P2};;`), linhaFora);
+    const tsvF = resultadoComoTexto(linhasF, colunasDoResultado(lf)).split("\n")[2] ?? "";
+    igual("cópia: a de fora sem processo_destino (a coluna da planilha fica)", tsvF.split("\t").slice(0, 5), ["Fora", "Bia", "", P2, ""]);
     const cn = config({ destino: { tipo: "novo-processo", idTipoProcesso: "100", especificacao: "x" } });
-    const n = lote(cn, registros(2), [
+    const n = lote(cn, registros(3), [
       { ...criada(1), processo: "PN1" },
       { situacao: "erro", erro: "Falha", processo: "PN2" },
+      { situacao: "pendente", processo: "PN3" },
     ]);
     const coln = colunasDoResultado(n).find((x) => x.titulo === "processo_destino")?.chave ?? "";
     igual(
-      "novo processo: o criado pela linha (mesmo com o documento falho)",
+      "novo processo: o criado pela linha (mesmo com o documento falho); pendente vazia",
       linhasDoResultado(n).map((x) => x.campos[coln]),
-      ["PN1", "PN2"],
+      ["PN1", "PN2", ""],
     );
   }
 

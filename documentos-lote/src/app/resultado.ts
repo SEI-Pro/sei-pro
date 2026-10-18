@@ -66,12 +66,15 @@ export function linkDoProcesso(i: ItemLote | undefined): string {
 }
 
 /**
- * O processo em que o documento da linha vai (ou foi) gravado. Processo novo criado sem o número lido: o link dele
- * (é o único jeito de achá-lo; repetir a linha criaria outro).
+ * O processo em que o documento da linha foi (ou pode ter sido) gravado: só na criada e na com erro (incerta ou não),
+ * que tentaram gravar. A de fora e a pendente não gravaram nada: vazio (a ajuda diz que `processo_destino` é "o
+ * processo em que o documento foi criado"; o número da planilha continua na coluna dela). Processo novo criado sem
+ * o número lido: o link dele (é o único jeito de achá-lo; repetir a linha criaria outro).
  */
 function processoDestino(l: LoteDocumentos, k: number): string {
   const item = l.itens[k];
   const linha = l.linhas[k];
+  if (item?.situacao !== "criada" && item?.situacao !== "erro") return "";
   switch (l.config.destino.tipo) {
     case "tela":
       return l.protocoloTela ?? "";

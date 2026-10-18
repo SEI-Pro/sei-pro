@@ -493,6 +493,68 @@ export async function verificarSei(): Promise<void> {
     checar("sem script/noscript/comentario/title", !/nao mostrar|ative|CONFIGURA|Titulo/.test(t), t);
   }
 
+  secao("sei: texto da previa sem o rodape 'Criado por ..., versao N por ... em ...' do SEI");
+  {
+    // Marcacao real do documento_visualizar (nomes trocados): SEI 5.0.4 do MJ (com o rodape do Decreto antes) e SEI
+    // 4.1.5 de SP. O rodape fica num <div unselectable> no fim do corpo.
+    const rodape = (versao: string, login: string, data: string, fechaHr = " /") =>
+      [
+        '<div unselectable="on" style="-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;">',
+        `<hr style="border:1px solid #c0c0c0;"${fechaHr}>Criado por <a onclick="alert('Fulano de Tal')" alt="Fulano de Tal" title="Fulano de Tal" style="color:#0066cc;text-decoration:none;cursor:pointer;">${login}</a>, ${versao} 3 por <a onclick="alert('Fulano de Tal')" alt="Fulano de Tal" title="Fulano de Tal" style="color:#0066cc;text-decoration:none;cursor:pointer;">${login}</a> em ${data}.`,
+        "",
+        "</div>",
+        "",
+      ].join("\r\n");
+    const mj = [
+      "<p>____________________________</p>",
+      '<p><a class="anchorRefInternaPro" href="#item_x" name="footer_x"><span class="ntRodape_footer ancoraSei" contenteditable="false">[1]</span></a> Este termo deve ser assinado eletronicamente pelo declarante e pelas testemunhas.</p>',
+      "<p>&nbsp;</p>",
+      '<div style="counter-reset: letra_minuscula romano_maiusculo;"></div>',
+      '<hr style="border:none; padding:0; margin:5px 2px 0 2px; border-top:medium double #333" />',
+      '<table border="0" cellpadding="2" cellspacing="0" width="100%"><tbody><tr>',
+      '<td align="left" style="font-family:Calibri;font-size:9pt;border:0;" width="50%">Conforme Decreto n&ordm; 7.845, de 14 de novembro de 2012</td>',
+      '<td align="right" style="font-family:Calibri;font-size:9pt;border:0;" width="50%">&nbsp;</td>',
+      "</tr></tbody></table>",
+      "",
+      rodape("versão", "fulano.tal", "08/05/2025 15:29:34", " /"),
+    ].join("\r\n");
+    const tMj = textoDaPrevia(mj);
+    checar("SEI 5 (MJ): sem o rodape Criado por", !tMj.includes("Criado por") && !tMj.includes("fulano.tal"), tMj);
+    checar("SEI 5 (MJ): o texto antes do rodape fica", tMj.endsWith("Conforme Decreto nº 7.845, de 14 de novembro de 2012"), tMj);
+    const sp = [
+      '<p class="Texto_Justificado_Recuo_Primeira_Linha">Ao Senhor ##nome##, Prefeito Municipal de ##municipio##.</p>',
+      "",
+      '<p class="Texto_Justificado_Recuo_Primeira_Linha">Atenciosamente,</p>',
+      "",
+      rodape("versão", "beltrano", "13/09/2026 04:51:30", ""),
+      "",
+    ].join("\n");
+    igual(
+      "SEI 4.1 (SP): sem o rodape Criado por",
+      textoDaPrevia(sp),
+      "Ao Senhor ##nome##, Prefeito Municipal de ##municipio##.\nAtenciosamente,",
+    );
+    igual(
+      "acento como entidade (vers&atilde;o) tambem sai",
+      textoDaPrevia(`<p>Corpo.</p>${rodape("vers&atilde;o", "beltrano", "13/09/2026 04:51:30", "")}`),
+      "Corpo.",
+    );
+    const meio = [
+      "<p>Criado por Fulano de Tal, versão 2 por Beltrano em 01/01/2026, o regulamento segue em vigor.</p>",
+      "<p>Atenciosamente.</p>",
+    ].join("");
+    igual(
+      "as mesmas palavras no meio do corpo ficam",
+      textoDaPrevia(meio),
+      "Criado por Fulano de Tal, versão 2 por Beltrano em 01/01/2026, o regulamento segue em vigor.\nAtenciosamente.",
+    );
+    igual(
+      "ultimo paragrafo 'Criado por' sem o padrao versao/data fica",
+      textoDaPrevia("<p>Corpo.</p><p>Criado por ato do Ministro.</p>"),
+      "Corpo.\nCriado por ato do Ministro.",
+    );
+  }
+
   secao("sei: criar documento da linha (CK4, modelo = documento)");
   await comMontagem({}, async ({ sei, chamadas, secoes }) => {
     const r = await criarDocumentoDaLinha(sei, pedido());

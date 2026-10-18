@@ -87,12 +87,24 @@ const NAO_TEXTO = /<!--[\s\S]*?-->|<(head|title|style|script|noscript|template)\
 /** Endereço `data:` que sobre solto no texto (base64 colado como texto, por exemplo). */
 const DADO_EMBUTIDO = /data:[a-z]+\/[\w.+-]+;base64,[A-Za-z0-9+/=]+/gi;
 
-/** O corpo em texto simples para a prévia (parágrafos em linhas, sem linhas em branco), cortado em MAX_TEXTO_PREVIA. */
+/**
+ * O rodapé que a visualização do SEI (4.1 e 5) põe no fim do documento: "Criado por <login>, versão N por <login> em
+ * dd/mm/aaaa hh:mm:ss." (um `<div unselectable>` com um `<hr>`). É da visualização, não do texto do modelo: na prévia
+ * só faz ruído. Só sai a ÚLTIMA linha, e só com o padrão inteiro (versão e data); "Criado por" no corpo fica.
+ */
+const RODAPE_CRIADO_POR = /(?:^|\n)Criado por [^\n]+, vers[\u00E3a]o \d+ por [^\n]+ em \d{2}\/\d{2}\/\d{4}[^\n]*$/;
+
+/**
+ * O corpo em texto simples para a prévia (parágrafos em linhas, sem linhas em branco), sem o rodapé "Criado por" da
+ * visualização, cortado em MAX_TEXTO_PREVIA. Só para a prévia: o que vai para o SEI é o próprio modelo.
+ */
 export const textoDaPrevia = (html: string) =>
   textoDoHtml(html.replace(NAO_TEXTO, ""))
     .replace(DADO_EMBUTIDO, "")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{2,}/g, "\n")
+    .trim()
+    .replace(RODAPE_CRIADO_POR, "")
     .trim()
     .slice(0, MAX_TEXTO_PREVIA);
 
