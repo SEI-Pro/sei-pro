@@ -379,7 +379,7 @@ export class TelaVerificacao implements TelaEtapa {
         botoes.append(
           h(
             "button",
-            { type: "button", class: "spro-botao", onclick: () => void this.abrir(numero) },
+            { type: "button", class: "spro-botao pequeno", onclick: () => void this.abrir(numero) },
             icone("saida", 14),
             "Abrir em nova aba",
           ),
@@ -390,7 +390,7 @@ export class TelaVerificacao implements TelaEtapa {
           "button",
           {
             type: "button",
-            class: "spro-botao",
+            class: "spro-botao pequeno",
             // Durante uma rodada (inicial ou "Verificar de novo os com problema") não sai consulta concorrente à aba.
             disabled: !!this.executor,
             title: this.executor ? "Aguarde terminar a verificação em curso." : undefined,
@@ -404,7 +404,8 @@ export class TelaVerificacao implements TelaEtapa {
     return h(
       "tr",
       { class: `dl-status-${status}`, "data-numero": numero },
-      h("td", {}, numero),
+      // O número não quebra (e, se não couber na coluna, o inteiro fica no title).
+      h("td", { class: "dl-processo", title: numero }, numero),
       h("td", {}, String(linhas)),
       situacao,
       acoes,

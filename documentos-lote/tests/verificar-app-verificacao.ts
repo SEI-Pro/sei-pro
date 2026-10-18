@@ -153,6 +153,13 @@ export async function verificarAppVerificacao(): Promise<void> {
     );
     checar("ok: a célula de ações existe vazia (as divisórias seguem as outras)", !!m.linha(P1)?.querySelector("td.dl-acoes-linha"));
     checar("Verificar de novo os com problema no topo", !!botao(m.raiz, "Verificar de novo os com problema"));
+    // Layout estável: o número do processo não quebra (célula própria, com o número inteiro no title).
+    const tdProc = m.linha(P1)?.querySelector("td.dl-processo");
+    checar(
+      "número do processo na célula que não quebra",
+      tdProc?.textContent === P1 && tdProc.getAttribute("title") === P1,
+      tdProc?.outerHTML,
+    );
 
     disparar(m.botaoDe(P2, "Abrir em nova aba")!, "click");
     await ate(() => m.chamadas.some((c) => c.op === "abrirAba"));
@@ -429,12 +436,14 @@ export async function verificarAppVerificacao(): Promise<void> {
       "Verificação é a etapa atual",
       m.raiz.querySelector('.dl-etapas li[aria-current="step"]')?.textContent?.includes("Verificação") === true,
     );
+    checar("Verificação: janela larga", m.raiz.classList.contains("dl-largo"));
     await ate(() => rodape()?.disabled === false, 3000);
     igual("2 linhas, 1 processo: 1 consulta", verifs.length, 1);
     igual("rodapé: Gravar 2 linhas", rodape()?.textContent, "Gravar 2 linhas");
     disparar(botao(m.raiz, "Voltar")!, "click");
     await ate(() => !!combo(m.raiz, ROTULO_COLUNA_NOME));
     checar("Voltar leva ao Cruzamento", true);
+    checar("Cruzamento: janela na largura normal", !m.raiz.classList.contains("dl-largo"));
 
     // Mudar só a pausa não invalida a verificação.
     const pausa = m.raiz.querySelector<HTMLInputElement>('input[type="number"]')!;

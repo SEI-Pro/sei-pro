@@ -294,6 +294,7 @@ export class AppDocumentosLote {
       ctx: this.d.ctx,
     });
     this.tela = tela;
+    this.largura(def.id === "verificacao");
     this.conteudo.replaceChildren(tela.el);
     this.atualizarRodape();
     await tela.iniciar?.();
@@ -382,10 +383,19 @@ export class AppDocumentosLote {
     this.tela = null;
     this.sairDoCorpo();
     this.corpo = corpo;
+    this.largura(corpo === "resultado" || corpo === "fora");
     this.etapas.hidden = true;
     this.rodape.hidden = true;
     this.conteudo.replaceChildren(el);
     this.desenharPastilha();
+  }
+
+  /**
+   * Janela larga nas telas de tabela (Verificação, Resultado e a reverificação das de fora): a classe na raiz faz o
+   * <dialog> em volta crescer (documentos-lote.css, `dialog.dl-modal:has(> .dl-largo)`).
+   */
+  private largura(larga: boolean): void {
+    this.raiz.classList.toggle("dl-largo", larga);
   }
 
   /** Saindo do corpo atual: a reverificação em curso para e o resultado deixa de ser o da tela. */

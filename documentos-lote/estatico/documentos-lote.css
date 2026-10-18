@@ -29,6 +29,11 @@ dialog.dl-modal[open] {
   flex-direction: column;
   background: var(--spro-pagina);
 }
+/* Telas de tabela (Verificacao, Resultado, reverificacao das de fora): o app poe .dl-largo no #app e a janela cresce.
+   Minimizado, nao (a pastilha ocupa o iframe inteiro). */
+html:not([data-minimizado]) dialog.dl-modal[open]:has(> .dl-largo) {
+  width: min(1100px, 96vw);
+}
 dialog.dl-modal:focus-visible {
   outline: none;
 }
@@ -373,9 +378,42 @@ table.spro-resultado td a {
 .dl-nota code {
   font-family: var(--spro-mono);
 }
-.dl-arquivo {
-  max-width: 100%;
+/* Escolher arquivo: um <label> com a cara de botao do modulo envolve o campo nativo, escondido so a vista (continua
+   focavel; o anel de foco aparece no label). O nome escolhido fica ao lado. */
+.dl-escolher-arquivo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.dl-botao-arquivo {
+  position: relative;
+}
+.dl-botao-arquivo:focus-within {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+.dl-arquivo-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+}
+.dl-nome-arquivo {
+  min-width: 0;
+  font-weight: 500;
   color: var(--spro-texto);
+  overflow-wrap: anywhere;
+}
+.dl-nome-arquivo.vazio {
+  font-weight: 400;
+  color: var(--spro-suave);
 }
 
 /* Etapa 3: cruzamento e destino */
@@ -420,8 +458,44 @@ table.spro-resultado td a {
 .dl-verificacao .dl-tabela {
   max-height: 38vh;
 }
+/* Layout estavel entre "Verificando..." e o resultado (e no Verificar de novo): colunas de largura fixa, o numero do
+   processo sem quebra, a mensagem longa quebra na Situacao, e cada linha ja reserva a altura de um resultado (status
+   + uma linha de mensagem, ou os botoes). Abaixo de 820px a tabela rola na horizontal (.dl-tabela). */
+table.dl-tabela-verificacao {
+  table-layout: fixed;
+  min-width: 820px;
+}
+.dl-tabela-verificacao th {
+  box-sizing: border-box;
+}
+.dl-tabela-verificacao th:nth-child(1) {
+  width: 230px;
+}
+.dl-tabela-verificacao th:nth-child(2) {
+  width: 72px;
+}
+.dl-tabela-verificacao th:nth-child(4) {
+  width: 340px;
+}
+.dl-tabela-verificacao td {
+  height: 34px;
+}
+.dl-tabela-verificacao td.dl-processo {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
 .dl-tabela-verificacao td:nth-child(2) {
   font-variant-numeric: tabular-nums;
+}
+.dl-tabela-verificacao td:nth-child(3) {
+  overflow-wrap: anywhere;
+}
+/* A linha de progresso continua ocupando o lugar quando some: a tabela nao sobe e desce. */
+.dl-verificacao > .dl-carregando[hidden] {
+  display: block;
+  visibility: hidden;
 }
 /* Situacao: sempre o texto; a cor so reforca. */
 .dl-tabela-verificacao tr.dl-status-ok td:nth-child(3) strong {
@@ -444,7 +518,7 @@ table.spro-resultado td a {
    conteiner de dentro. */
 .dl-acoes-linha-botoes {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   justify-content: flex-end;
 }
@@ -525,4 +599,13 @@ mark.dl-literal {
 }
 .dl-resultado .dl-nota {
   font-size: 12px;
+}
+/* Tabela compacta: numero do processo, numero SEI e o link curto do documento numa linha so (o endereco inteiro vai
+   no title e no CSV). Coluna da planilha larga demais: a .dl-tabela rola na horizontal, so como reserva. */
+.dl-resultado table.spro-resultado td.dl-sem-quebra {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.dl-resultado table.spro-resultado td.dl-sem-quebra a {
+  word-break: normal;
 }

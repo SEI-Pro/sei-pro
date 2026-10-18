@@ -47,6 +47,8 @@ function limparPlanilha(e: EstadoApp): void {
 export class TelaPlanilha implements TelaEtapa {
   readonly el: HTMLElement;
   private readonly arquivo: HTMLInputElement;
+  /** O nome do arquivo escolhido, ao lado do botão (o campo nativo, que o mostrava, fica escondido à vista). */
+  private readonly nomeArquivo: HTMLElement;
   private readonly carregando: HTMLElement;
   private readonly erro: HTMLElement;
   private readonly resumo: HTMLElement;
@@ -54,10 +56,22 @@ export class TelaPlanilha implements TelaEtapa {
   private destruida = false;
 
   constructor(private readonly d: DepsEtapa) {
-    this.arquivo = h("input", { type: "file", id: "dl-arquivo", class: "dl-arquivo", accept: ".csv,.txt,text/csv,text/plain" });
+    // O botão nativo de arquivo não segue o visual do módulo: o campo fica dentro de um <label> com a cara de
+    // botão, escondido só à vista (continua focável pelo teclado; o label mostra o anel com :focus-within).
+    this.arquivo = h("input", {
+      type: "file",
+      id: "dl-arquivo",
+      class: "dl-arquivo-oculto",
+      accept: ".csv,.txt,text/csv,text/plain",
+      "aria-describedby": "dl-nome-arquivo",
+    });
+    this.nomeArquivo = h("span", { id: "dl-nome-arquivo", class: "dl-nome-arquivo", "aria-live": "polite" });
+    this.mostrarNome(d.estado.nomeArquivo);
     this.arquivo.addEventListener("change", () => {
       const f = this.arquivo.files?.[0];
-      if (f) void this.ler(f);
+      if (!f) return;
+      this.mostrarNome(f.name);
+      void this.ler(f);
     });
     this.carregando = h("small", { class: "dl-carregando", "aria-live": "polite", hidden: true });
     this.erro = h("p", { class: "dl-erro", role: "alert", hidden: true });
@@ -76,8 +90,13 @@ export class TelaPlanilha implements TelaEtapa {
       h(
         "div",
         { class: "dl-campo" },
-        h("label", { class: "dl-rotulo", for: "dl-arquivo" }, "Arquivo CSV"),
-        this.arquivo,
+        h("span", { class: "dl-rotulo" }, "Arquivo CSV"),
+        h(
+          "div",
+          { class: "dl-escolher-arquivo" },
+          h("label", { class: "spro-botao dl-botao-arquivo" }, icone("subir", 16), "Escolher arquivo CSV", this.arquivo),
+          this.nomeArquivo,
+        ),
         h("small", { class: "dl-dica" }, `Separador ponto e vírgula, vírgula ou tabulação; até ${TETO} linhas.`),
         this.carregando,
       ),
@@ -136,6 +155,11 @@ export class TelaPlanilha implements TelaEtapa {
     }
     this.desenharResumo();
     this.d.aoMudar();
+  }
+
+  private mostrarNome(nome: string | undefined): void {
+    this.nomeArquivo.textContent = nome || "Nenhum arquivo escolhido";
+    this.nomeArquivo.classList.toggle("vazio", !nome);
   }
 
   private mostrarErro(texto: string | null): void {

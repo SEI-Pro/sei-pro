@@ -330,6 +330,29 @@ export async function verificarAppModelo(): Promise<void> {
     igual("o seletor mostra o documento escolhido", combo(m.raiz, ROTULO_MODELO)?.textContent?.includes("Ofício 12"), true);
   }
 
+  secao("app etapa 2: escolher arquivo é um botão do módulo (não o botão nativo)");
+  {
+    const m = montar();
+    await naPlanilha(m);
+    const input = m.arquivo();
+    const rotulo = input?.closest("label");
+    checar("o campo de arquivo fica dentro de um label com a cara de botão", !!rotulo?.classList.contains("spro-botao"), rotulo?.className);
+    checar("o label diz o que faz", (rotulo?.textContent ?? "").includes("Escolher arquivo CSV"), rotulo?.textContent);
+    checar(
+      "o campo nativo fica escondido só à vista (continua focável)",
+      !!input?.classList.contains("dl-arquivo-oculto") && !input?.hidden,
+    );
+    const nome = () => m.raiz.querySelector(".dl-nome-arquivo")?.textContent ?? "";
+    igual("sem arquivo: diz que nenhum foi escolhido", nome(), "Nenhum arquivo escolhido");
+    await m.escolherArquivo("pessoas.csv", utf8("nome;cargo\nAna;Analista\n"));
+    igual("o nome do arquivo escolhido ao lado do botão", nome(), "pessoas.csv");
+    disparar(botao(m.raiz, "Voltar")!, "click");
+    await ate(() => !!combo(m.raiz, ROTULO_MODELO));
+    disparar(m.avancar()!, "click");
+    await ate(() => !!m.arquivo());
+    igual("de volta à planilha: o nome do arquivo lido", nome(), "pessoas.csv");
+  }
+
   secao("app etapa 2: planilha");
   {
     const m = montar();

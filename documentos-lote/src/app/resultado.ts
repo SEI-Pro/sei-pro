@@ -244,6 +244,9 @@ export interface AcoesResultado {
   concluir(): void;
 }
 
+/** Valor de planilha que só quebraria na pontuação ("12345.000001/2026-01" virando três linhas): fica numa linha. */
+const semEspacoCurto = (t: string) => t.length > 0 && t.length <= 40 && !/\s/.test(t);
+
 export class TelaResultado {
   readonly el: HTMLElement;
   private readonly erro: HTMLElement;
@@ -260,17 +263,42 @@ export class TelaResultado {
       return b;
     };
     this.erro = h("p", { class: "dl-erro", role: "alert", hidden: true });
-    const tabela = montarTabelaResultado(document, linhasDoResultado(lote), colunasDoResultado(lote));
-    // A coluna processo_destino na tabela (a primeira é a Situação).
-    const colunaProcesso = 1 + colunasDoResultado(lote).findIndex((c) => c.chave === "processo_destino");
+    const linhas = linhasDoResultado(lote);
+    const colunas = colunasDoResultado(lote);
+    const tabela = montarTabelaResultado(document, linhas, colunas);
+    // As colunas na tabela (a primeira é a Situação).
+    const indice = (chave: string) => 1 + colunas.findIndex((c) => c.chave === chave);
+    const colunaProcesso = indice("processo_destino");
+    const colunaNumero = indice("numero_sei_gerado");
+    const colunaLink = indice("link_documento_gerado");
+    const qtdPlanilha = colunasDaPlanilha(lote).length;
     const abrirProcesso = (i: ItemLote | undefined, rotulo: string) =>
       h("a", { class: "dl-link-processo", href: linkDoProcesso(i), target: "_blank", rel: "noopener" }, rotulo);
+    // Os títulos são nomes com "_" (nome_documento_gerado): podem quebrar depois do "_", em vez de alargar a coluna.
+    for (const th of tabela.querySelectorAll("thead th")) {
+      const partes = (th.textContent ?? "").split(/(?<=_)/);
+      if (partes.length > 1) th.replaceChildren(...partes.flatMap((p, n) => (n ? [h("wbr", {}), p] : [p])));
+    }
     [...tabela.querySelectorAll("tbody tr")].forEach((tr, k) => {
       const i = lote.itens[k];
       // A cor só reforça: o incerto já diz "Incerto" na Situação.
       if (ehIncerto(i)) tr.classList.add("dl-incerto");
+      // Números (processo, SEI) e o link curto não quebram linha: a tabela fica compacta.
+      for (const c of [colunaProcesso, colunaNumero, colunaLink]) tr.children[c]?.classList.add("dl-sem-quebra");
+      // Da planilha, o valor curto sem espaço (o número do processo na coluna de destino, um CPF) também não quebra.
+      for (let c = 1; c <= qtdPlanilha; c += 1) {
+        const td = tr.children[c];
+        if (td && semEspacoCurto(td.textContent ?? "")) td.classList.add("dl-sem-quebra");
+      }
       // O processo criado pela linha com erro vira link (sem o número: "Abrir o processo criado", não o endereço).
       if (linkDoProcesso(i)) tr.children[colunaProcesso]?.replaceChildren(abrirProcesso(i, i?.processo || ROTULO_ABRIR_PROCESSO));
+      // O link do documento na tela é curto (o número SEI, ou "Abrir"), com o endereço inteiro no title; o CSV e a
+      // cópia levam o endereço inteiro (vêm de `linhasDoResultado`, não desta tabela).
+      const a = tr.children[colunaLink]?.querySelector("a");
+      if (a) {
+        a.setAttribute("title", a.getAttribute("href") ?? "");
+        a.textContent = linhas[k]?.campos.numero_sei_gerado || "Abrir";
+      }
     });
     const pendencia = c.erros || c.incertas || c.pendentes || foraRegravaveis(lote).length;
     const listaIncertas = incertas(lote);

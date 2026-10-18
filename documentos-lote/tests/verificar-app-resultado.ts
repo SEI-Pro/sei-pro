@@ -306,6 +306,30 @@ export async function verificarAppResultado(): Promise<void> {
     const tds = [...m.raiz.querySelectorAll(".dl-resultado tbody tr td:first-child")].map((td) => td.textContent);
     igual("situação em texto na tabela", tds, ["Criada", "Erro"]);
     checar("link clicável na tabela", !!m.raiz.querySelector('.dl-resultado a[href*="id_documento=901"]'));
+    // Tabela compacta: o link do documento mostra o número SEI (o endereço inteiro no title); CSV e cópia levam o link.
+    const linkDoc = m.raiz.querySelector<HTMLAnchorElement>('.dl-resultado table a[href*="id_documento=901"]');
+    igual("link do documento: o texto é o número SEI", linkDoc?.textContent, "0001");
+    checar(
+      "link do documento: o endereço inteiro no title",
+      (linkDoc?.getAttribute("title") ?? "").includes("id_documento=901"),
+      linkDoc?.outerHTML,
+    );
+    const primeira = [...(m.raiz.querySelector(".dl-resultado tbody tr")?.children ?? [])];
+    const semQuebra = (titulo: string) => {
+      const k = [...m.raiz.querySelectorAll(".dl-resultado thead th")].findIndex((x) => x.textContent === titulo);
+      return primeira[k]?.classList.contains("dl-sem-quebra") === true;
+    };
+    checar(
+      "processo, número SEI e link curto não quebram linha",
+      semQuebra("processo_destino") && semQuebra("numero_sei_gerado") && semQuebra("link_documento_gerado"),
+      m.raiz.querySelector(".dl-resultado tbody tr")?.outerHTML,
+    );
+    checar("valor curto sem espaço da planilha (=cmd()) também não quebra", semQuebra("cargo"));
+    checar("texto livre (nome_documento_gerado, com espaço) quebra", !semQuebra("nome_documento_gerado"));
+    checar("janela larga no resultado", m.raiz.classList.contains("dl-largo"));
+    // O título longo (nome_documento_gerado) pode quebrar depois do "_" (<wbr>), sem mudar o texto.
+    const th = [...m.raiz.querySelectorAll(".dl-resultado thead th")].find((x) => x.textContent === "nome_documento_gerado");
+    checar("cabeçalho com ponto de quebra depois do _", (th?.querySelectorAll("wbr").length ?? 0) === 2, th?.outerHTML);
     m.clicar("Baixar CSV");
     const b = m.t.baixados[0];
     igual("arquivo", [b?.nome, b?.tipo], ["documentos-em-lote.csv", "text/csv;charset=utf-8"]);
@@ -313,6 +337,11 @@ export async function verificarAppResultado(): Promise<void> {
       "CSV com as colunas e o =cmd() neutralizado",
       (b?.conteudo ?? "").includes("nome;cargo;processo_destino;nome_documento_gerado;numero_sei_gerado;link_documento_gerado") &&
         (b?.conteudo ?? "").includes("'=cmd()"),
+      b?.conteudo,
+    );
+    checar(
+      "CSV com o link inteiro do documento",
+      (b?.conteudo ?? "").includes(`https://${HOST}/sei/controlador.php?acao=procedimento_trabalhar&id_documento=901`),
       b?.conteudo,
     );
     // Cópia rica (com links) quando o navegador deixa.
@@ -334,6 +363,7 @@ export async function verificarAppResultado(): Promise<void> {
       (ricos[0] ?? "").includes('<a href="https://') && m.t.avisos[0] === "Copiado com links clicáveis",
       m.t.avisos,
     );
+    checar("cópia com o link inteiro como texto", (ricos[0] ?? "").includes("&amp;id_documento=901</a>"), ricos[0]);
     checar("sem botão Cancelar", !botao(m.doc, "Cancelar"));
     m.app.destruir();
   }
