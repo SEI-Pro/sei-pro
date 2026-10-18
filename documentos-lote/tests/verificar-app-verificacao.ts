@@ -138,6 +138,8 @@ export async function verificarAppVerificacao(): Promise<void> {
     checar("status em texto: Não aberto na unidade", (celulas(P2)[2] ?? "").includes(ROTULO_STATUS["nao-aberto"]), celulas(P2));
     igual("rótulo de não aberto", ROTULO_STATUS["nao-aberto"], "Não aberto na unidade");
     checar("mensagem da aba aparece", (celulas(P2)[2] ?? "").includes("mensagem de nao-aberto"));
+    // A mensagem fica numa linha (reticências) para a linha da tabela não mudar de altura; o texto inteiro no title.
+    igual("mensagem inteira no title", m.linha(P2)?.querySelector("small.dl-dica")?.getAttribute("title"), "mensagem de nao-aberto");
     checar("não aberto: Abrir em nova aba", !!m.botaoDe(P2, "Abrir em nova aba"));
     checar("não aberto: Verificar de novo", !!m.botaoDe(P2, "Verificar de novo"));
     checar("ok: sem botões", !m.linha(P1)?.querySelector("button"));

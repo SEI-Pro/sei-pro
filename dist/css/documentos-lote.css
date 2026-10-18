@@ -2093,6 +2093,8 @@ table.spro-resultado td a {
 }
 .dl-botao-arquivo {
   position: relative;
+  /* Como o <button>: a borda dentro dos 30px (o label dava 32px). */
+  box-sizing: border-box;
 }
 .dl-botao-arquivo:focus-within {
   outline: none;
@@ -2197,9 +2199,17 @@ table.dl-tabela-verificacao {
 .dl-tabela-verificacao td:nth-child(3) {
   overflow-wrap: anywhere;
 }
-/* A linha de progresso continua ocupando o lugar quando some: a tabela nao sobe e desce. */
+/* A mensagem do status numa linha so, com reticencias (o texto inteiro no title): toda linha tem a mesma altura
+   (status + 1 linha de mensagem, os 34px acima), em "Verificando..." e no resultado. */
+.dl-tabela-verificacao td small.dl-dica {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A linha de progresso continua ocupando o lugar quando some: a tabela nao sobe e desce. O !important vence o
+   [hidden] { display: none !important } do base.css; a regra e mais especifica. */
 .dl-verificacao > .dl-carregando[hidden] {
-  display: block;
+  display: block !important;
   visibility: hidden;
 }
 /* Situacao: sempre o texto; a cor so reforca. */
@@ -2307,6 +2317,17 @@ mark.dl-literal {
 }
 /* Tabela compacta: numero do processo, numero SEI e o link curto do documento numa linha so (o endereco inteiro vai
    no title e no CSV). Coluna da planilha larga demais: a .dl-tabela rola na horizontal, so como reserva. */
+/* Padding lateral menor e a observacao com largura minima legivel: a soma das colunas cabe nos 1064px da janela
+   larga (antes passava 6px e a observacao ficava com ~120px, em 5 a 7 linhas). */
+.dl-resultado table.spro-resultado th,
+.dl-resultado table.spro-resultado td {
+  padding-left: 7px;
+  padding-right: 7px;
+}
+.dl-resultado table.spro-resultado th:last-child,
+.dl-resultado table.spro-resultado td:last-child {
+  min-width: 140px;
+}
 .dl-resultado table.spro-resultado td.dl-sem-quebra {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;

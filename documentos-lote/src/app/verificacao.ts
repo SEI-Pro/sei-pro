@@ -368,7 +368,8 @@ export class TelaVerificacao implements TelaEtapa {
       "td",
       {},
       h("strong", {}, consultando ? "Verificando..." : ROTULO_STATUS[r.status]),
-      !consultando && r.mensagem && r.status !== "ok" ? h("small", { class: "dl-dica" }, ` ${r.mensagem}`) : null,
+      // Uma linha só, com reticências (a linha da tabela não muda de altura): o texto inteiro no title.
+      !consultando && r.mensagem && r.status !== "ok" ? h("small", { class: "dl-dica", title: r.mensagem }, ` ${r.mensagem}`) : null,
       this.avisoAbrir.has(numero) ? h("small", { class: "dl-erro-abrir" }, ` ${this.avisoAbrir.get(numero)}`) : null,
     );
     // D5: a célula fica célula de tabela (flex na `td` desalinhava as divisórias); o flex é do contêiner de dentro.
