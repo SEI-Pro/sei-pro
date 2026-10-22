@@ -14,6 +14,12 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
         var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
             tipos_prescricao = tipos_prescricao !== null ? uniqPro(tipos_prescricao) : null;
 
+        // O selo de prazo vem do getDatesPreview, que ainda monta onclick e onmouseover (plano 3).
+        // Passando pelo portao, o sanitizador arrancava os dois -- foi a regressao da 2.2.2, que
+        // tirou o tooltip do selo. A janela continua sanitizada; so o selo entra depois, sem
+        // sanitizar, na celula reservada para ele. O htmlDuration nao pode aparecer na montagem do
+        // htmlBox (nem para contar posicao): o produtores-pendentes.mjs rastreia pelo texto.
+        var prazosPrescricaoPro = [];
         var htmlBox =   '<div class="atividadeWork" style="max-height: 400px;overflow: auto;">';
 
         if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0) {
@@ -74,6 +80,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                             htmlDuration = (htmlDuration && htmlDuration.indexOf('atr\u00E1s') !== -1) ? htmlDuration.replace('atr\u00E1s','') : '';
                             htmlDuration = _diffDays >= 1 ? htmlDuration : '<span class="dateboxDisplay tagTableText_date_vencido "><i class="fas fa-history" style="color: #777; padding-right: 3px; font-size: 12pt;"></i> '+(typeof _duration !== 'undefined' ? moment.utc(_duration.as('milliseconds')).format('H[h]:m[m]') : '')+' </span>';
                             htmlDias = _diffDays;
+                            prazosPrescricaoPro.push(htmlDuration);
 
                             if (!p.suspensao) totalDecorrido = totalDecorrido+_diffDays;
 
@@ -98,7 +105,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                                     '              <td align="left">'+moment(p.data_inicio,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm')+'</td>'+
                                     '              <td align="left">'+(p.data_fim == '0000-00-00 00:00:00' ? '-' : moment(p.data_fim,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm'))+'</td>'+
                                     '              <td align="center">'+htmlDias+'</td>'+
-                                    '              <td align="left">'+htmlDuration+'</td>'+
+                                    '              <td align="left" class="prazoPrescricaoPro" data-indice="'+(prazosPrescricaoPro.length - 1)+'"></td>'+
                                     '              <td align="center">'+
                                     (checkCapacidade('delete_prescricao') && i == prescricao.length-1 && !p.key_prescricao ? 
                                     '                   <a class="newLink removePresc" style="cursor: pointer;float: right;margin: 0 !important;font-size: 1em;" data-id_prescricao="'+p.id_prescricao+'" data-spro-click="removePrescicao"><i class="fas fa-trash-alt cinzaColor"></i></a>'+
@@ -156,6 +163,9 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                         resetDialogBoxPro('dialogBoxPro');
                     },
                     buttons: []
+            });
+            $('#dialogBoxPro .prazoPrescricaoPro').each(function () {
+                htmlCruPro($(this), prazosPrescricaoPro[parseInt($(this).attr('data-indice'), 10)] || '', 'html', 'plano-3: getDatesPreview');
             });
     }
 }
