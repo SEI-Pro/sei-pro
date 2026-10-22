@@ -144,7 +144,10 @@ function loadScriptProAll() {
 	if (!frmEditor.length) {
         loadFontIcons('head');
         if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
-        if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify.min.js"));
+        // Sem "typeof DOMPurify": aqui e o mundo ISOLADO, onde o manifest ja carregou o purify, e a guarda
+        // dava sempre falso -- o purify nunca chegava ao mundo da PAGINA, onde o sei-pro-all.js e o htmlPro
+        // rodam (mesma armadilha documentada no init_arvore.js). O <script> ja no DOM evita pedir duas vezes.
+        if (!document.querySelector('script[src*="/js/lib/purify.min.js"]')) $.getScript(getUrlExtension("js/lib/purify.min.js"));
         if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
         if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
         if (typeof $().chosen === 'undefined') $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));
