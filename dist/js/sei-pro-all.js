@@ -148,9 +148,9 @@ function insertNewLinksMenu() {
     // A trava olha o primeiro item desta lista, e nao a classe: o item "Agente de IA" (agente-ia/src/ponte/aba.ts)
     // usa a mesma classe newLinksMenuPro e, entrando antes, fazia estes quatro itens nunca aparecerem (desde a 2.0).
     if ($(idMenu).find('#pesquisaLinkPermanentePro').length == 0) {
-        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" data-spro-click="initBoxSearchProtocoloSEI">'+iconeMenuPro('link')+'<span>Pesquisar Link Permanente</span></a></li>';
+        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" data-spro-click="initBoxSearchProtocoloSEI" data-spro-args="'+argsPro()+'">'+iconeMenuPro('link')+'<span>Pesquisar Link Permanente</span></a></li>';
 
-        if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" data-spro-click="getHistoryProcessosPro">'+iconeMenuPro('historico')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
+        if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" data-spro-click="getHistoryProcessosPro" data-spro-args="'+argsPro()+'">'+iconeMenuPro('historico')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
         if (checkConfigValue('ferramentaspdf')) newLinkMenu += '<li><a id="ferramentasPdfPro" class="newLinksMenuPro" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener">'+iconeMenuPro('pdf')+'<span>Ferramentas de PDF</span></a></li>';
         if (checkConfigValue('proclote')) newLinkMenu += '<li><a id="processosLotePro" class="newLinksMenuPro" data-spro-click="abrirProcessosLotePro">'+iconeMenuPro('lote')+'<span>Processos em Lote</span></a></li>';
         if (checkConfigValue('ordenarmenu')) initMenuSEISortable();

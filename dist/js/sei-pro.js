@@ -1106,7 +1106,7 @@ function getNewTabProcesso() {
             });
         });
         htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && typeof checkCapacidade !== 'undefined' && parent.checkCapacidade('save_atividade') && typeof __ !== 'undefined') 
-        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : ' data-spro-tip="'+__.Nova_Demanda+'"')+' data-spro-click="parent.saveAtividade" style="position: relative; margin-left: -3px;">'+
+        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : ' data-spro-tip="'+__.Nova_Demanda+'"')+' data-spro-click="parent.saveAtividade" data-spro-args="'+argsPro()+'" style="position: relative; margin-left: -3px;">'+
             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="'+__.Nova_Demanda+'">'+
             '    <span class="botaoSEI_iconBox">'+
             '       <i class="fad fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1118,7 +1118,7 @@ function getNewTabProcesso() {
             : '';
 
         var htmlBtnTypes =  (checkConfigValue('gerenciarprazos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Alterar informa\u00E7\u00F5es do processso"')+' data-spro-click="dialogChangeTypeProc" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Alterar informa\u00E7\u00F5es do processso"')+' data-spro-click="dialogChangeTypeProc" data-spro-args="'+argsPro()+'" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Alterar informa\u00E7\u00F5es do processso">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-info-circle" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1130,7 +1130,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnUpload =  (checkConfigValue('uploaddocsexternos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconUpload_new" '+(iconLabel ? '' : ' data-spro-tip="Enviar documentos em processos"')+' data-spro-click="initUploadFilesInProcess" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconUpload_new" '+(iconLabel ? '' : ' data-spro-tip="Enviar documentos em processos"')+' data-spro-click="initUploadFilesInProcess" data-spro-args="'+argsPro()+'" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Enviar documentos em processos">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-file-upload" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1166,7 +1166,7 @@ function getNewTabProcesso() {
         // aberto pelo service worker, e quem fala com ele e' o content script do
         // agente -- `abrirAgenteIAPro()` avisa a janela de topo por postMessage.
         var htmlBtnAgenteIA = (restrictConfigValue('ferramentasia')) ?
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_agenteia" data-spro-click="abrirAgenteIAPro" '+(iconLabel ? '' : ' data-spro-tip="Agente de IA"')+' style="position: relative; margin-left: -3px; cursor: pointer;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_agenteia" data-spro-click="abrirAgenteIAPro" data-spro-args="'+argsPro()+'" '+(iconLabel ? '' : ' data-spro-tip="Agente de IA"')+' style="position: relative; margin-left: -3px; cursor: pointer;">'+
                             '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Agente de IA</span>'+
@@ -1196,7 +1196,7 @@ function getNewTabProcesso() {
         // Historico de Processos Visitados: o mesmo do item do menu lateral, ao lado do Estudio de Fluxo.
         // Icone embutido (data URI): ele existe em todas as versoes, e o Estudio de Fluxo so no Lab.
         var htmlBtnHistorico = (checkConfigValue('historicoproc')) ?
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_historico" href="#" data-spro-click="getHistoryProcessosPro" '+(iconLabel ? '' : ' data-spro-tip="Hist\u00F3rico de Processos Visitados"')+' style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_historico" href="#" data-spro-click="getHistoryProcessosPro" data-spro-args="'+argsPro()+'" '+(iconLabel ? '' : ' data-spro-tip="Hist\u00F3rico de Processos Visitados"')+' style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="'+iconeHistoricoBarraPro()+'" alt="Hist\u00F3rico de Processos Visitados" title="Hist\u00F3rico de Processos Visitados">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Hist\u00F3rico</span>'+
@@ -1205,7 +1205,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Adicionar prazo"')+' data-spro-click="addControlePrazo" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Adicionar prazo"')+' data-spro-click="addControlePrazo" data-spro-args="'+argsPro()+'" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-clock" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1217,7 +1217,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnNaoLido =  (checkConfigValue('marcar_naolido')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : ' data-spro-tip="Marcar como n\u00E3o visualizado"')+' data-spro-click="getProcessoNaoLido" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : ' data-spro-tip="Marcar como n\u00E3o visualizado"')+' data-spro-click="getProcessoNaoLido" data-spro-args="'+argsPro()+'" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
@@ -2441,6 +2441,14 @@ function updateCountKanbanBoardProc() {
             elemBoard.attr('data-collapse',v.collapse).find('.kanban-title-board').attr('data-count',countBoard).after(iconCollapse);
     });
 }
+// O grupo vem escapado para JavaScript e HTML (formatarParametrosJavaScript do SEI, tambem o lido da lista). O
+// onmouseover antigo decodificava as duas camadas (atributo e string JavaScript); o data-spro-tip-titulo so a do
+// atributo. Desfaz a de JavaScript -- o tooltip recebe o grupo escapado so para HTML, como antes -- e escapa
+// para o atributo.
+function tituloGrupoAcompEspPro(acompanhamentoesp) {
+    var soHtml = String(acompanhamentoesp).replace(/\\(.)/g, function (m, c) { return c === 'n' ? '\n' : (c === 'r' ? '\r' : c); });
+    return soHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
 function addAcompanhamentoEspIcon() {
     var storeRecebimento = (typeof localStorageRestorePro !== 'undefined' &&  typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
     var array_procedimentos = [];
@@ -2451,9 +2459,7 @@ function addAcompanhamentoEspIcon() {
       var acompanhamentoesp = getGrupoAcompanhamentoEspPro($(this).attr('href'), listaAcompEsp);
             acompanhamentoesp = (typeof acompanhamentoesp !== 'undefined' && acompanhamentoesp !== null && acompanhamentoesp != '') ? acompanhamentoesp : false;
         if (acompanhamentoesp) {
-            // O grupo vem escapado para JavaScript e HTML (formatarParametrosJavaScript do SEI, tambem o lido da lista);
-            // aqui ele e escapado mais uma vez para o atributo onmouseover, que o navegador decodifica antes de rodar.
-            var tooltipGrupo = String(acompanhamentoesp).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/\\?'/g, "\\'");
+            var tooltipGrupo = tituloGrupoAcompEspPro(acompanhamentoesp);
             htmlPro($(this).closest('tr').find('td:not(.spro-anotacao-coluna)').eq(1), '<a class="acompanhamentoesp_icon" data-spro-tip="Acompanhamento Especial" data-spro-tip-titulo="'+tooltipGrupo+'"><i class="fas fa-eye azulColor"><i></a>', 'append');
         }
     });
@@ -2485,7 +2491,7 @@ function addControlePrazo(this_ = false) {
         var _this = $(this_);
         if (_this.closest('.kanban-item').length) {
             var id = _this.closest('.kanban-item').attr('data-eid');
-            $('#P'+id+' td.prazoBoxDisplay [onclick="addControlePrazo(this)"]').trigger('click');
+            $('#P'+id+' td.prazoBoxDisplay [onclick="addControlePrazo(this)"], #P'+id+' td.prazoBoxDisplay [data-spro-click="addControlePrazo"]').trigger('click');
             // console.log(id);
             return false;
         }
@@ -2506,7 +2512,7 @@ function addControlePrazo(this_ = false) {
             textControle = (typeof _data.timeSorter !== 'undefined') ? 'Alterar' : textControle;
             dueSetDate = (typeof _data.duesetdate !== 'undefined') ? _data.duesetdate : dueSetDate;
 
-            _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+            _this.closest('table').find('thead th a[onclick*="setSelectAllTr"], thead th a[data-spro-click="setSelectAllTr"]').data('index',1).trigger('click');
             _parent.find('input[type="checkbox"]').trigger('click');
             textTag = (typeof _data.timeSorter !== 'undefined') ? textTag.replace(moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm'), '').replace('Ate ', '').trim() : textTag;
             textTag = (typeof textTag !== 'undefined' && textTag !== null && textTag != '') ? textTag.replace(/\\n/g, "") : '';
@@ -2610,7 +2616,7 @@ function addControlePrazo(this_ = false) {
                 }
             },
             close: function() {
-                if (this_) _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+                if (this_) _this.closest('table').find('thead th a[onclick*="setSelectAllTr"], thead th a[data-spro-click="setSelectAllTr"]').data('index',1).trigger('click');
             },
             buttons: btnDialogBoxPro
     });
@@ -2740,7 +2746,7 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
                                         setControlePrazo();
                                     }
                                 });
-                                if (this_) tblProcessos.find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+                                if (this_) tblProcessos.find('thead th a[onclick*="setSelectAllTr"], thead th a[data-spro-click="setSelectAllTr"]').data('index',1).trigger('click');
                                 setTimeout(function(){ 
                                     if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload tableHomeDestroy');
                                     tableHomeDestroy(true);
@@ -2968,7 +2974,7 @@ var getTableDistribAutomatica = async () => {
             let atribuicao = v.atribuicao ? v.atribuicao.usuario : '';
             htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo">'+
                         '       <td class="tituloControle" style="text-align:center;">'+
-                        '           <input type="checkbox" data-spro-click="updateCountIconDist" id="chkDistrib_'+v.id_procedimento+'" '+(nova_atribuicao && nova_atribuicao.atribuicao != atribuicao ? 'checked' : '')+' '+(!nova_atribuicao ? 'disabled' : '')+' name="chkDistrib_'+v.id_procedimento+'" value="'+v.id_procedimento+'">'+
+                        '           <input type="checkbox" data-spro-click="updateCountIconDist" data-spro-args="'+argsPro()+'" id="chkDistrib_'+v.id_procedimento+'" '+(nova_atribuicao && nova_atribuicao.atribuicao != atribuicao ? 'checked' : '')+' '+(!nova_atribuicao ? 'disabled' : '')+' name="chkDistrib_'+v.id_procedimento+'" value="'+v.id_procedimento+'">'+
                         '       </td>'+
                         '       <td>'+
                         '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_procedimento+'" target="_blank">'+
@@ -3559,7 +3565,7 @@ function sendUploadArvoreHomeStart() {
 }
 function sortUploadArvore() {
     var htmlUpload =    '<div id="divUploadDoc" class="panelDadosArvore" style="margin: 15px 0; padding: 1.2em 0 0 0 !important;">'+
-                        '   <a style="cursor:pointer;" data-spro-click="sendUploadArvoreHomeStart" class="newLink newLink_confirm">'+
+                        '   <a style="cursor:pointer;" data-spro-click="sendUploadArvoreHomeStart" data-spro-args="'+argsPro()+'" class="newLink newLink_confirm">'+
                         '       <i class="fas fa-upload azulColor"></i>'+
                         '       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>'+
                         '   </a>'+

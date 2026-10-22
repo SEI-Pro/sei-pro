@@ -390,11 +390,11 @@ function getToolbarPro(click) {
         });
         if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
             if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
-                $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[data-spro-click="copiarParaClipboard"]').each(function(){ $(this).addClass('clipboard') });
+                $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });
             }
             var listToolbar = parent.isSEI_5
                 ? $('a[id*="anchorImg"][data-serialtip]').not(':first').not('[data-toolbarpro]').get()
-                : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[data-spro-click="copiarParaClipboard"]').not('[data-toolbarpro]').get();
+                : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
 
                 listToolbar.forEach(function (v, i) {
                     // Marca ja no agendamento: se outra chamada chegar antes do setTimeout, nao cria
@@ -1175,7 +1175,7 @@ function loadUploadArvore() {
 }
 function statusUploadArvore(this_) {
     $(this_).find('i').attr('class', 'fas fa-sync-alt fa-spin azulColor');
-    $(this_).removeAttr('onclick');
+    $(this_).removeAttr('onclick data-spro-click');   // trava o botao: sem a acao, o 2o clique nao reenvia
 }
 // Duas chamadas num handler so viraram funcao nomeada (uma acao por atributo).
 function enviarUploadArvorePro(el) {
@@ -1956,7 +1956,7 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
     var htmlAnotacao =  '<div class="stickDadosArvore '+anotacaoClass+' '+priorityClass+'" style="position: relative; ">'+
                         '   <label class="newLink" style="margin-bottom: 10px; display: block;"><i class="fas fa-sticky-note azulColor iconDadosProcesso"></i>Anota\u00E7\u00F5es:</label>'+
                         '   <div class="stickNoteDate"></div>'+
-                        '   <div class="stickNotePro" maxlength="500" data-spro-click="sticknotePosition" data-spro-paste="removeFormatting" data-spro-input="checkLimitTextArvore" data-spro-blur="sticknoteSave_" contenteditable="false">'+anotacaoTxt+'</div>'+
+                        '   <div class="stickNotePro" maxlength="500" data-spro-click="sticknotePosition" data-spro-args="'+argsArvorePro()+'" data-spro-paste="removeFormatting" data-spro-input="checkLimitTextArvore" data-spro-blur="sticknoteSave_" contenteditable="false">'+anotacaoTxt+'</div>'+
                         '   <div class="actionsNew">'+
                         '       <a class="newLink" style="font-size: 10pt;cursor: pointer;" data-spro-click="sticknoteEdit">'+
                         '           <i class="fas fa-sticky-note laranjaColor newStickNote" style="cursor: pointer; display: inline-block;"></i>'+
@@ -2216,7 +2216,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   </div>'+
                                     '</div>';
         var marcadorProcessoPro = parent.getHtmlMarcador(id_procedimento, processoAberto);
-        var iconMarcador = marcadorProcessoPro.icon;
+        var iconMarcador = marcadorProcessoPro.icon; // spro-limpo: <img> e texto do marcador, sem on*= (getHtmlMarcador)
         // O prazo do marcador vem do getHtmlMarcador (sei-functions-pro.js, plano 3), ainda com onclick,
         // onmouseover e o selo do getDatesPreview: o portao os arrancaria. O painel continua sanitizado e
         // so esse trecho entra depois, cru, no ponto reservado. O prazo nativo do SEI ja e marcacao limpa.
@@ -2266,7 +2266,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : 'position: relative;min-height: 60px;')+'">'+
                                     '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+iconMarcador+'</a>'+linkPrazo+
                                     (processoAberto ?
-                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" data-spro-click="parent.getRemoverMarcador" data-spro-tip="Clique para remover o marcador"><i class="fas fa-trash"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" data-spro-click="parent.getRemoverMarcador" data-spro-args="'+argsArvorePro()+'" data-spro-tip="Clique para remover o marcador"><i class="fas fa-trash"></i></a>'+
                                     '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
                                     '' : '')+
                                     '   </div>'+
@@ -2282,8 +2282,10 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
             dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;                     
         var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes+(dataAcompEsp.grupo != '' ? ' ('+dataAcompEsp.grupo+')' : '') : '';
 
-        var iconReabertura = (dataAcompEsp && dataAcompEsp.config && dataAcompEsp.config.hasOwnProperty('Reabertura')) ? parent.getDatesPreview({date: moment(dataAcompEsp.config.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') }) : false;
-            iconReabertura = (iconReabertura) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">Reabertura: '+dataAcompEsp.config.Reabertura+iconReabertura+'</a>' : '';
+        // O selo vem do getDatesPreview (sei-functions-pro.js, plano 3), com onclick: entra cru depois, no ponto
+        // reservado, como o prazo do marcador. O link em volta continua pelo portao.
+        var seloReaberturaCruPro = (dataAcompEsp && dataAcompEsp.config && dataAcompEsp.config.hasOwnProperty('Reabertura')) ? parent.getDatesPreview({date: moment(dataAcompEsp.config.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') }) : false;
+        var iconReabertura = (seloReaberturaCruPro) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">Reabertura: '+dataAcompEsp.config.Reabertura+'<span class="seloReaberturaArvorePro"></span></a>' : ''; // spro-limpo: o selo so e testado, entra depois pelo ponto reservado
 
         var htmlAcompEsp =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="acompanhamento_especial">'+
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
@@ -2412,6 +2414,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         $('.panelDadosArvorePro').remove();
         htmlArvorePro($('#frmArvore'), htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes, 'append');
         htmlCruArvorePro($('#frmArvore .prazoMarcadorArvorePro'), prazoMarcadorCruPro || '', 'replace', 'plano-3: getHtmlMarcador');
+        htmlCruArvorePro($('#frmArvore .seloReaberturaArvorePro'), seloReaberturaCruPro || '', 'replace', 'plano-3: getDatesPreview');
         if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();  
         if (!dataMarcador && processoAberto) {
             getDataMarcadorProcesso();
@@ -2642,7 +2645,7 @@ function stylePanelArvore() {
         initAtividadesProcesso();
 
         var disableQuery = `<div id="divConsultaExtras" style="border-top: 1px solid rgb(218, 218, 218);width: 99%;padding: 1em 0.2em 1em 0.2em;margin-top: 1em;">
-                                <a href="#" style="cursor:pointer;text-decoration: none;" data-spro-click="enableConsultasExtras" class="newLink" data-spro-tip="Clique para desativar"><i class="fas fa-lock azulColor iconDadosProcesso"></i>&nbsp;Bloqueada consultas adicionais</a>
+                                <a href="#" style="cursor:pointer;text-decoration: none;" data-spro-click="enableConsultasExtras" data-spro-args="${argsArvorePro()}" class="newLink" data-spro-tip="Clique para desativar"><i class="fas fa-lock azulColor iconDadosProcesso"></i>&nbsp;Bloqueada consultas adicionais</a>
                             </div>`;
             disableQuery = checkHostLimit() ? disableQuery : '';
 
@@ -2866,7 +2869,7 @@ function initPanelPrescricaoProcesso() {
                                 (vigente.suspensao ? '(SUSPENSO) ' : '')+value_prescricao.nome_prescricao;
 
                 $('#progressPrescricao_'+v).remove();
-                htmlArvorePro($('#topmenu'), '<div id="progressPrescricao_'+v+'" data-spro-tip="'+txtTip+'" data-spro-click="parent.getCtrPrescricao" class="progressPrescricao '+classProgress+'"></div>', 'append');
+                htmlArvorePro($('#topmenu'), '<div id="progressPrescricao_'+v+'" data-spro-tip="'+txtTip+'" data-spro-click="parent.getCtrPrescricao" data-spro-args="'+argsArvorePro()+'" class="progressPrescricao '+classProgress+'"></div>', 'append');
                 $('#progressPrescricao_'+v).progressbar({
                     value: decorrido,
                     max: prazo
@@ -3049,7 +3052,7 @@ function initSeiProArvore(loop = true) {
 }
 
 $(document).ready(function () {
-    aguardarBlocoArvorePro(initSeiProArvore);
+    aguardarBlocoArvorePro(function () { if (!initSeiProArvoreAplicado) initSeiProArvore(); });
     waitInitSeiProArvore();
     initLoadPastaArvorePro();
 });
