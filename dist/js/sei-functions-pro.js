@@ -7506,8 +7506,13 @@ function restrictConfigValue(name) {
 function initNameConst(type = 'get') {
     if (getOptionsPro('nomeVariaveisPro') && type == 'get') {
         window.__ = getOptionsPro('nomeVariaveisPro');
-    } else {
+    } else if (typeof getName === 'function') {
         setNameConst();
+    } else if (typeof window.__ === 'undefined') {
+        // getName e do sei-pro-atividades.js, que nao vai no pacote do Firefox. Os nomes (__) so sao lidos pelo
+        // botao de Nova Demanda, que exige o Atividades configurado; mas o painel da arvore espera __ existir
+        // (initStylePanelArvore) e, sem ele, nunca montava.
+        window.__ = {};
     }
 }
 function setNameConst() {
