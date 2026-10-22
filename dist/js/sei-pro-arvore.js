@@ -9,6 +9,73 @@ var delayAjax = false;
 var selectedItensPanelArvore = false;
 var stickNoteDivSelected = 0;
 var initSeiProArvoreAplicado = false;
+// === INICIO RESOLVEDOR ARVORE ===
+// O init_arvore.js pede o sei-functions-pro.js e este arquivo EM PARALELO (linhas 92-93, $.getScript
+// assincrono), e initSeiProArvore roda no ready: pode chegar antes de o bloco existir neste frame. Um
+// ReferenceError ali abortaria a inicializacao inteira da arvore. O topo carregou muito antes e tem o
+// bloco; o htmlPro dele insere no documento DESTE frame e instala o despachante nele. Sem nenhum dos
+// dois, a insercao nao acontece -- HTML cru nao e opcao -- e fica o aviso.
+// O htmlPro local sem o DOMPurify do frame (o purify tambem chega por $.getScript em paralelo) abortaria
+// a insercao; nesse caso o do topo, que tem o seu, e quem serve.
+function blocoArvorePro(nome) {
+    var localServe = typeof window[nome] === 'function' && (nome !== 'htmlPro' || typeof DOMPurify !== 'undefined');
+    if (localServe) return window[nome];
+    try { if (window.parent !== window && typeof window.parent[nome] === 'function') return window.parent[nome]; } catch (e) {}
+    try { console.warn('[SEIPro] ' + nome + ' indisponivel na arvore'); } catch (e) {}
+    return null;
+}
+// O alvo vira jQuery DESTE documento antes de ir ao topo: um seletor entregue ao htmlPro do topo
+// seria procurado no documento do topo.
+function htmlArvorePro(alvo, html, modo) {
+    var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
+    if (!$alvo.length) return $alvo;   // colecao vazia: sem efeito, como no jQuery
+    var f = blocoArvorePro('htmlPro');
+    return f ? f($alvo, html, modo) : $alvo;
+}
+function htmlCruArvorePro(alvo, html, modo, motivo) {
+    var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
+    if (!$alvo.length) return $alvo;
+    var f = blocoArvorePro('htmlCruPro');
+    return f ? f($alvo, html, modo, motivo) : $alvo;
+}
+function lerHtmlArvorePro(html) {
+    var f = blocoArvorePro('lerHtmlPro');
+    return f ? f(html) : $([]);
+}
+// Chamados NA MONTAGEM das strings (o codemod gera argsArvorePro/literalArvorePro aqui).
+function argsArvorePro() {
+    var f = blocoArvorePro('argsPro');
+    return f ? f.apply(null, arguments) : '[]';
+}
+function literalArvorePro(v) {
+    var f = blocoArvorePro('literalInlinePro');
+    return f ? f(v) : v;
+}
+// Estilo constante por DOM API, sem depender do bloco (como o init.js): um <style> que comeca o
+// fragmento nunca sobrevive ao portao.
+function estiloArvorePro(chave, css, posicao) {
+    if (document.querySelector('style[data-style="' + chave + '"]')) return;
+    var el = document.createElement('style');
+    el.setAttribute('type', 'text/css');
+    el.setAttribute('data-style', chave);
+    el.textContent = css;
+    var casa = document.head || document.documentElement;
+    if (posicao === 'prepend' && casa.firstChild) casa.insertBefore(el, casa.firstChild);
+    else casa.appendChild(el);
+}
+// No ready da arvore pode nao haver htmlPro em lugar nenhum: o sei-functions-pro.js do TOPO tambem chega
+// por $.getScript (medido no SEI SP 4.1.5: 1 em 6 aberturas). A inicializacao espera ate 10 s e depois
+// segue assim mesmo, como as outras esperas do projeto.
+function blocoDisponivelArvorePro() {
+    if (typeof window.htmlPro === 'function' && typeof DOMPurify !== 'undefined') return true;
+    try { return window.parent !== window && typeof window.parent.htmlPro === 'function'; } catch (e) { return false; }
+}
+function aguardarBlocoArvorePro(fn, TimeOut) {
+    if (typeof TimeOut === 'undefined') TimeOut = 10000;
+    if (blocoDisponivelArvorePro() || TimeOut <= 0) { fn(); return; }
+    setTimeout(function () { aguardarBlocoArvorePro(fn, TimeOut - 100); }, 100);
+}
+// === FIM RESOLVEDOR ARVORE ===
 // O caminho das imagens da arvore e o seletor dos documentos dependem de parent.isNewSEI e
 // parent.isSEI_5, que so existem depois que o sei-functions-pro.js do topo termina de carregar. Ele
 // entra por $.getScript, sem ordem garantida em relacao a este arquivo. Guardados em const no
@@ -24,7 +91,7 @@ function getAnchorDocPro() {
 
 function initCSSArvore() {
     if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
-        $('head').prepend("<style type='text/css' data-style='seipro'> "
+        estiloArvorePro('seipro', " "
             +"   #divMsgClipboard.msgGeral.msgSucesso { "
             +"      margin-top: -50px !important;"
             +"      padding: .4em;"
@@ -32,7 +99,7 @@ function initCSSArvore() {
             +"      background: #ffffaa;"
             +"      box-shadow: 0 0 5px #a0a0a0;"
             +"    } "
-            +"</style>");
+            , 'prepend');
     }
 }
 function dropzoneCancelInfo(e) {
@@ -117,7 +184,7 @@ function setToolbarDocs() {
     }
     
     $('#toolbar-options-doc, #toolbar-options-proc').remove();
-    $('body').prepend(htmlToolbarProc+htmlToolbarDoc);
+    htmlArvorePro($('body'), htmlToolbarProc+htmlToolbarDoc, 'prepend');
     var click = ( jmespath.search(selectedItensDocMenu, "[?[0]=='Ativar menu ao clicar'] | length(@)") > 0 ) ? true : false;
     getToolbarPro(click); 
     getTooltipOnSign();
@@ -323,11 +390,11 @@ function getToolbarPro(click) {
         });
         if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
             if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
-                $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });
+                $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[data-spro-click="copiarParaClipboard"]').each(function(){ $(this).addClass('clipboard') });
             }
             var listToolbar = parent.isSEI_5
                 ? $('a[id*="anchorImg"][data-serialtip]').not(':first').not('[data-toolbarpro]').get()
-                : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
+                : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[data-spro-click="copiarParaClipboard"]').not('[data-toolbarpro]').get();
 
                 listToolbar.forEach(function (v, i) {
                     // Marca ja no agendamento: se outra chamada chegar antes do setTimeout, nao cria
@@ -370,7 +437,7 @@ function actionToolbarDocs(_this, click) {
                                     delayAjax = true;
                                     setTimeout(function(){ delayAjax = false }, 1000);
                                     $.ajax({ url: doc[0] }).done(function (html) {
-                                        var $html = $(html);
+                                        var $html = lerHtmlArvorePro(html);
                                         var textLink = $html.filter('script').not('[src*="js"]').text();
                                         var arrayLinksArvoreDoc = getLinksInText(textLink);
 
@@ -596,10 +663,10 @@ function addIconActionsArvore(param) {
                 ) || 
                 (checkThisDocumento && id_documento && iconDoc && param.mode == 'clone' && newDocLink != null && newDocLink != '')
             ) {
-            var html =  '<span class="action-doc action-'+param.mode+'" data-id="'+id_documento+'" data-action="'+param.mode+'" data-title="'+param.name+'" onclick="getActionsArvore(this)" onmouseover="return infraTooltipMostrar(\''+name+'\');" onmouseout="return infraTooltipOcultar();">'+
+            var html =  '<span class="action-doc action-'+param.mode+'" data-id="'+id_documento+'" data-action="'+param.mode+'" data-title="'+param.name+'" data-spro-click="getActionsArvore" data-spro-tip="'+name+'">'+
                         '   <i class="'+param.icon+'" style="color: #017fff9c; font-size: 10pt;"></i>'+
                         '</span>';
-            $(this).after(html);
+            htmlArvorePro($(this), html, 'after');
         }
     });
 }    
@@ -783,7 +850,7 @@ function getDadosDoc(doc, newproc = false, openEditor = true, callback = false, 
         setTimeout(function(){ delayAjax = false }, 1000);
         if (hrefConsulta) {
             $.ajax({ url: hrefConsulta }).done(function (html) {
-                var $htmlConsulta = $(html);
+                var $htmlConsulta = lerHtmlArvorePro(html);
                 var paramDoc = {};
                     paramDoc['selAssuntos'] = $htmlConsulta.find('#selAssuntos option').map(function(){ return $(this).val() }).get();
                     paramDoc['hdnAssuntos'] = ($htmlConsulta.find('#selAssuntos option').length == 0) ? [] : $htmlConsulta.find('#selAssuntos option').map(function(){ return $(this).val()+'\u00B1'+$(this).text() }).get().join('\u00A5').replaceAll(' ','+');
@@ -836,7 +903,7 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
             // console.log('getDuplicateDoc === else', nameDoc, nr_sei, href, arrayLinksArvore);
             if (href !== null) {
                 $.ajax({ url: href }).done(function (html) {
-                    let $html = $(html);
+                    let $html = lerHtmlArvorePro(html);
                     $html.find('#tblSeries tbody tr').each(function (v) {
                         var text = $(this).data('desc').trim();
                         var value = $(this).find('input').val();
@@ -903,7 +970,7 @@ function ajaxGetDuplicateArvore(urlDoc, nr_sei, paramDoc, openEditor, callback, 
     });
 }
 function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
-    var $htmlDoc = $(htmlDoc);
+    var $htmlDoc = lerHtmlArvorePro(htmlDoc);
     var form = $htmlDoc.find('#frmDocumentoCadastro');
     var hrefForm = form.attr('action');
     var param = {};
@@ -972,7 +1039,7 @@ function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, ca
             // console.log(status);
             class_icon = 'fas fa-check verdeColor';
             text_icon = 'Documento duplicado com sucesso!';
-            var $htmlResult = $(htmlResult);
+            var $htmlResult = lerHtmlArvorePro(htmlResult);
             var urlEditor = [];
             var idUser = false;
             $.each($htmlResult.text().split('\n'), function(i, v){
@@ -1009,13 +1076,13 @@ function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, ca
             if (typeof callback_error === 'function') callback_error();
         }
         if (class_icon != '') {
-            $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+text_icon+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', class_icon);
+            $(containerUpload).find('.loading-action-doc').attr('data-spro-tip', text_icon).find('i').attr('class', class_icon);
         }
     });
 }
 function openAlertDuplicateDoc(textAlert) {
     if ($(containerUpload).find('.loading-action-doc').length > 0) {
-        $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+textAlert+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') 
+        $(containerUpload).find('.loading-action-doc').attr('data-spro-tip', textAlert).find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') 
     } else {
         parent.alertaBoxPro('Error', 'exclamation-triangle', textAlert);
     }
@@ -1023,7 +1090,7 @@ function openAlertDuplicateDoc(textAlert) {
 function setLoadingActionDoc(id_documento) {
     var html = '<span class="loading-action-doc" data-id="'+id_documento+'"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>';
     $(containerUpload).find('.loading-action-doc').remove();
-    $('#anchor'+id_documento).before(html);
+    htmlArvorePro($('#anchor'+id_documento), html, 'before');
 }
 function loadUploadArvore() {
     dropzoneDivInfoHover();
@@ -1110,9 +1177,14 @@ function statusUploadArvore(this_) {
     $(this_).find('i').attr('class', 'fas fa-sync-alt fa-spin azulColor');
     $(this_).removeAttr('onclick');
 }
+// Duas chamadas num handler so viraram funcao nomeada (uma acao por atributo).
+function enviarUploadArvorePro(el) {
+    sendUploadArvore('upload');
+    statusUploadArvore(el);
+}
 function sortUploadArvore() {
     var htmlUpload =    '<div id="divUploadDoc" class="panelDadosArvore" style="margin-top: 15px; padding: 1.2em 0 0 0 !important;">'+
-                        '   <a style="cursor:pointer;" onclick="sendUploadArvore(\'upload\'); statusUploadArvore(this)" class="newLink newLink_confirm">'+
+                        '   <a style="cursor:pointer;" data-spro-click="enviarUploadArvorePro" class="newLink newLink_confirm">'+
                         '       <i class="fas fa-upload azulColor"></i>'+
                         '       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>'+
                         '   </a>'+
@@ -1133,7 +1205,8 @@ function sortUploadArvore() {
             arvoreDropzone.removeAllFiles();
             arvoreDropzone.handleFiles(files);
         }
-    }).after(htmlUpload);
+    });
+    htmlArvorePro($('#divArvore'), htmlUpload, 'after');
 }
 // Devolve o preview do arquivo da vez -- o mesmo calculo repetido nos pontos de erro daqui.
 function getElemPreviewUploadPro(_containerUpload) {
@@ -1163,7 +1236,7 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
         var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
         if (href !== null) {
             $.ajax({ url: href }).done(function (html) {
-                let $html = $(html);
+                let $html = lerHtmlArvorePro(html);
                 var urlDocExterno = $html.find('#tblSeries').find('a[href*="controlador.php?acao=documento_receber"]').attr('href');
                 var checkPost = $html.find('#tblSeries').find('a.ancoraOpcao').attr('href');
                     checkPost = typeof checkPost !== 'undefined' && checkPost == '#' ? true : false;
@@ -1239,7 +1312,7 @@ function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDrop
     });
 }
 function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload, valueSerieEscolhido = false) {
-        var $htmlAnexo = $(htmlAnexo);
+        var $htmlAnexo = lerHtmlArvorePro(htmlAnexo);
         var form = $htmlAnexo.find('#frmDocumentoCadastro');
         var hrefForm = form.attr('action');
 
@@ -1506,7 +1579,7 @@ function dropzoneAlertBoxInfo() {
                                     : '';
         var htmlNotify =    '<div>'+
                             '   <span id="no_notify" class="no_notifyPro" data-notify="upload" style="font-size: 8pt; margin: 10px 0; display: block;">'+
-                            '       <input onchange="noNotifyPro(this)" type="checkbox" id="no_notifyPro_input">'+
+                            '       <input data-spro-change="noNotifyPro" type="checkbox" id="no_notifyPro_input">'+
                             '       <label class="txt_cinza" id="no_notifyPro_label" for="no_notifyPro_input">'+
                             '           Ok, n\u00E3o avisar novamente.'+
                             '       </label>'+
@@ -1527,13 +1600,13 @@ function dropzoneAlertBoxInfo() {
 function dropzoneDivInfoHover() {
 var html =  '<div id="dz-infoupload" class="dz-infoupload">'+
             '   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>'+
-            '   <span class="cancel" onclick="parent.parent.dropzoneCancelInfo(event); return false;">'+
+            '   <span class="cancel" data-spro-click="parent.parent.dropzoneCancelInfo" data-spro-captura data-spro-args="'+argsArvorePro('$ev')+'">'+
             '       <i class="far fa-times-circle icon"></i>'+
             '       <span class="label">CANCELAR</span>'+
             '   </span>'+
             '</div>';
     if ($(containerUpload).find('.dz-infoupload').length == 0) {
-        $(containerUpload).prepend(html).data('index', 0);
+        htmlArvorePro($(containerUpload), html, 'prepend').data('index', 0);
     }
 }
 function dropzoneNormalizeImg(file) {
@@ -1603,7 +1676,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
         if (textarea.text().trim().length >= 500) {
             var line = formatDadosAnotacao(textarea[0].outerHTML, 'line').substring(0,499);
             var par = formatDadosAnotacao(line, 'paragraph');
-                textarea.html(par);
+                htmlArvorePro(textarea, par);
                 value = line;
         }
 
@@ -1635,7 +1708,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
             if (_parent.find('.priorityStickNote').hasClass('fa-spin')) {
                 _parent.find('.priorityStickNote').removeClass('fa-spin').toggleClass('fa-spinner fa-exclamation-circle');
             }
-            textarea.prop('contenteditable',false).html( formatDadosAnotacao(value, 'paragraph') );
+            htmlArvorePro(textarea.prop('contenteditable',false), formatDadosAnotacao(value, 'paragraph'));
             _parent.find('.cancelStickNote').hide();
             _parent.find('.checkStickNote').hide();
             sticknoteDates(_this);
@@ -1652,7 +1725,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
             if (_parent.find('.stickNoteDate .dateboxDisplay').length > 0) {
                 _parent.find('.stickNoteDate .dateboxDisplay .userStick').text(parent.userSEI);
             } else {
-                _parent.find('.stickNoteDate').html('<span class="dateboxDisplay"><i class="far fa-user" style="color: #777;padding-right: 3px;margin-left: 10px;"></i> por <span class="userStick">'+parent.userSEI+'</span></span>');
+                htmlArvorePro(_parent.find('.stickNoteDate'), '<span class="dateboxDisplay"><i class="far fa-user" style="color: #777;padding-right: 3px;margin-left: 10px;"></i> por <span class="userStick">'+parent.userSEI+'</span></span>');
             }
         });
     }
@@ -1703,7 +1776,7 @@ function sticknoteCancel(this_) {
     _parent.find('.checkStickNote').hide();
     _parent.find('.countLimit').text('');
     var textarea = _parent.find('.stickNotePro');
-        textarea.prop('contenteditable',false).html( formatDadosAnotacao(textarea.data('oldValue'), 'paragraph') );
+        htmlArvorePro(textarea.prop('contenteditable',false), formatDadosAnotacao(textarea.data('oldValue'), 'paragraph'));
 
     if (typeof textarea.data('oldValue') === 'undefined' || textarea.data('oldValue').trim() == '') {
         _parent.addClass('stickEmpty').removeClass('priority');
@@ -1744,7 +1817,7 @@ function sticknoteSaveDate(this_) {
         par = formatDadosAnotacao(line, 'paragraph');
     }
     if (par != '' ) {
-        textarea.html(par);
+        htmlArvorePro(textarea, par);
         sticknoteSave(this_);
         _parent.find('.setDateStickNote').toggleClass('fa-calendar-plus fa-spinner').addClass('fa-spin');
     } 
@@ -1769,13 +1842,13 @@ function sticknoteSetDate(this_) {
         sticknoteSaveDate(this_);
         if (_this.hasClass('fa-thumbs-up')) {
             _this.toggleClass('fa-thumbs-up fa-calendar-plus');
-            _this.attr('onmouseover','return infraTooltipMostrar(\'Inserir Data\');');
+            _this.attr('data-spro-tip', 'Inserir Data');
         }
     } else {
         inputDate.show().find('input').val(dateStick).data('oldValue', dateStick).focus();
         if (_this.hasClass('fa-calendar-plus')) {
             _this.toggleClass('fa-thumbs-up fa-calendar-plus');
-            _this.attr('onmouseover','return infraTooltipMostrar(\'Confirmar Data\');');
+            _this.attr('data-spro-tip', 'Confirmar Data');
         }
     }
 }
@@ -1796,9 +1869,9 @@ function sticknoteDates(this_) {
         userStick = (userStick) ? '<i class="far fa-user" style="color: #777;padding-right: 3px;margin-left: 10px;"></i> por <span class="userStick">'+userStick+'</span>' : '';
     var checkDate = regex.exec(date_stick);
         htmlDateStick = (checkDate !== null) ? parent.getDatesPreview({date: moment(checkDate[0], 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss')}) : '';
-        htmlDateStick = (htmlDateStick != '') ? $(htmlDateStick).html() : htmlDateStick;
+        htmlDateStick = (htmlDateStick != '') ? lerHtmlArvorePro(htmlDateStick).html() : htmlDateStick;
     var htmlStick = (htmlDateStick || userStick) ? '<span class="dateboxDisplay" style="'+(checkDate !== null && moment(checkDate[0], 'DD/MM/YYYY') < moment() ? 'background: #fac3c4 !important;' : '')+'" >'+htmlDateStick+userStick+'</span>' : '';
-    _parent.find('.stickNoteDate').html(htmlStick);
+    htmlCruArvorePro(_parent.find('.stickNoteDate'), htmlStick, 'html', 'plano-3: getDatesPreview');
 }
 function sticknotePriority(this_) {
     var _this = $(this_);
@@ -1821,7 +1894,7 @@ function removeFormatting(this_) {
         var line = formatDadosAnotacao(_this[0].outerHTML, 'line');
             line = (line.trim() == '') ? _this.text().trim() : line;
         var paragraph = formatDadosAnotacao(line, 'paragraph');
-        _this.html( paragraph );
+        htmlArvorePro(_this, paragraph);
         // console.log('pasting', line, paragraph);
     }, 100);
 }
@@ -1831,13 +1904,13 @@ function checkLimitTextArvore(this_) {
     var maxlength = _this.attr('maxlength');
     var currentLength = (_this.is('textarea')) ? _this.val().length : _this.text().trim().length;
     var textCount = (currentLength >= maxlength) ? 'Voc\u00EA atingiu o n\u00FAmero m\u00E1ximo de caracteres.' : (maxlength - currentLength)+' caracteres restantes';
-    _parent.find('.countLimit').html(textCount);
+    _parent.find('.countLimit').text(textCount);
     sticknotePosition();
 }
 function formatDadosAnotacao(value, type, paste = false) {
     var result = '';
     if (type == 'line') {
-        var elem = $('<div/>').html(value).contents();
+        var elem = lerHtmlArvorePro('<div>' + value + '</div>').contents();
         var fistLine = elem.clone().children().remove().end().text();
         var othesLines = (paste) ? elem.find('div, p, br') : elem.find('div, p');
             othesLines = othesLines.map(function(v, i){ 
@@ -1883,9 +1956,9 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
     var htmlAnotacao =  '<div class="stickDadosArvore '+anotacaoClass+' '+priorityClass+'" style="position: relative; ">'+
                         '   <label class="newLink" style="margin-bottom: 10px; display: block;"><i class="fas fa-sticky-note azulColor iconDadosProcesso"></i>Anota\u00E7\u00F5es:</label>'+
                         '   <div class="stickNoteDate"></div>'+
-                        '   <div class="stickNotePro" maxlength="500" onclick="sticknotePosition();" onpaste="removeFormatting(this)" oninput="checkLimitTextArvore(this)" onblur="sticknoteSave_(this)" contenteditable="false">'+anotacaoTxt+'</div>'+
+                        '   <div class="stickNotePro" maxlength="500" data-spro-click="sticknotePosition" data-spro-paste="removeFormatting" data-spro-input="checkLimitTextArvore" data-spro-blur="sticknoteSave_" contenteditable="false">'+anotacaoTxt+'</div>'+
                         '   <div class="actionsNew">'+
-                        '       <a class="newLink" style="font-size: 10pt;cursor: pointer;" onclick="sticknoteEdit(this)">'+
+                        '       <a class="newLink" style="font-size: 10pt;cursor: pointer;" data-spro-click="sticknoteEdit">'+
                         '           <i class="fas fa-sticky-note laranjaColor newStickNote" style="cursor: pointer; display: inline-block;"></i>'+
                         '           Adicionar Anota\u00E7\u00E3o'+
                         '       </a>'+
@@ -1893,19 +1966,19 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
                         '   <div class="actions">'+
                         '       <div>'+
                         '           <span class="countLimit" style="font-size: 8pt;position: absolute;color: #666;left: 30px;margin-top: 5px;"></span>'+
-                        '           <i class="fas fa-edit azulColor editStickNote" style="cursor: pointer;" onclick="sticknoteEdit(this)" onmouseover="return infraTooltipMostrar(\'Editar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '           <i class="fas fa-save azulColor saveStickNote" style="cursor: pointer; display:none" onclick="sticknoteSave(this)" onmouseover="return infraTooltipMostrar(\'Salvar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '           <i class="fas fa-trash-alt removeStickNote" style="margin-top: 2px; cursor: pointer;float: right;font-size: 90%;" onclick="sticknoteRemove(this)" onmouseover="return infraTooltipMostrar(\'Remover Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '           <i class="fas fa-times-circle cancelStickNote" style="cursor: pointer;float: right;font-size: 90%; display:none;" onclick="sticknoteCancel(this)" onmouseover="return infraTooltipMostrar(\'Cancelar Edi\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '           <i class="fas fa-calendar-plus azulColor setDateStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknoteSetDate(this)" onmouseover="return infraTooltipMostrar(\'Inserir Data\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '           <span class="setDateStickNote_input" style="display:none"><input onkeypress="sticknoteSetDateKey(event, this)" type="date"></span>'+
-                        '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;font-size: 100%;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
-                        '           <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknotePriority(this)" onmouseover="return infraTooltipMostrar(\'Prioridade\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <i class="fas fa-edit azulColor editStickNote" style="cursor: pointer;" data-spro-click="sticknoteEdit" data-spro-tip="Editar Anota\u00E7\u00E3o"></i>'+
+                        '           <i class="fas fa-save azulColor saveStickNote" style="cursor: pointer; display:none" data-spro-click="sticknoteSave" data-spro-tip="Salvar Anota\u00E7\u00E3o"></i>'+
+                        '           <i class="fas fa-trash-alt removeStickNote" style="margin-top: 2px; cursor: pointer;float: right;font-size: 90%;" data-spro-click="sticknoteRemove" data-spro-tip="Remover Anota\u00E7\u00E3o"></i>'+
+                        '           <i class="fas fa-times-circle cancelStickNote" style="cursor: pointer;float: right;font-size: 90%; display:none;" data-spro-click="sticknoteCancel" data-spro-tip="Cancelar Edi\u00E7\u00E3o"></i>'+
+                        '           <i class="fas fa-calendar-plus azulColor setDateStickNote" style="cursor: pointer;float: right;margin-right: 10px;" data-spro-click="sticknoteSetDate" data-spro-tip="Inserir Data"></i>'+
+                        '           <span class="setDateStickNote_input" style="display:none"><input data-spro-keypress="sticknoteSetDateKey" data-spro-args="'+argsArvorePro('$ev', '$el')+'" type="date"></span>'+
+                        '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;font-size: 100%;" class="checkStickNote" data-spro-click="sticknoteCheck"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
+                        '           <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" data-spro-click="sticknotePriority" data-spro-tip="Prioridade"></i>'+
                         '       </div>'+
                         '   </div>'+
                         '</div>';
     $('.stickDadosArvore').remove();
-    $('#divConsultarAndamento').after(htmlAnotacao);
+    htmlArvorePro($('#divConsultarAndamento'), htmlAnotacao, 'after');
     sticknoteDates($('.stickNotePro')[0]);
     setStickNoteCheck();
 }
@@ -1968,7 +2041,7 @@ function getDadosAnotacao() {
     var urlAnotacao = jmespath.search(arrayLinksPage,"[?name=='Anota\u00E7\u00F5es'] | [0].url");
     if (urlAnotacao && !parent.checkHostLimit()) {
         $.ajax({ url: urlAnotacao }).done(function (html) {
-            var $htmlAnotacao = $(html);
+            var $htmlAnotacao = lerHtmlArvorePro(html);
             var anotacaoTxt = $htmlAnotacao.find('#txaDescricao').val().trim();
             var checkPrioridade = $htmlAnotacao.find('#chkSinPrioridade').is(':checked');
             setDadosAnotacao(anotacaoTxt, checkPrioridade);
@@ -2040,11 +2113,11 @@ function getDadosInteressadosArvore(this_) {
                             }
                         });
                         var htmlResult =    '<div class="options_interessado">'+
-                                            '   <a class="newLink" data-type="tramiteUnidade" onclick="optionSearchInteressado(this)">'+
+                                            '   <a class="newLink" data-type="tramiteUnidade" data-spro-click="optionSearchInteressado">'+
                                             '       <i class="'+(data.tramiteUnidade ? 'fas fa-check-square' : 'far fa-square')+' cinzaColor"></i>'+
                                             '       Tramitado na Unidade'+
                                             '   </a>'+
-                                            '   <a class="newLink" data-type="mesmaNatureza" onclick="optionSearchInteressado(this)">'+
+                                            '   <a class="newLink" data-type="mesmaNatureza" data-spro-click="optionSearchInteressado">'+
                                             '       <i class="far '+(data.mesmaNatureza ? 'fas fa-check-square' : 'far fa-square')+' cinzaColor"></i>'+
                                             '       De mesma natureza'+
                                             '       </a>'+
@@ -2075,7 +2148,7 @@ function getDadosInteressadosArvore(this_) {
                                             '   </div>'+
                                             '</div>';
                         })
-                        _this.closest('.dadosInteressados').find('.dadosInteressados_result').html(htmlResult).show();
+                        htmlArvorePro(_this.closest('.dadosInteressados').find('.dadosInteressados_result'), htmlResult).show();
                         // console.log(count, result);
                 });
                 iframe.find('#sbmPesquisar').trigger('click');
@@ -2111,7 +2184,7 @@ function getHtmlPrazoNativoArvore() {
         var estado = m[2].toLowerCase();
         var cor = estado.indexOf('atrasado') === 0 ? '#c0392b' : (estado.indexOf('conclu') === 0 ? '#2e7d32' : '#4285f4');
         var texto = $('<div></div>').text(m[1]+' ('+m[2]+')').html();
-        return '<a class="newLink spro-prazo-nativo" style="cursor:default;display:block;max-width: calc(100% - 70px);" onmouseover="return infraTooltipMostrar(\'Controle de prazo do SEI\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-clock" style="color:'+cor+';"></i> Prazo: '+texto+'</a>';
+        return '<a class="newLink spro-prazo-nativo" style="cursor:default;display:block;max-width: calc(100% - 70px);" data-spro-tip="Controle de prazo do SEI"><i class="fas fa-clock" style="color:'+cor+';"></i> Prazo: '+texto+'</a>';
     } catch (e) {
         return '';
     }
@@ -2129,33 +2202,36 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>'+
                                     '      Especifica\u00E7\u00E3o:'+
-                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="position: relative;min-height: 60px;'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'display:none' : '')+'">'+
-                                    '       <a class="newLink '+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+(parent.NAMESPACE_SPRO == 'SEI Pro Lab' && txtDescricao && txtDescricao.toLowerCase().indexOf('(trancado)') !== -1 ? ' trancadoPro' : '')+'" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+(parent.NAMESPACE_SPRO == 'SEI Pro Lab' && txtDescricao && txtDescricao.toLowerCase().indexOf('(trancado)') !== -1 ? '<div class="trancadoPro"></div>' : '')+(txtDescricao ? txtDescricao : '')+'</a>'+
+                                    '       <a class="newLink '+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+(parent.NAMESPACE_SPRO == 'SEI Pro Lab' && txtDescricao && txtDescricao.toLowerCase().indexOf('(trancado)') !== -1 ? ' trancadoPro' : '')+'" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+(parent.NAMESPACE_SPRO == 'SEI Pro Lab' && txtDescricao && txtDescricao.toLowerCase().indexOf('(trancado)') !== -1 ? '<div class="trancadoPro"></div>' : '')+(txtDescricao ? txtDescricao : '')+'</a>'+
                                     (processoAberto ?
-                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;position: absolute;right: 0;top: 30px;" onclick="parent.addUrgenteProcessoPro(this)" onmouseover="return infraTooltipMostrar(\'Clique para Adicionar/Remover Urg\u00EAncia no Processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-exclamation-circle"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;position: absolute;right: 0;top: 30px;" data-spro-click="parent.addUrgenteProcessoPro" data-spro-tip="Clique para Adicionar/Remover Urg\u00EAncia no Processo"><i class="fas fa-exclamation-circle"></i></a>'+
                                     (parent.NAMESPACE_SPRO == 'SEI Pro Lab' ?
-                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;position: absolute;right: 0;top: 55px;" onclick="parent.addTrancadoProcessoPro(this)" onmouseover="return infraTooltipMostrar(\'Clique para Adicionar/Remover Trancamento no Processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-lock" style="color:#e89a3c;"></i></a>'
+                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;position: absolute;right: 0;top: 55px;" data-spro-click="parent.addTrancadoProcessoPro" data-spro-tip="Clique para Adicionar/Remover Trancamento no Processo"><i class="fas fa-lock" style="color:#e89a3c;"></i></a>'
                                     : '')+
                                     '' : '')+
                                     '   </div>'+
                                     '</div>';
-        var htmlMarcador = parent.getHtmlMarcador(id_procedimento, processoAberto);
-        var iconMarcador = htmlMarcador.icon;
-        var linkPrazo = htmlMarcador.prazo;
-            linkPrazo = linkPrazo + getHtmlPrazoNativoArvore();
-        var dataMarcador = htmlMarcador.data;
+        var marcadorProcessoPro = parent.getHtmlMarcador(id_procedimento, processoAberto);
+        var iconMarcador = marcadorProcessoPro.icon;
+        // O prazo do marcador vem do getHtmlMarcador (sei-functions-pro.js, plano 3), ainda com onclick,
+        // onmouseover e o selo do getDatesPreview: o portao os arrancaria. O painel continua sanitizado e
+        // so esse trecho entra depois, cru, no ponto reservado. O prazo nativo do SEI ja e marcacao limpa.
+        var prazoMarcadorCruPro = marcadorProcessoPro.prazo;
+        var linkPrazo = '<span class="prazoMarcadorArvorePro"></span>' + getHtmlPrazoNativoArvore();
+        var dataMarcador = marcadorProcessoPro.data;
 
         if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1) {
-            $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
+            htmlArvorePro($('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('urgentePro').find('div.urgentePro').remove().end(), '<div class="urgentePro"></div>', 'prepend');
         } else {
             $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').removeClass('urgentePro').find('div.urgentePro').remove();
         }
         if (parent.NAMESPACE_SPRO == 'SEI Pro Lab') {
             if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(trancado)') !== -1) {
-                $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('trancadoPro').find('div.trancadoPro').remove().end().prepend('<div class="trancadoPro"></div>');
+                htmlArvorePro($('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('trancadoPro').find('div.trancadoPro').remove().end(), '<div class="trancadoPro"></div>', 'prepend');
             } else {
                 $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').removeClass('trancadoPro').find('div.trancadoPro').remove();
             }
@@ -2185,13 +2261,13 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-tags azulColor iconDadosProcesso"></i>'+
                                     '      Marcador:'+
-                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : 'position: relative;min-height: 60px;')+'">'+
-                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+'</a>'+linkPrazo+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+iconMarcador+'</a>'+linkPrazo+
                                     (processoAberto ?
-                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.getRemoverMarcador()" onmouseover="return infraTooltipMostrar(\'Clique para remover o marcador\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash"></i></a>'+
-                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" data-spro-click="parent.getRemoverMarcador" data-spro-tip="Clique para remover o marcador"><i class="fas fa-trash"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
                                     '' : '')+
                                     '   </div>'+
                                     '</div>';
@@ -2207,17 +2283,17 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes+(dataAcompEsp.grupo != '' ? ' ('+dataAcompEsp.grupo+')' : '') : '';
 
         var iconReabertura = (dataAcompEsp && dataAcompEsp.config && dataAcompEsp.config.hasOwnProperty('Reabertura')) ? parent.getDatesPreview({date: moment(dataAcompEsp.config.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') }) : false;
-            iconReabertura = (iconReabertura) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">Reabertura: '+dataAcompEsp.config.Reabertura+iconReabertura+'</a>' : '';
+            iconReabertura = (iconReabertura) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">Reabertura: '+dataAcompEsp.config.Reabertura+iconReabertura+'</a>' : '';
 
         var htmlAcompEsp =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="acompanhamento_especial">'+
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-eye azulColor iconDadosProcesso"></i>'+
                                     '      Acompanhamento Especial:'+
-                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_acompanhamento_especial') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_acompanhamento_especial') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_acompanhamento_especial') == 'hide' ? 'display:none' : '')+'">'+
-                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+txtAcompEsp+'</a>'+iconReabertura+
-                                    '       <a class="newLink" maxlength="100" data-mode="acompanhamento_especial" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+txtAcompEsp+'</a>'+iconReabertura+
+                                    '       <a class="newLink" maxlength="100" data-mode="acompanhamento_especial" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
                                     '   </div>'+
                                     '</div>';
             htmlAcompEsp = ($.inArray("Acompanhamento Especial",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAcompEsp : '';
@@ -2227,12 +2303,12 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-inbox azulColor iconDadosProcesso"></i>'+
                                     '      Tipo de Processo:'+
-                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'display:none' : '')+'">'+
-                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnNomeTipoProcedimento+'</a>'+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+prop.hdnNomeTipoProcedimento+'</a>'+
                                     (processoAberto ?
-                                    '       <a class="newLink" data-mode="tipo_procedimento" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" data-mode="tipo_procedimento" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
                                     '' : '')+
                                     '   </div>'+
                                     '</div>';
@@ -2248,12 +2324,12 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="'+dataNivelAcesso.icon+' azulColor iconDadosProcesso"></i>'+
                                 '      N\u00EDvel de Acesso:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'display:none' : '')+'">'+
-                                '      <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+dataNivelAcesso.name+'</a>'+
+                                '      <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+dataNivelAcesso.name+'</a>'+
                                 (processoAberto ?
-                                '       <a class="newLink" data-mode="nivel_acesso" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                '       <a class="newLink" data-mode="nivel_acesso" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>'+
                                 '' : '')+
                                 '   </div>'+
                                 '</div>';
@@ -2271,10 +2347,10 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="fas fa-book azulColor iconDadosProcesso"></i>'+
                                 '      Bloco Interno:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_bloco_interno') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_bloco_interno') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_bloco_interno') == 'hide' ? 'display:none' : '')+'">'+
-                                '      <a class="newLink infoDadosArvore_bloco_interno" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+descBlocoInterno+'</a>'+
+                                '      <a class="newLink infoDadosArvore_bloco_interno" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+descBlocoInterno+'</a>'+
                                 // (processoAberto ?
                                 // '       <a class="newLink" data-mode="bloco_interno" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
                                 // '' : '')+
@@ -2286,19 +2362,19 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-users azulColor iconDadosProcesso"></i>'+
                                     '      Interessados:'+
-                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'display:none' : '')+'">'+
                                             $.map(prop.selInteressadosProcedimento_list, function(v, i){ 
                                                 var return_ = ((prop.selInteressadosProcedimento_list.length-1) != i && prop.selInteressadosProcedimento_list.length > 1) ? '<div style="border-bottom: 1px solid #ececec;" class="dadosInteressados">' : '<div class="dadosInteressados">';
                                                 if (v.name.indexOf('(') !== -1) {
                                                     return_ += $.map(v.name.split('('), function(int){
-                                                                    return '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+int.trim().replace(')','')+'</a>';
+                                                                    return '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+int.trim().replace(')','')+'</a>';
                                                                 }).join('');
                                                 } else {
-                                                    return_ += '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.name+'</a>';
+                                                    return_ += '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+v.name+'</a>';
                                                 }
-                                                    return_ +=  '<a class="newLink interessadosProcesso" style="cursor:pointer;float: right;" data-interessado="'+v.value+'" data-tramite-unidade="'+(getOptionsPro('panelDadosArvoreInteressados_tramiteUnidade') ? 'true' : 'false' )+'" data-tipo-procedimento="'+prop.hdnIdTipoProcedimento+'" data-mesma-natureza="'+(getOptionsPro('panelDadosArvoreInteressados_mesmaNatureza') ? 'true' : 'false' )+'" onclick="getDadosInteressadosArvore(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar processos relacionados\');" onmouseout="return infraTooltipOcultar();">'+
+                                                    return_ +=  '<a class="newLink interessadosProcesso" style="cursor:pointer;float: right;" data-interessado="'+v.value+'" data-tramite-unidade="'+(getOptionsPro('panelDadosArvoreInteressados_tramiteUnidade') ? 'true' : 'false' )+'" data-tipo-procedimento="'+prop.hdnIdTipoProcedimento+'" data-mesma-natureza="'+(getOptionsPro('panelDadosArvoreInteressados_mesmaNatureza') ? 'true' : 'false' )+'" data-spro-click="getDadosInteressadosArvore" data-spro-tip="Pesquisar processos relacionados">'+
                                                                 '   <i class="fas fa-folder-open azulColor iconInteressadosProcesso"></i><i class="fas fa-search azulColor" style="margin-left: -10px;"></i>'+
                                                                 '</a>';
                                                     return_ +=  '<div class="dadosInteressados_result" style="display:none;"></div>'+
@@ -2313,10 +2389,10 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                             '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                             '      <i class="fas fa-bookmark azulColor iconDadosProcesso"></i>'+
                             '      Assuntos:'+
-                            '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                            '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                             '   </label>'+
                             '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'display:none' : '')+'">'+
-                                $.map(prop.selAssuntos_select, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v+'</a></div>' }).join('')+
+                                $.map(prop.selAssuntos_select, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+v+'</a></div>' }).join('')+
                             '   </div>'+
                             '</div>';
             htmlAssuntos = ($.inArray("Assuntos",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAssuntos : '';
@@ -2325,16 +2401,17 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="fas fa-comment-alt azulColor iconDadosProcesso"></i>'+
                                 '      Observa\u00E7\u00F5es:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'display:none' : '')+'">'+
-                                        $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.unidade+': '+v.observacao+'</a></div>' }).join('')+
+                                        $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+v.unidade+': '+v.observacao+'</a></div>' }).join('')+
                                 '   </div>'+
                                 '</div>';
             htmlObservacoes = ($.inArray("Observa\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlObservacoes : '';
 
         $('.panelDadosArvorePro').remove();
-        $('#frmArvore').append(htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
+        htmlArvorePro($('#frmArvore'), htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes, 'append');
+        htmlCruArvorePro($('#frmArvore .prazoMarcadorArvorePro'), prazoMarcadorCruPro || '', 'replace', 'plano-3: getHtmlMarcador');
         if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();  
         if (!dataMarcador && processoAberto) {
             getDataMarcadorProcesso();
@@ -2373,7 +2450,7 @@ function getDataMarcadorProcesso() {
         $.ajax({ 
             url: href
         }).done(function (html) {
-            var $html = $(html);
+            var $html = lerHtmlArvorePro(html);
             var marcador =  {
                 id_procedimento: getParamsUrlPro(window.location.href).id_procedimento,
                 icon: $html.find('#selMarcador').find('option:selected').data('imagesrc'),
@@ -2503,20 +2580,20 @@ function getAtividadesProcessoArvore() {
 }
 function stylePanelArvore() { 
     if ($('.iconDadosProcesso').length == 0) {
-        $('#divConsultarAndamento').css({'border-top': '1px solid #dadada'}).find('a').addClass('newLink').prepend('<i class="fas fa-search azulColor iconDadosProcesso"></i>').find('img').remove();
-        $('#divRelacionados').addClass('panelDadosArvore').find('label').addClass('newLink').prepend('<i class="fas fa-retweet azulColor iconDadosProcesso"></i>');
+        htmlArvorePro($('#divConsultarAndamento').css({'border-top': '1px solid #dadada'}).find('a').addClass('newLink'), '<i class="fas fa-search azulColor iconDadosProcesso"></i>', 'prepend').find('img').remove();
+        htmlArvorePro($('#divRelacionados').addClass('panelDadosArvore').find('label').addClass('newLink'), '<i class="fas fa-retweet azulColor iconDadosProcesso"></i>', 'prepend');
         $('#divRelacionadosParciais').css('margin-bottom','10px').find('a').addClass('newLink');
 
         $('.divRelacionadosParcial .iconStatusProcesso').remove();
         $('.divRelacionadosParcial a').each(function(){
             if ($(this).hasClass('protocoloFechado')) {
-                $(this).prepend('<i class="fas fa-folder cinzaColor iconStatusProcesso"></i>');
+                htmlArvorePro($(this), '<i class="fas fa-folder cinzaColor iconStatusProcesso"></i>', 'prepend');
             } else {
-                $(this).prepend('<i class="fas fa-folder-open cinzaColor iconStatusProcesso"></i>');
+                htmlArvorePro($(this), '<i class="fas fa-folder-open cinzaColor iconStatusProcesso"></i>', 'prepend');
             }
             var tooltip = (typeof $(this).attr('onmouseover') !== 'undefined') ? parent.extractTooltip($(this).attr('onmouseover')) : false;
             if (tooltip) {
-                $(this).append(' ('+tooltip+')');
+                htmlArvorePro($(this), ' ('+tooltip+')', 'append');
             }
         });
 
@@ -2533,15 +2610,15 @@ function stylePanelArvore() {
         var htmlInfoResponsaveis = '';
         if (infoResponsaveis != '') {
             $.each(infoResponsaveis.split('<br />'), function(i, v){
-                var result = $('<div/>').html(v).contents();
+                var result = lerHtmlArvorePro('<div>' + v + '</div>').contents();
                 var result_text = result.text().trim();
                 if (result_text != '') {
                     var naoAtribuido = ($('<div/>').append(result).find('a.ancoraSigla').length == 1) ? ' <span class="infoAlerta">(n\u00E3o atribu\u00EDdo)</span>' : '';
                     var iconEdit = (result_text.indexOf(parent.siglaUnidadeAtual) !== -1) 
-                                    ? '<a class="newLink" data-mode="responsaveis" data-text="'+result_text+'" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>' 
+                                    ? '<a class="newLink" data-mode="responsaveis" data-text="'+result_text+'" style="cursor:pointer;float: right;" data-spro-click="parent.editDadosArvorePro" data-spro-tip="Clique para editar"><i class="fas fa-edit"></i></a>' 
                                     : ''
                     htmlInfoResponsaveis += '<div>'+
-                                            '   <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+
+                                            '   <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+
                                             '   '+result_text+naoAtribuido+iconEdit+
                                             '   </a>'+
                                             '</div>';
@@ -2553,7 +2630,7 @@ function stylePanelArvore() {
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="fas fa-user-tie azulColor iconDadosProcesso"></i>'+
                                 '      Atribui\u00E7\u00E3o:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_responsaveis') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_responsaveis') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" data-spro-click="togglePanelDadosArvore"></i>'+
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_responsaveis') == 'hide' ? 'display:none' : '')+'">'+
                                 '       '+htmlInfoResponsaveis+
@@ -2565,11 +2642,11 @@ function stylePanelArvore() {
         initAtividadesProcesso();
 
         var disableQuery = `<div id="divConsultaExtras" style="border-top: 1px solid rgb(218, 218, 218);width: 99%;padding: 1em 0.2em 1em 0.2em;margin-top: 1em;">
-                                <a href="#" style="cursor:pointer;text-decoration: none;" onclick="enableConsultasExtras();" class="newLink" onmouseover="return infraTooltipMostrar(\'Clique para desativar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-lock azulColor iconDadosProcesso"></i>&nbsp;Bloqueada consultas adicionais</a>
+                                <a href="#" style="cursor:pointer;text-decoration: none;" data-spro-click="enableConsultasExtras" class="newLink" data-spro-tip="Clique para desativar"><i class="fas fa-lock azulColor iconDadosProcesso"></i>&nbsp;Bloqueada consultas adicionais</a>
                             </div>`;
             disableQuery = checkHostLimit() ? disableQuery : '';
 
-        $('#frmArvore').append(htmlAtividades+htmlResponsaveis+disableQuery);
+        htmlArvorePro($('#frmArvore'), htmlAtividades+htmlResponsaveis+disableQuery, 'append');
 
         initDadosProcessoArvore();
         initDadosProcessoArvoreSession();
@@ -2630,7 +2707,7 @@ function breakDocTwoLines() {
         var paddingLastFolder = (checkFolder && checkLastFolder) ? '<span style="margin-left: 18px;"></span>' : '';
         var imgDiv = (checkLast || checkLastItemFolder) ? '<img src="'+getPathArvorePro()+'joinbottom.gif" align="absbottom" style="margin-left: 18px;">' : '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAASCAYAAAAzI3woAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MkIxNDk0NTBFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MkIxNDk0NTFFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDoxRkIyMEY3NUVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDoxRkIyMEY3NkVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PpIKuNMAAABISURBVHjaYvj//z8DLtzQ0PAfnzwxmFQzGEHEYAJM+CQbGxspdi2pZoyG0GgIjYbQaAiNhtBAhRCx9MgLIVLBaAgNuRACCDAA4Zq1PU3G1rcAAAAASUVORK5CYII=" />';
             
-        $(this).after('<span class="breackline_doc"><br>'+paddingLastFolder+imgDivPasta+imgDiv+nrSEI+'</span>');
+        htmlArvorePro($(this), '<span class="breackline_doc"><br>'+paddingLastFolder+imgDivPasta+imgDiv+nrSEI+'</span>', 'after');
     });
 }
 function initBreakDocTwoLines(TimeOut = 9000) {
@@ -2675,12 +2752,12 @@ function initNumericDocsPro(loop = true) {
             var initCount = (folder * sumP) - sumP;
             _this.find(getAnchorDocPro()).each(function(i){
                 var count = initCount+i+1;
-                $(this).before('<span class="numericDocsPro" data-count="'+count+'"></span>');
+                htmlArvorePro($(this), '<span class="numericDocsPro" data-count="'+count+'"></span>', 'before');
             });
         });
     } else {
         $(`#container ${getAnchorDocPro()}`).each(function(i){
-            $(this).before('<span class="numericDocsPro" data-count="'+(i+1)+'"></span>');
+            htmlArvorePro($(this), '<span class="numericDocsPro" data-count="'+(i+1)+'"></span>', 'before');
         });
     }
 }
@@ -2692,7 +2769,7 @@ function initNumericDocsPro(loop = true) {
 // troca de icone. Refaz do zero a cada chamada: a arvore recarrega depois de assinar e ao abrir pasta.
 function initDestacarNaoAssinadosPro() {
     if ($('head').find('style[data-style="seipro-naoassinados"]').length == 0) {
-        $('head').append("<style type='text/css' data-style='seipro-naoassinados'> "
+        estiloArvorePro('seipro-naoassinados', " "
             +"   #divArvore a.naoAssinadoPro > span[id^='span'] { "
             +"      box-shadow: inset 2px 0 0 rgba(214, 150, 20, .75);"
             +"      border-radius: 3px;"
@@ -2705,7 +2782,7 @@ function initDestacarNaoAssinadosPro() {
             +"   #divArvore a.naoAssinadoPro:hover > span[id^='span']:not(.infraArvoreNoSelecionado) { background: rgba(234, 170, 40, .6); } "
             +"   body.dark-mode #divArvore a.naoAssinadoPro > span[id^='span'] { box-shadow: inset 2px 0 0 rgba(240, 190, 80, .8); } "
             +"   body.dark-mode #divArvore a.naoAssinadoPro > span[id^='span']:not(.infraArvoreNoSelecionado) { background: rgba(240, 190, 80, .16); } "
-            +"</style>");
+            , 'append');
     }
     var sigla = (typeof parent.siglaUnidadeAtual !== 'undefined' && parent.siglaUnidadeAtual) ? parent.siglaUnidadeAtual.trim().toUpperCase() : '';
     $('#divArvore a.naoAssinadoPro').removeClass('naoAssinadoPro').each(function(){
@@ -2789,7 +2866,7 @@ function initPanelPrescricaoProcesso() {
                                 (vigente.suspensao ? '(SUSPENSO) ' : '')+value_prescricao.nome_prescricao;
 
                 $('#progressPrescricao_'+v).remove();
-                $('#topmenu').append('<div id="progressPrescricao_'+v+'" onmouseover="return infraTooltipMostrar(\''+txtTip+'\');" onmouseout="return infraTooltipOcultar();" onclick="parent.getCtrPrescricao();" class="progressPrescricao '+classProgress+'"></div>');
+                htmlArvorePro($('#topmenu'), '<div id="progressPrescricao_'+v+'" data-spro-tip="'+txtTip+'" data-spro-click="parent.getCtrPrescricao" class="progressPrescricao '+classProgress+'"></div>', 'append');
                 $('#progressPrescricao_'+v).progressbar({
                     value: decorrido,
                     max: prazo
@@ -2853,7 +2930,7 @@ function waitInitSeiProArvore(TimeOut = 9000) {
     if (checkArvoreProntaPro()) {
         // Folga para a chamada de execArvorePro, que dispara no load do iframe da arvore.
         setTimeout(function(){
-            if (!initSeiProArvoreAplicado) initSeiProArvore();
+            aguardarBlocoArvorePro(function () { if (!initSeiProArvoreAplicado) initSeiProArvore(); });
         }, 1000);
     } else {
         setTimeout(function(){
@@ -2952,7 +3029,7 @@ function initSeiProArvore(loop = true) {
     }
     
     $('a[id*="anchor"][target="'+parent.ifrVisualizacao_+'"]').data('arvore-pro', true);
-    $('a[target="ifrVisualizacao"]:contains("(URGENTE)")').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
+    htmlArvorePro($('a[target="ifrVisualizacao"]:contains("(URGENTE)")').addClass('urgentePro').find('div.urgentePro').remove().end(), '<div class="urgentePro"></div>', 'prepend');
 
     setTimeout(function(){ 
         var arrayCheckActions = $('a[id*="anchor"][target="'+parent.ifrVisualizacao_+'"]').map(function(){ if (typeof $(this).data('arvore-pro') === 'undefined') return true ; }).get();
@@ -2972,7 +3049,7 @@ function initSeiProArvore(loop = true) {
 }
 
 $(document).ready(function () {
-    initSeiProArvore();
+    aguardarBlocoArvorePro(initSeiProArvore);
     waitInitSeiProArvore();
     initLoadPastaArvorePro();
 });
