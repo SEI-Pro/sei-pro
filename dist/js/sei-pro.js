@@ -1,4 +1,4 @@
-var actionTest = 'ondblclick="removeCacheGroupTable(this)"';
+var actionTest = 'data-spro-dblclick="removeCacheGroupTable"';
 var totalSecondsTest = 0;
 var totalSecondsTestText = '';
 var timerTest;
@@ -197,8 +197,8 @@ function appendGerados(type) {
     var orderbyDesc = (getOptionsPro('orderbyTableGroup') == 'desc') ? true : false;
     $('#divGerados table tr').not('.tablesorter-filter-row').each(function(index){
         if ( $(this).find('th').length == 0 ) {
-            var outerHTML = $('<div>').append($(this).clone().addClass('typeGerados')).html();
-            $('#divRecebidos').find('table tbody').append(outerHTML);
+            // P4: a linha e do proprio SEI, com handlers nativos -- move o clone, sem serializar e reparsear.
+            $('#divRecebidos').find('table tbody').append($(this).clone().addClass('typeGerados'));
         }
     });
     $('#divGerados').addClass('displayNone');
@@ -295,7 +295,10 @@ function updateTipSelectAll(this_) {
     var table = _this.closest('table');
     var text = (table.find('input[type="checkbox"]:checked').length > 0) ? 'Inverter Sele\u00E7\u00E3o' : 'Selecionar Todos';
         text = (typeof data.index != 'undefined' && data.index == 1) ? 'Remover Sele\u00E7\u00E3o' : text;
-    $(this_).attr('onmouseenter','return infraTooltipMostrar(\''+text+'\')');
+    // Convertido (data-spro-tip): troca o texto que o despachante mostra logo depois desta acao. Os que
+    // ficaram inline (agrupamento da grade antiga, fora do escopo) seguem com o onmouseenter.
+    if (_this.is('[data-spro-tip]')) _this.attr('data-spro-tip', text);
+    else $(this_).attr('onmouseenter','return infraTooltipMostrar(\''+text+'\')');
     if (_this.is(':hover')) {
         infraTooltipMostrar(text);
     } else {
@@ -305,7 +308,7 @@ function updateTipSelectAll(this_) {
 function replaceSelectAll() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if ( tableProc.length > 0 ) {
-        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
+        htmlPro(tableProc.find('#lnkInfraCheck'), '<a data-spro-click="setSelectAllTr" data-spro-mouseover="updateTipSelectAll" data-spro-tip="Selecionar Tudo"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>', 'after').remove();
     }
 }
 function cleanConfigDataRecebimento() {
@@ -1057,7 +1060,7 @@ function initNewBtnHome() {
     var iconBoxSlim = localStorage.getItem('seiSlim');
     var iconLabel = localStorage.getItem('iconLabel'); 
 
-    var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_reopen" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+title+'\')" onclick="checkDadosAcompEspecial(true);" style="position: relative; margin-left: -3px;">'+
+    var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_reopen" data-spro-tip="'+title+'" data-spro-click="checkDadosAcompEspecial" data-spro-args="'+argsPro(true)+'" style="position: relative; margin-left: -3px;">'+
                     '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/reabertura.svg" alt="'+title+'">'+
                     '    <span class="botaoSEI_iconBox">'+
                     '       <i class="fas fa-folder-download" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1067,7 +1070,7 @@ function initNewBtnHome() {
                     '' : '')+
                     '</a>';
     $(divComandos).find('.iconReaberturaPro').remove();
-    $(divComandos).append(htmlBtn);
+    htmlPro($(divComandos), htmlBtn, 'append');
 }
 function initNewTabProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -1103,7 +1106,7 @@ function getNewTabProcesso() {
             });
         });
         htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && typeof checkCapacidade !== 'undefined' && parent.checkCapacidade('save_atividade') && typeof __ !== 'undefined') 
-        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')"')+' onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px;">'+
+        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : ' data-spro-tip="'+__.Nova_Demanda+'"')+' data-spro-click="parent.saveAtividade" style="position: relative; margin-left: -3px;">'+
             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="'+__.Nova_Demanda+'">'+
             '    <span class="botaoSEI_iconBox">'+
             '       <i class="fad fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1115,7 +1118,7 @@ function getNewTabProcesso() {
             : '';
 
         var htmlBtnTypes =  (checkConfigValue('gerenciarprazos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar informa\u00E7\u00F5es do processso\')"')+' onclick="dialogChangeTypeProc()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Alterar informa\u00E7\u00F5es do processso"')+' data-spro-click="dialogChangeTypeProc" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Alterar informa\u00E7\u00F5es do processso">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-info-circle" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1127,7 +1130,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnUpload =  (checkConfigValue('uploaddocsexternos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconUpload_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Enviar documentos em processos\')"')+' onclick="initUploadFilesInProcess()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconUpload_new" '+(iconLabel ? '' : ' data-spro-tip="Enviar documentos em processos"')+' data-spro-click="initUploadFilesInProcess" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Enviar documentos em processos">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-file-upload" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1150,7 +1153,7 @@ function getNewTabProcesso() {
         // fica branco sobre branco e some -- sem erro nenhum, so um espaco
         // vazio com tooltip. O SVG traz a propria cor e aparece nos dois temas.
         var htmlBtnFerramentasPdf = (checkConfigValue('ferramentaspdf')) ? 
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_ferramentaspdf" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ferramentas de PDF\')"')+' style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_ferramentaspdf" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" '+(iconLabel ? '' : ' data-spro-tip="Ferramentas de PDF"')+' style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/ferramentas_pdf.svg" alt="Ferramentas de PDF" title="Ferramentas de PDF">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Ferramentas de PDF</span>'+
@@ -1163,7 +1166,7 @@ function getNewTabProcesso() {
         // aberto pelo service worker, e quem fala com ele e' o content script do
         // agente -- `abrirAgenteIAPro()` avisa a janela de topo por postMessage.
         var htmlBtnAgenteIA = (restrictConfigValue('ferramentasia')) ?
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_agenteia" onclick="abrirAgenteIAPro()" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Agente de IA\')"')+' style="position: relative; margin-left: -3px; cursor: pointer;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_agenteia" data-spro-click="abrirAgenteIAPro" '+(iconLabel ? '' : ' data-spro-tip="Agente de IA"')+' style="position: relative; margin-left: -3px; cursor: pointer;">'+
                             '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Agente de IA</span>'+
@@ -1182,7 +1185,7 @@ function getNewTabProcesso() {
         // de acoes tem fundo BRANCO, esse icone fica branco sobre branco e some --
         // sem erro nenhum, so um espaco vazio com tooltip.
         var htmlBtnEstudioFluxo = (restrictConfigValue('estudiofluxo')) ?
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_estudiofluxo" href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Est\u00FAdio de Fluxo\')"')+' style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_estudiofluxo" href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" '+(iconLabel ? '' : ' data-spro-tip="Est\u00FAdio de Fluxo"')+' style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="Est\u00FAdio de Fluxo" title="Est\u00FAdio de Fluxo">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Est\u00FAdio de Fluxo</span>'+
@@ -1193,7 +1196,7 @@ function getNewTabProcesso() {
         // Historico de Processos Visitados: o mesmo do item do menu lateral, ao lado do Estudio de Fluxo.
         // Icone embutido (data URI): ele existe em todas as versoes, e o Estudio de Fluxo so no Lab.
         var htmlBtnHistorico = (checkConfigValue('historicoproc')) ?
-                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_historico" href="#" onclick="getHistoryProcessosPro(); return false;" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Hist\u00F3rico de Processos Visitados\')"')+' style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_historico" href="#" data-spro-click="getHistoryProcessosPro" '+(iconLabel ? '' : ' data-spro-tip="Hist\u00F3rico de Processos Visitados"')+' style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="'+iconeHistoricoBarraPro()+'" alt="Hist\u00F3rico de Processos Visitados" title="Hist\u00F3rico de Processos Visitados">'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Hist\u00F3rico</span>'+
@@ -1202,7 +1205,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : ' data-spro-tip="Adicionar prazo"')+' data-spro-click="addControlePrazo" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-clock" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1214,7 +1217,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnNaoLido =  (checkConfigValue('marcar_naolido')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="getProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : ' data-spro-tip="Marcar como n\u00E3o visualizado"')+' data-spro-click="getProcessoNaoLido" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1225,7 +1228,7 @@ function getNewTabProcesso() {
                             '</a>'
                             : '';
 
-        htmlBtn =   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPro_newtab" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')"')+' onclick="openListNewTab(this)" style="position: relative; margin-left: -3px;">'+
+        htmlBtn =   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPro_newtab" '+(iconLabel ? '' : ' data-spro-tip="Abrir Processos em Nova Aba"')+' data-spro-click="openListNewTab" style="position: relative; margin-left: -3px;">'+
                     '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Abrir Processos em Nova Aba">'+
                     '    <span class="botaoSEI_iconBox">'+
                     '       <i class="fad fa-external-link-alt" style="font-size: 17pt; color: #fff;"></i>'+
@@ -1246,7 +1249,7 @@ function getNewTabProcesso() {
                 _this.find('.iconPro_agenteia').remove();
                 _this.find('.iconPro_estudiofluxo').remove();
                 _this.find('.iconPro_historico').remove();
-                _this.append(htmlBtn);            
+                htmlPro(_this, htmlBtn, 'append');
         });
     }, 500);
 }
@@ -1269,7 +1272,7 @@ function dialogChangeTypeProc(this_) {
         var htmlOption = $.map(arrayListTypesSEI.selectTipoProc, function(v){
             return '<option value="'+v.value+'">'+v.name+'</option>';
         });
-        $('#dialogBoxTipoProc').html(htmlOption);
+        htmlPro($('#dialogBoxTipoProc'), htmlOption.join(''));
         initChosenReplace('box_reload', $('#dialogBoxTipoProc')[0], true);
     });
 
@@ -1289,8 +1292,7 @@ function dialogChangeTypeProc(this_) {
                     '</div>';
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
         .dialog({
             title: "Alterar informa\u00E7\u00F5es do processso",
         	width: 600,
@@ -1317,10 +1319,10 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
         var tr = tableProc.find('tr#P'+id_protocolo+'');
         var td = tr.find('td.tagintable').eq(1);
             td.find('.sucessEdit').remove();
-            td.html(txtTypeProc+'<i class="fas fa-check azulColor sucessEdit" style="margin-left:10px;"></i>');
+            htmlPro(td, txtTypeProc+'<i class="fas fa-check azulColor sucessEdit" style="margin-left:10px;"></i>');
             updateDadosArvore('Consultar/Alterar Processo', 'selTipoProcedimento', idTypeProc, id_protocolo, function(){ 
                 td.find('.sucessEdit').remove();
-                td.append('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
+                htmlPro(td, '<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>', 'append');
                 setTimeout(function(){ td.find('.sucessEdit').remove(); }, 2000);
                 setTimeout(function(){ 
                         tr.find(getElemCheckboxPro()+':checked').trigger('click');
@@ -1405,14 +1407,16 @@ function insertDivPanelControleProc() {
                                          '<path d="M1.9 20.2 5.3 11.3A1.7 1.7 0 0 1 6.9 10.2h15.3a1.1 1.1 0 0 1 1 1.5l-2.9 8.1a1.7 1.7 0 0 1-1.6 1.1H2.8a.95.95 0 0 1-.9-.7z" fill="currentColor" stroke="none"/>', 22)+
                             '</i>';
     var estiloSetaPro =     'background:none;border:0;cursor:pointer;color:inherit;line-height:0;padding:2px;margin-left:4px;';
-    var htmlToggleTable =   '<button type="button" class="controleProcPro spro-fav-recolher" id="'+elementControleProc+'_showIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'show\')" title="Mostrar a lista de processos" aria-label="Mostrar a lista de processos" style="'+estiloSetaPro+statusIconShow+'">'+svgTituloPro('<path d="M6 9l6 6 6-6"/>', 18)+'</button>'+
-                            '<button type="button" class="controleProcPro spro-fav-recolher" id="'+elementControleProc+'_hideIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'hide\')" title="Recolher a lista de processos" aria-label="Recolher a lista de processos" style="'+estiloSetaPro+statusIconHide+'">'+svgTituloPro('<path d="M6 15l6-6 6 6"/>', 18)+'</button>';
+    var htmlToggleTable =   '<button type="button" class="controleProcPro spro-fav-recolher" id="'+elementControleProc+'_showIcon" data-spro-click="toggleTablePro" data-spro-args="'+argsPro(String(idControleProc), 'show')+'" title="Mostrar a lista de processos" aria-label="Mostrar a lista de processos" style="'+estiloSetaPro+statusIconShow+'">'+svgTituloPro('<path d="M6 9l6 6 6-6"/>', 18)+'</button>'+
+                            '<button type="button" class="controleProcPro spro-fav-recolher" id="'+elementControleProc+'_hideIcon" data-spro-click="toggleTablePro" data-spro-args="'+argsPro(String(idControleProc), 'hide')+'" title="Recolher a lista de processos" aria-label="Recolher a lista de processos" style="'+estiloSetaPro+statusIconHide+'">'+svgTituloPro('<path d="M6 15l6-6 6 6"/>', 18)+'</button>';
     var htmlDivPanel = '<div class="controleProcPro panelHomePro" style="display: inline-block; width: 100%;" id="processosSEIPro" data-order="'+idOrder+'"></div>';
     
     if (isNewSEI) $('#divFiltro, #collapseControle, #newFiltro, #divTabelaProcesso').addClass('collapseTabelaProcesso');
 
     if ($('.controleProcPro').length == 0) {
-        $('#divInfraBarraLocalizacao').css('width', '100%').addClass('titlePanelHome').append(htmlToggleTable).prepend(htmlIconTable);
+        var $barraLocalizacao = $('#divInfraBarraLocalizacao').css('width', '100%').addClass('titlePanelHome');
+        htmlPro($barraLocalizacao, htmlToggleTable, 'append');
+        htmlPro($barraLocalizacao, htmlIconTable, 'prepend');
         $(idControleProc).css({'width': '100%', 'display': statusView});
         // No SEI novo o #divFiltro e um .row do Bootstrap (display: flex). O display 'initial' acima o
         // transforma em bloco e os links "Visualizacao detalhada / Ver por..." ficam um embaixo do outro.
@@ -1420,7 +1424,7 @@ function insertDivPanelControleProc() {
         // O mesmo vale para o #collapseControle (barra de botoes, "collapse d-md-block"): o display inline anulava o
         // recolhimento nativo abaixo de 768 px (botao "Exibir/Ocultar Botoes"); acima disso o d-md-block ja prevalece.
         if (isNewSEI && statusView != 'none') $('#divFiltro, #collapseControle').css('display', '');
-        $('#panelHomePro').prepend(htmlDivPanel);
+        htmlPro($('#panelHomePro'), htmlDivPanel, 'prepend');
         $('#frmProcedimentoControlar').moveTo('#processosSEIPro');
         $('#divInfraBarraLocalizacao').moveTo('#processosSEIPro');
         if (isNewSEI && getOptionsPro(elementControleProc) == 'hide') $(idControleProc).addClass('displayNone');
@@ -1430,7 +1434,7 @@ function insertDivPanelControleProc() {
 function insertDivPanel() {
     if ($('#tblMarcadores').length > 0) return;
     if ($('#panelHomePro').length == 0) {
-        $('#frmProcedimentoControlar').after('<div id="panelHomePro" style="display: inline-block; width: 100%;"></div>');
+        htmlPro($('#frmProcedimentoControlar'), '<div id="panelHomePro" style="display: inline-block; width: 100%;"></div>', 'after');
     }
     // O painel novo de favoritos (favoritos/pagina/painel.ts) pode criar o #panelHomePro antes desta funcao rodar:
     // o titulo do Controle de Processos (icone e recolher) e a ordenacao dos paineis continuam sendo montados aqui.
@@ -1738,11 +1742,11 @@ function setTableSorterHome() {
                     var filter = _this.find('.tablesorter-filter-row').get(0);
                     if (typeof filter !== 'undefined') {
                         setTimeout(function(){ 
-                            var htmlFilter =    '<a class="newLink filterTableProcessos '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'newLink_active')+'" onclick="initFilterTableProcessos(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar na tabela\');" onmouseout="return infraTooltipOcultar();" style="left: 0; top: -20px; position: absolute;">'+
+                            var htmlFilter =    '<a class="newLink filterTableProcessos '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'newLink_active')+'" data-spro-click="initFilterTableProcessos" data-spro-tip="Pesquisar na tabela" style="left: 0; top: -20px; position: absolute;">'+
                                                 '   <i class="fas fa-search cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
                                                 '</a>';
                             _this.find('thead .filterTableProcessos').remove();
-                            _this.find('thead').prepend(htmlFilter);
+                            htmlPro(_this.find('thead'), htmlFilter, 'prepend');
                             observerFilterHome.observe(filter, {
                                 attributes: true
                             });
@@ -2450,7 +2454,7 @@ function addAcompanhamentoEspIcon() {
             // O grupo vem escapado para JavaScript e HTML (formatarParametrosJavaScript do SEI, tambem o lido da lista);
             // aqui ele e escapado mais uma vez para o atributo onmouseover, que o navegador decodifica antes de rodar.
             var tooltipGrupo = String(acompanhamentoesp).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/\\?'/g, "\\'");
-            $(this).closest('tr').find('td:not(.spro-anotacao-coluna)').eq(1).append('<a class="acompanhamentoesp_icon" onmouseover="return infraTooltipMostrar(\'Acompanhamento Especial\',\''+tooltipGrupo+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-eye azulColor"><i></a>');
+            htmlPro($(this).closest('tr').find('td:not(.spro-anotacao-coluna)').eq(1), '<a class="acompanhamentoesp_icon" data-spro-tip="Acompanhamento Especial" data-spro-tip-titulo="'+tooltipGrupo+'"><i class="fas fa-eye azulColor"><i></a>', 'append');
         }
     });
     checkListaAcompanhamentoEspIconPro();
@@ -2843,7 +2847,7 @@ function updateCountIconDist() {
 
 var txtPadrao_getList = async () => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
-    var listTxtPadrao = $(htmlTxtPadrao).find('#divInfraAreaTabela table.infraTable tr').map(function(){
+    var listTxtPadrao = lerHtmlPro(htmlTxtPadrao).find('#divInfraAreaTabela table.infraTable tr').map(function(){
         var td = $(this).find('td:not(.spro-anotacao-coluna)');
         var link = td.eq(4).find('a');
         var id = td.eq(1).text();
@@ -2863,19 +2867,19 @@ var txtPadrao_getList = async () => {
 }
 var txtPadrao_newLink = async () => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
-    var urlNew = $(htmlTxtPadrao).find('#btnNovo').attr('onclick');
+    var urlNew = lerHtmlPro(htmlTxtPadrao).find('#btnNovo').attr('onclick');
         urlNew = typeof urlNew !== 'undefined' && urlNew.indexOf("'") !== -1 ? urlNew.split("'")[1] : false;
     return urlNew;
 }
 var txtPadrao_getConfig = async (idTxt) => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
-    var urlView = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td:not(.spro-anotacao-coluna)').eq(2).text() == '[_'+idTxt+']') return $(this).find('a[href*="acao=texto_padrao_interno_consultar"]').attr('href') }).get();
+    var urlView = lerHtmlPro(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td:not(.spro-anotacao-coluna)').eq(2).text() == '[_'+idTxt+']') return $(this).find('a[href*="acao=texto_padrao_interno_consultar"]').attr('href') }).get();
         urlView = typeof urlView !== 'undefined' && urlView !== null && urlView.length ? urlView[0] : false;
 
     if (urlView) {
         var htmlTxtPadrao = await $.get(urlView);
-        var conteudoTxtPadrao = $(htmlTxtPadrao).find('#txaConteudo').val();
-            conteudoTxtPadrao = typeof conteudoTxtPadrao !== 'undefined' && conteudoTxtPadrao !== null && conteudoTxtPadrao.trim() != '' ? $(conteudoTxtPadrao).text() : false;
+        var conteudoTxtPadrao = lerHtmlPro(htmlTxtPadrao).find('#txaConteudo').val();
+            conteudoTxtPadrao = typeof conteudoTxtPadrao !== 'undefined' && conteudoTxtPadrao !== null && conteudoTxtPadrao.trim() != '' ? lerHtmlPro(conteudoTxtPadrao).text() : false;
             conteudoTxtPadrao = conteudoTxtPadrao && isJson(conteudoTxtPadrao) ? JSON.parse(conteudoTxtPadrao) : false;
             conteudoTxtPadrao = conteudoTxtPadrao && $.isArray(conteudoTxtPadrao) ? conteudoTxtPadrao : false;
         return conteudoTxtPadrao;
@@ -2885,11 +2889,11 @@ var txtPadrao_getConfig = async (idTxt) => {
 }
 var txtPadrao_setConfig = async (data) => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
-    var urlEdit = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td:not(.spro-anotacao-coluna)').eq(2).text() == '[_'+data.nome+']') return $(this).find('a[href*="acao=texto_padrao_interno_alterar"]').attr('href') }).get();
+    var urlEdit = lerHtmlPro(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td:not(.spro-anotacao-coluna)').eq(2).text() == '[_'+data.nome+']') return $(this).find('a[href*="acao=texto_padrao_interno_alterar"]').attr('href') }).get();
         urlEdit = typeof urlEdit !== 'undefined' && urlEdit !== null && urlEdit.length ? urlEdit[0] : false;
     var urlPage = urlEdit ? urlEdit : await txtPadrao_newLink();
     var htmlLink = await $.get(urlPage);
-    var form = $(htmlLink).find('#frmTextoPadraoInternoCadastro');
+    var form = lerHtmlPro(htmlLink).find('#frmTextoPadraoInternoCadastro');
     var urlForm = form.attr('action');
     var createConfig = await txtPadrao_createConfig(form, urlForm, data);
     return createConfig;
@@ -2931,14 +2935,14 @@ var getTableDistribAutomatica = async () => {
     var dadosDistribuicao = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
         window.dadosDistribuicaoAut = dadosDistribuicao;
     var htmlBox =       '<div id="boxDistribAut" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
-                        '               <a class="newLink iconConfig_distrib" onclick="getAtribuicaoAutomatica(this)" onmouseover="return infraTooltipMostrar(\'Atribuir processos\');" onmouseout="return infraTooltipOcultar();" style="margin: 0px; font-size: 14pt;">'+
+                        '               <a class="newLink iconConfig_distrib" data-spro-click="getAtribuicaoAutomatica" data-spro-tip="Atribuir processos" style="margin: 0px; font-size: 14pt;">'+
                         '                   <span class="fa-layers fa-fw">'+
                         '                       <i class="fas fa-user-friends"></i>'+
                         '                       <span class="fa-layers-counter" style="display:none"></span>'+
                         '                   </span>'+
                         '                   <span style="font-size: 80%;">Atribuir Processos</span>'+
                         '               </a>'+
-                        '               <a class="newLink iconConfig_distrib" onclick="setAtribuicaoAutomatica(this)" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es de atribui\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();" style="margin: 0px;font-size: 14pt;right: 280px;position: absolute;">'+
+                        '               <a class="newLink iconConfig_distrib" data-spro-click="setAtribuicaoAutomatica" data-spro-tip="Configura\u00E7\u00F5es de atribui\u00E7\u00E3o" style="margin: 0px;font-size: 14pt;right: 280px;position: absolute;">'+
                         '                   <i class="fas fa-cog"></i>'+
                         '               </a>'+
                         '   <table id="distribAutTablePro" style="margin-top: 5px; font-size: 9pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
@@ -2946,7 +2950,7 @@ var getTableDistribAutomatica = async () => {
                         '            <tr class="tableHeader">'+
                         '                <th class="tituloControle " width="5%" align="center">'+
                         '                   <label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label>'+
-                        '                   <a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Todos\')" onmouseout="return infraTooltipOcultar();">'+
+                        '                   <a id="lnkInfraCheck" data-spro-click="getSelectAllTr" data-spro-args="'+argsPro('$el', 'SemGrupo')+'" data-spro-mouseover="updateTipSelectAll" data-spro-tip="Selecionar Todos">'+
                         '                       <img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" class="infraImg">'+
                         '                   </a>'+
                         '                </th>'+
@@ -2964,7 +2968,7 @@ var getTableDistribAutomatica = async () => {
             let atribuicao = v.atribuicao ? v.atribuicao.usuario : '';
             htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo">'+
                         '       <td class="tituloControle" style="text-align:center;">'+
-                        '           <input type="checkbox" onclick="updateCountIconDist()" id="chkDistrib_'+v.id_procedimento+'" '+(nova_atribuicao && nova_atribuicao.atribuicao != atribuicao ? 'checked' : '')+' '+(!nova_atribuicao ? 'disabled' : '')+' name="chkDistrib_'+v.id_procedimento+'" value="'+v.id_procedimento+'">'+
+                        '           <input type="checkbox" data-spro-click="updateCountIconDist" id="chkDistrib_'+v.id_procedimento+'" '+(nova_atribuicao && nova_atribuicao.atribuicao != atribuicao ? 'checked' : '')+' '+(!nova_atribuicao ? 'disabled' : '')+' name="chkDistrib_'+v.id_procedimento+'" value="'+v.id_procedimento+'">'+
                         '       </td>'+
                         '       <td>'+
                         '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_procedimento+'" target="_blank">'+
@@ -2983,8 +2987,7 @@ var getTableDistribAutomatica = async () => {
         htmlBox +=      '   </table>'+
                         '</div>';
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
             title: 'Distribui\u00E7\u00E3o Autom\u00E1tica de Processos',
             width: $('body').width()-300,
@@ -3037,21 +3040,21 @@ var getTableDistribAutomatica = async () => {
                         });
                         setTimeout(function(){ 
                             var htmlfilterDistrib =    '<div class="btn-group filterTableDistrib" role="group" style="right: 45px;top: 18px;z-index: 999;position: absolute;">'+
-                                                        '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                                                        '   <button type="button" data-spro-click="downloadTablePro" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                                         '       <span class="text">Baixar</span>'+
                                                         '   </button>'+
-                                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                                        '   <button type="button" data-spro-click="copyTablePro" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                                                         '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                                         '       <span class="text">Copiar</span>'+
                                                         '   </button>'+
-                                                        '   <button type="button" onclick="filterTablePro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(distribTable.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                                        '   <button type="button" data-spro-click="filterTablePro" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(distribTable.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
                                                         '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
                                                         '       Pesquisar'+
                                                         '   </button>'+
                                                         '</div>';
                                 distribTable.find('thead .filterTableDistrib').remove();
-                                distribTable.find('thead').prepend(htmlfilterDistrib);
+                                htmlPro(distribTable.find('thead'), htmlfilterDistrib, 'prepend');
                                 observerFilterDistrib.observe(filterDistrib, {
                                     attributes: true
                                 });
@@ -3075,8 +3078,7 @@ function setAtribuicaoAutomatica() {
                         '</div>';
                         
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
             title: 'Distribui\u00E7\u00E3o Autom\u00E1tica de Processos',
             width: $('body').width()-300,
@@ -3234,16 +3236,14 @@ function initNaoVisualizadoPro() {
 }
 function initUrgentePro() {
     $('a div.urgentePro').remove();
-    $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]')
-        .prepend('<div class="urgentePro"></div>')
+    htmlPro($('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]'), '<div class="urgentePro"></div>', 'prepend')
         .addClass('urgentePro')
         .closest('tr')
         .addClass('urgentePro');
 }
 function initTrancadoPro() {
     $('a div.trancadoPro').remove();
-    $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(TRANCADO)"]')
-        .prepend('<div class="trancadoPro"></div>')
+    htmlPro($('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(TRANCADO)"]'), '<div class="trancadoPro"></div>', 'prepend')
         .addClass('trancadoPro');
 }
 
@@ -3399,7 +3399,7 @@ function resumoUploadFilesInProcess() {
 // servidor (o 504 do nginx chega assim): so o comeco, em texto puro, serve para o resumo.
 function textoFalhaUploadPro(mensagem) {
     var texto = (typeof mensagem === 'string') ? mensagem : ((mensagem && mensagem.error) ? mensagem.error : '');
-        texto = $.trim($('<div>').html(String(texto).replace(/<[^>]*>/g, ' ')).text()).replace(/\s+/g, ' ');
+        texto = $.trim(lerHtmlPro('<div>' + String(texto).replace(/<[^>]*>/g, ' ') + '</div>').text()).replace(/\s+/g, ' ');
     return texto ? texto.substring(0, 160) : 'Falha no envio do arquivo';
 }
 function removeUploadFilesInProcess() {
@@ -3419,7 +3419,7 @@ function onClickRemoveDragHoverHome() {
     })
 }
 function cleanUploadFilesInProcess() {
-    $('#uploadListPro').html('');
+    $('#uploadListPro').empty();
     $(containerUpload).data('index',0);
     // Os mesmos arquivos sao reenfileirados a cada processo. Antes isto era feito percorrendo
     // arvoreDropzone.files e chamando addFile(), que empurra de volta no MESMO array: a lista
@@ -3438,19 +3438,25 @@ function cleanUploadFilesInProcess() {
         arvoreDropzone.addFile(v);
     });
 }
+// O Cancelar fica DENTRO da area do Dropzone. dropzoneCancelInfo para a propagacao para o Dropzone
+// nao abrir o seletor de arquivos; por isso a acao vai com data-spro-captura (fase de captura).
+function cancelarUploadProcessosPro(ev) {
+    dropzoneCancelInfo(ev);
+    removeUploadFilesInProcess();
+}
 function getUploadFilesInProcess() {
     var _containerUpload = $(containerUpload);
     var html =  '<div id="uploadListPro"></div>'+
                 '<div id="dz-infoupload" class="dz-infoupload dz-infoupload-home">'+
                 '   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>'+
-                '   <span class="cancel" onclick="dropzoneCancelInfo(event); removeUploadFilesInProcess(); return false;">'+
+                '   <span class="cancel" data-spro-click="cancelarUploadProcessosPro" data-spro-captura data-spro-args="'+argsPro('$ev')+'">'+
                 '       <i class="far fa-times-circle icon"></i>'+
                 '       <span class="label">CANCELAR</span>'+
                 '   </span>'+
                 '</div>';
 
     if (_containerUpload.find('.dz-infoupload').length == 0) {
-        _containerUpload.find(divComandos).after(html).data('index', 0);
+        htmlPro(_containerUpload.find(divComandos), html, 'after').data('index', 0);
     }
 
     // Clicar no icone com a ferramenta ja aberta chamava new Dropzone() sobre o mesmo elemento e
@@ -3553,7 +3559,7 @@ function sendUploadArvoreHomeStart() {
 }
 function sortUploadArvore() {
     var htmlUpload =    '<div id="divUploadDoc" class="panelDadosArvore" style="margin: 15px 0; padding: 1.2em 0 0 0 !important;">'+
-                        '   <a style="cursor:pointer;" onclick="sendUploadArvoreHomeStart();" class="newLink newLink_confirm">'+
+                        '   <a style="cursor:pointer;" data-spro-click="sendUploadArvoreHomeStart" class="newLink newLink_confirm">'+
                         '       <i class="fas fa-upload azulColor"></i>'+
                         '       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>'+
                         '   </a>'+
@@ -3574,7 +3580,8 @@ function sortUploadArvore() {
             arvoreDropzone.removeAllFiles();
             arvoreDropzone.handleFiles(files);
         }
-    }).after(htmlUpload);
+    });
+    htmlPro($('#uploadListPro'), htmlUpload, 'after');
 }
 function storeLinkUsuarioSistema() {
     if (typeof setOptionsPro !== 'undefined') setOptionsPro('usuarioSistema',$('#lnkUsuarioSistema').attr('title'));
@@ -3664,8 +3671,9 @@ function initSeiPro() {
 // chegou quando o documento fica pronto, o initSeiPro morre no meio (ReferenceError: NAMESPACE_SPRO is
 // not defined) e a tela fica sem parte das funcoes ate um novo carregamento (#142, #126). Por isso espera
 // o sei-functions-pro.js por ate ~10 s. Se ele ja chegou, o initSeiPro roda na hora, como antes.
+// O purify.min.js tambem chega por $.getScript em paralelo (init.js): sem ele o htmlPro aborta a insercao.
 function initSeiProAposFunctions(TimeOut = 10000) {
-    if (typeof checkHostLimit === 'undefined' && TimeOut > 0) {
+    if ((typeof checkHostLimit === 'undefined' || typeof DOMPurify === 'undefined') && TimeOut > 0) {
         setTimeout(function(){ initSeiProAposFunctions(TimeOut - 100) }, 100);
         return;
     }

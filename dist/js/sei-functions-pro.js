@@ -612,7 +612,8 @@ function sanitizarFragmentoPro(html, doc) {
 // Devolve o jQuery do alvo, como .html()/.append()/.after(), para ser drop-in.
 function htmlPro(alvo, html, modo) {
     var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
-    if (!$alvo.length) { avisarPro('htmlPro: alvo inexistente', alvo); return $alvo; }
+    // Colecao jQuery vazia e o idioma normal do jQuery (sem efeito); so o seletor em texto avisa.
+    if (!$alvo.length) { if (typeof alvo === 'string') avisarPro('htmlPro: alvo inexistente', alvo); return $alvo; }
     var doc = $alvo[0].ownerDocument || document;
     var texto = (html === null || html === undefined) ? '' : String(html);
     var limpo;
@@ -971,7 +972,7 @@ function relatarRemocoesPro() {
 function htmlCruPro(alvo, html, modo, motivo) {
     var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
     if (!/^plano-3: [\w$.]+$/.test(String(motivo))) avisarPro('htmlCruPro sem motivo no formato "plano-3: <produtor>"', motivo);
-    if (!$alvo.length) { avisarPro('htmlCruPro: alvo inexistente', alvo); return $alvo; }
+    if (!$alvo.length) { if (typeof alvo === 'string') avisarPro('htmlCruPro: alvo inexistente', alvo); return $alvo; }
     reescreverDocumentoPro($alvo, html, modo);
     if (typeof installActionsPro === 'function') installActionsPro($alvo[0].ownerDocument || document);
     return $alvo;
