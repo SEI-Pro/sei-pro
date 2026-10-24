@@ -58,7 +58,7 @@ export function ligarRele(d: DepsRele): void {
     const s = porta.sender ?? {};
     const aba = s.tab?.id;
     const lado = s.url && d.ehDaExtensao(s.url) ? "app" : "aba";
-    if (aba === undefined || (lado === "aba" && (s.frameId ?? 0) !== 0)) {
+    if (aba === undefined || (lado === "aba" && s.frameId !== 0)) {
       porta.disconnect();
       return;
     }

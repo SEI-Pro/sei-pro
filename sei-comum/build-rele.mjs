@@ -17,7 +17,8 @@ await build({
   bundle: true,
   minify: true,
   format: "iife",
-  target: ["firefox115"],
+  // O mesmo piso do manifest do Firefox (browser_specific_settings.gecko.strict_min_version).
+  target: ["firefox102"],
   charset: "ascii",
   logLevel: "warning",
   legalComments: "none",

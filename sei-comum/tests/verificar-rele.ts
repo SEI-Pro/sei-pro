@@ -14,16 +14,25 @@ function fabrica() {
       ouvinte = cb;
     },
     ehDaExtensao: (url) => url.startsWith(EXT),
-    canais: new Set(["seipro-teste"]),
+    canais: new Set(["seipro-teste", "seipro-outro"]),
   });
-  return (lado: Lado, aba: number, nome = "seipro-teste", frameId = lado === "aba" ? 0 : 7): { porta: PortaRpc; caiu: () => boolean } => {
+  return (
+    lado: Lado,
+    aba: number | undefined,
+    nome = "seipro-teste",
+    frameId: number | null = lado === "aba" ? 0 : 7, // null = sem frameId (undefined aplicaria o padrao)
+  ): { porta: PortaRpc; caiu: () => boolean } => {
     const [remetente, noRele] = parDePortas();
     let caiu = false;
     remetente.onDisconnect.addListener(() => {
       caiu = true;
     });
     const url = lado === "app" ? `${EXT}html/teste.html` : "https://sei.exemplo.gov.br/sei/controlador.php";
-    ouvinte?.({ ...noRele, name: nome, sender: { tab: { id: aba }, frameId, url } });
+    ouvinte?.({
+      ...noRele,
+      name: nome,
+      sender: { ...(aba === undefined ? {} : { tab: { id: aba } }), ...(frameId === null ? {} : { frameId }), url },
+    });
     return { porta: remetente, caiu: () => caiu };
   };
 }
@@ -101,8 +110,49 @@ export async function verificarRele(): Promise<void> {
   sozinha.porta.disconnect();
   await tique();
   const depois = conectar("app", 9);
+  const doDepois = recebidas(depois.porta);
   await tique();
-  checar("ponta que caiu antes de ligar nao fica esperando", !depois.caiu());
+  const abaNova = conectar("aba", 9);
+  abaNova.porta.postMessage("da-aba-nova");
+  await tique();
+  checar(
+    "ponta que caiu antes de ligar nao fica esperando: o app liga com a aba nova",
+    doDepois.join() === "da-aba-nova" && !depois.caiu(),
+    doDepois,
+  );
+
+  secao("rele do Firefox: casos de borda (revisao)");
+  conectar = fabrica();
+  const semTab = conectar("aba", undefined);
+  const semFrame = conectar("aba", 10, "seipro-teste", null);
+  await tique();
+  checar("porta sem aba e recusada", semTab.caiu());
+  checar("porta da aba sem frameId e recusada (como no Chrome: frameId === 0)", semFrame.caiu());
+  const abaC1 = conectar("aba", 11, "seipro-teste");
+  const abaC2 = conectar("aba", 11, "seipro-outro");
+  const appC2 = conectar("app", 11, "seipro-outro");
+  const appC1 = conectar("app", 11, "seipro-teste");
+  const doAppC1 = recebidas(appC1.porta);
+  const doAppC2 = recebidas(appC2.porta);
+  abaC1.porta.postMessage("c1");
+  abaC2.porta.postMessage("c2");
+  await tique();
+  checar("dois canais na mesma aba nao se misturam", doAppC1.join() === "c1" && doAppC2.join() === "c2", [doAppC1, doAppC2]);
+  const appVelho = conectar("app", 12);
+  const abaP = conectar("aba", 12);
+  await tique();
+  const appRecarregado = conectar("app", 12);
+  const doRecarregado = recebidas(appRecarregado.porta);
+  abaP.porta.postMessage("depois-da-recarga");
+  await tique();
+  appVelho.porta.disconnect();
+  await tique();
+  await tique();
+  checar(
+    "app recarregado com o antigo ainda pareado: a aba segue com o antigo ate ele cair",
+    doRecarregado.length === 0 && abaP.caiu(),
+    doRecarregado,
+  );
 }
 
 /** A lista do relé tem de cobrir todo canal de app em iframe declarado nos módulos (os `*-lateral` são da sidebar). */
@@ -133,4 +183,6 @@ export async function verificarCanaisDoRele(): Promise<void> {
   }
   const faltam = [...achados].filter((c) => !CANAIS_IFRAME.includes(c));
   checar("todo canal de app em iframe esta na lista do rele", achados.size > 0 && faltam.length === 0, faltam);
+  const sobram = CANAIS_IFRAME.filter((c) => !achados.has(c));
+  checar("a lista do rele nao tem canal que nao existe mais nos modulos", sobram.length === 0, sobram);
 }
