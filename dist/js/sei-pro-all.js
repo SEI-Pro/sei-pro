@@ -26,7 +26,7 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
             });
             param['hdnInicio'] = index;
             pagesInfiniteSearch.push(index);
-            ifrView.find(divPaginas).append('<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>');
+            htmlPro(ifrView.find(divPaginas), '<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>', 'append');
             // console.log(param, href);
 
         $.ajax({ 
@@ -34,11 +34,11 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
             data: param,
             url: href
         }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var table = $html.find(tableID);
             if(table.length > 0) {
                 table.each(function(index){
-                    ifrView.find(tableID).last().after($(this)[0].outerHTML);
+                    ifrView.find(tableID).last().after(this);
                 });
             } else {
                 param['hdnInicio'] = 0;
@@ -148,14 +148,19 @@ function insertNewLinksMenu() {
     // A trava olha o primeiro item desta lista, e nao a classe: o item "Agente de IA" (agente-ia/src/ponte/aba.ts)
     // usa a mesma classe newLinksMenuPro e, entrando antes, fazia estes quatro itens nunca aparecerem (desde a 2.0).
     if ($(idMenu).find('#pesquisaLinkPermanentePro').length == 0) {
-        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()">'+iconeMenuPro('link')+'<span>Pesquisar Link Permanente</span></a></li>';
+        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" data-spro-click="initBoxSearchProtocoloSEI" data-spro-args="'+argsPro()+'">'+iconeMenuPro('link')+'<span>Pesquisar Link Permanente</span></a></li>';
 
-        if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()">'+iconeMenuPro('historico')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
+        if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" data-spro-click="getHistoryProcessosPro" data-spro-args="'+argsPro()+'">'+iconeMenuPro('historico')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
         if (checkConfigValue('ferramentaspdf')) newLinkMenu += '<li><a id="ferramentasPdfPro" class="newLinksMenuPro" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener">'+iconeMenuPro('pdf')+'<span>Ferramentas de PDF</span></a></li>';
-        if (checkConfigValue('proclote')) newLinkMenu += '<li><a id="processosLotePro" class="newLinksMenuPro" onclick="if(typeof initProcLoteModal===\'function\')initProcLoteModal()">'+iconeMenuPro('lote')+'<span>Processos em Lote</span></a></li>';
+        if (checkConfigValue('proclote')) newLinkMenu += '<li><a id="processosLotePro" class="newLinksMenuPro" data-spro-click="abrirProcessosLotePro">'+iconeMenuPro('lote')+'<span>Processos em Lote</span></a></li>';
         if (checkConfigValue('ordenarmenu')) initMenuSEISortable();
-        $(idMenu).append(newLinkMenu);
+        htmlPro($(idMenu), newLinkMenu, 'append');
     }
+}
+// A guarda do onclick antigo: o sei-pro-proc-lote.js nao carrega em toda tela (na Pesquisa, por
+// exemplo), e ali o item do menu nao fazia nada, em silencio.
+function abrirProcessosLotePro() {
+    if (typeof initProcLoteModal === 'function') initProcLoteModal();
 }
 function setTableSorter() {
     var observerFilterTable = new MutationObserver(function(mutations) {
@@ -179,7 +184,7 @@ function setTableSorter() {
         tableSorter.each(function(){
             if ($(this).find('table').hasClass('infraTableOrdenacao')) { 
                 $('#divInfraAreaTabela table.infraTable table.infraTableOrdenacao').each(function(){
-                    $(this).after($(this).text()).remove();
+                    $(this).after(document.createTextNode($(this).text())).remove();
                 });
             }
             corrigeTableSEI(this);
@@ -270,15 +275,15 @@ function setTableSorter() {
             var filter = $(this).find('.tablesorter-filter-row').get(0);
             setTimeout(function(){ 
                 var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="left: 0; top: -20px;z-index: 999; position: absolute;">'+
-                                    '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                                    '   <button type="button" data-spro-click="downloadTablePro" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                     '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                     '       <span class="text">Baixar</span>'+
                                     '   </button>'+
-                                    '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                    '   <button type="button" data-spro-click="copyTablePro" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                                     '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                     '       <span class="text">Copiar</span>'+
                                     '   </button>'+
-                                    '   <button type="button" onclick="filterIfraTable(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                    '   <button type="button" data-spro-click="filterIfraTable" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
                                     '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
                                     '       Pesquisar'+
                                     '   </button>'+
@@ -288,7 +293,7 @@ function setTableSorter() {
                                     // '</a>'+
                                     '';
                 _this.find('thead .filterIfraTable').remove();
-                _this.find('thead').prepend(htmlFilter);
+                htmlPro(_this.find('thead'), htmlFilter, 'prepend');
                 observerFilterTable.observe(filter, {
                     attributes: true
                 });
@@ -378,7 +383,7 @@ function getTablePesquisaDownload(this_, mode){
                     '</table>';
 
     if (mode == 'download') {
-        downloadTablePesquisa(this_, $(htmlTable));
+        downloadTablePesquisa(this_, lerHtmlPro(htmlTable));
     } else if (mode == 'copy') {
         copyTablePesquisa(this_, htmlTable);
     }
@@ -408,15 +413,15 @@ function downloadTablePesquisa(this_, table){
 }
 function setTablePesquisaDownload() {
     var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
-                        '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
+                        '   <button type="button" data-spro-click="getTablePesquisaDownload" data-spro-args="'+argsPro('$el', 'download')+'" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Baixar Lista</span>'+
                         '   </button>'+
-                        '   <button type="button" onclick="getTablePesquisaDownload(this, \'copy\')" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                        '   <button type="button" data-spro-click="getTablePesquisaDownload" data-spro-args="'+argsPro('$el', 'copy')+'" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Copiar</span>'+
                         '   </button>'+
-                        '   <button type="button" onclick="downloadAllDocsSearch(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Documentos" class="btn btn-sm btn-light">'+
+                        '   <button type="button" data-spro-click="downloadAllDocsSearch" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Documentos" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Baixar Documentos</span>'+
                         '   </button>'+
@@ -424,7 +429,7 @@ function setTablePesquisaDownload() {
 
     var tablePesquisa = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo .pesquisaBarra' : '#conteudo');
         tablePesquisa.css('position','relative').find('.filterIfraTable').remove();
-        tablePesquisa.prepend(htmlFilter);
+        htmlPro(tablePesquisa, htmlFilter, 'prepend');
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload(TimeOut = 9000) {
@@ -661,18 +666,27 @@ function markQuickViewSearch(this_) {
     $('#conteudo .resultado tr.infraTrAcessada').removeClass('infraTrAcessada');
     _this.closest('tr').addClass('infraTrAcessada');
 }
+// Dois handlers numa acao so: o onclick fazia markQuickViewSearch(this);openSEINrPro(this, nr).
+function abrirVisualizacaoRapidaPro(el, nrSEI) {
+    markQuickViewSearch(el);
+    openSEINrPro(el, nrSEI);
+}
+function abrirAnexoRapidoPro(el) {
+    markQuickViewSearch(el);
+    openDialogAnexo(el);
+}
 function startQuickViewSearch() { 
     $('a.quickview').remove();
     $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"]').each(function(){
         var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
-        var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openSEINrPro(this, \''+nrSEI+'\')"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
-        $(this).after(html);
+        var html = '<a class="quickview" style="font-size: 12px;" data-spro-tip="Visualiza\u00E7\u00E3o r\u00E1pida" data-spro-click="abrirVisualizacaoRapidaPro" data-spro-args="'+argsPro('$el', String(nrSEI))+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
+        htmlPro($(this), html, 'after');
     });
     $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"]').each(function(){
         var href = $(this).attr('href');
         var text = $(this).text();
-        var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openDialogAnexo(this)" data-url="'+href+'" data-title="'+text+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
-        $(this).after(html);
+        var html = '<a class="quickview" style="font-size: 12px;" data-spro-tip="Visualiza\u00E7\u00E3o r\u00E1pida" data-spro-click="abrirAnexoRapidoPro" data-url="'+href+'" data-title="'+text+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
+        htmlPro($(this), html, 'after');
     });
 }
 function downloadAllDocsSearch(this_) {
@@ -693,21 +707,21 @@ function downloadAllDocsSearch(this_) {
         var text = $(this).text().trim();
         var href = $(this).attr('href');
         var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
-        var html = '<a class="downloadview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Baixando documento...\');" onmouseout="return infraTooltipOcultar();"><i style="margin: 0 3px;" class="fas fa-hourglass-half roxoColor"></i></a>';
-        $(this).after(html);
+        var html = '<a class="downloadview" style="font-size: 12px;" data-spro-tip="Baixando documento..."><i style="margin: 0 3px;" class="fas fa-hourglass-half roxoColor"></i></a>';
+        htmlPro($(this), html, 'after');
         var _this = $(this).closest('td').find('.downloadview');
         console.log(text, href, nrSEI);
         setTimeout(function(){
             if (typeof href !== 'undefined' && href.indexOf('?acao=documento_visualizar') !== -1) {
                 getIDProtocoloSEI(nrSEI,  
                     function(html){
-                        let $html = $(html);
+                        let $html = lerHtmlPro(html);
                         var param = getParamsUrlPro($html.find('#ifrArvore').attr('src'));
                             console.log(param);
                             openDialogDoc(param, true, _this);
                     }, 
                     function(){
-                        _this.attr('onmouseover','return infraTooltipMostrar(\'Erro ao baixar documento\')').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
+                        _this.attr('data-spro-tip', 'Erro ao baixar documento').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
                     }
                 );
             } else if (typeof href !== 'undefined' && href.indexOf('?acao=documento_download_anexo') !== -1) {
@@ -717,7 +731,7 @@ function downloadAllDocsSearch(this_) {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                _this.attr('onmouseover','return infraTooltipMostrar(\'Documento baixado\')').find('i').attr('class', 'fas fa-download verdeColor');
+                _this.attr('data-spro-tip', 'Documento baixado').find('i').attr('class', 'fas fa-download verdeColor');
                 _this.closest('tr').addClass('infraTrAcessada').addClass('infraDocBaixado');
             }
         }, index*2000);
@@ -821,9 +835,9 @@ function setMarcadorUserColor() {
             oldColor = (oldColor !== null) ? oldColor : '';
         var htmlUserColor = '<div style="position: absolute;top: 0;left: 63%;">'+
                             '   <label id="lblUserColor" for="txaUserColor" style="display: block;" class="infraLabelOpcional">Cor Personalizada:</label>'+
-                            '   <input onchange="changeMarcadorUserColor(this)" type="color" value="'+oldColor+'">'+
+                            '   <input data-spro-change="changeMarcadorUserColor" type="color" value="'+oldColor+'">'+
                             '</div>';
-        txtNome.after(htmlUserColor);
+        htmlPro(txtNome, htmlUserColor, 'after');
         replaceColorsIcons($('#selStaIcone a.dd-option'));
         replaceColorsIcons($('#selStaIcone a.dd-selected'));
     } else if ($('#frmGerenciarMarcador').length) {
@@ -910,7 +924,14 @@ function initNewProcDefault(TimeOut = 9000) {
 }
 function initConfigSEIPro() {
     if ($('form#frmInfraConfigurar').length && typeof URL_SPRO !== 'undefined') {
-        let ifrConfig = `<iframe id="ifrConfig" src="${URL_SPRO}html/options.html" style="border: 0;margin: 20px auto;display: block;height: 800px" width="800" frameborder="0" scrolling="yes"></iframe>`;
+        // Construido por DOM API: o sanitizador do portao remove <iframe>.
+        let ifrConfig = document.createElement('iframe');
+        ifrConfig.id = 'ifrConfig';
+        ifrConfig.src = URL_SPRO + 'html/options.html';
+        ifrConfig.setAttribute('style', 'border: 0;margin: 20px auto;display: block;height: 800px');
+        ifrConfig.setAttribute('width', '800');
+        ifrConfig.setAttribute('frameborder', '0');
+        ifrConfig.setAttribute('scrolling', 'yes');
         $('#ifrConfig').remove();
         $('#frmInfraConfigurar').after(ifrConfig);
         setTimeout(() => {
@@ -997,8 +1018,10 @@ function initSeiProAll() {
 // SEI 4.1.5: este arquivo, pedido DEPOIS do sei-functions-pro.js, executou antes dele. Nesse caso as
 // guardas typeof abaixo pulam em silencio a caixa de troca de unidade (checkHostLimit), o modalLink do
 // SEI 5 (isSEI_5) e a versao no logo (NAMESPACE_SPRO). Se o sei-functions-pro.js ja chegou, nada muda.
+// O purify.min.js corre do mesmo jeito (init_all.js): sem ele, o htmlPro aborta a insercao -- a barra
+// da pesquisa e os icones de visualizacao rapida sumiam (medido no SEI SP 4.1.5 em 22/10/2026).
 function initSeiProAllAposFunctions(TimeOut = 10000) {
-    if (typeof checkHostLimit === 'undefined' && TimeOut > 0) {
+    if ((typeof checkHostLimit === 'undefined' || typeof DOMPurify === 'undefined') && TimeOut > 0) {
         setTimeout(function(){ initSeiProAllAposFunctions(TimeOut - 100) }, 100);
         return;
     }

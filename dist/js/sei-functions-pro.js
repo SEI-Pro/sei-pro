@@ -125,7 +125,7 @@ function getHtmlJanelaProcessoPro(html, elemento) {
             if (!elemento || elemento.ownerDocument !== ifrInterno.contentDocument) { return html; }
         } catch (e) { return html; }
     }
-    return String(html).replace(/\bparent\.(?!getJanelaProcessoPro\()/g, 'parent.getJanelaProcessoPro().');
+    return reescreverParentPro(html);
 }
 // Na tela do processo este arquivo roda em DUAS copias: a do manifest (content script, mundo
 // isolado) e a do $.getScript de init_all.js (mundo da pagina). Cada uma liga os proprios handlers
@@ -612,7 +612,8 @@ function sanitizarFragmentoPro(html, doc) {
 // Devolve o jQuery do alvo, como .html()/.append()/.after(), para ser drop-in.
 function htmlPro(alvo, html, modo) {
     var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
-    if (!$alvo.length) { avisarPro('htmlPro: alvo inexistente', alvo); return $alvo; }
+    // Colecao jQuery vazia e o idioma normal do jQuery (sem efeito); so o seletor em texto avisa.
+    if (!$alvo.length) { if (typeof alvo === 'string') avisarPro('htmlPro: alvo inexistente', alvo); return $alvo; }
     var doc = $alvo[0].ownerDocument || document;
     var texto = (html === null || html === undefined) ? '' : String(html);
     var limpo;
@@ -622,7 +623,11 @@ function htmlPro(alvo, html, modo) {
         if (/[<&]/.test(texto)) { avisarPro('htmlPro: DOMPurify ausente, insercao abortada', texto.slice(0, 80)); return $alvo; }
         limpo = texto;
     } else {
+        // Fragmento que COMECA com <style>, <script>, <iframe>... some inteiro e sem passar pelo
+        // DOMPurify.removed: o parser o manda para o <head> antes de o sanitizador olhar.
+        if (/^\s*<(style|script|iframe|link|meta|object|embed)\b/i.test(texto)) avisarPro('htmlPro: fragmento comeca com uma tag que nunca sobrevive ao portao -- construir por DOM API', texto.slice(0, 60));
         limpo = sanitizarFragmentoPro(texto, doc);
+        relatarRemocoesPro();
     }
     switch (modo || 'html') {
         case 'append':  $alvo.append(limpo); break;
@@ -677,13 +682,32 @@ function estiloPro(alvo, chave, css, opcoes) {
 var ATRASO_AVISO_DESPACHANTE_PRO = 4000;
 
 var EVENTOS_ACAO_PRO = ['click', 'change', 'input', 'blur', 'focus', 'keyup', 'keydown',
-    'keypress', 'submit', 'dblclick', 'contextmenu', 'paste', 'mouseenter', 'mouseleave'];
+    'keypress', 'submit', 'dblclick', 'contextmenu', 'paste', 'mouseenter', 'mouseleave',
+    'mouseover', 'mouseout'];
 
 // Resolve "fn", "parent.fn" ou "top.a.b" andando no objeto. Sem eval, sem new Function.
 // Devolve tambem o dono, para que a chamada preserve o 'this' que o onclick tinha:
 // "parent.fn(x)" chamava com this = parent, e "fn(x)" com this = window.
+// No SEI 4.1 o formulario do processo fica num iframe ANINHADO (ifrVisualizacao dentro de
+// ifrConteudoVisualizacao): "parent.fn" a partir dali cai numa janela sem as funcoes do SEI Pro.
+// O onclick inline dependia de getHtmlJanelaProcessoPro reescrever o HTML; aqui o resolvedor sobe
+// de janela sozinho, ate o topo, quando nao acha o nome onde o elemento esta. A janela do proprio
+// elemento vem primeiro: funcao local sempre ganha.
 function resolverAcaoPro(nome, win) {
     if (!/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(String(nome))) return null;
+    var janela = win;
+    for (var degrau = 0; janela && degrau < 6; degrau++) {
+        var achado = resolverAcaoNaJanelaPro(nome, janela);
+        if (achado) return achado;
+        var pai = null;
+        try { pai = janela.parent; } catch (e) { pai = null; }
+        if (!pai || pai === janela) break;
+        janela = pai;
+    }
+    return null;
+}
+
+function resolverAcaoNaJanelaPro(nome, win) {
     var partes = String(nome).split('.');
     var dono = win, atual = win;
     for (var i = 0; i < partes.length; i++) {
@@ -737,7 +761,9 @@ function mostrarTipPro(el) {
         if (el.hasAttribute('data-spro-tip-el')) {
             if (typeof win._infraTooltipMostrar === 'function') win._infraTooltipMostrar(el, texto);
         } else if (typeof win.infraTooltipMostrar === 'function') {
-            win.infraTooltipMostrar(texto);
+            var titulo = el.getAttribute('data-spro-tip-titulo');
+            if (titulo !== null) win.infraTooltipMostrar(texto, titulo);
+            else win.infraTooltipMostrar(texto);
         }
     } catch (e) {}
 }
@@ -785,9 +811,20 @@ function installActionsPro(doc) {
         (function (evento) {
             var atributo = 'data-spro-' + evento;
             $doc.on(evento + '.sproAcoes', '[' + atributo + ']', function (e) {
+                if (evento === 'click' && this.hasAttribute('data-spro-captura')) return;
                 dispararAcaoPro(this, e, atributo);
             });
         })(EVENTOS_ACAO_PRO[i]);
+    }
+    // Acao que precisa PARAR a propagacao nao pode esperar a delegacao: quando o clique chega ao
+    // documento, quem escuta num ancestral ja agiu -- o Dropzone, por exemplo, ja abriu o seletor
+    // de arquivos. O onclick inline rodava no proprio alvo, antes disso. data-spro-captura liga a
+    // acao na fase de CAPTURA do documento, que vem antes de todos.
+    if (doc.addEventListener) {
+        doc.addEventListener('click', function (ev) {
+            var el = (ev.target && ev.target.closest) ? ev.target.closest('[data-spro-click][data-spro-captura]') : null;
+            if (el) dispararAcaoPro(el, ev, 'data-spro-click');
+        }, true);
     }
     $doc.on('mouseover.sproAcoes', '[data-spro-tip]', function () { mostrarTipPro(this); });
     $doc.on('mouseout.sproAcoes', '[data-spro-tip]', function () { ocultarTipPro(this); });
@@ -900,6 +937,100 @@ function argsPro() {
     return json.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
                .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
 }
+// Atributo removido nao deixa rastro: foi assim que o selo de prazo da janela de prescricoes
+// perdeu o tooltip na 2.2.2 sem que teste, verificador ou validacao ao vivo notassem. O DOMPurify
+// guarda em DOMPurify.removed o que tirou na ULTIMA chamada; aqui isso vira aviso no console, uma
+// vez por assinatura, para que a validacao ao vivo enxergue a perda.
+var REMOCOES_RELATADAS_PRO = {};
+function relatarRemocoesPro() {
+    var lista = (typeof DOMPurify !== 'undefined' && DOMPurify && DOMPurify.removed) ? DOMPurify.removed : [];
+    for (var i = 0; i < lista.length; i++) {
+        var r = lista[i], assinatura = null;
+        if (r.attribute && /^on/i.test(r.attribute.name)) {
+            var de = '?';
+            if (r.from && r.from.tagName) {
+                var classe = r.from.getAttribute ? (r.from.getAttribute('class') || '') : '';
+                de = r.from.tagName.toLowerCase() + (classe ? '.' + classe.split(/\s+/)[0] : '');
+            }
+            assinatura = 'handler inline removido: ' + r.attribute.name + ' em <' + de + '> = ' + String(r.attribute.value).slice(0, 60);
+        } else if (r.element && r.element.nodeType === 1 && /^(script|style|iframe|object|embed|link)$/i.test(r.element.tagName)) {
+            assinatura = 'elemento removido: <' + r.element.tagName.toLowerCase() + '>';
+        }
+        if (assinatura && !REMOCOES_RELATADAS_PRO[assinatura]) {
+            REMOCOES_RELATADAS_PRO[assinatura] = true;
+            avisarPro('htmlPro: ' + assinatura);
+        }
+    }
+}
+
+// Insercao SEM sanitizar, com prazo de validade. Existe so para HTML que vem de funcao de arquivo
+// ainda nao convertido e que ainda monta on*= (o getDatesPreview, por exemplo): o portao arrancaria
+// o handler, e o usuario perderia tooltip e clique sem nenhum erro. O motivo e obrigatorio e tem
+// formato fixo -- 'plano-3: <produtor>' --, porque o check-dom-injection conta estes usos: o plano 3
+// so termina com ZERO deles, e a extensao so vai a AMO depois disso. Instala o despachante no
+// documento de destino, que pode ser um iframe sem copia propria do sei-functions-pro.js.
+function htmlCruPro(alvo, html, modo, motivo) {
+    var $alvo = (alvo && alvo.jquery) ? alvo : $(alvo);
+    if (!/^plano-3: [\w$.]+$/.test(String(motivo))) avisarPro('htmlCruPro sem motivo no formato "plano-3: <produtor>"', motivo);
+    if (!$alvo.length) { if (typeof alvo === 'string') avisarPro('htmlCruPro: alvo inexistente', alvo); return $alvo; }
+    reescreverDocumentoPro($alvo, html, modo);
+    if (typeof installActionsPro === 'function') installActionsPro($alvo[0].ownerDocument || document);
+    return $alvo;
+}
+
+// Parse SO PARA LER. $(html) parseia no documento VIVO: um <img src=x onerror=...> que venha na
+// resposta do servidor dispara ali mesmo, antes de qualquer insercao. O DOMParser devolve um
+// documento inerte, sem contexto de navegacao: nada carrega, nada executa. Devolve os mesmos nos
+// de topo que o $(html) devolvia -- o jQuery descarta as tags html/head/body e poe o conteudo das
+// duas no mesmo nivel --, entao .find(), .filter(), .hasClass() e .html() respondem igual.
+// Cuidado ao MOVER um desses nos para a pagina com .append(): o jQuery executa <script> que
+// encontrar ao inserir.
+function lerHtmlPro(html) {
+    var texto = (html === null || html === undefined) ? '' : String(html);
+    var ini = texto.indexOf('<'), fim = texto.lastIndexOf('>');
+    if (ini < 0 || fim < ini) return $([]);
+    var doc = new DOMParser().parseFromString(texto.slice(ini, fim + 1), 'text/html');
+    var nos = Array.prototype.slice.call(doc.head.childNodes).concat(Array.prototype.slice.call(doc.body.childNodes));
+    return $(nos);
+}
+
+// O valor que um token SOLTO teria dentro de um onclick: onclick="fn(482)" passava o numero 482,
+// e onclick="fn(true)" o booleano. Montado por concatenacao ('fn('+id+')'), o token so existia como
+// texto; argsPro(id) passaria a string "482" e um === com numero quebraria em silencio.
+function literalInlinePro(v) {
+    if (typeof v !== 'string') return v;
+    var s = v.replace(/^\s+|\s+$/g, '');
+    if (/^-?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s)) return Number(s);
+    if (s === 'true') return true;
+    if (s === 'false') return false;
+    if (s === 'null') return null;
+    if (s === 'undefined') return undefined;
+    return v;
+}
+
+// onkeypress="if (event.which == 13) { $(this).closest('.ui-dialog').find('.confirm.ui-button').trigger('click') }"
+// aparecia igual em varios arquivos: Enter no campo confirma o dialogo.
+function confirmarDialogoNoEnterPro(el, ev) {
+    var tecla = ev ? (ev.which || ev.keyCode) : 0;
+    if (tecla == 13) $(el).closest('.ui-dialog').find('.confirm.ui-button').trigger('click');
+}
+
+// onclick="$(this).closest('span').remove()" e variantes: remove o ancestral indicado.
+function removerAncestralPro(el, seletor) {
+    $(el).closest(seletor).remove();
+}
+
+// getHtmlJanelaProcessoPro troca "parent." por "parent.getJanelaProcessoPro()." no HTML que vai
+// para o iframe aninhado do SEI 4.1, para o onclick inline alcancar as funcoes do SEI Pro. Dentro
+// de um data-spro-*, a troca produziria um nome com parenteses, que o despachante recusa -- e la
+// nem e preciso, porque resolverAcaoPro sobe de janela sozinho. A troca so atinge o que esta FORA
+// dos atributos data-spro-*.
+function reescreverParentPro(html) {
+    return String(html).replace(/(data-spro-[a-z-]+="[^"]*")|\bparent\.(?!getJanelaProcessoPro\()/g, function (m, atributo) {
+        return atributo ? atributo : 'parent.getJanelaProcessoPro().';
+    });
+}
+
 // === FIM SEI PRO DOM ===
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
@@ -7388,8 +7519,13 @@ function restrictConfigValue(name) {
 function initNameConst(type = 'get') {
     if (getOptionsPro('nomeVariaveisPro') && type == 'get') {
         window.__ = getOptionsPro('nomeVariaveisPro');
-    } else {
+    } else if (typeof getName === 'function') {
         setNameConst();
+    } else if (typeof window.__ === 'undefined') {
+        // getName e do sei-pro-atividades.js, que nao vai no pacote do Firefox. Os nomes (__) so sao lidos pelo
+        // botao de Nova Demanda, que exige o Atividades configurado; mas o painel da arvore espera __ existir
+        // (initStylePanelArvore) e, sem ele, nunca montava.
+        window.__ = {};
     }
 }
 function setNameConst() {

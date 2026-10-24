@@ -307,7 +307,7 @@ var docsLote_printDataCrossing = async () => {
                         <tr style="display:none" class="containerTipoProcessoSelect">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-folder-open cinzaColor"></i> Tipo de Processo:</p>
-                                <select data-spro-change="checkTipoProcessoSelect" id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
+                                <select data-spro-change="checkTipoProcessoSelect" data-spro-args="${argsPro()}" id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
                             </td>
                         </tr>
                         <tr style="display:none" class="containerTipoProcessoSelect">
