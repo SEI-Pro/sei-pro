@@ -1200,7 +1200,7 @@ function calcFilterResume(table) {
         var avg = (sum/total.length) || 0;
         var result = (data.resumemod == 'avg') ? avg.toFixed(2)+' <sup>[MED]</sup>' : sum.toFixed(2)+' <sup>[TOTAL]</sup>';
             result = (data.resumemod == 'dist') ? dist+' <sup>[DIST]</sup>' : result;
-        $(this).html(result);
+        htmlPro($(this), result);
     })
 }
 function checkProcessoSigiloso(content = $('html')) {
@@ -1296,8 +1296,7 @@ function insertFontIcon(elementTo, target = $('html')) {
             href: initUrlExtension("css/fontawesome.pro.min.css") 
         }).appendTo(target.find(elementTo));
         
-        var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="1">'+
-                            '    @font-face {\n'+
+        var cssFont = '    @font-face {\n'+
                             '       font-family: "Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
@@ -1330,9 +1329,8 @@ function insertFontIcon(elementTo, target = $('html')) {
                             '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot) !important;\n'+
                             '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot?#iefix) format(\"embedded-opentype\"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n'+
                             '   }\n'
-                            : '')
-                            '</style>';
-        target.find('head').append(htmlStyleFont);
+                            : '');
+        estiloPro(target.find('head'), 'seipro-fonticon', cssFont, { indice: 1 });
     }
     if (localStorage.getItem('seiSlim_editor')) {
         $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
@@ -1538,7 +1536,7 @@ function extractAllTextBetweenQuotes(str){
 function appendDebugReport() {
     var htmlIconDebug = '<i data-spro-click="dialogDebugScreen" data-spro-args="'+argsPro()+'" data-spro-tip="Notificar bug" class="fas fa-bug brancoColor iconDebugScreen" style="float: right;font-size: 16pt;margin-left:15px;cursor: pointer;animation: 2s ease 0s infinite normal none running whitepulser;border-radius: 50%;"></i>';
     $('.iconDebugScreen').remove();
-    $('div[data-ref="infraAcaoBarraSistema"]').prepend(htmlIconDebug);
+    htmlPro($('div[data-ref="infraAcaoBarraSistema"]'), htmlIconDebug, 'prepend');
 }
 function userTyped(this_) {
     $(this_).data('user-typed', ($(this_).val().trim() == '' ? false : true));
@@ -2080,7 +2078,7 @@ function extractOnlyAlphaNum(string) {
     return string;
 }
 function extractTooltip(elem) {
-    return extractOnlyAlphaNum(removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text()));
+    return extractOnlyAlphaNum(removeAcentos(lerHtmlPro('<div>'+elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")+'</div>').text()));
 }
 function changeInputProtocoloSEI(this_, callback = false, callback_error = false) {
     var _this = $(this_);
@@ -2098,7 +2096,7 @@ function changeInputProtocoloSEI(this_, callback = false, callback_error = false
     );
 }
 function extractTooltipToArray(elem) {
-        elem = $("<div>").html(elem).text();
+        elem = lerHtmlPro('<div>'+elem+'</div>').text();
         elem = elem.replace(/<[^>]*>?/gm, '');
         elem = removeAcentos(elem);
         elem = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
@@ -2430,7 +2428,7 @@ function getLinksProcessoAjax(id_procedimento, callback) {
     var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
     if (href !== null) {
         $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
+            var $html = lerHtmlPro(html);
             var urlArvore = $html.find("#ifrArvore").attr('src');
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
                 if (typeof callback === 'function') callback(getLinksArvoreAjax(htmlArvore));
@@ -7935,6 +7933,13 @@ function checkFormRequiredPro(elementForm) {
     });
     return required;
 }
+// Campo da frase de confirmacao: Enter confirma, e o botao so acende com a frase certa.
+function teclaConfirmaFrasePro(el, ev) {
+    if (ev.which == 13) { $(el).closest('.ui-dialog').find('.confirm.ui-button').trigger('click'); }
+}
+function conferirFrasePro(el, ev, frase) {
+    updateButtonConfirm(el, frase == $(el).val().trim().toUpperCase());
+}
 function confirmaFraseBoxPro(text, phrase, func, cancel) {
     if (alertBoxPro) { 
         alertBoxPro.dialog('destroy');
@@ -7943,7 +7948,7 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
     }
     var phraseDiv = '<div class="dialogBoxDiv">Para confirmar, digite <b style="font-weight: bold;">'+phrase.toUpperCase()+'</b>:</div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
-                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" oninput="if (\''+phrase.toUpperCase()+'\' == $(this).val().trim().toUpperCase()) {updateButtonConfirm(this, true)} else {updateButtonConfirm(this, false)}" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
+                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" data-spro-keypress="teclaConfirmaFrasePro" data-spro-input="conferirFrasePro" data-spro-args="'+argsPro('$el', '$ev', phrase.toUpperCase())+'" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
                     '</div>';
     alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
         .dialog({
@@ -8622,7 +8627,7 @@ function getListTypesSEI() {
     var hrefConsulta = $(mainMenu).find('a[href*="protocolo_pesquisa"]').attr('href');
     if (typeof hrefConsulta !== 'undefined' && hrefConsulta != '') {
         $.ajax({ url: hrefConsulta }).done(function (html) {
-            var $htmlConsulta = $(html);
+            var $htmlConsulta = lerHtmlPro(html);
             var form = $htmlConsulta.find('#frmPesquisaProtocolo');
             var param = {};
                 param['selectTipoProc'] = $htmlConsulta.find('#selTipoProcedimentoPesquisa option').map(function(){ if($(this).text().trim() != '') { return {name: $(this).text().trim(), value: $(this).val()} } }).get();
@@ -8684,7 +8689,7 @@ function getDadosPesquisaPro(iframe, mode) {
     if (href != '') {
         var tiposDocumentos = [];
         $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
                 $html.find("#selSeriePesquisa").find('option').each(function(){
                     var id = $(this).attr('value');
                     var name = $(this).text().trim();
@@ -8707,7 +8712,7 @@ const getTypeSEI = async (type = 'documentos') => {
         }
         
         const html = await $.ajax({ url: href });
-        const $html = $(html);
+        const $html = lerHtmlPro(html);
         let listArray = [];
         const elemSelect = type === 'documentos' ? $html.find("#selSeriePesquisa") : $html.find("#selTipoProcedimentoPesquisa");
         
@@ -8793,7 +8798,7 @@ function getLinksArvorePro(_ifrArvore) {
 function getDadosAndamentoPro(href) {
     //var andamento = [];
         $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
                 /*
                 $html.find("#tblHistorico").find('tr').each(function(){
                     var datahora = $(this).find('td').eq(0).text().trim();
@@ -8924,7 +8929,7 @@ function getLinksProcessoPro(_ifrVisualizacao, _ifrArvore) {
 function ajaxDadosDocumentosPro(href, mode, callback = false) {
     var documentos = [];
     $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
+        let $html = lerHtmlPro(html);
         $html.find('#tblDocumentos tbody tr.infraTrClara').each(function () { 
             var a = $(this).find('td').eq(1).find('a');
             if ( a.attr('href') ) {
@@ -8948,7 +8953,7 @@ function ajaxDadosDocumentosPro(href, mode, callback = false) {
 function ajaxDadosProcessoPro(href, mode, arrayAcompEsp) {
     var processo = {};
     $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
+        let $html = lerHtmlPro(html);
         processo.action = $html.find("#frmProcedimentoCadastro").attr('action');
         processo.acompanhamentoEsp = arrayAcompEsp;
         processo.selAssuntos_select = $html.find("#selAssuntos option").map(function () { return $(this).text(); }).get();
@@ -9117,7 +9122,7 @@ function registrarHipotesesParaOpcoesPro(urlHipoteseLegal) {
             data: { primeiroItemValor: null, primeiroItemDescricao: '', valorItemSelecionado: '', staNivelAcesso: nivel }
         }).done(function (result) {
             try {
-                var opcoes = $('<select>').html($(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>', '')).html());
+                var opcoes = $('<div>').append(lerHtmlPro(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>', '')));
                 opcoes.find('option').each(function () {
                     var id = String($(this).val() || '').trim();
                     var nome = $(this).text().trim();
@@ -9136,7 +9141,10 @@ function checkDadosIframeDocumentosPro(mode) {
                 i = 1;
                 $('#frmCheckerProcessoPro').attr('src', href).unbind().on('load', function(){
                     var ifrArvoreOpen = $('#frmCheckerProcessoPro').contents();
-                        $(this).contents().find('head').append("<script data-config='config-seipro-checker'>function atualizarVisualizacao(){ return; }</script>");
+                        var docChecker = this.contentDocument, scChecker = docChecker.createElement('script');
+                        scChecker.setAttribute('data-config', 'config-seipro-checker');
+                        scChecker.textContent = 'function atualizarVisualizacao(){ return; }';
+                        (docChecker.head || docChecker.documentElement).appendChild(scChecker);
                         arrayDadosIframeDocumentosPro(ifrArvoreOpen, mode);
                 });
             }
@@ -9325,7 +9333,7 @@ function getHistoryProcessosPro() {
                                             '   </button>'+
                                             '</div>';
                     historyTable.find('thead .filterTableHistory').remove();
-                    historyTable.find('thead').prepend(htmlFilterHistory);
+                    htmlPro(historyTable.find('thead'), htmlFilterHistory, 'prepend');
                     observerFilterHistory.observe(filterHistory, {
                         attributes: true
                     });
