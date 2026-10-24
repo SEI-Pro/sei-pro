@@ -139,6 +139,140 @@ export async function verificarCombobox(): Promise<void> {
   checar("criar chama o criador e ja escolhe", criados.join() === "Convênios" && simples.join() === "novo");
 }
 
+export async function verificarComboboxExtensoes(): Promise<void> {
+  secao("combobox: complemento, marca, estados e lista longa");
+  const doc = instalarDom('<html><body><div id="r"></div></body></html>');
+  const pop = () => doc.querySelector(".spro-combo-pop");
+  const marca = (cor: string) => () => {
+    const s = doc.createElement("span");
+    s.className = "teste-marca";
+    s.setAttribute("data-cor", cor);
+    return s;
+  };
+  const gente = [
+    { valor: "ana", rotulo: "ana.silva", complemento: "Ana Paula da Silva", marca: marca("a") },
+    { valor: "joao", rotulo: "joao.pereira", complemento: "João Carlos Pereira" },
+    { valor: "zeca", rotulo: "zeca", complemento: "José Antônio Ribeiro" },
+  ];
+  checar(
+    "o complemento entra na busca, sem acento nem caixa",
+    filtrarOpcoes(gente, "JOSE antonio")
+      .map((o) => o.valor)
+      .join() === "zeca",
+  );
+  checar(
+    "quem comeca com o termo no rotulo vem antes de quem so tem no complemento",
+    filtrarOpcoes(gente, "jo")
+      .map((o) => o.valor)
+      .join() === "joao,zeca",
+    filtrarOpcoes(gente, "jo").map((o) => o.valor),
+  );
+  let mudou: string[] = [];
+  const c = criarCombo({ rotulo: "Usuário", busca: true, opcoes: gente, valor: ["ana"], vazio: "Escolher…", aoMudar: (v) => (mudou = v) });
+  doc.getElementById("r")!.append(c.el);
+  checar(
+    "o botao mostra a marca, o rotulo forte e o complemento suave",
+    !!c.el.querySelector(".teste-marca") &&
+      c.el.querySelector(".spro-combo-rotulo")?.textContent === "ana.silva" &&
+      c.el.querySelector(".spro-combo-compl")?.textContent === "Ana Paula da Silva",
+  );
+  c.el.click();
+  await tique();
+  checar(
+    "a opcao mostra a marca, o rotulo e o complemento, e a atual vem marcada",
+    pop()!.querySelectorAll(".teste-marca").length === 1 &&
+      pop()!.querySelector('[data-valor="ana"] .spro-combo-op-rotulo')?.textContent === "ana.silva" &&
+      pop()!.querySelector('[data-valor="ana"] .spro-combo-op-compl')?.textContent === "Ana Paula da Silva" &&
+      pop()!.querySelector('[data-valor="ana"]')?.getAttribute("aria-selected") === "true",
+  );
+  const busca = pop()!.querySelector("input.spro-combo-busca") as HTMLInputElement;
+  busca.value = "ribeiro";
+  disparar(busca, "input");
+  await tique();
+  checar(
+    "achar pelo complemento destaca o trecho no complemento",
+    pop()!.querySelector('[data-valor="zeca"] .spro-combo-op-compl mark')?.textContent === "Ribeiro",
+  );
+  tecla(busca, "Enter");
+  await tique();
+  checar(
+    "Enter escolhe e o botao passa a mostrar o novo",
+    mudou.join() === "zeca" && c.el.querySelector(".spro-combo-rotulo")?.textContent === "zeca",
+  );
+
+  secao("combobox: carregando e erro");
+  const lista: Array<{ valor: string; rotulo: string }> = [];
+  let tentou = 0;
+  const e = criarCombo({ rotulo: "Carga", opcoes: () => lista, vazio: "Carregando…" });
+  doc.getElementById("r")!.append(e.el);
+  e.definirEstado({ tipo: "carregando" });
+  checar("botao ocupado enquanto carrega", e.el.getAttribute("aria-busy") === "true");
+  e.el.click();
+  await tique();
+  checar(
+    "esqueleto na lista e nenhuma opcao",
+    pop()!.querySelectorAll(".spro-combo-esqueleto").length >= 3 &&
+      pop()!.querySelectorAll('[role="option"]').length === 0 &&
+      pop()!.querySelector('[role="listbox"]')?.getAttribute("aria-busy") === "true",
+  );
+  e.definirEstado({ tipo: "erro", mensagem: "Sem rede.", tentar: () => tentou++ });
+  await tique();
+  checar(
+    "erro: mensagem em alerta e 'Tentar de novo'",
+    pop()!.querySelector('[role="alert"]')?.textContent === "Sem rede." &&
+      /Tentar de novo/.test(pop()!.querySelector(".spro-combo-de-novo")?.textContent ?? ""),
+  );
+  checar("erro marca o botao", e.el.classList.contains("spro-combo-erro"));
+  (pop()!.querySelector(".spro-combo-de-novo") as HTMLElement).click();
+  checar("'Tentar de novo' chama o chamador", tentou === 1);
+  lista.push({ valor: "x", rotulo: "Xis" }, { valor: "y", rotulo: "Ypsilon" });
+  e.definirEstado({ tipo: "pronto" });
+  await tique();
+  checar(
+    "pronto: as opcoes aparecem e o erro some",
+    pop()!.querySelectorAll('[role="option"]').length === 2 &&
+      !pop()!.querySelector('[role="alert"]') &&
+      !e.el.classList.contains("spro-combo-erro") &&
+      e.el.getAttribute("aria-busy") === "false",
+  );
+  tecla(pop()!.querySelector("input.spro-combo-busca") ?? pop()!, "Escape");
+  await tique();
+
+  secao("combobox: lista longa limitada");
+  const muitas = Array.from({ length: 450 }, (_, i) => ({
+    valor: `u${i}`,
+    rotulo: `usuario${String(i).padStart(3, "0")}`,
+    complemento: `Pessoa ${i}`,
+  }));
+  const m = criarCombo({
+    rotulo: "Muitos",
+    opcoes: muitas,
+    limite: 100,
+    resumo: (_mostradas, achadas, total) => `${achadas} de ${total} usuários`,
+  });
+  doc.getElementById("r")!.append(m.el);
+  m.el.click();
+  await tique();
+  checar("desenha so o limite", pop()!.querySelectorAll('[role="option"]').length === 100);
+  checar(
+    "avisa quantas faltam e dá a contagem",
+    /Mostrando 100 de 450/.test(pop()!.textContent ?? "") && /450 de 450 usuários/.test(pop()!.textContent ?? ""),
+  );
+  const bm = pop()!.querySelector("input.spro-combo-busca") as HTMLInputElement;
+  bm.value = "usuario44";
+  disparar(bm, "input");
+  await tique();
+  checar(
+    "filtrar traz o que estava depois do limite, sem aviso de corte",
+    pop()!.querySelectorAll('[role="option"]').length === 10 && !/Mostrando/.test(pop()!.textContent ?? ""),
+    pop()!.querySelectorAll('[role="option"]').length,
+  );
+  tecla(bm, "ArrowUp");
+  tecla(bm, "Enter");
+  await tique();
+  checar("seta para cima no primeiro vai ao ultimo filtrado e Enter escolhe", m.valor().join() === "u449", m.valor());
+}
+
 export async function verificarComboboxNoDialogo(): Promise<void> {
   secao("combobox: dentro de um dialogo, a lista fica no dialogo");
   const doc = instalarDom('<html><body><dialog id="d" open><div id="dentro"></div></dialog></body></html>');

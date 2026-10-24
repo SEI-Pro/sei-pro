@@ -26,7 +26,17 @@ export interface OpcaoCombo {
   /** Bolinha de cor (etiquetas). */
   cor?: string;
   icone?: NomeIcone;
+  /**
+   * Texto suave ao lado do rótulo (ex.: o nome completo ao lado do login). Entra na busca e no destaque; o rótulo
+   * continua sendo a parte forte.
+   */
+  complemento?: string;
+  /** Marca própria à esquerda (ex.: uma etiqueta na cor do marcador). Fábrica: o mesmo nó não pode estar em dois lugares. */
+  marca?: () => Node;
 }
+
+/** O que a lista mostra enquanto as opções não chegaram (ou não vieram). */
+export type EstadoCombo = { tipo: "pronto" } | { tipo: "carregando" } | { tipo: "erro"; mensagem: string; tentar?: () => void };
 
 export interface ConfigCombo {
   /** Nome do campo: rótulo acessível e título do botão. */
@@ -48,6 +58,12 @@ export interface ConfigCombo {
   classe?: string;
   /** Largura mínima da lista, em px. */
   larguraLista?: number;
+  /** Lista longa: quantas opções desenhar de uma vez; o resto aparece ao filtrar (a lista avisa quantas faltam). */
+  limite?: number;
+  /** Frase sob a lista (ex.: "412 usuários"); sem ela, só aparece o aviso de lista cortada. */
+  resumo?: (mostradas: number, achadas: number, total: number) => string;
+  /** Texto da caixa de busca. */
+  dicaBusca?: string;
 }
 
 export interface Combo {
@@ -59,6 +75,8 @@ export interface Combo {
   atualizar(): void;
   /** Troca o texto do botão sem nada escolhido (ex.: "carregando..." vira "selecione..." quando a lista chega). */
   definirVazio(texto: string): void;
+  /** Carregando (esqueleto na lista), erro (mensagem e "Tentar de novo") ou pronto. */
+  definirEstado(estado: EstadoCombo): void;
   abrir(termo?: string): void;
   fechar(): void;
 }
@@ -74,16 +92,17 @@ export interface Parte {
  * posição), sem acento nem caixa. Quem começa com o termo vem antes; depois,
  * quem tem uma palavra que começa com ele; o resto mantém a ordem original.
  */
-export function filtrarOpcoes<T extends Pick<OpcaoCombo, "rotulo" | "descricao">>(opcoes: T[], termo: string): T[] {
+export function filtrarOpcoes<T extends Pick<OpcaoCombo, "rotulo" | "descricao" | "complemento">>(opcoes: T[], termo: string): T[] {
   const t = normalizarTexto(termo);
   if (!t) return [...opcoes];
   const palavras = t.split(" ");
   const pontuadas: Array<{ o: T; nota: number; i: number }> = [];
   opcoes.forEach((o, i) => {
     const rotulo = normalizarTexto(o.rotulo);
-    const tudo = `${rotulo} ${normalizarTexto(o.descricao ?? "")}`;
+    const compl = normalizarTexto(o.complemento ?? "");
+    const tudo = `${rotulo} ${compl} ${normalizarTexto(o.descricao ?? "")}`;
     if (!palavras.every((p) => tudo.includes(p))) return;
-    const nota = rotulo.startsWith(t) ? 0 : rotulo.split(" ").some((w) => w.startsWith(palavras[0]!)) ? 1 : 2;
+    const nota = rotulo.startsWith(t) ? 0 : `${rotulo} ${compl}`.split(" ").some((w) => w.startsWith(palavras[0]!)) ? 1 : 2;
     pontuadas.push({ o, nota, i });
   });
   return pontuadas.sort((a, b) => a.nota - b.nota || a.i - b.i).map((x) => x.o);
@@ -141,6 +160,8 @@ export function criarCombo(cfg: ConfigCombo): Combo {
   let visiveis: OpcaoCombo[] = [];
   let flut: Flutuante | null = null;
   let vazio = cfg.vazio ?? "Escolher…";
+  let estado: EstadoCombo = { tipo: "pronto" };
+  let achadas = 0;
 
   const botao = h("button", {
     type: "button",
@@ -164,11 +185,15 @@ export function criarCombo(cfg: ConfigCombo): Combo {
       texto.append(vazio);
     } else {
       const primeira = nomes[0]!;
+      if (primeira.marca) texto.append(primeira.marca());
       if (primeira.cor) texto.append(h("span", { class: "spro-combo-cor", style: `background:${primeira.cor}` }));
       texto.append(h("span", { class: "spro-combo-rotulo" }, primeira.rotulo));
+      if (primeira.complemento) texto.append(h("span", { class: "spro-combo-compl" }, primeira.complemento));
       if (nomes.length > 1) texto.append(h("span", { class: "spro-combo-mais" }, `+${nomes.length - 1}`));
     }
     filhos.push(texto, icone("chevron", 14));
+    botao.setAttribute("aria-busy", estado.tipo === "carregando" ? "true" : "false");
+    botao.classList.toggle("spro-combo-erro", estado.tipo === "erro");
     botao.classList.toggle("spro-combo-ativo", cfg.multiplo === true && nomes.length > 0);
     botao.replaceChildren(...filhos);
   }
@@ -210,6 +235,9 @@ export function criarCombo(cfg: ConfigCombo): Combo {
     const marcada = escolhidos.includes(o.valor);
     const rotulo = h("span", { class: "spro-combo-op-rotulo" });
     for (const p of partesDestacadas(o.rotulo, termo)) rotulo.append(p.marcado ? h("mark", {}, p.texto) : p.texto);
+    const compl = o.complemento ? h("span", { class: "spro-combo-op-compl" }) : null;
+    if (compl && o.complemento)
+      for (const p of partesDestacadas(o.complemento, termo)) compl.append(p.marcado ? h("mark", {}, p.texto) : p.texto);
     const li = h(
       "li",
       {
@@ -220,9 +248,15 @@ export function criarCombo(cfg: ConfigCombo): Combo {
         "aria-selected": marcada ? "true" : "false",
       },
       cfg.multiplo ? h("span", { class: "spro-combo-caixa", "aria-hidden": "true" }, marcada ? icone("check", 12) : null) : null,
+      o.marca ? o.marca() : null,
       o.cor ? h("span", { class: "spro-combo-cor", style: `background:${o.cor}` }) : null,
       o.icone ? icone(o.icone, 15) : null,
-      h("span", { class: "spro-combo-op-textos" }, rotulo, o.descricao ? h("span", { class: "spro-combo-op-desc" }, o.descricao) : null),
+      h(
+        "span",
+        { class: "spro-combo-op-textos" },
+        compl ? h("span", { class: "spro-combo-op-linha" }, rotulo, compl) : rotulo,
+        o.descricao ? h("span", { class: "spro-combo-op-desc" }, o.descricao) : null,
+      ),
       o.contagem !== undefined ? h("span", { class: "spro-combo-conta" }, String(o.contagem)) : null,
       !cfg.multiplo && marcada ? h("span", { class: "spro-combo-marca" }, icone("check", 14)) : null,
     );
@@ -256,16 +290,51 @@ export function criarCombo(cfg: ConfigCombo): Combo {
 
   function desenharLista(): void {
     if (!pop) return;
-    visiveis = filtrarOpcoes(lerOpcoes(), termo);
+    const todas = filtrarOpcoes(lerOpcoes(), termo);
+    achadas = todas.length;
+    visiveis = cfg.limite !== undefined && todas.length > cfg.limite ? todas.slice(0, cfg.limite) : todas;
+    if (estado.tipo !== "pronto") visiveis = [];
     if (ativo >= visiveis.length) ativo = Math.max(0, visiveis.length - 1);
     const lista = pop.querySelector<HTMLElement>('[role="listbox"]')!;
-    lista.replaceChildren(...visiveis.map(linhaDaOpcao));
+    lista.setAttribute("aria-busy", estado.tipo === "carregando" ? "true" : "false");
     const extras = pop.querySelector<HTMLElement>(".spro-combo-extras")!;
     extras.replaceChildren();
+    if (estado.tipo === "carregando") {
+      lista.replaceChildren(
+        ...[62, 84, 48, 74].map((l) =>
+          h("li", { role: "presentation", class: "spro-combo-esqueleto", "aria-hidden": "true" }, h("span", { style: `width:${l}%` })),
+        ),
+      );
+      extras.append(h("p", { class: "spro-combo-nada", role: "status" }, "Carregando…"));
+    } else if (estado.tipo === "erro") {
+      lista.replaceChildren();
+      const tentar = estado.tentar;
+      extras.append(h("p", { class: "spro-combo-nada spro-combo-falha", role: "alert" }, estado.mensagem));
+      if (tentar) {
+        const deNovo = h(
+          "button",
+          { type: "button", class: "spro-combo-criar spro-combo-de-novo" },
+          icone("atualizar", 14),
+          h("span", {}, "Tentar de novo"),
+        );
+        deNovo.addEventListener("pointerdown", (ev) => ev.preventDefault());
+        deNovo.addEventListener("click", tentar);
+        extras.append(deNovo);
+      }
+    } else {
+      lista.replaceChildren(...visiveis.map(linhaDaOpcao));
+      const t = termo.trim();
+      if (!visiveis.length) extras.append(h("p", { class: "spro-combo-nada" }, t ? "Nada encontrado." : "Nenhuma opção."));
+      const frase = visiveis.length ? cfg.resumo?.(visiveis.length, achadas, lerOpcoes().length) : undefined;
+      if (frase) extras.append(h("p", { class: "spro-combo-resumo", role: "status" }, frase));
+      if (visiveis.length < achadas)
+        extras.append(
+          h("p", { class: "spro-combo-resumo", role: "status" }, `Mostrando ${visiveis.length} de ${achadas}. Digite para refinar.`),
+        );
+    }
     const t = termo.trim();
-    if (!visiveis.length) extras.append(h("p", { class: "spro-combo-nada" }, t ? "Nada encontrado." : "Nenhuma opção."));
     const exata = lerOpcoes().some((o) => normalizarTexto(o.rotulo) === normalizarTexto(t));
-    if (cfg.criar && t && !exata) {
+    if (cfg.criar && t && !exata && estado.tipo === "pronto") {
       const criar = h(
         "button",
         { type: "button", class: "spro-combo-criar" },
@@ -315,7 +384,7 @@ export function criarCombo(cfg: ConfigCombo): Combo {
   function teclado(ev: KeyboardEvent): void {
     const n = visiveis.length;
     const alvo = ev.target as HTMLElement | null;
-    const rodape = pop ? [...pop.querySelectorAll<HTMLButtonElement>(".spro-combo-rodape button:not(:disabled)")] : [];
+    const rodape = pop ? [...pop.querySelectorAll<HTMLButtonElement>(".spro-combo-rodape button:not(:disabled), .spro-combo-de-novo")] : [];
     const noBotao = !!alvo?.closest?.(".spro-combo-rodape, .spro-combo-criar");
     if (ev.key === "Tab") {
       const i = rodape.indexOf(alvo as HTMLButtonElement);
@@ -411,7 +480,7 @@ export function criarCombo(cfg: ConfigCombo): Combo {
       ? h("input", {
           type: "text",
           class: "spro-combo-busca",
-          placeholder: cfg.criar ? "Buscar ou criar…" : "Buscar…",
+          placeholder: cfg.dicaBusca ?? (cfg.criar ? "Buscar ou criar…" : "Buscar…"),
           "aria-label": `Filtrar ${cfg.rotulo.toLowerCase()}`,
           "aria-controls": `${id}-lista`,
           "aria-autocomplete": "list",
@@ -503,6 +572,12 @@ export function criarCombo(cfg: ConfigCombo): Combo {
     definirVazio(texto) {
       vazio = texto;
       desenharBotao();
+    },
+    definirEstado(novo) {
+      estado = novo;
+      desenharBotao();
+      desenharLista();
+      posicionar();
     },
     abrir,
     fechar: () => fechar(false),
