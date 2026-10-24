@@ -965,6 +965,13 @@ function reescreverDocumentoPro(alvo, html, modo) {
         case 'replace': $alvo.replaceWith(texto); break;
         default:        $alvo.html(texto);
     }
+    // Acao data-spro-* que entra no documento (balao do link, revisao): no CK4 o corpo e um iframe, e o
+    // despachante tem de existir NAQUELE documento -- como o htmlPro faz.
+    if (/data-spro-/.test(texto) && typeof installActionsPro === 'function') {
+        var docDestino = $alvo[0].nodeType === 9 ? $alvo[0] : ($alvo[0].ownerDocument || document);
+        // Documento inerte (DOMParser, sem janela) nao recebe despachante: o HTML dele e serializado de volta.
+        if (docDestino.defaultView && !installActionsPro(docDestino)) cobrarDespachantePro(docDestino);
+    }
     return $alvo;
 }
 
@@ -9172,7 +9179,7 @@ function getHipoteseLegal(urlHipoteseLegal = dadosProcessoPro.propProcesso.urlHi
             staNivelAcesso: parseInt(nivelAcesso)
         },
         success: function(result){
-            var html_result = $(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
+            var html_result = lerHtmlPro(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
             if (html_result != '' && typeof callback === 'function') {
                 callback(html_result);
             }
