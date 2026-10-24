@@ -49,6 +49,32 @@ export async function verificarPonteApp(): Promise<void> {
   checar("o app continua chamando a aba", rpcApp.aberta);
   cr.restaurar();
 
+  secao("ponte do app no Firefox: o app abre a porta com o rele do background");
+  {
+    const g = globalThis as { chrome?: unknown };
+    const antes = g.chrome;
+    const nomes: string[] = [];
+    let ladoAba: PortaRpc | null = null;
+    g.chrome = {
+      runtime: {
+        getURL: (c: string) => `moz-extension://abc/${c}`,
+        connect: ({ name }: { name: string }) => {
+          nomes.push(name);
+          const [app, aba] = parDePortas();
+          ladoAba = aba;
+          return app;
+        },
+        onConnect: { addListener: () => undefined },
+      },
+    };
+    const conexaoFx = esperarConexaoDaAba("seipro-teste", { eco: (x) => x });
+    const rpcFx = await conexaoFx;
+    checar("no Firefox o app conecta ao rele pelo nome do canal", nomes.join() === "seipro-teste");
+    const rpcAbaFx = criarRpc(ladoAba!);
+    checar("a aba chama o app pela porta do rele", (await rpcAbaFx.chamar<string>("eco", "ola")) === "ola" && rpcFx.aberta);
+    g.chrome = antes;
+  }
+
   secao("ponte do app: porta do painel exposta para a aba");
   const doc = instalarDom('<html><body><form id="frmProcedimentoControlar"></form></body></html>');
   const mp = montarPainelEmbutido(doc, {
