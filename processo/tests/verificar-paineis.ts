@@ -521,7 +521,8 @@ export async function verificarPaineis(): Promise<void> {
       "nome, icone e texto",
       /Para assinatura/.test(corpoTexto(c.doc, "marcador")) &&
         /ver com a chefia/.test(corpoTexto(c.doc, "marcador")) &&
-        p?.querySelector("img.spro-p-marcador-icone")?.getAttribute("src") === "svg/marcador_verde.svg?18",
+        p?.querySelector("svg.spro-tag")?.getAttribute("data-cor") === "verde" &&
+        (p?.querySelector("svg.spro-tag")?.getAttribute("style") ?? "").includes("#00ff00"),
     );
     checar(
       "prazo vencido em destaque",

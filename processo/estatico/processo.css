@@ -273,6 +273,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   font-weight: 650;
 }
 .spro-p-copiavel img,
+.spro-p-copiavel .spro-tag,
 .spro-p-marcador-icone {
   width: var(--spro-p-icone);
   height: var(--spro-p-icone);
@@ -545,16 +546,54 @@ dialog.spro-p-dialogo .spro-dialogo-corpo {
 .spro-p-grade .spro-campo {
   width: 100%;
 }
-.spro-p-lista {
-  padding: 4px;
+/* Seletor com busca dos modais (criarCombo): ocupa a largura do campo, com o botao do tamanho dos outros campos. */
+.spro-p-campo .spro-p-combo {
+  width: 100%;
+  min-height: 32px;
 }
-.spro-p-lista option {
-  padding: 4px 8px;
-  border-radius: var(--spro-raio-p);
+.spro-p-campo .spro-p-combo .spro-combo-texto {
+  flex: 1 1 auto;
 }
-.spro-p-busca {
-  display: grid;
-  gap: 6px;
+dialog.spro-p-dialogo .spro-combo-pop {
+  max-width: calc(100vw - 32px);
+}
+/* O CSS do SEI pinta todo input da pagina de topo (fundo cinza, borda); a busca do seletor volta a ser transparente. */
+dialog.spro-p-dialogo .spro-combo-pop input.spro-combo-busca {
+  height: 38px;
+  padding: 0;
+  color: var(--spro-texto);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+/* Etiqueta do marcador: preenchida na cor dele (tema claro) ou na versao mais clara (tema escuro), com um contorno fino
+   que segura o amarelo no branco e o azul marinho no escuro. */
+.spro-tag {
+  flex: none;
+  color: var(--spro-tag, #9aa3ac);
+  stroke: color-mix(in srgb, var(--spro-texto) 32%, transparent);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+[data-tema="escuro"] .spro-tag {
+  color: var(--spro-tag-escuro, #9aa3ac);
+}
+.spro-combo > .spro-tag,
+.spro-combo-texto > .spro-tag,
+.spro-combo-op > .spro-tag {
+  color: var(--spro-tag, #9aa3ac);
+}
+[data-tema="escuro"] .spro-combo > .spro-tag,
+[data-tema="escuro"] .spro-combo-texto > .spro-tag,
+[data-tema="escuro"] .spro-combo-op > .spro-tag {
+  color: var(--spro-tag-escuro, #9aa3ac);
+}
+.spro-p-nota-marcador {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .spro-p-grade {
   display: grid;

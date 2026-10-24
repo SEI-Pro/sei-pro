@@ -1,42 +1,40 @@
-import { h, icone } from "@comum/ui/dom";
+import { h } from "@comum/ui/dom";
 import type { MarcadorDoPainel, OpcaoLista } from "@nucleo/dominio/painelProcesso";
 import { comporTextoMarcador, separarTextoMarcador } from "../../modelo/texto";
+import { tagMarcador } from "../../ui/tagMarcador";
 import type { ContextoProcesso } from "../contexto";
-import { abrirDialogo, botaoPrimario, campo, interruptor, listaComBusca, preencher, rodape } from "./comum";
+import { abrirDialogo, botaoPrimario, campo, escolhaComBusca, interruptor, preencher, rodape } from "./comum";
+import { opcoesDeMarcadores } from "./opcoes";
 
 const hojeIso = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /** Adiciona um marcador ao processo ou edita o texto/prazo de um que já está nele. */
 export function abrirModalMarcador(ctx: ContextoProcesso, item?: MarcadorDoPainel): void {
-  const lugar = h("div", { class: "spro-p-modal-lugar" }, h("p", { class: "spro-p-nota" }, "Carregando os marcadores…"));
+  const lugar = h("div", { class: "spro-p-modal-lugar" });
   const d = abrirDialogo(ctx, {
     titulo: item ? "Editar marcador" : "Adicionar marcador",
     icone: "etiqueta",
     largura: 520,
     conteudo: [lugar],
   });
-  void ctx.op
-    .opcoesMarcador()
-    .then((opcoes) => {
-      if (!d.el.isConnected) return;
-      montar(ctx, d, lugar, opcoes, item);
-    })
-    .catch((e) => {
-      d.erro(e instanceof Error ? e.message : "Não foi possível carregar os marcadores.");
-      lugar.replaceChildren();
-    });
+  montar(ctx, d, lugar, item);
 }
 
-function montar(
-  ctx: ContextoProcesso,
-  d: ReturnType<typeof abrirDialogo>,
-  lugar: HTMLElement,
-  opcoes: OpcaoLista[],
-  item?: MarcadorDoPainel,
-): void {
+function montar(ctx: ContextoProcesso, d: ReturnType<typeof abrirDialogo>, lugar: HTMLElement, item?: MarcadorDoPainel): void {
   const atual = item ? separarTextoMarcador(item.texto) : { prazo: null, texto: "" };
-  const lista = listaComBusca(opcoes, item ? opcoes.find((o) => o.texto === item.nome)?.valor : undefined, "marcadores");
+  let opcoes: OpcaoLista[] = [];
+  const lista = escolhaComBusca({
+    rotulo: "Marcador",
+    vazio: "Escolher um marcador…",
+    dicaBusca: "Buscar marcador…",
+    limite: 150,
+    carregar: async () => {
+      opcoes = await ctx.op.opcoesMarcador();
+      return opcoesDeMarcadores(opcoes, ctx.topo);
+    },
+    valor: () => (item ? opcoes.find((o) => o.texto === item.nome)?.valor : undefined),
+  });
 
   const controlar = interruptor("Controlar prazo", Boolean(atual.prazo), (v) => (linhasPrazo.hidden = !v));
   const vencimento = interruptor("Controlar vencimento (“Até”)", Boolean(atual.prazo?.vencimento), () => {});
@@ -80,7 +78,14 @@ function montar(
   preencher(
     lugar,
     campo("Marcador", lista.el),
-    item ? h("p", { class: "spro-p-nota" }, icone("etiqueta", 12), ` Atual: ${item.nome}. Escolher outro troca o marcador.`) : null,
+    item
+      ? h(
+          "p",
+          { class: "spro-p-nota spro-p-nota-marcador" },
+          tagMarcador(item.icone, 13, ctx.topo),
+          ` Atual: ${item.nome}. Escolher outro troca o marcador.`,
+        )
+      : null,
     controlar.el,
     linhasPrazo,
     campo("Texto", texto),

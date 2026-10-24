@@ -3,10 +3,9 @@
  * `dialog.spro-dialogo` dos outros módulos: sem botão Cancelar (o X e o Esc fecham). Durante a gravação, X e Esc
  * ficam travados, os botões desabilitados, e o erro volta no próprio modal, sem perder o que o usuário digitou.
  */
+import { type Combo, criarCombo, type OpcaoCombo } from "@comum/ui/combobox";
 import { type Filho, h, icone, type NomeIcone } from "@comum/ui/dom";
 import type { ResultadoEscrita } from "@nucleo/dominio/escrita";
-import type { OpcaoLista } from "@nucleo/dominio/painelProcesso";
-import { paraBusca } from "../../modelo/texto";
 import { avisarNoTopo, mensagemDeErro } from "../comum";
 import type { ContextoProcesso } from "../contexto";
 import { garantirEstilo, temaEscuro } from "../estilo";
@@ -58,7 +57,9 @@ export function abrirDialogo(ctx: Pick<ContextoProcesso, "topo" | "doc">, o: Opc
   ctx.topo.body.append(dlg);
   dlg.showModal();
   dlg
-    .querySelector<HTMLElement>(".spro-dialogo-corpo :is(input:not([type=hidden]):not([type=checkbox]), textarea, select)")
+    .querySelector<HTMLElement>(
+      ".spro-dialogo-corpo :is(input:not([type=hidden]):not([type=checkbox]), textarea, select, button[role=combobox])",
+    )
     ?.focus({ preventScroll: true });
   return {
     el: dlg,
@@ -124,51 +125,93 @@ export function interruptor(rotulo: string, marcado: boolean, aoMudar: (v: boole
   return { el: h("label", { class: "spro-p-opcao" }, input, h("span", {}, rotulo)), input };
 }
 
-export interface ListaComBusca {
-  el: HTMLElement;
-  valor(): string;
-  definir(v: string): void;
+export interface ConfigEscolha {
+  /** Rótulo acessível do campo. */
+  rotulo: string;
+  /** Texto do botão sem nada escolhido. */
+  vazio: string;
+  /** Opções já em mãos... */
+  opcoes?: OpcaoCombo[];
+  /** ...ou a carga delas: o botão mostra "Carregando…", a lista um esqueleto, e a falha oferece "Tentar de novo". */
+  carregar?: () => Promise<OpcaoCombo[]>;
+  /** Só carrega quando alguém chamar `carregarAgora()` (ex.: a hipótese legal, que só existe no nível restrito). */
+  adiar?: boolean;
+  /** Valor inicial; a função recebe as opções que chegaram (a atual pode depender delas). */
+  valor?: string | ((opcoes: OpcaoCombo[]) => string | undefined);
+  aoMudar?: (valor: string) => void;
+  /** Caixa de busca: padrão é mostrar sempre (a lista é de escolha única e quase sempre longa). */
+  busca?: boolean;
+  limite?: number;
+  resumo?: (mostradas: number, achadas: number, total: number) => string;
+  dicaBusca?: string;
 }
 
-/** Lista de escolha com caixa de busca (no lugar do select com Chosen do legado); filtra sem diferenciar acento nem caixa. */
-export function listaComBusca(
-  opcoes: OpcaoLista[],
-  atual: string | undefined,
-  rotulo: string,
-  aoMudar?: (v: string) => void,
-): ListaComBusca {
-  const sel = h("select", {
-    class: "spro-campo spro-p-lista",
-    size: String(Math.min(8, Math.max(4, opcoes.length))),
-    "aria-label": rotulo,
-  });
-  let valor = atual ?? "";
-  const desenhar = (termo: string) => {
-    const t = paraBusca(termo);
-    const visiveis = t ? opcoes.filter((x) => paraBusca(x.texto).includes(t)) : opcoes;
-    sel.replaceChildren(
-      ...visiveis.map((x) => {
-        const o = h("option", { value: x.valor }, x.texto);
-        o.selected = x.valor === valor;
-        return o;
-      }),
-    );
-  };
-  sel.addEventListener("change", () => {
-    valor = sel.value;
-    aoMudar?.(valor);
-  });
-  const busca = h("input", { type: "search", class: "spro-campo", placeholder: "Buscar…", "aria-label": `Buscar em ${rotulo}` });
-  busca.addEventListener("input", () => desenhar(busca.value));
-  desenhar("");
-  const el = h("div", { class: "spro-p-busca" }, opcoes.length > 8 ? busca : null, sel);
-  return {
-    el,
-    valor: () => valor,
-    definir(v) {
-      valor = v;
-      desenhar(busca.value);
+export interface EscolhaComBusca {
+  /** O botão do seletor (`role=combobox`). */
+  el: HTMLButtonElement;
+  combo: Combo;
+  valor(): string;
+  definir(v: string): void;
+  opcoes(): OpcaoCombo[];
+  /** Resolve quando a carga terminou (bem ou mal). */
+  pronto: Promise<void>;
+  /** Começa a carga adiada (e não repete uma que já está feita ou em curso). */
+  carregarAgora(): Promise<void>;
+}
+
+/** Seletor de escolha única com busca (o `criarCombo` do SEI Pro): no lugar do `<select>` nativo e do Chosen do legado. */
+export function escolhaComBusca(cfg: ConfigEscolha): EscolhaComBusca {
+  let lista = cfg.opcoes ?? [];
+  let atual = typeof cfg.valor === "string" ? cfg.valor : "";
+  const escolhidos = (): string[] => (atual || lista.some((o) => o.valor === "") ? [atual] : []);
+  const combo = criarCombo({
+    rotulo: cfg.rotulo,
+    opcoes: () => lista,
+    valor: escolhidos(),
+    vazio: cfg.carregar && !cfg.adiar ? "Carregando…" : cfg.vazio,
+    busca: cfg.busca ?? true,
+    ...(cfg.limite !== undefined ? { limite: cfg.limite } : {}),
+    ...(cfg.resumo ? { resumo: cfg.resumo } : {}),
+    ...(cfg.dicaBusca ? { dicaBusca: cfg.dicaBusca } : {}),
+    classe: "spro-p-combo",
+    larguraLista: 260,
+    aoMudar: (v) => {
+      atual = v[0] ?? "";
+      cfg.aoMudar?.(atual);
     },
+  });
+  const carregar = cfg.carregar;
+  let andamento: Promise<void> | null = null;
+  const carregarAgora = (): Promise<void> => {
+    if (!andamento) andamento = buscar();
+    return andamento;
+  };
+  async function buscar(): Promise<void> {
+    if (!carregar) return;
+    combo.definirVazio("Carregando…");
+    combo.definirEstado({ tipo: "carregando" });
+    try {
+      lista = await carregar();
+      if (typeof cfg.valor === "function") atual = cfg.valor(lista) ?? atual;
+      combo.definir(escolhidos());
+      combo.definirVazio(cfg.vazio);
+      combo.definirEstado({ tipo: "pronto" });
+    } catch (e) {
+      combo.definirVazio("Não foi possível carregar");
+      combo.definirEstado({ tipo: "erro", mensagem: mensagemDeErro(e), tentar: () => void buscar() });
+    }
+  }
+  return {
+    el: combo.el,
+    combo,
+    valor: () => atual,
+    definir(v) {
+      atual = v;
+      combo.definir(escolhidos());
+    },
+    opcoes: () => lista,
+    pronto: cfg.adiar ? Promise.resolve() : carregarAgora(),
+    carregarAgora,
   };
 }
 

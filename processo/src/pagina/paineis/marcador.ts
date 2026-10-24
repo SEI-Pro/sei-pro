@@ -4,6 +4,7 @@ import type { DadoMarcador } from "../../modelo/dados";
 import { dataBrasileira, prazoNativoDaPagina, separarTextoMarcador, situacaoDoPrazo } from "../../modelo/texto";
 import { corpoPorEstado, vazio } from "../../ui/estados";
 import { botaoDeAcao } from "../../ui/painel";
+import { tagMarcador } from "../../ui/tagMarcador";
 import { avisarNoTopo } from "../comum";
 import type { ContextoProcesso } from "../contexto";
 import { confirmar } from "../modais/comum";
@@ -35,15 +36,11 @@ async function remover(ctx: ContextoProcesso, m: MarcadorDoPainel): Promise<void
 
 function itemMarcador(ctx: ContextoProcesso, m: MarcadorDoPainel, editavel: boolean): HTMLElement {
   const { texto } = separarTextoMarcador(m.texto);
-  const img = m.icone ? h("img", { class: "spro-p-marcador-icone", src: m.icone, alt: "" }) : icone("etiqueta", 14);
+  // A etiqueta vem ANTES do nome, na cor do marcador.
+  const nome = copiavel(ctx, m.nome, "forte");
+  nome.prepend(tagMarcador(m.icone, 15, ctx.doc));
   return linha(
-    h(
-      "div",
-      { class: "spro-p-marcador" },
-      copiavel(ctx, m.nome, "forte", img),
-      chipPrazo(ctx, m.texto),
-      texto ? copiavel(ctx, texto, "suave") : null,
-    ),
+    h("div", { class: "spro-p-marcador" }, nome, chipPrazo(ctx, m.texto), texto ? copiavel(ctx, texto, "suave") : null),
     editavel && m.id
       ? h(
           "span",

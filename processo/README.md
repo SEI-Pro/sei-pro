@@ -980,6 +980,83 @@ em um iframe OCULTO (`frmCheckerProcessoPro`): uma primeira versão do editor tr
 - Anotação inline: SEI 5 não exercitado ao vivo (o editor só usa o formulário de `definirAnotacao`, já provado nos dois SEI nos testes do núcleo). O foco não volta ao campo quando a árvore se refaz e o painel é remontado.
   "Sair do campo grava" depende de `topo.activeElement` (quadro visível) para distinguir clique em outro quadro de captura de tela: em SEI com outra estrutura de quadros esse caso pode não gravar, o botão Salvar e o Ctrl+Enter continuam valendo.
 
+## Seletores com busca nos modais (24/10/2026)
+
+As listas de escolha única dos modais (a lista nativa de rolagem da Atribuição e o `<select multiple>` do Marcador, que ficaram feios no SEI) viraram o
+**seletor com busca do SEI Pro**, `criarCombo` de `@comum/ui/combobox`, o mesmo de Favoritos, Projetos, Demandas e Histórico. O popup mora DENTRO do
+`dialog.spro-dialogo` (não é cortado) e sobe quando falta espaço embaixo.
+
+### O que trocou
+
+| Modal | Antes | Agora |
+| --- | --- | --- |
+| Atribuição | campo Buscar + `<select size>` com "login - Nome" | seletor com busca por login e nome (sem acento nem caixa): **login** forte e nome completo suave; o usuário atual vem marcado; contagem "15 usuários na unidade"; "Remover atribuição" segue como botão (só aparece com atribuição) |
+| Marcador (adicionar e editar) | `<select multiple>` | seletor com busca; cada opção e o valor escolhido com a **etiqueta SVG na cor do marcador** (e a nota "Atual: …" do editar); prazo, vencimento e texto como estavam |
+| Acompanhamento especial: Grupo | `<select>` | seletor com "(sem grupo)" como primeira opção |
+| Tipo de processo | lista com busca (≥ 9 itens) | seletor com busca, 150 por vez e "Mostrando 150 de 584. Digite para refinar." |
+| Nível de acesso: Hipótese legal | lista com busca | seletor com busca; só é pedida ao SEI quando o nível é Restrito (`adiar`), uma vez só |
+
+Não mudaram: assuntos e interessados (autocompletar próprio), o seletor segmentado Público/Restrito (dois itens, `radiogroup`) e todas as regras de gravação.
+`listaComBusca` e o CSS `.spro-p-lista`/`.spro-p-busca` foram removidos.
+
+### Estados e acessibilidade
+
+`escolhaComBusca` (`src/pagina/modais/comum.ts`) monta o seletor e cuida da carga: o modal abre na hora; o botão mostra "Carregando…" (`aria-busy`) e a
+lista, um esqueleto; a falha vira "Não foi possível carregar" no botão (borda de erro) e, na lista, a mensagem (`role=alert`) com **Tentar de novo**
+(também alcançável por Tab). `role=combobox` no botão, `listbox`/`option` na lista, `aria-expanded`, `aria-activedescendant` (já do componente),
+`aria-label` no botão e na busca. Teclado: digitar no botão abre já com a letra, setas, Home/End, Enter escolhe, Esc fecha SÓ a lista (o modal fica), Tab.
+Sem `title` e sem `innerHTML`; o foco inicial do modal cai no seletor.
+
+### Cores do marcador (`src/ui/tagMarcador.ts`)
+
+O SEI diz a cor pelo nome do arquivo do ícone (`data-imagesrc="svg/marcador_azul_marinho.svg?18"` no `<option>`, `<img src>` na tabela do processo). Os 32
+nomes do SEI 4.1/5.0 (36 arquivos menos adicionar, anotacao, gerenciar e remover) foram mapeados para o hex do `fill` dos SVG do 5.0.0. Dois temas: no claro vale o hex do
+SEI; no escuro, o que tem luminância relativa < 0,17 é clareado até passar disso (azul marinho `#002d9e` vira `#6681c5`, verde escuro e vinho idem) e o preto vira `#d5d9de`.
+Um contorno fino (a cor do texto a 32%) segura o amarelo e o branco no fundo claro. Sem ícone ou nome desconhecido: cinza `#9aa3ac` nos dois temas (marcador inativo
+ou sem cor). A etiqueta é `glifo("tag")` com `--spro-tag` e `--spro-tag-escuro` no `style`; o CSS escolhe pelo `data-tema="escuro"`. O painel **Marcador** do quadro
+passou a usar a mesma etiqueta (antes era o `<img>` do SEI, que não acompanhava o tema escuro: o preto sumia), agora ANTES do nome.
+
+### Componente comum (`sei-comum/src/ui/combobox.ts`, `base.css`): o que foi acrescentado (tudo opcional, usos existentes intactos)
+
+- `OpcaoCombo.complemento` (texto suave ao lado do rótulo; entra na busca e no destaque) e `OpcaoCombo.marca` (fábrica de um nó à esquerda, na opção e no botão).
+- `ConfigCombo.limite` (desenha N opções; o resto aparece ao filtrar, com o aviso de quantas faltam), `resumo` (frase sob a lista) e `dicaBusca`.
+- `Combo.definirEstado({tipo: "pronto" | "carregando" | "erro", ...})`, com esqueleto, mensagem e "Tentar de novo" (`prefers-reduced-motion` desliga o brilho).
+- Na ordenação da busca, quem tem o termo no início do rótulo vem antes; depois, quem o tem no início de uma palavra do rótulo OU do complemento.
+
+### Testes
+
+`tests/verificar-combo-modais.ts` (68 verificações): cores (32 nomes, claro/escuro, luminância, desconhecida), opções (login/nome, marca nova por chamada), e cada modal com
+operações falsas: carregando com esqueleto, filtro por login e por nome sem acento, teclado, valor inicial, Remover atribuição, erro e Tentar de novo, marcador (tag na cor, prazo, edição,
+troca tira o antigo), grupo "(sem grupo)", 220 tipos limitados e hipótese só no Restrito. Em `sei-comum`, `verificarComboboxExtensoes` cobre complemento, marca, estados e lista longa.
+
+### Resultado ao vivo (24/10/2026, SEI SP de treinamento 4.1.5, unidade TESTE, processo `99906.713-630.000032/2025-82`)
+
+| Cenário | Resultado |
+| --- | --- |
+| Atribuição: abrir | esqueleto enquanto carrega (4 linhas), depois 15 usuários; `pedro.soares` marcado e no botão; foco no seletor |
+| Atribuição: buscar, atribuir, remover, devolver | "lucas" achou `lscalima`; Enter + Salvar: painel "atribuído para lscalima"; Remover atribuição: "não atribuído"; de volta a `pedro.soares`; reaberto: **igual ao original** |
+| Marcador: adicionar com cor e desfazer | `Teste!` (laranja) com o texto "combo teste": painel com a etiqueta laranja; Editar abre com o marcador, a tag e o texto; remover pelo painel; reaberto: `Para Bruna assinar` (azul marinho) e `teste` (preto), **igual ao original** |
+| Cores | as 14 opções do SEI SP com a cor certa (rosa, vermelho, amarelo, branco com contorno, azul marinho, verde amazonas, laranja, preto...) |
+| Claro e escuro | lista, busca, destaque, esqueleto e painel legíveis nos dois; azul marinho e preto viram tons claros no escuro |
+| Esc | com a lista aberta, fecha só a lista; de novo, fecha o modal |
+| Larguras e alturas | viewports de 420x560, 360x740 e 900x420: lista dentro da janela (encolhe em altura); com o modal mais embaixo a lista abre PARA CIMA |
+| Tipo de processo | 584 tipos: 150 desenhados + resumo "584 tipos" e "Mostrando 150 de 584"; "servicos" filtra para 61, com o trecho em destaque |
+| Hipótese legal | lista de hipóteses do SEI no seletor, só pedida ao abrir o nível restrito |
+| Console | nenhum erro nem aviso do módulo |
+
+Capturas em `scratchpad/live/shots/`: `combo-atrib-{0-carregando,1-fechado,2-aberto,3-filtro}-{claro,escuro}.png`, `combo-marc-{1-fechado,2-aberto,3-escolhido}-{claro,escuro}.png`,
+`combo-marc-4-preenchido-claro.png`, `combo-marc-5-painel-{claro,escuro}.png`, `combo-marc-6-editar-claro.png`, `combo-tipo-{1-aberto,2-filtro}-{claro,escuro}.png`,
+`combo-acomp-1-aberto-claro.png`, `combo-nivel-1-aberto-claro.png`, `combo-largura-420-baixa.png`, `combo-largura-360.png`, `combo-altura-420.png`, `combo-sobe-quando-falta-espaco.png`.
+
+Armadilha: o CSS do SEI pinta todo `input` da janela de topo (fundo cinza `#dfdfdf`) e vencia o `.spro-combo-busca` do componente; `processo.css` repete a regra com `dialog.spro-p-dialogo .spro-combo-pop input.spro-combo-busca`.
+
+### Divergências e pendências
+
+- "Sem atribuição" ficou como o botão existente (Remover atribuição), não como item da lista: é uma ação destrutiva, fica separada e só aparece quando há atribuição.
+- A capa (quadro do visualizador) ainda usa o `<img>` do SEI para o marcador; só o painel do quadro da árvore e os modais ganharam a etiqueta própria.
+- Marcador no SEI 5: não exercitado ao vivo (o `data-imagesrc` e a tabela do processo vêm do fonte do 5.0.0).
+- Os bundles de Favoritos, Projetos, Demandas, Histórico, Processos em Lote, Ações em Lote, Documentos em Lote e Grade do controle foram regerados (o CSS e o componente comuns mudaram; nada do comportamento deles).
+
 ## Fechamento (etapa 6, Task 13)
 
 ### Fluxo completo ao vivo, numa sessão contínua (SEI SP de treinamento 4.1.5, unidade TESTE, 24/10/2026)
