@@ -1,6 +1,7 @@
 import type { Area } from "@comum/armazenamento/area";
-import { RepositorioProcesso } from "../repositorio";
+import { RepositorioHistorico, RepositorioProcesso } from "../repositorio";
 import { ESPERA_TENTATIVA_MS, TENTATIVAS_PADRAO } from "./constantes";
+import type { HistoricoGuardado } from "./dados";
 import type { EntradaCache, Fatia, NomeFatia } from "./tipos";
 
 export interface DepsLoja {
@@ -23,6 +24,8 @@ export class LojaProcesso {
   private readonly agora: () => number;
   private readonly esperar: (ms: number) => Promise<void>;
   private readonly repo: RepositorioProcesso;
+  private readonly repoHistorico: RepositorioHistorico;
+  private historico: HistoricoGuardado | null | undefined;
   private readonly fatias = new Map<NomeFatia, Fatia<unknown>>();
   private readonly ouvintes = new Set<(n: NomeFatia) => void>();
   private readonly emAndamento = new Map<NomeFatia, Promise<void>>();
@@ -33,8 +36,9 @@ export class LojaProcesso {
   private gravando: Promise<void> = Promise.resolve();
 
   constructor(area: Area, escopo: string, id: string, deps: DepsLoja = {}) {
-    this.repo = new RepositorioProcesso(area, escopo, id);
     this.agora = deps.agora ?? Date.now;
+    this.repo = new RepositorioProcesso(area, escopo, id);
+    this.repoHistorico = new RepositorioHistorico(area, escopo, id, this.agora);
     this.esperar = deps.esperar ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.sigiloso = deps.sigiloso ?? false;
   }
@@ -108,6 +112,23 @@ export class LojaProcesso {
       }
     }
     this.definir<T>(n, { estado: "erro", dado: anterior.dado, erro: mensagem(falha), em: this.agora() });
+  }
+
+  /**
+   * O histórico completo guardado (memória, senão o cache persistente), vencido ou não. Processo sigiloso nunca tem:
+   * o histórico dele não é coletado nem guardado.
+   */
+  async lerHistorico(): Promise<HistoricoGuardado | null> {
+    if (this.sigiloso) return null;
+    if (this.historico === undefined) this.historico = await this.repoHistorico.ler();
+    return this.historico;
+  }
+
+  /** Guarda o histórico coletado (memória e cache persistente; falha do storage é engolida). */
+  async guardarHistorico(h: HistoricoGuardado): Promise<void> {
+    if (this.sigiloso) return;
+    this.historico = h;
+    await this.repoHistorico.gravar(h);
   }
 
   private carregarCache(): Promise<EntradaCache | null> {

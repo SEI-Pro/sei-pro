@@ -6078,6 +6078,18 @@ function getBlocoProcessoHistorico() {
     return blocoProcesso;
 }
 function initGanttHistoryProc(TimeOut = 9000) {
+    // Gantt novo (js/init_processo_arvore.js, SEI Pro Lab): o modal e dele. O quadro da arvore marca o proprio <html> e escuta
+    // o pedido no proprio documento (o content script mora no mundo isolado desse quadro).
+    if (TimeOut == 9000) {
+        try {
+            var ifrGanttPro = getJanelaProcessoPro().document.getElementById('ifrArvore');
+            var docGanttPro = ifrGanttPro && ifrGanttPro.contentDocument;
+            if (docGanttPro && docGanttPro.documentElement.hasAttribute('data-seipro-processo-gantt')) {
+                docGanttPro.dispatchEvent(new CustomEvent('spro-processo-gantt-abrir'));
+                return;
+            }
+        } catch (e) {}
+    }
     if (TimeOut <= 0) {
         // Sem o Gantt nao ha o que abrir: troca o "Aguarde..." por um aviso em vez de deixa-lo na tela.
         alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel carregar o hist\u00F3rico de tramita\u00E7\u00E3o do processo. Recarregue a p\u00E1gina e tente novamente.');

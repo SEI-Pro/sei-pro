@@ -6,7 +6,7 @@ import { copiavel, type DefPainel, fatia, linha } from "./comum";
 /**
  * Bloco interno não tem leitura barata e sem efeito colateral: só sai do histórico completo. Decisão do autor:
  * o painel mostra o bloco quando o histórico completo está em cache (30 min, coletado por clique) e, senão,
- * apenas um link discreto “Carregar do histórico”. Nada coleta sozinho.
+ * apenas um link discreto “Carregar do histórico” (que coleta, com progresso). Nada coleta sozinho.
  */
 export const painelBlocoInterno: DefPainel = {
   tipo: "bloco_interno",
@@ -18,12 +18,23 @@ export const painelBlocoInterno: DefPainel = {
     if (d && historicoVale(d.coletadoEm, ctx.agora().getTime())) {
       return { estado: "pronto", desenho: { corpo: [linha(d.descricao ? copiavel(ctx, d.descricao) : nota("Nenhum bloco localizado."))] } };
     }
-    const aviso = h("span", { class: "spro-p-nota", hidden: true }, "A coleta do histórico ainda não está disponível nesta versão.");
+    const aviso = h("span", { class: "spro-p-nota", hidden: true }, "Não foi possível carregar o histórico do processo.");
     const pedir = h("button", { type: "button", class: "spro-p-link discreto" }, "Carregar do histórico");
     pedir.addEventListener("click", () => {
-      void ctx.aoPedirHistorico().then((ok) => {
-        aviso.hidden = ok;
-      });
+      if (pedir.disabled) return;
+      pedir.disabled = true;
+      aviso.hidden = true;
+      pedir.textContent = "Carregando…";
+      void ctx
+        .aoPedirHistorico((feito, total) => {
+          pedir.textContent = `Carregando… página ${feito} de ${total}`;
+        })
+        .then((ok) => {
+          // Com a coleta pronta a fatia mudou e o painel já foi redesenhado; este botão só importa quando falhou.
+          pedir.disabled = false;
+          pedir.textContent = "Carregar do histórico";
+          aviso.hidden = ok;
+        });
     });
     return { estado: "pronto", desenho: { corpo: [h("div", { class: "spro-p-linha" }, pedir, aviso)] } };
   },

@@ -2,13 +2,19 @@ import type { Area } from "@comum/armazenamento/area";
 import { obterPorPrefixo } from "@comum/armazenamento/colecao";
 import {
   chaveCache,
+  chaveHistorico,
   escopoValido,
+  GUARDA_HISTORICO_MS,
   MAX_BYTES_CACHE,
+  MAX_BYTES_HISTORICO,
+  MAX_PROCESSOS_HISTORICO,
   MAX_BYTES_ENTRADA,
   MAX_PROCESSOS_CACHE,
   PODA_A_CADA,
   prefixoCache,
+  prefixoHistorico,
 } from "./modelo/constantes";
+import type { HistoricoGuardado } from "./modelo/dados";
 import type { EntradaCache } from "./modelo/tipos";
 
 let gravacoes = 0;
@@ -81,6 +87,73 @@ export async function podarCache(area: Area, conferirBytes = false): Promise<num
     for (const k of Object.keys(todas)) if (!lista.some((x) => x.k === k)) apagar.push(k);
     if (apagar.length) await area.remover(apagar);
     return apagar.length;
+  } catch {
+    return 0;
+  }
+}
+
+const historicoValido = (v: unknown): v is HistoricoGuardado =>
+  !!v &&
+  typeof v === "object" &&
+  typeof (v as HistoricoGuardado).coletadoEm === "number" &&
+  typeof (v as HistoricoGuardado).hash === "string" &&
+  typeof (v as HistoricoGuardado).total === "number" &&
+  Array.isArray((v as HistoricoGuardado).andamentos);
+
+/**
+ * Cache do histórico completo de UM processo, numa chave própria (`processo-historico/...`): ele é muito maior que as
+ * fatias dos painéis e não pode tirar o cache delas do ar. Tolerante como o outro: qualquer falha vira “sem cache”.
+ */
+export class RepositorioHistorico {
+  constructor(
+    private readonly area: Area,
+    readonly escopo: string,
+    readonly id: string,
+    private readonly agora: () => number = Date.now,
+  ) {}
+
+  get chave(): string {
+    return chaveHistorico(this.escopo, this.id);
+  }
+
+  async ler(): Promise<HistoricoGuardado | null> {
+    try {
+      const v = (await this.area.obter(this.chave))[this.chave];
+      return historicoValido(v) ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Devolve falso quando não gravou (escopo sem login, histórico grande demais, cota cheia). */
+  async gravar(h: HistoricoGuardado): Promise<boolean> {
+    if (!escopoValido(this.escopo)) return false;
+    try {
+      if (JSON.stringify(h).length > MAX_BYTES_HISTORICO) return false;
+      await this.area.gravar({ [this.chave]: h });
+    } catch {
+      return false;
+    }
+    await podarHistoricos(this.area, this.agora());
+    return true;
+  }
+}
+
+/** Fica o mais novo de cada processo, no máximo `MAX_PROCESSOS_HISTORICO`, e nada com mais de um dia. */
+export async function podarHistoricos(area: Area, agora: number): Promise<number> {
+  try {
+    const todas = await obterPorPrefixo(area, prefixoHistorico);
+    const lista = Object.entries(todas)
+      .filter(([, v]) => historicoValido(v))
+      .map(([k, v]) => ({ k, em: (v as HistoricoGuardado).coletadoEm }))
+      .sort((a, b) => b.em - a.em);
+    const apagar = new Set<string>();
+    lista.forEach((x, i) => {
+      if (i >= MAX_PROCESSOS_HISTORICO || agora - x.em > GUARDA_HISTORICO_MS) apagar.add(x.k);
+    });
+    for (const k of Object.keys(todas)) if (!lista.some((x) => x.k === k)) apagar.add(k);
+    if (apagar.size) await area.remover([...apagar]);
+    return apagar.size;
   } catch {
     return 0;
   }

@@ -4,10 +4,12 @@
  * modais recebem este contexto; nos testes ele é montado com falsos.
  */
 import type { Arvore } from "@nucleo/dominio/arvore";
+import { coletarHistoricoDaArvore } from "@nucleo/dominio/historico";
 import { type AcoesDoPainel, acoesDoPainel } from "@nucleo/dominio/painelProcesso";
 import { type Localizado, lerContexto, Sei } from "@nucleo/sei";
 import type { OpcoesHttp, Pagina } from "@nucleo/sessao/http";
 import { paginaDe } from "@nucleo/sessao/pagina";
+import { type ColetorHistorico, obterHistorico } from "../gantt/coleta";
 import type { LojaProcesso } from "../modelo/loja";
 import type { TipoPainel } from "../modelo/paineis";
 import type { NomeFatia } from "../modelo/tipos";
@@ -41,11 +43,13 @@ export interface ContextoProcesso {
   op: Operacoes;
   /** Refaz a leitura de uma fatia (botão "Tentar de novo" e depois de gravar). */
   recarregar(n: NomeFatia): void;
+  /** O histórico completo do processo (todas as páginas), pelo núcleo. Nos testes, um falso. */
+  coletarHistorico: ColetorHistorico;
   /**
-   * Pede a coleta do histórico completo (Etapa 3). Até lá é inerte: devolve `false` e o painel avisa que ainda
-   * não está disponível. Com a coleta pronta, quem a faz grava a fatia `blocoInterno` e os painéis redesenham.
+   * Pede a coleta do histórico completo (só por clique: spec 8.2). Devolve `false` se não foi possível. Quem coleta
+   * grava a fatia `blocoInterno` e o painel redesenha sozinho. `aoProgresso` recebe “página x de y”.
    */
-  aoPedirHistorico(): Promise<boolean>;
+  aoPedirHistorico(aoProgresso?: (feito: number, total: number) => void): Promise<boolean>;
 }
 
 /**
@@ -98,7 +102,8 @@ export interface DepsContexto {
   /** Para testes: operações falsas. */
   op?: Operacoes;
   agora?: () => Date;
-  aoPedirHistorico?: () => Promise<boolean>;
+  coletarHistorico?: ColetorHistorico;
+  aoPedirHistorico?: ContextoProcesso["aoPedirHistorico"];
 }
 
 export function escopoDoUsuario(host: string, login: string): string {
@@ -117,7 +122,7 @@ export function criarContexto(d: DepsContexto): ContextoProcesso {
     () => d.arv,
     () => paginaDe(d.topo),
   );
-  return {
+  const ctx: ContextoProcesso = {
     doc: d.doc,
     topo: d.topo,
     arv: d.arv,
@@ -137,6 +142,18 @@ export function criarContexto(d: DepsContexto): ContextoProcesso {
     agora: d.agora ?? (() => new Date()),
     op: d.op ?? operacoesDe(sei, d.arv, d.loja),
     recarregar: d.recarregar,
-    aoPedirHistorico: d.aoPedirHistorico ?? (async () => false),
+    coletarHistorico: d.coletarHistorico ?? ((o) => coletarHistoricoDaArvore(sei, d.arv, o)),
+    aoPedirHistorico: async () => false,
   };
+  ctx.aoPedirHistorico =
+    d.aoPedirHistorico ??
+    (async (aoProgresso) => {
+      try {
+        await obterHistorico(ctx, aoProgresso ? { aoProgresso } : {});
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  return ctx;
 }

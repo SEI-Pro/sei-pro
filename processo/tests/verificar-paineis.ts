@@ -391,12 +391,46 @@ export async function verificarPaineis(): Promise<void> {
       "sem historico: so o link “Carregar do historico”",
       link?.textContent === "Carregar do histórico" && !/Nenhum bloco/.test(corpoTexto(c.doc, "bloco_interno")),
     );
+    // O gancho agora coleta (por clique): aqui o coletor falha, e o painel avisa em vez de ficar “carregando”.
+    c.ctx.coletarHistorico = async () => {
+      throw new Error("sem rede");
+    };
     if (link) disparar(link, "click");
-    await tique(10);
+    await tique(20);
+    const aviso = painel(c.doc, "bloco_interno")?.querySelector<HTMLElement>(".spro-p-nota");
     checar(
-      "gancho inerte ate a Etapa 3: avisa que ainda nao esta disponivel",
-      painel(c.doc, "bloco_interno")?.querySelector<HTMLElement>(".spro-p-nota")?.hidden === false,
+      "coleta que falha: avisa e devolve o link (nao fica carregando para sempre)",
+      aviso?.hidden === false && /N\u00E3o foi poss\u00EDvel/.test(aviso.textContent ?? "") && link?.disabled === false && link.textContent === "Carregar do histórico",
     );
+
+    // Coleta que dá certo: o botão mostra o progresso e, no fim, a fatia é publicada e o painel redesenha sozinho.
+    let progride: ((f: number, t: number) => void) | undefined;
+    let concluir: (() => void) | undefined;
+    c.ctx.coletarHistorico = async (o) => {
+      progride = o.aoProgresso;
+      await new Promise<void>((r) => {
+        concluir = r;
+      });
+      return {
+        andamentos: [{ data: "01/10/2026 09:00", dataISO: "2026-10-01T09:00:00", unidade: "TESTE", usuario: "u", descricao: "Processo inserido no bloco interno 7 (Bloco Z)" }],
+        total: 1,
+        hash: "h",
+        completo: true,
+        aproveitouCache: false,
+      };
+    };
+    const link2 = painel(c.doc, "bloco_interno")?.querySelector<HTMLButtonElement>(".spro-p-link.discreto");
+    if (link2) disparar(link2, "click");
+    await tique(10);
+    progride?.(3, 9);
+    checar(
+      "durante a coleta: botao desligado com “pagina 3 de 9”",
+      link2?.disabled === true && /p\u00E1gina 3 de 9/.test(link2.textContent ?? ""),
+      link2?.textContent,
+    );
+    concluir?.();
+    await tique(30);
+    checar("coleta pronta: o painel mostra o bloco do historico, sem novo clique", /bloco interno 7/.test(corpoTexto(c.doc, "bloco_interno")), corpoTexto(c.doc, "bloco_interno"));
 
     let pediu = 0;
     const c2 = cenario();

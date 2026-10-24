@@ -4,7 +4,7 @@
  * Observações, Bloco Interno). O content script roda no document_start, então o atributo existe antes de o
  * legado olhar. Só nos quadros da árvore (acao=procedimento_visualizar), nunca na janela de topo.
  */
-import { ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
+import { ATRIBUTO_GANTT, ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
 
 export function ehQuadroDaArvore(janela: Pick<Window, "location" | "top">): boolean {
   return janela !== janela.top && /[?&]acao=procedimento_visualizar(&|$)/.test(janela.location.search);
@@ -21,6 +21,15 @@ export function marcarAtivo(doc: Document): void {
  */
 export function marcarMenu(doc: Document): void {
   doc.documentElement?.setAttribute(ATRIBUTO_MENU, "1");
+}
+
+/**
+ * Sinal para o legado: com este atributo, `initGanttHistoryProc` (o link “Histórico de tramitação do processo” da capa
+ * legada) não monta mais o frappe-gantt: dispara o evento `spro-processo-gantt-abrir` no documento do quadro da árvore,
+ * onde o `gantt/ligar.ts` abre o modal. Síncrono, só no quadro da árvore.
+ */
+export function marcarGantt(doc: Document): void {
+  doc.documentElement?.setAttribute(ATRIBUTO_GANTT, "1");
 }
 
 /**
