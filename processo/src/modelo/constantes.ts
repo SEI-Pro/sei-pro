@@ -3,6 +3,12 @@ export const ATRIBUTO_PAINEIS = "data-seipro-processo-paineis";
 export const ATRIBUTO_MENU = "data-seipro-processo-menu";
 export const ATRIBUTO_CAPA = "data-seipro-processo-capa";
 export const ATRIBUTO_GANTT = "data-seipro-processo-gantt";
+/** Na JANELA DE TOPO do processo (onde o legado roda): o legado deixa de montar o título da aba (`updateTitlePage`, modo processo). */
+export const ATRIBUTO_TITULO = "data-seipro-processo-titulo";
+/** Na JANELA DE TOPO do processo: o legado deixa de verificar os documentos não assinados no Enviar Processo (`initCheckNaoAssinados`). */
+export const ATRIBUTO_AVISO = "data-seipro-processo-aviso";
+/** Opção do legado (liga/desliga, ligada por padrão): o aviso de documentos não assinados ao enviar o processo. */
+export const OPCAO_NAO_ASSINADOS = "naoassinados";
 /** Evento no documento do quadro da árvore: o legado (link da capa) e a capa nova pedem a abertura do Gantt por ele. */
 export const EVENTO_ABRIR_GANTT = "spro-processo-gantt-abrir";
 /**

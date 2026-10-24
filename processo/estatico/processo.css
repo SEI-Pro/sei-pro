@@ -21,6 +21,7 @@ html[data-seipro-processo-paineis],
 .spro-pm,
 .spro-f-barra,
 .spro-g-impressao,
+.spro-na,
 dialog.spro-dialogo {
   --spro-fundo: #ffffff;
   --spro-fundo-2: #f6f7f9;
@@ -45,6 +46,7 @@ dialog.spro-dialogo {
 .spro-p-raiz[data-tema="escuro"],
 .spro-pm[data-tema="escuro"],
 .spro-f-barra[data-tema="escuro"],
+.spro-na[data-tema="escuro"],
 dialog.spro-dialogo[data-tema="escuro"] {
   --spro-fundo: #1a1d21;
   --spro-fundo-2: #22262b;
@@ -1320,4 +1322,58 @@ html[data-seipro-processo-paineis] #divRelacionados label.newLink i.iconDadosPro
 html[data-seipro-processo-paineis] #divRelacionados .divRelacionadosParcial a,
 html[data-seipro-processo-paineis] #divRelacionadosParciais a {
   font-size: var(--spro-p-fonte-corpo);
+}
+
+/* ---------- Aviso de documentos nao assinados (quadro do Enviar Processo) ---------- */
+.spro-na {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 20px;
+  padding: 4px 10px;
+  font: 400 13px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto);
+  background: var(--spro-fundo-2);
+  border-radius: 6px;
+  vertical-align: middle;
+}
+.spro-na.pendente {
+  background: color-mix(in srgb, var(--spro-perigo) 12%, var(--spro-fundo));
+}
+.spro-na.falha {
+  background: color-mix(in srgb, var(--spro-aviso) 14%, var(--spro-fundo));
+}
+.spro-na-icone {
+  display: inline-flex;
+}
+.spro-na.pendente .spro-na-icone {
+  color: var(--spro-perigo);
+}
+.spro-na.ok .spro-na-icone {
+  color: var(--spro-ok);
+}
+.spro-na.falha .spro-na-icone {
+  color: var(--spro-aviso);
+}
+.spro-na .spro-p-link {
+  color: var(--spro-destaque);
+}
+.spro-na-lista {
+  max-height: 280px;
+  overflow-y: auto;
+}
+.spro-na-lista .spro-p-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  text-align: left;
+}
+.spro-na-data {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  color: var(--spro-suave);
 }

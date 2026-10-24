@@ -51,14 +51,18 @@ export function contarPastas(arv: Pick<Arvore, "pagina">): number {
 }
 
 /** Pastas (id `PASTAn`) em que a árvore ainda não mostra nenhum documento: o SEI as carrega quando o usuário as abre. */
-function pastasSemDocumentos(arv: Pick<Arvore, "pagina" | "documentos">): number {
+export function pastasFechadas(arv: Pick<Arvore, "pagina" | "documentos">): string[] {
   try {
     const ids = [...arv.pagina.html.matchAll(/infraArvoreNo\("PASTA","(PASTA\d+)"/g)].map((m) => m[1] as string);
     const comDocumento = new Set(arv.documentos.map((d) => d.pasta).filter(Boolean));
-    return ids.filter((id) => !comDocumento.has(id)).length;
+    return ids.filter((id) => !comDocumento.has(id));
   } catch {
-    return 0;
+    return [];
   }
+}
+
+export function pastasSemDocumentos(arv: Pick<Arvore, "pagina" | "documentos">): number {
+  return pastasFechadas(arv).length;
 }
 
 export function contagemDaArvore(arv: Pick<Arvore, "documentos">): ContagemDocumentos {

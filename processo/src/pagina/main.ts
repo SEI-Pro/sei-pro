@@ -18,17 +18,22 @@ import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
 import { type ContextoProcesso, criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
 import { criarLeituras } from "./leituras";
-import { dentroDoVerificadorOculto, ehQuadroDaArvore, ehTopoDoProcesso, marcarAtivo, marcarCapa, marcarGantt, marcarMenu } from "./marca";
+import { dentroDoVerificadorOculto, ehQuadroDaArvore, ehTopoDoProcesso, marcarAtivo, marcarCapa, marcarGantt, marcarMenu, marcarTituloEAviso } from "./marca";
+import { ehEnviarProcesso, ligarAviso } from "./aviso/ligar";
 import { ligarFiltro } from "./filtro/barra";
 import { ligarMenuDaArvore } from "./menuDoc/ligar";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
 import { ligarPonteDaCapa } from "./ponteCapa";
+import { ligarTitulo } from "./titulo";
 
 let contextoDaPagina: Promise<ContextoProcesso | null> | null = null;
 
 definirCss(`${base}\n${proprio}`);
-if (ehTopoDoProcesso(window)) marcarCapa(document);
+if (ehTopoDoProcesso(window)) {
+  marcarCapa(document);
+  marcarTituloEAviso(document);
+}
 if (ehQuadroDaArvore(window)) {
   marcarAtivo(document);
   marcarMenu(document);
@@ -46,6 +51,13 @@ if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVeri
   const iniciar = () => void principal().catch((e) => console.warn("[SEI Pro] painéis do processo:", e));
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar, { once: true });
   else iniciar();
+}
+
+// O aviso de documentos não assinados mora no quadro do Enviar Processo (outro quadro, sem painéis nem loja de escrita).
+if (ehEnviarProcesso(window) && !dentroDoVerificadorOculto(window)) {
+  const iniciarAviso = () => void ligarAviso().catch((e) => console.warn("[SEI Pro] aviso de não assinados:", e));
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciarAviso, { once: true });
+  else iniciarAviso();
 }
 
 /** O contexto do processo, montado uma vez e só quando alguém precisa (painéis, menu ou o pedido do Gantt). */
@@ -99,13 +111,22 @@ async function principal(): Promise<void> {
   const comMenu = opcaoLegadaLigada(dataValues, "menurapido");
   // O filtro vale por si (não depende dos painéis nem do menu) e vem ligado: só esconde nós quando o usuário pede.
   const comFiltro = opcaoLegadaLigada(dataValues, OPCAO_FILTRO_ARVORE);
-  if (!comPaineis && !comMenu && !comFiltro) return;
+  // O título da aba vem da especificação (um GET do formulário do processo, ou o cache): vale sem painéis e sem menu.
+  // Só na janela de topo do processo (não em janela auxiliar) e sem `disablequery`, como o legado.
+  const comTitulo = !opcaoLegadaMarcada(dataValues, "disablequery") && ehTopoDoProcesso(window.top as Window);
+  if (!comPaineis && !comMenu && !comFiltro && !comTitulo) return;
   const ctx = await obterContexto();
   if (!ctx) return;
+  if (comTitulo && !ctx.sigiloso) {
+    ligarTitulo(ctx);
+    if (!comPaineis) ctx.recarregar("dadosProcesso");
+  }
   if (comPaineis) {
     manterMontagem(ctx);
     ligarMarcaDoMenu(ctx);
-    for (const n of fatiasNecessarias(ctx)) ctx.recarregar(n);
+    const fatias = new Set(fatiasNecessarias(ctx));
+    if (comTitulo && !ctx.sigiloso) fatias.add("dadosProcesso");
+    for (const n of fatias) ctx.recarregar(n);
     // Histórico completo ainda válido no cache (coletado por clique há menos de 30 min): o Bloco Interno aparece sem rede.
     void restaurarBlocoInterno(ctx).catch(() => undefined);
   }

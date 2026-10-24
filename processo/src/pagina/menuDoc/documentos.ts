@@ -21,6 +21,11 @@ export class DocumentosDaTela {
     return [...this.porId.values()];
   }
 
+  /** Soma um documento lido do DOM (o modelo não o conhece); o que já existe não é trocado. */
+  somar(d: DocumentoArvore): void {
+    if (!this.porId.has(d.id)) this.porId.set(d.id, d);
+  }
+
   tamanho(): number {
     return this.porId.size;
   }

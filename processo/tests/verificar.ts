@@ -6,6 +6,7 @@ import { verificarLoja } from "./verificar-loja";
 import { verificarMenu } from "./verificar-menu";
 import { verificarPaineis } from "./verificar-paineis";
 import { verificarTexto } from "./verificar-texto";
+import { verificarTituloEAviso } from "./verificar-titulo-aviso";
 
 await verificarLoja();
 verificarTexto();
@@ -14,4 +15,5 @@ await verificarMenu();
 await verificarGantt();
 await verificarCapa();
 await verificarFiltro();
+await verificarTituloEAviso();
 resumo();

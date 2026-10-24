@@ -4,7 +4,7 @@
  * Observações, Bloco Interno). O content script roda no document_start, então o atributo existe antes de o
  * legado olhar. Só nos quadros da árvore (acao=procedimento_visualizar), nunca na janela de topo.
  */
-import { ATRIBUTO_CAPA, ATRIBUTO_GANTT, ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
+import { ATRIBUTO_AVISO, ATRIBUTO_CAPA, ATRIBUTO_GANTT, ATRIBUTO_MENU, ATRIBUTO_PAINEIS, ATRIBUTO_TITULO } from "./../modelo/constantes";
 
 export function ehQuadroDaArvore(janela: Pick<Window, "location" | "top">): boolean {
   return janela !== janela.top && /[?&]acao=procedimento_visualizar(&|$)/.test(janela.location.search);
@@ -44,6 +44,16 @@ export function ehTopoDoProcesso(janela: Pick<Window, "location" | "top">): bool
  */
 export function marcarCapa(doc: Document): void {
   doc.documentElement?.setAttribute(ATRIBUTO_CAPA, "1");
+}
+
+/**
+ * Sinais para o legado, também na JANELA DE TOPO e em `document_start`: `updateTitlePage` (modo processo) não grava mais o
+ * título da aba, que passa a vir de `titulo.ts`, e `initCheckNaoAssinados` não coleta mais o histórico para montar o aviso
+ * de documentos não assinados do Enviar Processo, que passa a vir de `aviso/`. Cada um cede por um atributo próprio.
+ */
+export function marcarTituloEAviso(doc: Document): void {
+  doc.documentElement?.setAttribute(ATRIBUTO_TITULO, "1");
+  doc.documentElement?.setAttribute(ATRIBUTO_AVISO, "1");
 }
 
 /**

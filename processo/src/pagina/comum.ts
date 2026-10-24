@@ -68,3 +68,13 @@ export function mensagemDeLeitura(e: unknown): string {
   if (codigo === "SEI_REDE") return "Sem conexão com o SEI.";
   return mensagemDeErro(e);
 }
+
+/** Espera a condição valer (conferida a cada 100 ms) até o prazo. Devolve se valeu. */
+export async function aguardar(condicao: () => boolean, ms: number, passo = 100): Promise<boolean> {
+  const lim = Date.now() + ms;
+  while (Date.now() < lim) {
+    if (condicao()) return true;
+    await new Promise((r) => setTimeout(r, passo));
+  }
+  return condicao();
+}

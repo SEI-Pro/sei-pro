@@ -4102,7 +4102,8 @@ function getActionsOnSendProcess() {
     ifrVisualizacao.find('#divSinRemoveAttributes').remove();
     ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
 
-    if (checkConfigValue('naoassinados') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
+    // O aviso de nao assinados do Enviar Processo agora e do modulo processo/ (a partir da arvore, sem coletar o historico).
+    if (checkConfigValue('naoassinados') && !document.documentElement.hasAttribute('data-seipro-processo-aviso') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
         initCheckNaoAssinados();
     }
     ifrVisualizacao.find('#txtUnidade').on('blur', function(){
@@ -11056,7 +11057,10 @@ function updateTitlePage(mode, dadosProcesso = false) {
     if ( typeof processo.txtDescricao !== 'undefined'  ) {
         var protocolo = (typeof processo !== 'undefined' && typeof processo.txtProtocoloExibir === 'undefined') ? processo.hdnProtocoloFormatado : processo.txtProtocoloExibir;
         if (mode == 'processo') {
-            $('head title').text(processo.txtDescricao+' | SEI - Processo '+protocolo);
+            // O titulo da aba agora e do modulo processo/ (a partir da loja do processo, sem o iframe oculto).
+            if (!document.documentElement.hasAttribute('data-seipro-processo-titulo')) {
+                $('head title').text(processo.txtDescricao+' | SEI - Processo '+protocolo);
+            }
             if (parent.verifyConfigValue('urlamigavel')) {
                 updateUrlPage(true, dadosProcesso);
             }
