@@ -1119,6 +1119,9 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-prazo-nativo {
   margin-top: 4px;
 }
+.spro-p-linha:has(> .spro-p-nivel) {
+  flex-wrap: nowrap;
+}
 .spro-p-nivel {
   display: inline-flex;
   color: var(--spro-destaque);
