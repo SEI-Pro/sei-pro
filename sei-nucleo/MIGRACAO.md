@@ -31,6 +31,8 @@ validar ao vivo · ⏳ ainda não existe (ver fase no plano).
 | `setDataDocs`, `getDocsArvore`, `getListDocumentosArvore`, `getLinksArvore`, `getLinksArvorePasta` | `abrirArvore`, `lerArvore` (nível, hipótese, assinaturas, cancelado, pastas) | ✅ |
 | `ajaxDadosProcessoPro` (`propProcesso`) | `consultarProcesso` | ✅ |
 | `getDadosHistoricoPro`, `getDadosHistoricoPaginacao`, `getArrayHistorico`, `restaurarPaginacaoHistoricoPro` | `andamentos({ tipo: resumido \| completo \| total })` | ✅ |
+| `getDadosHistoricoUrlPro` (completo), `atualizarCacheHistoricoPro`, coletas interrompidas (`registrarColetaHistoricoPro`, `restaurarColetasInterrompidasPro`, `instalarRestauroAoSairPro`) | `coletarHistorico` (cache incremental, progresso, cancelamento, uma coleta por processo) e `historicoSessao.ts` (exclusão entre abas + pendência de restauro). O restauro da sessão É necessário: ver `processo/README.md` | ✅ |
+| `getGanttHistoryProc` (o cálculo) | `calcularPassagens` | ✅ |
 | `getProcessoUnidadePro`, `getProcessosPaginacao`, `getMapaControleProcesso` | `listarCaixa` | ✅ |
 | `getContentDocSEI`, `getDownloadAnexoFromArvore` | `localizarDocumento` + `lerConteudo` | ✅ |
 | `getTypeSEI`, `getListTypesSEI`, `getHipoteseLegal`, `getListaAtribuicaoProcesso`, `getAjaxListaMarcador`, `getListaGruposAcompEsp` | `listarOpcoes`, `tiposDocumento` | ✅ |

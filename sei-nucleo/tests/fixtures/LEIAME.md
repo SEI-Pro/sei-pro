@@ -30,6 +30,15 @@ Somente leitura (GET), na unidade TESTE. Hashes de sessão zerados; o login `283
 
 Não há captura real de árvore do SEI 5 nas fixtures: os testes do menu usam a mesma árvore do 4.1 com a âncora do 5 montada a partir do fonte do 5.0.0 (`arvore_montar.js`: `data-serialtip` no `anchorImg`), marcada como sintética nos próprios testes.
 
+## Capturas do SEI SP Treinamento (4.1.5) para o leitor de andamentos, 24/10/2026
+
+Histórico completo (`hdnTipoHistorico=P`), capturado pelo POST do formulário do histórico (somente leitura de dados; muda o estado do histórico na sessão, que a coleta devolveu ao que era). Hashes de sessão zerados (`hdnInfraHashCriterios`, que é um MD5 da consulta e não da sessão, ficou); os logins e nomes de pessoas (`afarias`, CPFs, `pedro.soares`, nomes completos) viraram `usuarioNN`/`Usuário NN`; os e-mails e o nome do destinatário do acesso externo viraram `fulano@exemplo.com`/`beltrano@exemplo.com`/`FULANO APOSENTADO`.
+
+| Arquivo | Origem |
+|---|---|
+| `sei41/historico_completo_p0.html`, `historico_completo_p1.html` | Páginas 0 e 1 do histórico completo de um processo com 150 andamentos (100 + 50, sem `select` de páginas: só o link de próxima), remessa para várias unidades, reabertura, conclusão, unidades que nunca abriram o processo e linhas `andamentoAberto`. Aqui "Chefia de Gabinete" é o nome de cinco unidades de órgãos diferentes e a sigla SSP-CG aparece com dois nomes. |
+| `sei41/historico_completo_siglas.html` | Histórico completo de um processo com 60 andamentos (uma página): a sigla CGE-CG com dois nomes. |
+
 ## Fixtures sintéticas (não são captura)
 
 | Arquivo | Origem | Substituir |

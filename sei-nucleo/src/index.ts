@@ -45,7 +45,33 @@ export {
   type LinhaAtribuicao,
   type ProcessoRelacionado,
 } from "./dominio/painelProcesso";
-export { andamentos, andamentosDaArvore, andamentosDoLink, type Andamento, type TipoHistorico } from "./dominio/historico";
+export {
+  acrescentarAoCache,
+  andamentos,
+  andamentosDaArvore,
+  andamentosDoLink,
+  coletarHistorico,
+  coletarHistoricoDaArvore,
+  lerHistorico,
+  type Andamento,
+  type CacheHistorico,
+  type HistoricoColetado,
+  type OpcoesColeta,
+  type TipoHistorico,
+} from "./dominio/historico";
+export {
+  calcularPassagens,
+  dataISODe,
+  isoDoRelogio,
+  relogioDe,
+  relogioDoISO,
+  JANELA_REMESSA_MS,
+  ROTULOS,
+  type DocumentoDaPassagem,
+  type FimPassagem,
+  type InicioPassagem,
+  type Passagem,
+} from "./dominio/passagens";
 export { lerCaixaDaPagina, lerLinhaCaixa, listarCaixa, type ProcessoNaCaixa } from "./dominio/caixa";
 export {
   localizarDocumento,
