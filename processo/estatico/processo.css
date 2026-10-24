@@ -358,7 +358,8 @@ dialog.spro-dialogo[data-tema="escuro"] {
   box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
   overflow: hidden;
 }
-.spro-p-raiz[data-tema="escuro"] .spro-p-post-it {
+.spro-p-raiz[data-tema="escuro"] .spro-p-post-it,
+dialog.spro-dialogo[data-tema="escuro"] .spro-p-post-it {
   background: linear-gradient(#e9dc9b, #dccb73);
   border-color: rgb(110 90 15 / 60%);
   box-shadow: 0 4px 8px rgb(0 0 0 / 40%);
@@ -1478,4 +1479,98 @@ dialog.spro-p-dialogo .spro-p-processos-rodape {
 dialog.spro-p-dialogo .spro-p-esqueleto {
   padding: 8px 10px;
   list-style: none;
+}
+
+/* ---------- Edicao da anotacao: o papel do post-it dentro do modal ---------- */
+dialog.spro-p-dialogo .spro-p-post-it-edicao {
+  gap: 6px;
+  padding: 12px 14px 10px;
+  margin-top: 0;
+}
+dialog.spro-p-dialogo .spro-p-post-it-edicao:focus-within {
+  box-shadow: 0 0 0 2px var(--spro-destaque), 0 4px 6px rgb(0 0 0 / 10%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-texto {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  padding: 0;
+  font: 14px/1.5 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto) !important;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  resize: vertical;
+}
+dialog.spro-p-dialogo .spro-p-post-it-texto::placeholder {
+  color: var(--spro-fraco);
+  opacity: 1;
+}
+/* Rodape do papel: o contador ocupa o que sobra e nunca passa por baixo das ferramentas (quebram de linha antes de sobrepor). */
+dialog.spro-p-dialogo .spro-p-post-it-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+  padding-top: 6px;
+  border-top: 1px dashed rgb(150 125 30 / 45%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-rodape .spro-p-contador {
+  flex: 1 1 11em;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--spro-suave) !important;
+}
+dialog.spro-p-dialogo .spro-p-post-it-ferramentas {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 6px;
+  margin-left: auto;
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 3px 9px;
+  font: 600 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-destaque) !important;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao:hover {
+  background: rgb(120 95 10 / 14%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--spro-destaque);
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao[aria-pressed="true"] {
+  color: #fff !important;
+  background: var(--spro-perigo);
+}
+dialog.spro-p-dialogo .spro-p-post-it-data-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--spro-destaque) !important;
+}
+dialog.spro-p-dialogo .spro-p-post-it-data {
+  min-height: 26px;
+  padding: 1px 6px;
+  font: 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto) !important;
+  background: rgb(255 255 255 / 45%) !important;
+  border: 1px solid rgb(150 125 30 / 40%);
+  border-radius: 6px;
+  color-scheme: light;
 }
