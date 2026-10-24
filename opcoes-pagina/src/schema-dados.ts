@@ -478,6 +478,29 @@ export const SECOES_GERAL: Secao[] = [
         padrao: true,
       },
       {
+        nome: "processoparado",
+        rotulo: "Avisar na capa do processo quando ele estiver parado na unidade há mais de (dias; 0 desliga o aviso)",
+        ajuda: "O card \"Na unidade atual\" da capa ganha destaque quando o processo está há mais dias que este limite na sua unidade.",
+        tipo: "numero",
+        icone: "fa fa-hourglass-half",
+        padrao: 15,
+        min: 0,
+        max: 3650,
+        // A capa nova so existe no pacote do Lab.
+        visivelEm: "lab",
+      },
+      {
+        nome: "filtroarvore",
+        rotulo: "Filtro acima da árvore do processo (busca e chips Não assinados, Externos e Cancelados)",
+        ajuda:
+          "Põe uma busca e três botões acima da lista de documentos da árvore para mostrar só o que interessa. Só esconde linhas na tela: não altera o processo nem faz consultas ao SEI. Para incluir os documentos de uma pasta, abra a pasta antes.",
+        tipo: "chave",
+        icone: "fa fa-filter",
+        padrao: true,
+        // O filtro so existe no pacote do Lab.
+        visivelEm: "lab",
+      },
+      {
         nome: "resizearvore",
         rotulo: "Redimensionar automaticamente a árvore do processo pela sua largura total",
         tipo: "chave",

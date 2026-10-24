@@ -1,0 +1,23 @@
+import { resumo } from "./util";
+import { verificarCapa } from "./verificar-capa";
+import { verificarFiltro } from "./verificar-filtro";
+import { verificarGantt } from "./verificar-gantt";
+import { verificarLoja } from "./verificar-loja";
+import { verificarLupa } from "./verificar-lupa";
+import { verificarMenu } from "./verificar-menu";
+import { verificarPaineis } from "./verificar-paineis";
+import { verificarProcessosDoInteressado } from "./verificar-processos-interessado";
+import { verificarTexto } from "./verificar-texto";
+import { verificarTituloEAviso } from "./verificar-titulo-aviso";
+
+await verificarLoja();
+verificarTexto();
+await verificarPaineis();
+await verificarMenu();
+await verificarLupa();
+await verificarProcessosDoInteressado();
+await verificarGantt();
+await verificarCapa();
+await verificarFiltro();
+await verificarTituloEAviso();
+resumo();

@@ -366,6 +366,15 @@ export async function tipoDoDocumento(sei: Sei, numero: string, sinal?: AbortSig
   return { id, nome: nome || id };
 }
 
+/** "Despacho - Minuta" vira "Despacho": a palavra, o hifen que a liga ao resto e os espacos que sobram. */
+export function tirarMinuta(texto: string): string {
+  return texto
+    .replace(/(?:\s*[-\u2013]\s*)?\bminuta\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[-\u2013\s]+/, "")
+    .trim();
+}
+
 /** Número que o usuário digitou (ex.: "A-12/2026"). Numérico puro é o SEI quem dá, e copiar repetiria o número. */
 const numeroACopiar = (n: string | undefined) => (n && !/^\d+$/.test(n.trim()) ? n : undefined);
 
@@ -378,7 +387,18 @@ const numeroACopiar = (n: string | undefined) => (n && !/^\d+$/.test(n.trim()) ?
  * Substitui no legado: `getDadosDoc`, `getDuplicateDoc`, `saveDuplicateArvore`
  * (`sei-pro-arvore.js`), que escolhiam o tipo pelo começo do nome na árvore.
  */
-export async function duplicarDocumento(sei: Sei, numero: string, op: OpcoesEscrita): Promise<ResultadoEscrita> {
+export async function duplicarDocumento(
+  sei: Sei,
+  numero: string,
+  op: OpcoesEscrita,
+  o: {
+    /**
+     * Tira a palavra MINUTA da descrição e do nome na árvore da cópia (a pergunta "Deseja duplicar sem a denominação
+     * MINUTA?" do menu da árvore). O tipo vem do original, então só o texto muda.
+     */
+    semMinuta?: boolean;
+  } = {},
+): Promise<ResultadoEscrita> {
   const loc = await localizarDocumento(sei, numero, { sinal: op.sinal });
   if (loc.documento.nivel === "sigiloso" || loc.arvore.nivel === "sigiloso") throw new ErroSei("SEI_SIGILOSO", "Documento sigiloso: o agente n\u00E3o atua nele.");
   if (loc.documento.externo) {
@@ -414,9 +434,9 @@ export async function duplicarDocumento(sei: Sei, numero: string, op: OpcoesEscr
     tipo,
     {
       tipo: tipo.id,
-      descricao: original.valor("txtDescricao") ?? "",
+      descricao: o.semMinuta ? tirarMinuta(original.valor("txtDescricao") ?? "") : (original.valor("txtDescricao") ?? ""),
       numero: numeroACopiar(original.valor("txtNumero")),
-      nomeArvore: original.valor("txtNomeArvore") || undefined,
+      nomeArvore: original.valor("txtNomeArvore") ? (o.semMinuta ? tirarMinuta(original.valor("txtNomeArvore") ?? "") : (original.valor("txtNomeArvore") ?? "")) : undefined,
       documentoModelo: doc.numero,
       interessados: original.itensLupa("selInteressados"),
       assuntos: original.itensLupa("selAssuntos"),

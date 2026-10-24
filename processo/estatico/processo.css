@@ -1,0 +1,1576 @@
+/*
+ * Painéis abaixo da árvore do processo (opção A da spec: lista refinada) e seus modais.
+ * As cores vêm dos tokens --spro-* de sei-comum/src/ui/base.css (anexado antes deste arquivo). O escuro vem de
+ * data-tema="escuro" na raiz dos painéis e no diálogo (o quadro e a janela de topo são documentos diferentes).
+ */
+/* Escala unica de tamanhos do quadro da arvore (README, "Escala de tamanhos"). Vale no <html> do quadro (para o que o legado
+   desenha: Consultar Andamento e Processos Relacionados) e nos nossos paineis. Os modais e o menu do documento nao usam. */
+html[data-seipro-processo-paineis],
+.spro-p-raiz,
+.spro-f-barra {
+  --spro-p-fonte-titulo: 13.5px;
+  --spro-p-fonte-corpo: 13px;
+  --spro-p-fonte-pequena: 12px;
+  --spro-p-icone: 16px;
+  --spro-p-icone-mini: 13px;
+  --spro-p-alvo: 26px;
+}
+/* Os tokens do base.css seguem o esquema de cores do SISTEMA quando ninguem fixou o tema; aqui o tema e o do SEI
+   (claro por padrao, escuro quando o SEI esta escuro), nunca o do sistema operacional. */
+.spro-p-raiz,
+.spro-pm,
+.spro-f-barra,
+.spro-g-impressao,
+.spro-na,
+dialog.spro-dialogo {
+  --spro-fundo: #ffffff;
+  --spro-fundo-2: #f6f7f9;
+  --spro-fundo-3: #eceef2;
+  --spro-texto: #1b1f24;
+  --spro-suave: #5d6772;
+  --spro-fraco: #8b939c;
+  --spro-borda: #e3e6eb;
+  --spro-borda-forte: #cfd4db;
+  --spro-destaque: #1f5fbf;
+  --spro-destaque-texto: #ffffff;
+  --spro-perigo: #d1352b;
+  --spro-aviso: #b45c0a;
+  --spro-ok: #12805c;
+  --spro-estrela: #f2a516;
+  --spro-sombra-3: 0 10px 24px -6px rgb(16 24 40 / 18%), 0 24px 56px -12px rgb(16 24 40 / 24%);
+  --spro-veu: rgb(17 21 28 / 46%);
+  --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 10%, transparent);
+  --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 18%, transparent);
+  color-scheme: light;
+}
+.spro-p-raiz[data-tema="escuro"],
+.spro-pm[data-tema="escuro"],
+.spro-f-barra[data-tema="escuro"],
+.spro-na[data-tema="escuro"],
+dialog.spro-dialogo[data-tema="escuro"] {
+  --spro-fundo: #1a1d21;
+  --spro-fundo-2: #22262b;
+  --spro-fundo-3: #2b3036;
+  --spro-texto: #e7e9ec;
+  --spro-suave: #a4abb3;
+  --spro-fraco: #767e87;
+  --spro-borda: #2f343a;
+  --spro-borda-forte: #3d434a;
+  --spro-destaque: #79acff;
+  --spro-destaque-texto: #0a1526;
+  --spro-perigo: #ff7d73;
+  --spro-aviso: #e8b04a;
+  --spro-ok: #4fcf96;
+  --spro-sombra-3: 0 10px 24px -6px rgb(0 0 0 / 50%), 0 24px 56px -12px rgb(0 0 0 / 60%);
+  --spro-veu: rgb(0 0 0 / 58%);
+  --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 14%, transparent);
+  --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 24%, transparent);
+  color-scheme: dark;
+}
+
+.spro-p-raiz {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--spro-fonte);
+  font-size: var(--spro-p-fonte-corpo);
+  line-height: 1.4;
+  color: var(--spro-texto);
+}
+.spro-p-raiz *,
+.spro-p-raiz *::before,
+.spro-p-raiz *::after {
+  box-sizing: border-box;
+}
+.spro-p-raiz.anotacoes {
+  margin-top: 6px;
+}
+.spro-p-slot:empty {
+  display: none;
+}
+
+/* ---------- Painel ---------- */
+.spro-p-painel {
+  margin: 0;
+  padding: 8px 6px 8px 4px;
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-p-painel > header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--spro-p-alvo);
+}
+.spro-p-painel > header h3 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: inherit;
+  font-size: var(--spro-p-fonte-titulo);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--spro-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-p-icone {
+  display: inline-flex;
+  flex: none;
+  color: var(--spro-destaque);
+}
+.spro-p-raiz .spro-icone {
+  width: var(--spro-p-icone);
+  height: var(--spro-p-icone);
+}
+.spro-p-acoes {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+.spro-p-acao,
+.spro-p-alternar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--spro-p-alvo);
+  height: var(--spro-p-alvo);
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--spro-suave);
+  background: transparent;
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-p-acao:hover,
+.spro-p-alternar:hover {
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+}
+.spro-p-acao.perigo:hover {
+  color: var(--spro-perigo);
+  background: color-mix(in srgb, var(--spro-perigo) 12%, transparent);
+}
+.spro-p-acao.ativa {
+  color: var(--spro-perigo);
+  background: color-mix(in srgb, var(--spro-perigo) 12%, transparent);
+}
+.spro-p-acao:focus-visible,
+.spro-p-alternar:focus-visible,
+.spro-p-copiavel:focus-visible,
+.spro-p-link:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+.spro-p-alternar .spro-icone {
+  transition: transform var(--spro-dur) var(--spro-curva);
+}
+.spro-p-painel[data-recolhido] .spro-p-alternar .spro-icone {
+  transform: rotate(-90deg);
+}
+.spro-p-corpo {
+  display: grid;
+  gap: 3px;
+  padding: 4px 0 0 calc(var(--spro-p-icone) + 6px);
+}
+.spro-p-painel[data-estado="desatualizado"] > header h3::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  background: var(--spro-fraco);
+  border-radius: 50%;
+  animation: spro-p-pulsa 1.1s ease-in-out infinite;
+}
+@keyframes spro-p-pulsa {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* ---------- Conteúdo ---------- */
+.spro-p-linha {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.spro-p-linha.interessado {
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--spro-borda);
+}
+.spro-p-linha.interessado:last-child {
+  border-bottom: 0;
+}
+.spro-p-copiavel {
+  display: inline;
+  max-width: 100%;
+  margin: 0;
+  padding: 1px 3px;
+  font: inherit;
+  color: var(--spro-texto);
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: transparent;
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: copy;
+}
+.spro-p-copiavel:hover {
+  background: var(--spro-destaque-suave);
+}
+.spro-p-copiavel.forte {
+  font-weight: 600;
+}
+.spro-p-copiavel.suave {
+  color: var(--spro-suave);
+}
+.spro-p-copiavel.urgente {
+  color: var(--spro-perigo);
+  font-weight: 650;
+}
+.spro-p-copiavel.trancado {
+  color: var(--spro-aviso);
+  font-weight: 650;
+}
+.spro-p-copiavel img,
+.spro-p-marcador-icone {
+  width: var(--spro-p-icone);
+  height: var(--spro-p-icone);
+  margin-right: 5px;
+  vertical-align: -2px;
+}
+.spro-p-marcador {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+}
+.spro-p-acoes-linha {
+  display: inline-flex;
+  flex: none;
+  margin-left: auto;
+}
+.spro-p-prazo-nativo {
+  margin-top: 4px;
+}
+.spro-p-linha:has(> .spro-p-nivel) {
+  flex-wrap: nowrap;
+}
+.spro-p-nivel {
+  display: inline-flex;
+  color: var(--spro-destaque);
+}
+.spro-p-nivel.restrito {
+  color: var(--spro-aviso);
+}
+.spro-p-nivel.sigiloso {
+  color: var(--spro-perigo);
+}
+.spro-p-vazio,
+.spro-p-nota {
+  color: var(--spro-fraco);
+  font-size: var(--spro-p-fonte-corpo);
+}
+.spro-p-raiz .spro-p-chip .spro-icone,
+.spro-p-raiz .spro-p-erro-texto .spro-icone,
+.spro-p-raiz .spro-p-nivel .spro-icone {
+  width: var(--spro-p-icone-mini);
+  height: var(--spro-p-icone-mini);
+}
+.spro-p-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  font-size: var(--spro-p-fonte-pequena);
+  font-weight: 550;
+  line-height: 1.5;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-3);
+  border-radius: 999px;
+}
+.spro-p-chip.ok {
+  color: var(--spro-ok);
+  background: color-mix(in srgb, var(--spro-ok) 12%, transparent);
+}
+.spro-p-chip.atencao,
+.spro-p-chip.aviso {
+  color: var(--spro-aviso);
+  background: color-mix(in srgb, var(--spro-aviso) 14%, transparent);
+}
+.spro-p-chip.vencido {
+  color: var(--spro-perigo);
+  background: color-mix(in srgb, var(--spro-perigo) 12%, transparent);
+}
+.spro-p-link {
+  margin: 0;
+  padding: 1px 3px;
+  font: inherit;
+  font-size: var(--spro-p-fonte-corpo);
+  font-weight: 600;
+  color: var(--spro-destaque);
+  background: transparent;
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-p-link:hover {
+  text-decoration: underline;
+}
+.spro-p-link.discreto {
+  font-weight: 500;
+  color: var(--spro-fraco);
+}
+.spro-p-link.discreto:hover {
+  color: var(--spro-destaque);
+}
+
+/* ---------- Anotação (post-it) ---------- */
+/* A pele é a do post-it do legado (.stickNotePro): amarelo em degradê, borda tracejada fina, sombra suave e canto dobrado.
+   O papel é amarelo nos dois temas (como um post-it de verdade), por isso as cores de texto e de estado são fixas aqui. */
+.spro-p-post-it {
+  --spro-texto: #3b3320;
+  --spro-suave: #5c5230;
+  --spro-fraco: #7a6f45;
+  --spro-perigo: #b3261e;
+  --spro-aviso: #8f4a00;
+  --spro-ok: #0d6b4c;
+  --spro-destaque: #1f5fbf;
+  position: relative;
+  display: grid;
+  gap: 3px;
+  margin-top: 2px;
+  padding: 10px 14px 12px;
+  line-height: 1.5;
+  color: var(--spro-texto);
+  background: linear-gradient(#f9efaf, #f7e98d);
+  border: 1px dashed rgb(150 125 30 / 55%);
+  border-radius: 3px;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+  overflow: hidden;
+}
+.spro-p-raiz[data-tema="escuro"] .spro-p-post-it,
+dialog.spro-dialogo[data-tema="escuro"] .spro-p-post-it {
+  background: linear-gradient(#e9dc9b, #dccb73);
+  border-color: rgb(110 90 15 / 60%);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 40%);
+}
+.spro-p-post-it::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, transparent 50%, rgb(140 115 20 / 28%) 50%);
+  pointer-events: none;
+}
+.spro-p-post-it.prioridade,
+.spro-p-raiz[data-tema="escuro"] .spro-p-post-it.prioridade {
+  border-left: 4px solid var(--spro-perigo);
+}
+.spro-p-post-it .spro-p-chip {
+  justify-self: start;
+  margin-top: 3px;
+  color: var(--spro-suave);
+  background: rgb(120 95 10 / 14%);
+}
+.spro-p-post-it .spro-p-chip.vencido {
+  color: #fff;
+  background: var(--spro-perigo);
+}
+.spro-p-post-it .spro-p-chip.aviso,
+.spro-p-post-it .spro-p-chip.atencao {
+  color: var(--spro-aviso);
+  background: rgb(143 74 0 / 16%);
+}
+.spro-p-post-it .spro-p-chip.ok {
+  color: var(--spro-ok);
+  background: rgb(13 107 76 / 14%);
+}
+.spro-p-nota-linha {
+  min-height: 1.2em;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.spro-p-nota-linha.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  white-space: normal;
+}
+.spro-p-nota-linha.item.feito span {
+  color: var(--spro-fraco);
+  text-decoration: line-through;
+}
+.spro-p-nota-linha.item input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--spro-destaque);
+}
+
+/* O modo escuro do SEI Pro pinta todo descendente (.seiSlim.dark-mode *) de claro com !important; o papel segue amarelo,
+   então o texto e os chips do post-it reafirmam as cores escuras com mais especificidade. */
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha,
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha span {
+  color: var(--spro-texto) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha.item.feito span {
+  color: var(--spro-fraco) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip {
+  color: var(--spro-suave) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.vencido {
+  color: #fff !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.aviso,
+.spro-p-raiz .spro-p-post-it .spro-p-chip.atencao {
+  color: var(--spro-aviso) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.ok {
+  color: var(--spro-ok) !important;
+}
+
+/* ---------- Esqueleto e erro ---------- */
+.spro-p-esqueleto {
+  display: grid;
+  gap: 6px;
+  padding: 3px 0;
+}
+.spro-p-barra {
+  display: block;
+  height: 12px;
+  background: linear-gradient(90deg, var(--spro-fundo-3) 25%, var(--spro-fundo-2) 50%, var(--spro-fundo-3) 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: spro-p-brilho 1.2s linear infinite;
+}
+@keyframes spro-p-brilho {
+  to {
+    background-position: -200% 0;
+  }
+}
+.spro-p-erro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--spro-perigo);
+  font-size: var(--spro-p-fonte-corpo);
+}
+.spro-p-erro-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-p-barra,
+  .spro-p-painel[data-estado="desatualizado"] > header h3::after {
+    animation: none;
+  }
+}
+
+/* ---------- Modais ---------- */
+dialog.spro-p-dialogo > header h2 {
+  text-align: left;
+}
+dialog.spro-p-dialogo .spro-dialogo-corpo {
+  gap: 10px;
+}
+.spro-p-modal-lugar {
+  display: grid;
+  gap: 10px;
+}
+.spro-p-campo {
+  display: grid;
+  gap: 4px;
+}
+.spro-p-campo-rotulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--spro-suave);
+}
+.spro-p-campo-dica {
+  font-size: 11.5px;
+  color: var(--spro-fraco);
+}
+.spro-p-campo .spro-campo,
+.spro-p-busca .spro-campo,
+.spro-p-grade .spro-campo {
+  width: 100%;
+}
+.spro-p-lista {
+  padding: 4px;
+}
+.spro-p-lista option {
+  padding: 4px 8px;
+  border-radius: var(--spro-raio-p);
+}
+.spro-p-busca {
+  display: grid;
+  gap: 6px;
+}
+.spro-p-grade {
+  display: grid;
+  gap: 8px;
+}
+.spro-p-par {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 8px;
+}
+.spro-p-opcao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.spro-p-opcao input[type="checkbox"] {
+  accent-color: var(--spro-destaque);
+}
+.spro-p-ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.spro-p-data {
+  width: auto !important;
+  min-height: 28px;
+}
+.spro-p-contador {
+  font-size: 11.5px;
+  color: var(--spro-fraco);
+}
+.spro-p-anotacao {
+  width: 100%;
+}
+.spro-p-pergunta {
+  margin: 0;
+  font-size: 13.5px;
+}
+.spro-p-lista-modal {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.spro-p-linha-modal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--spro-fundo-2);
+  border-radius: var(--spro-raio-p);
+}
+.spro-p-linha-modal[data-retirado] .spro-p-texto-modal {
+  color: var(--spro-fraco);
+  text-decoration: line-through;
+}
+.spro-p-texto-modal {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.spro-p-linha-modal .spro-p-acao {
+  width: auto;
+  padding: 0 8px;
+  font-size: 12px;
+}
+dialog.spro-p-dialogo .spro-p-erro {
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--spro-perigo) 10%, transparent);
+  border-radius: var(--spro-raio-p);
+}
+
+/* ---------- Menu da arvore (menuDoc/) ---------- */
+.spro-pm {
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+.spro-pm *,
+.spro-pm *::before,
+.spro-pm *::after {
+  box-sizing: border-box;
+}
+.spro-pm-grupo + .spro-pm-grupo,
+.spro-pm-grupo + .spro-menu-sep {
+  margin-top: 2px;
+}
+.spro-pm-grupo + .spro-pm-grupo {
+  padding-top: 2px;
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-pm-titulo {
+  padding: 5px 10px 2px 8px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--spro-fraco);
+}
+.spro-pm .spro-menu-item {
+  padding: 5px 10px 5px 8px;
+}
+.spro-pm .spro-menu-item:focus-visible {
+  box-shadow: var(--spro-anel);
+}
+.spro-pm .spro-menu-dica {
+  margin-left: 6px;
+}
+.spro-pm-desativado {
+  color: var(--spro-fraco);
+  cursor: default;
+}
+.spro-pm-desativado:hover,
+.spro-pm-desativado:focus {
+  background: transparent;
+}
+.spro-pm-desativado .spro-menu-icone {
+  opacity: 0.55;
+}
+
+/* Icones fixos ao lado do documento: ficam na propria arvore, entao as cores vem do SEI (claro por padrao). */
+span.action-doc.spro-pm-icone {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13px;
+  margin: 0 1px;
+  padding: 3px;
+  vertical-align: middle;
+  color: #017fff9c;
+  border-radius: 5px;
+  cursor: pointer;
+}
+span.action-doc.spro-pm-icone:hover,
+span.action-doc.spro-pm-icone:focus-visible {
+  color: #fff;
+  background: #017fff;
+  outline: none;
+}
+span.action-doc.spro-pm-icone.feito {
+  color: #12805c;
+}
+span.action-doc.spro-pm-icone[aria-busy="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+span.action-doc.spro-pm-icone svg {
+  display: block;
+  pointer-events: none;
+}
+span.action-doc.spro-pm-icone[data-rotulo]:hover::after,
+span.action-doc.spro-pm-icone[data-rotulo]:focus-visible::after {
+  content: attr(data-rotulo);
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  z-index: 2147483000;
+  padding: 3px 7px;
+  font: 11px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  white-space: nowrap;
+  color: #fff;
+  background: #2b3036;
+  border-radius: 5px;
+  pointer-events: none;
+}
+.seiSlim.dark-mode span.action-doc.spro-pm-icone,
+html[data-spro-tema="escuro"] span.action-doc.spro-pm-icone {
+  color: #0494c7;
+}
+.seiSlim.dark-mode span.action-doc.spro-pm-icone:hover,
+html[data-spro-tema="escuro"] span.action-doc.spro-pm-icone:hover {
+  color: #fbfbfe;
+  background: #0494c7;
+}
+
+/* ---------- Gantt de tramitação ---------- */
+dialog.spro-g-dialogo {
+  height: min(calc(100vh - 32px), 780px);
+}
+dialog.spro-g-dialogo .spro-dialogo-corpo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+}
+.spro-g-visao {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+}
+.spro-g-topo,
+.spro-g-ferramentas,
+.spro-g-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.spro-g-topo {
+  justify-content: space-between;
+}
+.spro-g-situacao,
+.spro-g-frescor,
+.spro-g-resumo,
+.spro-g-nota {
+  font-size: 12px;
+  color: var(--spro-suave);
+}
+.spro-g-rodape {
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-g-frescor {
+  margin-right: auto;
+}
+.spro-g-progresso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--spro-destaque-suave);
+  border-radius: var(--spro-raio);
+}
+.spro-g-progresso[hidden],
+.spro-g-aviso[hidden],
+.spro-g-dica[hidden] {
+  display: none;
+}
+.spro-g-prog-texto {
+  font-size: 12.5px;
+  min-width: 0;
+}
+.spro-g-prog-barra {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  background: var(--spro-borda);
+  border-radius: 999px;
+}
+.spro-g-prog-barra > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--spro-destaque);
+  transition: width 200ms var(--spro-curva);
+}
+.spro-g-prog-barra.indeterminado > span {
+  width: 35%;
+  animation: spro-g-vai-e-vem 1.1s ease-in-out infinite alternate;
+}
+@keyframes spro-g-vai-e-vem {
+  to {
+    transform: translateX(185%);
+  }
+}
+.spro-g-aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  border-radius: var(--spro-raio);
+  background: color-mix(in srgb, var(--spro-aviso) 14%, transparent);
+  color: var(--spro-texto);
+}
+.spro-g-aviso .spro-icone {
+  flex: none;
+  color: var(--spro-aviso);
+}
+.spro-g-aviso.erro {
+  background: color-mix(in srgb, var(--spro-perigo) 12%, transparent);
+}
+.spro-g-aviso.erro .spro-icone {
+  color: var(--spro-perigo);
+}
+.spro-g-aviso-texto {
+  flex: 1;
+  min-width: 0;
+}
+.spro-g-painel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.spro-g-vazio {
+  margin: 24px 0;
+  text-align: center;
+  color: var(--spro-suave);
+}
+.spro-g-gantt {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.spro-g-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  font-size: 11.5px;
+  color: var(--spro-suave);
+  list-style: none;
+}
+.spro-g-legenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.spro-g-amostra {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--spro-destaque);
+}
+.spro-g-amostra.em-curso {
+  background: repeating-linear-gradient(135deg, var(--spro-ok) 0 4px, color-mix(in srgb, var(--spro-ok) 55%, #ffffff) 4px 8px);
+}
+.spro-g-amostra.pendente {
+  background: radial-gradient(var(--spro-aviso) 1.2px, color-mix(in srgb, var(--spro-aviso) 20%, var(--spro-fundo)) 1.5px) 0 0 / 5px 5px;
+  outline: 1px dashed var(--spro-aviso);
+  outline-offset: -1px;
+}
+.spro-g-amostra.mantido-aberto {
+  background: linear-gradient(90deg, var(--spro-destaque) 55%, var(--spro-ok) 55%);
+}
+.spro-g-amostra.losango {
+  width: 9px;
+  height: 9px;
+  background: var(--spro-fundo);
+  border: 2px solid var(--spro-destaque);
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+.spro-g-quadro {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+  overflow: hidden;
+}
+.spro-g-rolagem {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.spro-g-rolagem:focus-visible {
+  outline: none;
+  box-shadow: inset var(--spro-anel);
+}
+.spro-g-svg {
+  display: block;
+  max-width: none;
+  font-family: var(--spro-fonte);
+}
+.spro-g-svg .raia-impar {
+  fill: var(--spro-fundo);
+}
+.spro-g-svg .raia-par {
+  fill: var(--spro-fundo-2);
+}
+.spro-g-svg .grade {
+  stroke: var(--spro-borda);
+  stroke-width: 1;
+}
+.spro-g-svg .grade-forte {
+  stroke: var(--spro-borda-forte);
+  stroke-width: 1;
+}
+.spro-g-svg .cabecalho-fundo {
+  fill: var(--spro-fundo-2);
+}
+.spro-g-svg .rotulos-fundo {
+  fill: var(--spro-fundo);
+  fill-opacity: 0.96;
+}
+.spro-g-svg text {
+  font-size: 11px;
+}
+.spro-g-svg .eixo-cima {
+  font-weight: 600;
+  fill: var(--spro-suave);
+}
+.spro-g-svg .eixo-baixo {
+  font-size: 10px;
+  fill: var(--spro-fraco);
+}
+.spro-g-svg .rotulo-raia {
+  font-size: 12px;
+  font-weight: 650;
+  fill: var(--spro-texto);
+}
+.spro-g-svg .rotulo-nome {
+  font-size: 10px;
+  fill: var(--spro-suave);
+}
+.spro-g-svg .spro-g-barra .fundo {
+  fill: var(--spro-destaque);
+}
+.spro-g-svg .spro-g-barra.em-curso .fundo {
+  fill: var(--spro-ok);
+}
+.spro-g-svg .spro-g-barra.pendente .fundo {
+  fill: color-mix(in srgb, var(--spro-aviso) 20%, var(--spro-fundo));
+  stroke: var(--spro-aviso);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+.spro-g-svg .padrao {
+  pointer-events: none;
+}
+.spro-g-svg .listra-fundo {
+  fill: var(--spro-ok);
+}
+.spro-g-svg .listra-traco {
+  fill: rgb(255 255 255 / 38%);
+}
+.spro-g-svg .pontos-fundo {
+  fill: color-mix(in srgb, var(--spro-aviso) 20%, var(--spro-fundo));
+}
+.spro-g-svg .pontos-ponto {
+  fill: var(--spro-aviso);
+}
+.spro-g-svg .texto-barra {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--spro-destaque-texto);
+  pointer-events: none;
+}
+.spro-g-svg .spro-g-barra.pendente .texto-barra {
+  fill: var(--spro-texto);
+}
+.spro-g-svg .marca-remessa {
+  stroke: var(--spro-texto);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+.spro-g-svg .spro-g-barra,
+.spro-g-svg .spro-g-losango {
+  outline: none;
+  cursor: default;
+}
+.spro-g-svg .spro-g-barra:hover .fundo,
+.spro-g-svg .spro-g-barra:focus-visible .fundo {
+  stroke: var(--spro-texto);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.spro-g-svg .spro-g-losango {
+  fill: var(--spro-fundo);
+  stroke: var(--spro-destaque);
+  stroke-width: 1.8;
+  cursor: pointer;
+}
+.spro-g-svg .spro-g-losango:hover,
+.spro-g-svg .spro-g-losango:focus-visible {
+  fill: var(--spro-destaque);
+  stroke: var(--spro-texto);
+}
+.spro-g-svg .spro-g-agora line {
+  stroke: var(--spro-perigo);
+  stroke-width: 1.4;
+  stroke-dasharray: 4 3;
+}
+.spro-g-svg .spro-g-agora text {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--spro-perigo);
+}
+.spro-g-dica {
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  max-width: 360px;
+  padding: 9px 11px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  box-shadow: var(--spro-sombra-3);
+  pointer-events: none;
+}
+.spro-g-dica-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 4px;
+  font-weight: 650;
+}
+.spro-g-dica-selo {
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+  border-radius: 999px;
+}
+.spro-g-dica-linha {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 8px;
+}
+.spro-g-dica-rotulo {
+  color: var(--spro-suave);
+}
+.spro-g-dica-docs {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-g-dica-docs > div {
+  padding-left: 8px;
+}
+.spro-g-tempo {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-height: 0;
+  overflow: auto;
+}
+.spro-g-tabela {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+}
+.spro-g-tabela th,
+.spro-g-tabela td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--spro-borda);
+}
+.spro-g-tabela thead th {
+  font-size: 11.5px;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-2);
+}
+.spro-g-tabela tbody th {
+  font-weight: 600;
+}
+.spro-g-tabela .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.spro-g-tabela td.barra {
+  width: 34%;
+}
+.spro-g-legenda-tabela {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.spro-g-barra-pct {
+  display: block;
+  height: 8px;
+  background: var(--spro-destaque);
+  border-radius: 999px;
+}
+.spro-g-barra-pct.em-curso {
+  background: repeating-linear-gradient(135deg, var(--spro-ok) 0 4px, color-mix(in srgb, var(--spro-ok) 55%, #ffffff) 4px 8px);
+}
+.spro-g-selo-curso {
+  margin-left: 8px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--spro-ok);
+  background: color-mix(in srgb, var(--spro-ok) 14%, transparent);
+  border-radius: 999px;
+}
+dialog.spro-g-dialogo-doc {
+  height: min(calc(100vh - 32px), 780px);
+}
+dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
+  flex: 1;
+  padding-bottom: 12px;
+}
+.spro-g-documento {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  background: #ffffff;
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+}
+
+/* Visão para impressão: invisível na tela; ao imprimir, é a única coisa da página. */
+.spro-g-impressao {
+  display: none;
+}
+@media print {
+  html[data-spro-imprimindo] body > *:not(.spro-g-impressao) {
+    display: none !important;
+  }
+  html[data-spro-imprimindo] body {
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+  html[data-spro-imprimindo] .spro-g-impressao {
+    display: block !important;
+    box-sizing: border-box;
+    padding: 8mm;
+    font: 11px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #000000;
+    background: #ffffff;
+  }
+  .spro-g-impressao h1 {
+    margin: 0 0 4px;
+    font-size: 16px;
+  }
+  .spro-g-impressao h2 {
+    margin: 14px 0 4px;
+    font-size: 13px;
+    break-after: avoid;
+  }
+  .spro-g-impressao-sub {
+    margin: 0 0 8px;
+    color: #444444;
+  }
+  .spro-g-impressao .spro-g-svg {
+    width: 100%;
+    height: auto;
+  }
+  .spro-g-impressao .spro-g-tabela {
+    break-inside: auto;
+  }
+  .spro-g-impressao .spro-g-tabela tr {
+    break-inside: avoid;
+  }
+  .spro-g-impressao * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-g-prog-barra.indeterminado > span {
+    animation: none;
+  }
+}
+
+/* ---------- Filtro da árvore ---------- */
+/* O filtro só esconde: o atributo vai em cada irmão da linha do nó (a árvore do SEI é plana) e sai ao limpar. */
+[data-spro-f-oculto] {
+  display: none !important;
+}
+.spro-f-barra {
+  box-sizing: border-box;
+  margin: 0 0 6px;
+  padding: 6px 4px 4px;
+  font-family: var(--spro-fonte);
+  font-size: var(--spro-p-fonte-corpo);
+  line-height: 1.4;
+  color: var(--spro-texto);
+  border-bottom: 1px solid var(--spro-borda);
+}
+.spro-f-barra[hidden],
+.spro-f-barra [hidden] {
+  display: none !important;
+}
+.spro-f-barra *,
+.spro-f-barra *::before,
+.spro-f-barra *::after {
+  box-sizing: border-box;
+}
+.spro-f-linha {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.spro-f-lupa {
+  position: absolute;
+  left: 9px;
+  display: inline-flex;
+  color: var(--spro-fraco);
+  pointer-events: none;
+}
+.spro-f-busca {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  margin: 0;
+  padding: 0 30px 0 30px;
+  font: inherit;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: 6px;
+}
+/* O botão de limpar é o nosso (com aria-label); o do navegador apareceria dobrado. */
+.spro-f-busca::-webkit-search-cancel-button,
+.spro-f-busca::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.spro-f-busca::placeholder {
+  color: var(--spro-fraco);
+}
+.spro-f-busca:focus-visible,
+.spro-f-chip:focus-visible,
+.spro-f-limpar:focus-visible {
+  outline: 2px solid var(--spro-destaque);
+  outline-offset: 1px;
+}
+.spro-f-limpar {
+  position: absolute;
+  right: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--spro-suave);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.spro-f-limpar:hover {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-f-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.spro-f-chip {
+  height: 26px;
+  margin: 0;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--spro-p-fonte-pequena);
+  color: var(--spro-suave);
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: 13px;
+  cursor: pointer;
+}
+.spro-f-chip:hover {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-f-chip[aria-pressed="true"] {
+  color: var(--spro-destaque-texto);
+  background: var(--spro-destaque);
+  border-color: var(--spro-destaque);
+}
+.spro-f-status {
+  margin-top: 5px;
+  color: var(--spro-suave);
+  font-size: var(--spro-p-fonte-corpo);
+}
+.spro-f-status-texto {
+  font-weight: 600;
+  color: var(--spro-texto);
+}
+.spro-f-dica {
+  display: block;
+  margin-top: 1px;
+}
+.spro-f-dica:empty {
+  display: none;
+}
+
+/* ---------- Legado no quadro da arvore (Consultar Andamento, Processos Relacionados) na mesma escala ---------- */
+/* O legado estiliza esses dois por classe (.newLink: 1.2em sobre 12px = 14,4px, lupa de 17px); com o modulo ativo eles descem
+   um pouco e os nossos paineis sobem, para o cabecalho de cada painel pesar o mesmo que o rotulo "Consultar Andamento". */
+html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink,
+html[data-seipro-processo-paineis] #divRelacionados label.newLink {
+  font-size: var(--spro-p-fonte-titulo);
+  line-height: 1.4;
+}
+html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink i.iconDadosProcesso,
+html[data-seipro-processo-paineis] #divRelacionados label.newLink i.iconDadosProcesso {
+  font-size: var(--spro-p-icone);
+  line-height: 1;
+}
+html[data-seipro-processo-paineis] #divRelacionados .divRelacionadosParcial a,
+html[data-seipro-processo-paineis] #divRelacionadosParciais a {
+  font-size: var(--spro-p-fonte-corpo);
+}
+
+/* ---------- Aviso de documentos nao assinados (quadro do Enviar Processo) ---------- */
+.spro-na {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 20px;
+  padding: 4px 10px;
+  font: 400 13px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto);
+  background: var(--spro-fundo-2);
+  border-radius: 6px;
+  vertical-align: middle;
+}
+.spro-na.pendente {
+  background: color-mix(in srgb, var(--spro-perigo) 12%, var(--spro-fundo));
+}
+.spro-na.falha {
+  background: color-mix(in srgb, var(--spro-aviso) 14%, var(--spro-fundo));
+}
+.spro-na-icone {
+  display: inline-flex;
+}
+.spro-na.pendente .spro-na-icone {
+  color: var(--spro-perigo);
+}
+.spro-na.ok .spro-na-icone {
+  color: var(--spro-ok);
+}
+.spro-na.falha .spro-na-icone {
+  color: var(--spro-aviso);
+}
+.spro-na .spro-p-link {
+  color: var(--spro-destaque);
+}
+.spro-na-lista {
+  max-height: 280px;
+  overflow-y: auto;
+}
+.spro-na-lista .spro-p-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  text-align: left;
+}
+.spro-na-data {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  color: var(--spro-suave);
+}
+
+/* ---------- Modal de lista com pesquisa (assuntos e interessados) ---------- */
+dialog.spro-p-dialogo .spro-p-lupa-titulo {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--spro-suave);
+}
+dialog.spro-p-dialogo .spro-p-lupa-busca {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--spro-borda);
+}
+dialog.spro-p-dialogo .spro-p-lupa-estado {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 1.4em;
+}
+dialog.spro-p-dialogo .spro-p-resultados,
+dialog.spro-p-dialogo .spro-p-lista-modal[aria-label$="no processo"] {
+  max-height: 220px;
+  overflow-y: auto;
+}
+dialog.spro-p-dialogo .spro-p-lista-modal[aria-label$="no processo"] {
+  max-height: 200px;
+}
+dialog.spro-p-dialogo .spro-p-linha-modal[data-estado="novo"] {
+  background: color-mix(in srgb, var(--spro-ok) 9%, var(--spro-fundo-2));
+}
+dialog.spro-p-dialogo .spro-p-linha-modal[data-estado="retirado"] .spro-p-texto-modal {
+  color: var(--spro-fraco);
+  text-decoration: line-through;
+}
+dialog.spro-p-dialogo .spro-p-linha-modal .spro-p-acao:disabled {
+  color: var(--spro-fraco);
+  cursor: default;
+}
+dialog.spro-p-dialogo .spro-p-lupa-situacao {
+  margin-right: auto;
+  align-self: center;
+}
+dialog.spro-p-dialogo .spro-p-vazio {
+  padding: 6px 2px;
+  color: var(--spro-fraco);
+}
+
+/* ---------- Processos do interessado ---------- */
+.spro-p-linha.interessado .spro-p-proc-do-interessado {
+  margin-left: auto;
+  flex: none;
+}
+dialog.spro-p-dialogo .spro-p-interessado-nome {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+dialog.spro-p-dialogo .spro-p-lista-processos {
+  display: grid;
+  gap: 6px;
+  max-height: min(420px, 55vh);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+dialog.spro-p-dialogo .spro-p-processo {
+  display: grid;
+  gap: 2px;
+  padding: 7px 10px;
+  background: var(--spro-fundo-2);
+  border-radius: var(--spro-raio-p, 6px);
+}
+dialog.spro-p-dialogo .spro-p-processo-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+dialog.spro-p-dialogo .spro-p-proc-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+}
+dialog.spro-p-dialogo .spro-p-processo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 12px;
+  color: var(--spro-suave);
+}
+dialog.spro-p-dialogo .spro-p-processos-rodape {
+  display: flex;
+  justify-content: center;
+}
+dialog.spro-p-dialogo .spro-p-esqueleto {
+  padding: 8px 10px;
+  list-style: none;
+}
+
+/* ---------- Edicao da anotacao: o papel do post-it dentro do modal ---------- */
+dialog.spro-p-dialogo .spro-p-post-it-edicao {
+  gap: 6px;
+  padding: 12px 14px 10px;
+  margin-top: 0;
+}
+dialog.spro-p-dialogo .spro-p-post-it-edicao:focus-within {
+  box-shadow: 0 0 0 2px var(--spro-destaque), 0 4px 6px rgb(0 0 0 / 10%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-texto {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  padding: 0;
+  font: 14px/1.5 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto) !important;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  resize: vertical;
+}
+dialog.spro-p-dialogo .spro-p-post-it-texto::placeholder {
+  color: var(--spro-fraco);
+  opacity: 1;
+}
+/* Rodape do papel: o contador ocupa o que sobra e nunca passa por baixo das ferramentas (quebram de linha antes de sobrepor). */
+dialog.spro-p-dialogo .spro-p-post-it-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+  padding-top: 6px;
+  border-top: 1px dashed rgb(150 125 30 / 45%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-rodape .spro-p-contador {
+  flex: 1 1 11em;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--spro-suave) !important;
+}
+dialog.spro-p-dialogo .spro-p-post-it-ferramentas {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 6px;
+  margin-left: auto;
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 3px 9px;
+  font: 600 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-destaque) !important;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao:hover {
+  background: rgb(120 95 10 / 14%);
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--spro-destaque);
+}
+dialog.spro-p-dialogo .spro-p-post-it-botao[aria-pressed="true"] {
+  color: #fff !important;
+  background: var(--spro-perigo);
+}
+dialog.spro-p-dialogo .spro-p-post-it-data-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--spro-destaque) !important;
+}
+dialog.spro-p-dialogo .spro-p-post-it-data {
+  min-height: 26px;
+  padding: 1px 6px;
+  font: 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-texto) !important;
+  background: rgb(255 255 255 / 45%) !important;
+  border: 1px solid rgb(150 125 30 / 40%);
+  border-radius: 6px;
+  color-scheme: light;
+}

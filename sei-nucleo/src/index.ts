@@ -23,7 +23,55 @@ export {
   marcadoresDoProcesso,
   type MarcadorProcesso,
 } from "./dominio/acoesProcesso";
-export { andamentos, andamentosDaArvore, andamentosDoLink, type Andamento, type TipoHistorico } from "./dominio/historico";
+export {
+  acoesDoPainel,
+  blocoInternoDoHistorico,
+  lerAcompanhamento,
+  lerAnotacao,
+  lerAtribuicaoDaPagina,
+  lerFormularioDoProcesso,
+  lerMarcadoresDoProcesso,
+  lerOpcoesAcompanhamento,
+  lerOpcoesAtribuicao,
+  lerOpcoesMarcador,
+  lerRelacionados,
+  type AcoesDoPainel,
+  type FormularioDoProcesso,
+  type MarcadorDoPainel,
+  type OpcaoLista,
+  type AcompanhamentoProcesso,
+  type AnotacaoProcesso,
+  type AtribuicaoDaPagina,
+  type LinhaAtribuicao,
+  type ProcessoRelacionado,
+} from "./dominio/painelProcesso";
+export {
+  acrescentarAoCache,
+  andamentos,
+  andamentosDaArvore,
+  andamentosDoLink,
+  coletarHistorico,
+  coletarHistoricoDaArvore,
+  lerHistorico,
+  type Andamento,
+  type CacheHistorico,
+  type HistoricoColetado,
+  type OpcoesColeta,
+  type TipoHistorico,
+} from "./dominio/historico";
+export {
+  calcularPassagens,
+  dataISODe,
+  isoDoRelogio,
+  relogioDe,
+  relogioDoISO,
+  JANELA_REMESSA_MS,
+  ROTULOS,
+  type DocumentoDaPassagem,
+  type FimPassagem,
+  type InicioPassagem,
+  type Passagem,
+} from "./dominio/passagens";
 export { lerCaixaDaPagina, lerLinhaCaixa, listarCaixa, type ProcessoNaCaixa } from "./dominio/caixa";
 export {
   localizarDocumento,
@@ -49,7 +97,14 @@ export { Pseudonimos, type Categoria, type OpcoesAnonimizacao } from "./privacid
 export { listarOpcoes, type ListaOpcoes, type OpcaoSei } from "./dominio/opcoes";
 export { enviarProcesso, assinarDocumento, type Envio, type Assinatura } from "./dominio/tramitacao";
 export { excluirDocumento, cancelarDocumento, cancelarAssinatura, darCiencia } from "./dominio/acoesDocumento";
-export { pesquisar, type CriteriosPesquisa, type ResultadoPesquisa } from "./dominio/pesquisa";
+export {
+  pesquisar,
+  pesquisarProcessosDoInteressado,
+  type CriteriosInteressado,
+  type CriteriosPesquisa,
+  type PaginaDeProcessos,
+  type ResultadoPesquisa,
+} from "./dominio/pesquisa";
 export {
   criarArmazemTextoPadrao,
   type ArmazemTextoPadrao,

@@ -76,8 +76,8 @@ export function verificarConfig(): void {
   checar("67 itens legados na pagina intocada (69 menos as 2 removidas)", atualSemNovas.length === 67, atualSemNovas.length);
   const iProj = nomes(atual).indexOf("gerenciarprojetos");
   checar(
-    "gerenciardemandas gravada LIGADA (padrao novo), logo depois de gerenciarprojetos (69 itens)",
-    atual.length === 69 && atual[iProj + 1]?.name === "gerenciardemandas" && atual[iProj + 1]?.value === true,
+    "gerenciardemandas gravada LIGADA (padrao novo), logo depois de gerenciarprojetos (71 itens)",
+    atual.length === 71 && atual[iProj + 1]?.name === "gerenciardemandas" && atual[iProj + 1]?.value === true,
   );
 
   secao("config: dependencias");

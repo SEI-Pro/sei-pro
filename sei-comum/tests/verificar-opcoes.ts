@@ -74,7 +74,7 @@ export async function verificarOpcoes(): Promise<void> {
   };
   checar(
     "definirOpcaoLegada grava em dataValues",
-    (await definirOpcaoLegada("gradecontrole", true, area as never)) === true && gravados.length === 1 && "dataValues" in gravados[0],
+    (await definirOpcaoLegada("gradecontrole", true, area as never)) === true && gravados.length === 1 && "dataValues" in gravados[0]!,
   );
   checar(
     "e nao grava de novo quando ja esta igual",

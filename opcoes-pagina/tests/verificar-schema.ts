@@ -11,8 +11,8 @@ const nomeDe = (el: Element) => el.getAttribute("data-name") ?? "";
 
 /** Opcoes que existiam na pagina legada e foram removidas de proposito (pedido do usuario em 10/10/2026). */
 export const REMOVIDAS = ["gerenciarformularios", "natjus"];
-/** Opcoes novas, que nao existiam na pagina legada (Demandas, versao 2.8). */
-export const ADICIONADAS = ["gerenciardemandas", "gradecontrole"];
+/** Opcoes novas, que nao existiam na pagina legada (Demandas, versao 2.8; alerta de processo parado da capa nova). */
+export const ADICIONADAS = ["gerenciardemandas", "gradecontrole", "processoparado", "filtroarvore"];
 
 export function verificarSchema(): void {
   secao("schema: paridade com a pagina de opcoes legada");
@@ -22,8 +22,8 @@ export function verificarSchema(): void {
   const schema = new Map(todasAsOpcoes().map((o) => [o.nome, o]));
 
   checar(
-    "73 no legado; 73 no schema (menos as 2 removidas, mais as 2 adicionadas)",
-    todosLegados.length === 73 && legados.length === 71 && schema.size === 73 && todasAsOpcoes().length === 73,
+    "73 no legado; 75 no schema (menos as 2 removidas, mais as 4 adicionadas)",
+    todosLegados.length === 73 && legados.length === 71 && schema.size === 75 && todasAsOpcoes().length === 75,
     {
       legado: todosLegados.length,
       schema: schema.size,
@@ -32,6 +32,21 @@ export function verificarSchema(): void {
   for (const n of REMOVIDAS) checar(`${n}: removida do schema`, !schema.has(n));
   for (const n of ADICIONADAS)
     checar(`${n}: adicionada ao schema e ausente do legado`, schema.has(n) && !todosLegados.some((el) => nomeDe(el) === n));
+  const parado = schema.get("processoparado");
+  checar(
+    "processoparado: numero em dias, padrao 15, 0 desliga, logo depois de infoarvore",
+    parado?.tipo === "numero" && parado.padrao === 15 && parado.min === 0 && (parado.max ?? 0) >= 365 && !parado.dependencias &&
+      (SECOES_GERAL.flatMap((x) => x.opcoes.map((o) => o.nome)).indexOf("infoarvore") + 1 ===
+        SECOES_GERAL.flatMap((x) => x.opcoes.map((o) => o.nome)).indexOf("processoparado")),
+  );
+  const filtro = schema.get("filtroarvore");
+  checar(
+    "filtroarvore: chave ligada por padrao, so no Lab, logo depois de processoparado",
+    filtro?.tipo === "chave" && filtro.padrao === true && filtro.visivelEm === "lab" && !filtro.dependencias &&
+      (SECOES_GERAL.flatMap((x) => x.opcoes.map((o) => o.nome)).indexOf("processoparado") + 1 ===
+        SECOES_GERAL.flatMap((x) => x.opcoes.map((o) => o.nome)).indexOf("filtroarvore")),
+  );
+  checar("processoparado: so no Lab", parado?.visivelEm === "lab");
   const demandas = schema.get("gerenciardemandas");
   checar(
     "gerenciardemandas: chave ligada por padrao, logo depois de Gerenciar Projetos, com manual e ajuda",

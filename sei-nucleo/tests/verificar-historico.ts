@@ -39,6 +39,7 @@ export async function verificarHistorico(): Promise<void> {
   checar("assuntos lidos", meta.assuntos.length === 1 && meta.assuntos[0].startsWith("004.01.05.002 - "), meta.assuntos);
   checar("interessados lidos", JSON.stringify(meta.interessados) === JSON.stringify(["CGE-CAUD", "Cliente 1"]), meta.interessados);
   checar("editavel com link de alterar", meta.editavel === true);
+  checar("autuacao lida do campo hdnDtaGeracao (a capa a mostra)", meta.autuacao === "10/07/2025", meta.autuacao);
 
   const sei = { arvore: async () => arv, http: httpFalso([]) } as unknown as Sei;
   const completo = await consultarProcesso(sei, arv.protocolo);

@@ -4102,7 +4102,8 @@ function getActionsOnSendProcess() {
     ifrVisualizacao.find('#divSinRemoveAttributes').remove();
     ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
 
-    if (checkConfigValue('naoassinados') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
+    // O aviso de nao assinados do Enviar Processo agora e do modulo processo/ (a partir da arvore, sem coletar o historico).
+    if (checkConfigValue('naoassinados') && !document.documentElement.hasAttribute('data-seipro-processo-aviso') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
         initCheckNaoAssinados();
     }
     ifrVisualizacao.find('#txtUnidade').on('blur', function(){
@@ -6078,6 +6079,18 @@ function getBlocoProcessoHistorico() {
     return blocoProcesso;
 }
 function initGanttHistoryProc(TimeOut = 9000) {
+    // Gantt novo (js/init_processo_arvore.js, SEI Pro Lab): o modal e dele. O quadro da arvore marca o proprio <html> e escuta
+    // o pedido no proprio documento (o content script mora no mundo isolado desse quadro).
+    if (TimeOut == 9000) {
+        try {
+            var ifrGanttPro = getJanelaProcessoPro().document.getElementById('ifrArvore');
+            var docGanttPro = ifrGanttPro && ifrGanttPro.contentDocument;
+            if (docGanttPro && docGanttPro.documentElement.hasAttribute('data-seipro-processo-gantt')) {
+                docGanttPro.dispatchEvent(new CustomEvent('spro-processo-gantt-abrir'));
+                return;
+            }
+        } catch (e) {}
+    }
     if (TimeOut <= 0) {
         // Sem o Gantt nao ha o que abrir: troca o "Aguarde..." por um aviso em vez de deixa-lo na tela.
         alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel carregar o hist\u00F3rico de tramita\u00E7\u00E3o do processo. Recarregue a p\u00E1gina e tente novamente.');
@@ -10307,6 +10320,9 @@ function setDataDocs(htmlArvore, id_procedimento) {
     return listDocs;
 }
 function setCapaProcesso(loop = true) {
+    // A capa nova (processo/src/capa, init_processo_capa.js) cede por este atributo no <html> da janela de topo, posto em
+    // document_start: ela desenha a faixa de cards e os dados do processo, e a antiga nao desenha mais.
+    if (document.documentElement.hasAttribute('data-seipro-processo-capa')) { return; }
     var ifrArvore = $('#ifrArvore').contents();
     var ifrVisualizacao = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
                         ? $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents()
@@ -11041,7 +11057,10 @@ function updateTitlePage(mode, dadosProcesso = false) {
     if ( typeof processo.txtDescricao !== 'undefined'  ) {
         var protocolo = (typeof processo !== 'undefined' && typeof processo.txtProtocoloExibir === 'undefined') ? processo.hdnProtocoloFormatado : processo.txtProtocoloExibir;
         if (mode == 'processo') {
-            $('head title').text(processo.txtDescricao+' | SEI - Processo '+protocolo);
+            // O titulo da aba agora e do modulo processo/ (a partir da loja do processo, sem o iframe oculto).
+            if (!document.documentElement.hasAttribute('data-seipro-processo-titulo')) {
+                $('head title').text(processo.txtDescricao+' | SEI - Processo '+protocolo);
+            }
             if (parent.verifyConfigValue('urlamigavel')) {
                 updateUrlPage(true, dadosProcesso);
             }

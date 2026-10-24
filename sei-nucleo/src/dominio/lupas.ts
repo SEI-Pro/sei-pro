@@ -74,3 +74,17 @@ export async function pesquisarNoAutoCompletar(
   // O SEI manda `descricao` ja escapado dentro do XML (dupla codificacao): o parser tira uma camada e sobra `&quot;`.
   return semRepetir(itens.map((i) => ({ ...i, texto: decodificarEntidades(i.texto) })));
 }
+
+/**
+ * Itens que a unidade NÃO pode retirar do processo: o SEI declara, no script da tela "Consultar/Alterar Processo",
+ * `arrAssuntosNegados[n] = {id_assunto:'..',sigla_unidade:'..'}` e `arrInteressadosNegados[n] = {id_contato:'..', sigla_unidade:'..'}`
+ * (foram acrescentados por outra unidade). Devolve id -> sigla da unidade que acrescentou.
+ */
+export function lerNegados(html: string, tipo: "assunto" | "interessado"): Map<string, string> {
+  const nome = tipo === "assunto" ? "arrAssuntosNegados" : "arrInteressadosNegados";
+  const chave = tipo === "assunto" ? "id_assunto" : "id_contato";
+  const re = new RegExp(`${nome}\\[\\d+\\]\\s*=\\s*\\{\\s*${chave}\\s*:\\s*['"]([^'"]*)['"]\\s*,\\s*sigla_unidade\\s*:\\s*['"]([^'"]*)['"]`, "g");
+  const saida = new Map<string, string>();
+  for (const m of html.matchAll(re)) saida.set(m[1] as string, m[2] as string);
+  return saida;
+}
