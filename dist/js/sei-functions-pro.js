@@ -10319,6 +10319,9 @@ function setDataDocs(htmlArvore, id_procedimento) {
     return listDocs;
 }
 function setCapaProcesso(loop = true) {
+    // A capa nova (processo/src/capa, init_processo_capa.js) cede por este atributo no <html> da janela de topo, posto em
+    // document_start: ela desenha a faixa de cards e os dados do processo, e a antiga nao desenha mais.
+    if (document.documentElement.hasAttribute('data-seipro-processo-capa')) { return; }
     var ifrArvore = $('#ifrArvore').contents();
     var ifrVisualizacao = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
                         ? $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents()

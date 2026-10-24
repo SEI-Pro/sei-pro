@@ -17,14 +17,16 @@ import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
 import { type ContextoProcesso, criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
 import { criarLeituras } from "./leituras";
-import { dentroDoVerificadorOculto, ehQuadroDaArvore, marcarAtivo, marcarGantt, marcarMenu } from "./marca";
+import { dentroDoVerificadorOculto, ehQuadroDaArvore, ehTopoDoProcesso, marcarAtivo, marcarCapa, marcarGantt, marcarMenu } from "./marca";
 import { ligarMenuDaArvore } from "./menuDoc/ligar";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
+import { ligarPonteDaCapa } from "./ponteCapa";
 
 let contextoDaPagina: Promise<ContextoProcesso | null> | null = null;
 
 definirCss(`${base}\n${proprio}`);
+if (ehTopoDoProcesso(window)) marcarCapa(document);
 if (ehQuadroDaArvore(window)) {
   marcarAtivo(document);
   marcarMenu(document);
@@ -37,6 +39,8 @@ if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVeri
   // O Gantt abre por pedido (o link da capa legada), com ou sem os painéis e o menu ligados: o ouvinte vale sempre que
   // o atributo `data-seipro-processo-gantt` foi posto, senão o link ficaria morto.
   ligarGantt(document, obterContexto);
+  // A capa (quadro do visualizador) pede as fatias e a coleta do histórico por evento: o dono da escrita é este quadro.
+  ligarPonteDaCapa(document, obterContexto);
   const iniciar = () => void principal().catch((e) => console.warn("[SEI Pro] painéis do processo:", e));
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar, { once: true });
   else iniciar();

@@ -5,6 +5,21 @@ export const ATRIBUTO_CAPA = "data-seipro-processo-capa";
 export const ATRIBUTO_GANTT = "data-seipro-processo-gantt";
 /** Evento no documento do quadro da árvore: o legado (link da capa) e a capa nova pedem a abertura do Gantt por ele. */
 export const EVENTO_ABRIR_GANTT = "spro-processo-gantt-abrir";
+/**
+ * A capa (quadro do visualizador) fala com o quadro da árvore por eventos no documento da árvore, sem dados no evento
+ * (o `detail` não atravessa mundos isolados): o pedido é só o nome. O que precisa voltar vai em atributos do <html> da árvore.
+ *  - pedir: carrega as fatias que a capa lê (dadosProcesso, marcador) se ainda não vieram;
+ *  - calcular: coleta o histórico completo (progresso/erro em `ATRIBUTO_COLETA`); cancelar: para a coleta.
+ */
+export const EVENTO_CAPA_PEDIR = "spro-processo-capa-pedir";
+export const EVENTO_CAPA_CALCULAR = "spro-processo-capa-calcular";
+export const EVENTO_CAPA_CANCELAR = "spro-processo-capa-cancelar";
+/** No <html> da árvore: "coletando:<feito>/<total>", "erro:<mensagem>" ou ausente (nada em curso). */
+export const ATRIBUTO_COLETA = "data-spro-capa-coleta";
+
+/** Opção do legado (`dataValues`, numérica): dias sem sair da unidade para a capa avisar. 0 desliga. */
+export const OPCAO_PROCESSO_PARADO = "processoparado";
+export const LIMITE_PARADO_PADRAO = 15;
 
 /** Teto do cache: cota do chrome.storage.local é dividida com Favoritos, Histórico e Agente. */
 export const MAX_PROCESSOS_CACHE = 200;

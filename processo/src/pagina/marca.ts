@@ -4,7 +4,7 @@
  * Observações, Bloco Interno). O content script roda no document_start, então o atributo existe antes de o
  * legado olhar. Só nos quadros da árvore (acao=procedimento_visualizar), nunca na janela de topo.
  */
-import { ATRIBUTO_GANTT, ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
+import { ATRIBUTO_CAPA, ATRIBUTO_GANTT, ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
 
 export function ehQuadroDaArvore(janela: Pick<Window, "location" | "top">): boolean {
   return janela !== janela.top && /[?&]acao=procedimento_visualizar(&|$)/.test(janela.location.search);
@@ -30,6 +30,20 @@ export function marcarMenu(doc: Document): void {
  */
 export function marcarGantt(doc: Document): void {
   doc.documentElement?.setAttribute(ATRIBUTO_GANTT, "1");
+}
+
+/** A janela de topo da tela do processo (`acao=procedimento_trabalhar`): é nela que o legado desenha a capa. */
+export function ehTopoDoProcesso(janela: Pick<Window, "location" | "top">): boolean {
+  return janela === janela.top && /[?&]acao=procedimento_trabalhar(&|$)/.test(janela.location.search);
+}
+
+/**
+ * Sinal para o legado: com este atributo, `setCapaProcesso` (a capa antiga, desenhada pela janela de topo no quadro do
+ * visualizador) não desenha mais; quem desenha é `capa/`. Vai no <html> da JANELA DE TOPO, onde o legado roda, e é posto
+ * em `document_start` para existir antes da primeira chamada dele. A capa nova também o reafirma ao montar.
+ */
+export function marcarCapa(doc: Document): void {
+  doc.documentElement?.setAttribute(ATRIBUTO_CAPA, "1");
 }
 
 /**
