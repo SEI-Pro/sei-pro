@@ -15,6 +15,7 @@ import { acaoNaArvore, type Arvore, type NivelAcesso } from "./arvore";
 import { hipotesesDoFormulario, mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
 import { escolherItem, Formulario, type ItemLupa } from "../formulario/formulario";
 import { linkDaAcao, parametros } from "../links/links";
+import { textoDe } from "../sessao/dom";
 import { ErroSei } from "../sessao/erros";
 import type { Http, OpcoesHttp } from "../sessao/http";
 import type { Sei } from "../sei";
@@ -57,6 +58,8 @@ export interface MetadadosProcesso {
   assuntos: string[];
   interessados: string[];
   observacoes: string;
+  /** Observações das OUTRAS unidades (tabela `#divObservacoesOutras`), quando a tela as mostra. */
+  observacoesOutras: Array<{ unidade: string; observacao: string }>;
   editavel: boolean;
   /** Nível de acesso lido do formulário (cai no da árvore quando o formulário não o marca, ex.: campo desabilitado). */
   nivel: NivelAcesso;
@@ -83,14 +86,25 @@ export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp
     assuntos: nomes(form.itensLupa("selAssuntos")),
     interessados: nomes(form.itensLupa("selInteressadosProcedimento")),
     observacoes: form.valor("txaObservacoes") ?? "",
+    observacoesOutras: observacoesDasOutrasUnidades(form),
     editavel,
   };
+}
+
+function observacoesDasOutrasUnidades(form: Formulario): Array<{ unidade: string; observacao: string }> {
+  const saida: Array<{ unidade: string; observacao: string }> = [];
+  for (const tr of form.pagina.doc.querySelectorAll("#divObservacoesOutras tbody tr")) {
+    const td = [...tr.querySelectorAll("td")];
+    const unidade = textoDe(td[0]);
+    if (unidade) saida.push({ unidade, observacao: textoDe(td[1]) });
+  }
+  return saida;
 }
 
 export async function consultarProcesso(sei: Sei, referencia: string, op?: OpcoesHttp): Promise<Processo> {
   const arv = await sei.arvore(referencia, op);
   if (arv.nivel === "sigiloso") throw new ErroSei("SEI_SIGILOSO", "Processo sigiloso: o agente n\u00E3o atua nele.");
-  const { nivel: _nivel, hipotese: _hipotese, ...meta } = await consultarDaArvore(sei.http, arv, op);
+  const { nivel: _nivel, hipotese: _hipotese, observacoesOutras: _outras, ...meta } = await consultarDaArvore(sei.http, arv, op);
   return {
     idProcedimento: arv.idProcedimento,
     protocolo: arv.protocolo,

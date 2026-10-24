@@ -7,7 +7,13 @@
 
 import { acaoNaArvore, lerArvore } from "../src/dominio/arvore";
 import {
+  acoesDoPainel,
   blocoInternoDoHistorico,
+  lerFormularioDoProcesso,
+  lerMarcadoresDoProcesso,
+  lerOpcoesAcompanhamento,
+  lerOpcoesAtribuicao,
+  lerOpcoesMarcador,
   lerAcompanhamento,
   lerAnotacao,
   lerAtribuicaoDaPagina,
@@ -201,6 +207,38 @@ export async function verificarPainel(): Promise<void> {
     checar("sigiloso (usuario / unidade) nao e atribuicao", sig.usuario === null, sig);
     const nenhum = lerAtribuicaoDaPagina({ ...arv, pagina: paginaSintetica("<p>sem script</p>") }, "TESTE");
     checar("pagina sem Nos[0].html: texto vazio, sem quebrar", nenhum.texto === "" && nenhum.usuario === null);
+  }
+
+  secao("listas e leituras dos modais (so GET)");
+  {
+    const a = acoesDoPainel(arv);
+    checar("acoesDoPainel: processo aberto na unidade oferece as 6 acoes", a.anotar && a.acompanhar && a.marcar && a.atribuir && a.alterar && a.consultar, a);
+    const fechada = acoesDoPainel({ ...arv, acoesProcesso: [], links: [] });
+    checar("acoesDoPainel: sem barra nenhuma acao", !fechada.anotar && !fechada.alterar && !fechada.consultar, fechada);
+
+    const cham: string[] = [];
+    const at = await lerOpcoesAtribuicao(httpCom([["acao=procedimento_atribuicao_cadastrar", fixture("sei41/p_procedimento_atribuicao_cadastrar.html")]], cham), arv);
+    checar("opcoes de atribuicao: sem a vazia, com login - nome", at.opcoes.length === 15 && at.opcoes[0].texto === "pedro.soares - Pedro Soares" && at.opcoes[0].valor === "100001861", at.opcoes[0]);
+    checar("opcoes de atribuicao: um GET so", cham.length === 1);
+
+    const gr = await lerOpcoesAcompanhamento(httpCom([["acao=acompanhamento_gerenciar", fixture("sei41/p_acompanhamento_alterar.html")]], []), arv);
+    checar("opcoes de acompanhamento: grupos e o atual", gr.grupos.length === 6 && gr.atual === "37" && gr.grupos.some((g) => g.texto === "compras"), gr);
+
+    const mk = await lerOpcoesMarcador(httpCom([["acao=andamento_marcador_gerenciar", fixture("sei41/marcador_cadastrar.html")]], []), arv);
+    checar("opcoes de marcador: id, nome e icone", mk.length === 14 && mk[0].texto.startsWith("Capacita") && mk[0].icone === "svg/marcador_rosa.svg?18", mk[0]);
+
+    const lista = await lerMarcadoresDoProcesso(httpCom([["acao=andamento_marcador_gerenciar", fixture("sei41/p_andamento_marcador_gerenciar.html")]], []), arv);
+    checar("marcadores do processo: icone, nome, usuario e data", lista.length === 2 && lista[0].nome === "Para Bruna assinar" && lista[0].icone === "svg/marcador_azul_marinho.svg?18" && lista[0].usuario === "pedro.soares" && lista[0].id === "883", lista[0]);
+    const vazio = await lerMarcadoresDoProcesso(httpCom([["acao=andamento_marcador_gerenciar", fixture("sei41/marcador_cadastrar.html")]], []), arv);
+    checar("sem marcador (abre o formulario): lista vazia, nao erro", vazio.length === 0);
+    const estranha = await lanca(() => lerMarcadoresDoProcesso(httpCom([["andamento_marcador_gerenciar", paginaSintetica("<h1>Erro</h1>")]], []), arv));
+    checar("resposta que nao e lista nem formulario: erro explicito", estranha?.codigo === "SEI_VERSAO_NAO_SUPORTADA", estranha?.codigo);
+
+    const sei = { http: httpCom([["acao=procedimento_alterar", fixture("sei41/p_procedimento_alterar.html")]], []) } as never;
+    const fp = await lerFormularioDoProcesso(sei, arv);
+    checar("formulario do processo: tipos, nivel e hipotese marcada", fp.tipos.length > 3 && fp.nivel === "1" && !!fp.hipoteseAtual, { n: fp.tipos.length, nivel: fp.nivel, h: fp.hipoteseAtual });
+    const comObs = await consultarDaArvore(httpCom([["acao=procedimento_alterar", fixture("sei41/p_procedimento_alterar.html")]], []), arv);
+    checar("consultarDaArvore traz observacoesOutras (lista, possivelmente vazia)", Array.isArray(comObs.observacoesOutras));
   }
 
   secao("blocoInternoDoHistorico (puro, sobre andamentos ja coletados)");

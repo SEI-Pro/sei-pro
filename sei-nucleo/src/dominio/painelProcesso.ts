@@ -17,12 +17,14 @@
 
 import { acaoNaArvore, type Arvore } from "./arvore";
 import type { Andamento } from "./historico";
-import { Formulario } from "../formulario/formulario";
+import { hipotesesDoFormulario } from "./escrita";
+import { Formulario, type ItemLupa } from "../formulario/formulario";
+import { linkDaAcao } from "../links/links";
 import { lerString } from "../sessao/literais";
 import { analisarHtml, textoDe } from "../sessao/dom";
 import { ErroSei } from "../sessao/erros";
 import type { Http, OpcoesHttp, Pagina } from "../sessao/http";
-import { lerContexto } from "../sei";
+import { lerContexto, type Sei } from "../sei";
 
 function linkObrigatorio(arv: Arvore, acao: string, nome: string): string {
   const l = acaoNaArvore(arv, acao);
@@ -264,4 +266,155 @@ export function blocoInternoDoHistorico(andamentos: Andamento[], siglaUnidade: s
   if (!inserido) return null;
   const retirado = maisRecente(da.filter((a) => a.descricao.includes("Processo retirado do bloco")));
   return retirado && momento(inserido.data) < momento(retirado.data) ? null : inserido.descricao;
+}
+
+// --- O que a barra do processo oferece -----------------------------------------------------------------------
+
+export interface AcoesDoPainel {
+  /** Anotações (`anotacao_registrar`). */
+  anotar: boolean;
+  /** Acompanhamento especial (`acompanhamento_gerenciar`). */
+  acompanhar: boolean;
+  /** Marcadores (`andamento_marcador_gerenciar`). */
+  marcar: boolean;
+  /** Atribuição (o ícone "Atribuir Processo" da barra). */
+  atribuir: boolean;
+  /** "Consultar/Alterar Processo" (processo aberto na unidade). */
+  alterar: boolean;
+  /** Pelo menos a consulta do processo (aberto ou não). */
+  consultar: boolean;
+}
+
+/** Quais ações a barra do processo oferece ao usuário, lido da árvore que já está na tela. Sem rede. */
+export function acoesDoPainel(arv: Arvore): AcoesDoPainel {
+  const tem = (a: string) => Boolean(acaoNaArvore(arv, a));
+  const alterar = tem("procedimento_alterar");
+  return {
+    anotar: tem("anotacao_registrar"),
+    acompanhar: tem("acompanhamento_gerenciar"),
+    marcar: tem("andamento_marcador_gerenciar"),
+    atribuir: tem("procedimento_atribuicao_cadastrar"),
+    alterar,
+    consultar: alterar || tem("procedimento_consultar"),
+  };
+}
+
+// --- Marcadores do processo, com ícone ------------------------------------------------------------------------
+
+export interface MarcadorDoPainel {
+  /** id do marcador (vale para `definirMarcador` e para o vínculo de remoção). */
+  id: string;
+  nome: string;
+  texto: string;
+  /** Caminho do ícone como o SEI o serve (`svg/marcador_azul.svg?18`), relativo à tela. */
+  icone: string;
+  usuario: string;
+  data: string;
+}
+
+/**
+ * Marcadores do processo (GET da tela "Gerenciar Marcador" que a árvore oferece). Diferente de
+ * `marcadoresDoProcesso` (do agente), usa a árvore que o quadro já tem e traz o ícone de cada marcador.
+ * Lista vazia = sem marcador (estado vazio, não erro).
+ */
+export async function lerMarcadoresDoProcesso(http: Http, arv: Arvore, op?: OpcoesHttp): Promise<MarcadorDoPainel[]> {
+  const tela = await http.obter(linkObrigatorio(arv, "andamento_marcador_gerenciar", "Gerenciar Marcador"), { ...op, aceitarValidacao: true });
+  // Sem nenhum marcador o SEI 5 abre direto o formulário de cadastro: não há lista.
+  if (tela.doc.querySelector("#frmAndamentoMarcadorCadastro")) return [];
+  const tabela = tela.doc.querySelector("#tblMarcadores");
+  if (!tabela) {
+    if (/Nenhum registro encontrado|sem marcador/i.test(tela.doc.body?.textContent ?? "") || tela.doc.querySelector("#frmGerenciarMarcador")) return [];
+    throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A tela de marcadores não é a lista nem o formulário esperados.", textoDe(tela.doc.querySelector("title")));
+  }
+  const linhas = [...tabela.querySelectorAll("tr")].filter((tr) => tr.querySelector("input[type=checkbox]"));
+  return linhas.map((tr) => {
+    const td = [...tr.querySelectorAll("td")];
+    return {
+      id: tr.querySelector("input[type=checkbox]")?.getAttribute("value") ?? "",
+      nome: textoDe(td[1]),
+      texto: textoDe(td[2]),
+      icone: td[1]?.querySelector("img")?.getAttribute("src") ?? "",
+      usuario: textoDe(td[3]),
+      data: textoDe(td[4]),
+    };
+  });
+}
+
+// --- Listas dos modais de edição ------------------------------------------------------------------------------
+
+export interface OpcaoLista {
+  valor: string;
+  texto: string;
+  /** Ícone (marcadores). */
+  icone?: string;
+}
+
+/** Usuários a quem a unidade pode atribuir o processo (GET do formulário de atribuição, que não grava nada). */
+export async function lerOpcoesAtribuicao(http: Http, arv: Arvore, op?: OpcoesHttp): Promise<{ opcoes: OpcaoLista[]; atual?: string }> {
+  const f = await Formulario.abrir(http, linkObrigatorio(arv, "procedimento_atribuicao_cadastrar", "Atribuir Processo"), "#frmAtividadeAtribuir", { ...op, aceitarValidacao: true });
+  const todas = f.opcoes("selAtribuicao");
+  const atual = todas.find((o) => o.selecionada && o.valor !== "null")?.valor;
+  return { opcoes: todas.filter((o) => o.valor !== "null" && o.texto).map((o) => ({ valor: o.valor, texto: o.texto })), ...(atual ? { atual } : {}) };
+}
+
+/** Marcadores que a unidade pode aplicar (select do formulário "Adicionar"). */
+export async function lerOpcoesMarcador(http: Http, arv: Arvore, op?: OpcoesHttp): Promise<OpcaoLista[]> {
+  const tela = await http.obter(linkObrigatorio(arv, "andamento_marcador_gerenciar", "Gerenciar Marcador"), { ...op, aceitarValidacao: true });
+  let pagina = tela;
+  if (!tela.doc.querySelector("#frmAndamentoMarcadorCadastro")) {
+    const cadastrar = linkDaAcao(tela.html, "andamento_marcador_cadastrar");
+    if (!cadastrar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Esta versão do SEI não tem a tela de marcadores esperada (4.1 ou superior).");
+    pagina = await http.obter(cadastrar, { ...op, aceitarValidacao: true });
+  }
+  const sel = pagina.doc.querySelector("#selMarcador");
+  if (!sel) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A tela de marcadores não tem a lista de marcadores.");
+  return [...sel.querySelectorAll("option")]
+    .map((o) => ({ valor: o.getAttribute("value") ?? "", texto: textoDe(o), icone: o.getAttribute("data-imagesrc") ?? undefined }))
+    .filter((o) => o.valor && o.valor !== "null" && o.texto)
+    .map((o) => (o.icone ? o : { valor: o.valor, texto: o.texto }));
+}
+
+/** Grupos de acompanhamento especial da unidade e o grupo atual do processo (GET, sem gravar). */
+export async function lerOpcoesAcompanhamento(http: Http, arv: Arvore, op?: OpcoesHttp): Promise<{ grupos: OpcaoLista[]; atual?: string }> {
+  const tela = await http.obter(linkObrigatorio(arv, "acompanhamento_gerenciar", "Acompanhamento Especial"), { ...op, aceitarValidacao: true });
+  let pagina = tela;
+  if (!tela.doc.querySelector("#frmAcompanhamentoCadastro")) {
+    const link = ["acompanhamento_alterar", "acompanhamento_cadastrar"].map((a) => linkDaAcao(tela.html, a)).find(Boolean);
+    if (!link) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A tela de acompanhamento especial não tem o formulário esperado.");
+    pagina = await http.obter(link, { ...op, aceitarValidacao: true });
+  }
+  const f = Formulario.de(pagina, "#frmAcompanhamentoCadastro");
+  const todas = f.opcoes("selGrupoAcompanhamento");
+  const atual = todas.find((o) => o.selecionada && o.valor !== "null")?.valor;
+  return { grupos: todas.filter((o) => o.valor !== "null" && o.texto).map((o) => ({ valor: o.valor, texto: o.texto })), ...(atual ? { atual } : {}) };
+}
+
+export interface FormularioDoProcesso {
+  tipos: OpcaoLista[];
+  tipoAtual?: string;
+  nivel: string;
+  hipoteseAtual?: string;
+  interessados: ItemLupa[];
+  /** Hipóteses legais de um nível ("1" restrito, "2" sigiloso): a tela só as preenche por AJAX. */
+  hipoteses(nivel: string, sinal?: AbortSignal): Promise<OpcaoLista[]>;
+}
+
+/** Tipos de processo, nível, hipótese e interessados do formulário "Consultar/Alterar Processo" (GET, sem gravar). */
+export async function lerFormularioDoProcesso(sei: Sei, arv: Arvore, op?: OpcoesHttp): Promise<FormularioDoProcesso> {
+  const link = acaoNaArvore(arv, "procedimento_alterar") ?? acaoNaArvore(arv, "procedimento_consultar");
+  if (!link) throw new ErroSei("SEI_ACAO_INDISPONIVEL", `O SEI não oferece a consulta do processo ${arv.protocolo} para você.`);
+  const f = await Formulario.abrir(sei.http, link, "#frmProcedimentoCadastro", op);
+  const tipos = f.opcoes("selTipoProcedimento");
+  const hip = f.opcoes("selHipoteseLegal").find((o) => o.selecionada && o.valor !== "null")?.valor;
+  const tipoAtual = tipos.find((o) => o.selecionada)?.valor;
+  return {
+    tipos: tipos.filter((o) => o.valor && o.valor !== "null").map((o) => ({ valor: o.valor, texto: o.texto })),
+    ...(tipoAtual ? { tipoAtual } : {}),
+    nivel: f.valor("rdoNivelAcesso") ?? "",
+    ...(hip ? { hipoteseAtual: hip } : {}),
+    interessados: f.itensLupa("selInteressadosProcedimento"),
+    async hipoteses(nivel, sinal) {
+      return (await hipotesesDoFormulario(sei, f, nivel, sinal)).map((h) => ({ valor: h.id, texto: h.texto }));
+    },
+  };
 }
