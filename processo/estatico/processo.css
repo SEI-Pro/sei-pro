@@ -3,6 +3,30 @@
  * As cores vêm dos tokens --spro-* de sei-comum/src/ui/base.css (anexado antes deste arquivo). O escuro vem de
  * data-tema="escuro" na raiz dos painéis e no diálogo (o quadro e a janela de topo são documentos diferentes).
  */
+/* Os tokens do base.css seguem o esquema de cores do SISTEMA quando ninguem fixou o tema; aqui o tema e o do SEI
+   (claro por padrao, escuro quando o SEI esta escuro), nunca o do sistema operacional. */
+.spro-p-raiz,
+dialog.spro-dialogo {
+  --spro-fundo: #ffffff;
+  --spro-fundo-2: #f6f7f9;
+  --spro-fundo-3: #eceef2;
+  --spro-texto: #1b1f24;
+  --spro-suave: #5d6772;
+  --spro-fraco: #8b939c;
+  --spro-borda: #e3e6eb;
+  --spro-borda-forte: #cfd4db;
+  --spro-destaque: #1f5fbf;
+  --spro-destaque-texto: #ffffff;
+  --spro-perigo: #d1352b;
+  --spro-aviso: #b45c0a;
+  --spro-ok: #12805c;
+  --spro-estrela: #f2a516;
+  --spro-sombra-3: 0 10px 24px -6px rgb(16 24 40 / 18%), 0 24px 56px -12px rgb(16 24 40 / 24%);
+  --spro-veu: rgb(17 21 28 / 46%);
+  --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 10%, transparent);
+  --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 18%, transparent);
+  color-scheme: light;
+}
 .spro-p-raiz[data-tema="escuro"],
 dialog.spro-dialogo[data-tema="escuro"] {
   --spro-fundo: #1a1d21;
@@ -356,6 +380,9 @@ dialog.spro-dialogo[data-tema="escuro"] {
 }
 
 /* ---------- Modais ---------- */
+dialog.spro-p-dialogo > header h2 {
+  text-align: left;
+}
 dialog.spro-p-dialogo .spro-dialogo-corpo {
   gap: 10px;
 }

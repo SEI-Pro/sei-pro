@@ -9,6 +9,7 @@ import type { Arvore } from "@nucleo/dominio/arvore";
 import type { OpcoesEscrita, ResultadoEscrita } from "@nucleo/dominio/escrita";
 import {
   type FormularioDoProcesso,
+  lerAnotacao,
   lerFormularioDoProcesso,
   lerOpcoesAcompanhamento,
   lerOpcoesAtribuicao,
@@ -18,10 +19,17 @@ import {
 import { type AlteracaoProcesso, alterarProcesso } from "@nucleo/dominio/processo";
 import type { Sei } from "@nucleo/sei";
 import type { LojaProcesso } from "../modelo/loja";
+import { alternarItem } from "../modelo/texto";
 
 export interface Operacoes {
   atribuir(usuario: string | null): Promise<ResultadoEscrita>;
   anotar(a: { texto: string; prioridade: boolean }): Promise<ResultadoEscrita>;
+  /**
+   * Marca/desmarca o item `i` da checklist LENDO a anotação dentro da fila de gravações: dois cliques seguidos não
+   * se atropelam (o segundo parte do que o primeiro gravou, não do que estava na tela).
+   */
+  alternarItemDaAnotacao(i: number): Promise<ResultadoEscrita>;
+  alternarPrioridadeDaAnotacao(): Promise<ResultadoEscrita>;
   acompanhar(a: { grupo?: string; observacao?: string }): Promise<ResultadoEscrita>;
   /** `marcador` é o NOME do marcador (o núcleo compara por nome para saber se o processo já o tem). */
   marcar(m: { marcador: string; texto?: string }): Promise<ResultadoEscrita>;
@@ -39,6 +47,17 @@ export function operacoesDe(sei: Sei, arv: Arvore, loja: LojaProcesso): Operacoe
   return {
     atribuir: (usuario) => gravar((op) => atribuirProcesso(sei, ref, usuario, op)),
     anotar: (a) => gravar((op) => definirAnotacao(sei, ref, a, op)),
+    alternarItemDaAnotacao: (i) =>
+      gravar(async (op) => {
+        const atual = await lerAnotacao(sei.http, arv);
+        return definirAnotacao(sei, ref, { texto: alternarItem(atual?.texto ?? "", i), prioridade: atual?.prioridade ?? false }, op);
+      }),
+    alternarPrioridadeDaAnotacao: () =>
+      gravar(async (op) => {
+        const atual = await lerAnotacao(sei.http, arv);
+        if (!atual) return { alvo: ref, mudancas: [], aplicado: false, resumo: "Não há anotação." };
+        return definirAnotacao(sei, ref, { texto: atual.texto, prioridade: !atual.prioridade }, op);
+      }),
     acompanhar: (a) => gravar((op) => definirAcompanhamento(sei, ref, a, op)),
     marcar: (m) => gravar((op) => definirMarcador(sei, ref, m, op)),
     desmarcar: (marcador) => gravar((op) => definirMarcador(sei, ref, { marcador, remover: true }, op)),

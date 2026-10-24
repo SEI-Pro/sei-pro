@@ -15,7 +15,7 @@ import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
 import { criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
 import { criarLeituras } from "./leituras";
-import { ehQuadroDaArvore, marcarAtivo } from "./marca";
+import { dentroDoVerificadorOculto, ehQuadroDaArvore, marcarAtivo } from "./marca";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
 
@@ -23,7 +23,7 @@ definirCss(`${base}\n${proprio}`);
 if (ehQuadroDaArvore(window)) marcarAtivo(document);
 
 const global = window as unknown as { __seiProProcessoPaineis?: boolean };
-if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window)) {
+if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVerificadorOculto(window)) {
   global.__seiProProcessoPaineis = true;
   const iniciar = () => void principal().catch((e) => console.warn("[SEI Pro] painéis do processo:", e));
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar, { once: true });

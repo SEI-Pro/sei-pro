@@ -3,7 +3,7 @@
  * topo, onde os modais abrem). Sem arquivo de folha de estilo no manifest e sem depender da ordem de carga.
  */
 
-import { seiEscuro } from "@comum/pagina/tema";
+import { esquemaDoEstilo2 } from "@comum/pagina/tema";
 
 const ID = "spro-processo-estilo";
 let css = "";
@@ -21,10 +21,23 @@ export function garantirEstilo(doc: Document): void {
   (doc.head ?? doc.documentElement).append(el);
 }
 
+/**
+ * O SEI está escuro? Manda o Estilo Avançado (`data-spro-tema` no <html>); senão, o modo noturno antigo, que só vale
+ * quando o legado de fato pintou a página (classe `dark-mode` no <body>): a chave `darkModePro` sozinha não escurece nada.
+ */
 export function temaEscuro(doc: Document): boolean {
-  try {
-    return seiEscuro(doc, doc.defaultView?.localStorage ?? localStorage);
-  } catch {
-    return false;
-  }
+  const novo = esquemaDoEstilo2(doc);
+  if (novo) return novo === "escuro";
+  return doc.body?.classList.contains("dark-mode") ?? false;
+}
+
+/** Avisa quando o tema muda (Estilo Avançado ligado/desligado/trocado, ou o legado pôs `dark-mode` no corpo). */
+export function aoMudarTema(doc: Document, cb: () => void): () => void {
+  const Observador =
+    (doc.defaultView as unknown as { MutationObserver?: typeof MutationObserver } | null)?.MutationObserver ?? globalThis.MutationObserver;
+  if (typeof Observador !== "function") return () => {};
+  const o = new Observador(cb);
+  if (doc.documentElement) o.observe(doc.documentElement, { attributes: true, attributeFilter: ["data-spro-tema"] });
+  if (doc.body) o.observe(doc.body, { attributes: true, attributeFilter: ["class"] });
+  return () => o.disconnect();
 }

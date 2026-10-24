@@ -57,7 +57,7 @@ export const SELECAO_PADRAO: readonly string[] = [
 
 /** Quais painéis ligar, dada a lista salva pelo usuário (`null` = nunca personalizou). */
 export function paineisHabilitados(selecao: readonly string[] | null): Set<TipoPainel> {
-  const nomes = new Set(selecao && selecao.length ? selecao : SELECAO_PADRAO);
+  const nomes = new Set(selecao?.length ? selecao : SELECAO_PADRAO);
   const saida = new Set<TipoPainel>(["descricao"]);
   for (const [tipo, nome] of Object.entries(NOME_NA_PERSONALIZACAO) as Array<[TipoPainel, string]>) if (nomes.has(nome)) saida.add(tipo);
   return saida;

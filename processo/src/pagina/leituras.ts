@@ -16,6 +16,7 @@ import type { Http } from "@nucleo/sessao/http";
 import type { DadoAcompanhamento, DadoAnotacao, DadoAtribuicao, DadoBlocoInterno, DadoMarcador, DadoProcesso } from "../modelo/dados";
 import type { LojaProcesso } from "../modelo/loja";
 import type { NomeFatia } from "../modelo/tipos";
+import { mensagemDeLeitura } from "./comum";
 
 export interface DepsLeituras {
   http: Http;
@@ -35,7 +36,23 @@ export function marcadoresDaArvore(arv: Arvore): MarcadorDoPainel[] {
   });
 }
 
+/** Falha de leitura com a mensagem que o usuário entende (a loja a guarda como `erro` da fatia). */
+function amigavel(busca: () => Promise<unknown>): () => Promise<unknown> {
+  return async () => {
+    try {
+      return await busca();
+    } catch (e) {
+      throw new Error(mensagemDeLeitura(e));
+    }
+  };
+}
+
 export function criarLeituras(d: DepsLeituras): Leituras {
+  const bruto = criarLeiturasBrutas(d);
+  return Object.fromEntries(Object.entries(bruto).map(([n, f]) => [n, amigavel(f)])) as Leituras;
+}
+
+function criarLeiturasBrutas(d: DepsLeituras): Leituras {
   const acoes = acoesDoPainel(d.arv);
   const semConsulta = { disponivel: false, motivo: "consultas" } as const;
   const semAcao = { disponivel: false, motivo: "acao" } as const;

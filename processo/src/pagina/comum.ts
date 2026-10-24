@@ -55,3 +55,16 @@ export function mensagemDeErro(e: unknown): string {
   }
   return typeof e === "string" && e ? e : "Não foi possível concluir.";
 }
+
+/**
+ * O que o painel diz quando uma leitura falha: sem códigos nem seletores de formulário. O motivo mais comum de a
+ * resposta não ser a tela esperada é a sessão ter expirado (o SEI devolve o login ou uma página de erro).
+ */
+export function mensagemDeLeitura(e: unknown): string {
+  const codigo = e && typeof e === "object" ? (e as { codigo?: unknown }).codigo : undefined;
+  if (codigo === "SEI_SESSAO_EXPIRADA") return "Sua sessão do SEI expirou. Entre de novo e atualize a página.";
+  if (codigo === "SEI_VERSAO_NAO_SUPORTADA" || codigo === "SEI_RESPOSTA_INESPERADA")
+    return "O SEI respondeu uma tela inesperada (a sessão pode ter expirado).";
+  if (codigo === "SEI_REDE") return "Sem conexão com o SEI.";
+  return mensagemDeErro(e);
+}

@@ -465,6 +465,24 @@ export async function verificarPaineis(): Promise<void> {
     );
   }
 
+  secao("paineis: tema segue o do SEI, nao o do sistema");
+  {
+    const claro = cenario();
+    montarPaineis(claro.ctx);
+    checar("pagina clara: raiz sem data-tema", !claro.doc.querySelector("[data-spro-processo-raiz]")?.hasAttribute("data-tema"));
+    const escuro = cenario({ html: HTML_ARVORE.replace(/<body /, '<body class="dark-mode" ') });
+    montarPaineis(escuro.ctx);
+    checar(
+      "corpo com dark-mode (legado pintou): raiz escura",
+      escuro.doc.querySelector("[data-spro-processo-raiz]")?.getAttribute("data-tema") === "escuro",
+    );
+    const so = cenario({
+      html: HTML_ARVORE.replace(/<html /, '<html data-spro-tema="claro" ').replace(/<body /, '<body class="dark-mode" '),
+    });
+    montarPaineis(so.ctx);
+    checar("Estilo Avancado claro manda sobre o dark-mode", !so.doc.querySelector("[data-spro-processo-raiz]")?.hasAttribute("data-tema"));
+  }
+
   secao("paineis: sigiloso nao mostra nem guarda especificacao, interessados, assuntos, observacoes");
   {
     const c = cenario({ sigiloso: true });
@@ -519,6 +537,56 @@ export async function verificarPaineis(): Promise<void> {
     await tique(60);
     checar("sem remocao nada e refeito", c.doc.querySelectorAll("[data-spro-processo-raiz]").length === 2);
     m.parar();
+  }
+
+  secao("leituras: mensagens para gente, consultas desativadas, fallback do marcador");
+  {
+    const c = cenario();
+    const paginaRuim = {
+      url: "https://treinamento.sei.sp.gov.br/sei/controlador.php?x=1",
+      status: 200,
+      html: "<html><body><h1>Erro</h1></body></html>",
+      doc: new DOMParser().parseFromString("<html><body><h1>Erro</h1></body></html>", "text/html") as unknown as Document,
+    };
+    const chamadas: string[] = [];
+    const http = {
+      base: new URL("https://treinamento.sei.sp.gov.br/sei/"),
+      obter: async (u: string) => {
+        chamadas.push(u);
+        return paginaRuim;
+      },
+      enviar: async () => paginaRuim,
+      absoluta: (u: string) => u,
+      baixar: async () => {
+        throw new Error("x");
+      },
+    };
+    const l = criarLeituras({ http: http as never, arv: c.ctx.arv, loja: c.loja, unidadeSigla: "TESTE", consultasDesativadas: false });
+    let msg = "";
+    try {
+      await (l.anotacao as () => Promise<unknown>)();
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    checar("tela que nao e o formulario: mensagem sem seletor nem codigo", /inesperada/.test(msg) && !/#frm/.test(msg), msg);
+
+    const sem = criarLeituras({ http: http as never, arv: c.ctx.arv, loja: c.loja, unidadeSigla: "TESTE", consultasDesativadas: true });
+    const antes = chamadas.length;
+    const d = (await (sem.dadosProcesso as () => Promise<{ disponivel: boolean; motivo?: string }>)()) as {
+      disponivel: boolean;
+      motivo?: string;
+    };
+    const m = (await (sem.marcador as () => Promise<{ itens: unknown[]; editavel: boolean }>)()) as { itens: unknown[]; editavel: boolean };
+    checar(
+      "consultas desativadas: nenhuma requisicao e motivo claro",
+      chamadas.length === antes && d.disponivel === false && d.motivo === "consultas",
+    );
+    checar("marcador sem a tela de marcadores: lista da propria arvore, nao editavel", m.editavel === false && Array.isArray(m.itens));
+    const a = (await (sem.atribuicao as () => Promise<{ linhas: unknown[]; editavel: boolean }>)()) as {
+      linhas: unknown[];
+      editavel: boolean;
+    };
+    checar("atribuicao nunca usa rede", chamadas.length === antes && a.linhas.length > 0);
   }
 
   secao("arvore: espera por MutationObserver / relogio com prazo");

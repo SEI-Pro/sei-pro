@@ -4,7 +4,6 @@
  * página (a árvore se refaz), a montagem se refaz sozinha, sem duplicar.
  */
 
-import { aoMudarEsquemaSei } from "@comum/pagina/tema";
 import { h } from "@comum/ui/dom";
 import { type Arvore, lerArvore } from "@nucleo/dominio/arvore";
 import { paginaDe } from "@nucleo/sessao/pagina";
@@ -12,7 +11,7 @@ import { FATIAS_DO_PAINEL, OCULTOS_NO_SIGILOSO, ORDEM_FINAL, type TipoPainel } f
 import type { NomeFatia } from "../modelo/tipos";
 import { type Casca, criarCasca } from "../ui/painel";
 import type { ContextoProcesso } from "./contexto";
-import { garantirEstilo, temaEscuro } from "./estilo";
+import { aoMudarTema, garantirEstilo, temaEscuro } from "./estilo";
 import { gravarAberto, painelAberto } from "./opcoes";
 import { type DefPainel, PAINEIS } from "./paineis/indice";
 
@@ -148,7 +147,7 @@ export function montarPaineis(ctx: ContextoProcesso): Montagem {
   });
   redesenhar();
 
-  const sairTema = aoMudarEsquemaSei(doc, () => {
+  const sairTema = aoMudarTema(doc, () => {
     const e = temaEscuro(doc);
     for (const el of [raiz, raizAnotacoes]) {
       if (e) el.setAttribute("data-tema", "escuro");
@@ -182,7 +181,9 @@ export function manterMontagem(
   let agendado = false;
   const janela = ctx.doc.defaultView;
   const Observador =
-    (janela as unknown as { MutationObserver?: typeof MutationObserver } | null)?.MutationObserver ?? globalThis.MutationObserver;
+    deps.Observador ??
+    (janela as unknown as { MutationObserver?: typeof MutationObserver } | null)?.MutationObserver ??
+    globalThis.MutationObserver;
   const verificar = () => {
     agendado = false;
     if (m.raiz.isConnected) return;
