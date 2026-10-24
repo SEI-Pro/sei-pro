@@ -2013,6 +2013,12 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   border: 1px solid var(--spro-borda-forte);
   border-radius: 6px;
 }
+/* O bot\xE3o de limpar \xE9 o nosso (com aria-label); o do navegador apareceria dobrado. */
+.spro-f-busca::-webkit-search-cancel-button,
+.spro-f-busca::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
 .spro-f-busca::placeholder {
   color: var(--spro-fraco);
 }
