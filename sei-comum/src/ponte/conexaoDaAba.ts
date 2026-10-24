@@ -9,10 +9,26 @@
  * a origem do pai (`document.referrer`), aceitando a primeira porta dessa origem.
  */
 
-import { criarRpc, type Rpc, type Tratador } from "./rpc";
+import { criarRpc, type PortaRpc, type Rpc, type Tratador } from "./rpc";
+
+/** Página da extensão no Firefox (`moz-extension:`). */
+export function ehFirefox(): boolean {
+  try {
+    return chrome.runtime.getURL("").startsWith("moz-extension:");
+  } catch {
+    return false;
+  }
+}
 
 /** `tratadores`: o que a aba pode pedir ao app (o objeto é lido a cada pedido: dá para preencher depois). */
 export function esperarConexaoDaAba(canal: string, tratadores: Record<string, Tratador> = {}): Promise<Rpc> {
+  // Firefox: a porta do content script não chega a um iframe da extensão na mesma aba. O relé do background
+  // (`ponte/rele.ts`, só no pacote do Firefox) liga as duas pontas pela aba e pelo canal, e já confere o que
+  // aqui se confere (mesma aba, frame de topo): o app só abre a porta com ele.
+  if (ehFirefox()) {
+    console.info(`[SEI Pro] ${canal} conectado pelo relé`);
+    return Promise.resolve(criarRpc(chrome.runtime.connect({ name: canal }) as unknown as PortaRpc, tratadores));
+  }
   const minhaAba = (async () => {
     try {
       return (await chrome.tabs?.getCurrent?.())?.id;
