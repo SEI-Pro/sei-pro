@@ -1536,7 +1536,7 @@ function extractAllTextBetweenQuotes(str){
     : [str];
 }
 function appendDebugReport() {
-    var htmlIconDebug = '<i onclick="dialogDebugScreen()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Notificar bug\')" class="fas fa-bug brancoColor iconDebugScreen" style="float: right;font-size: 16pt;margin-left:15px;cursor: pointer;animation: 2s ease 0s infinite normal none running whitepulser;border-radius: 50%;"></i>';
+    var htmlIconDebug = '<i data-spro-click="dialogDebugScreen" data-spro-args="'+argsPro()+'" data-spro-tip="Notificar bug" class="fas fa-bug brancoColor iconDebugScreen" style="float: right;font-size: 16pt;margin-left:15px;cursor: pointer;animation: 2s ease 0s infinite normal none running whitepulser;border-radius: 50%;"></i>';
     $('.iconDebugScreen').remove();
     $('div[data-ref="infraAcaoBarraSistema"]').prepend(htmlIconDebug);
 }
@@ -1607,7 +1607,7 @@ function repareStickColumnsSortable(elemTable, refresh = false) {
 
     var tableHeader = elemTable.find('thead tr.tableHeader').not('.headerStick');
         tableHeader.show().find('.fa-arrows-alt-h').remove();
-        tableHeader.find('th.tablesorter-header').not('.sorter-false').find('.tablesorter-header-inner').append('<i class="fas fa-arrows-alt-h" style="float: right;right: 20px;position: absolute;"></i>');
+        htmlPro(tableHeader.find('th.tablesorter-header').not('.sorter-false').find('.tablesorter-header-inner'), '<i class="fas fa-arrows-alt-h" style="float: right;right: 20px;position: absolute;"></i>', 'append');
     var headerStick = elemTable.find('thead tr.headerStick');
 
     $('#tabelaAtivPanel').unbind('scroll').scroll(function() {
@@ -2058,7 +2058,7 @@ function getBrightnessColor(value) {
 }
 function setIconLoadinBtnSEI(elem, display = true) {
     if (display) {
-        elem.find('img').css('opacity','0').end().append('<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="'+(isNewSEI ? 'margin: 0;border: 0;width: 100%;height: 46px;background: #fff !important;' : 'margin: 0px 0 0 5px; border: 0.1em solid white;')+'"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>'); 
+        htmlPro(elem.find('img').css('opacity','0').end(), '<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="'+(isNewSEI ? 'margin: 0;border: 0;width: 100%;height: 46px;background: #fff !important;' : 'margin: 0px 0 0 5px; border: 0.1em solid white;')+'"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>', 'append'); 
     } else {
         elem.find('img').css('opacity','1').end().find('.botaoSEI_loading').remove();
     }
@@ -2599,12 +2599,12 @@ function openDialogCompareDocs() {
                         '      <tr>'+
                         '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
                         '               <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> <strong>B</strong>: Selecione abaixo o documento para compara\u00E7\u00E3o:</label>'+
-                        '               <a class="newLink newLink_active invertCompareDoc" onclick="invertCompareDoc(this)" style="float: right;font-size: 10pt;"><i class="fas fa-exchange-alt"></i>Inverter (A/B \u2192 B/A)</a>'+
+                        '               <a class="newLink newLink_active invertCompareDoc" data-spro-click="invertCompareDoc" style="float: right;font-size: 10pt;"><i class="fas fa-exchange-alt"></i>Inverter (A/B \u2192 B/A)</a>'+
                         '           </td>'+
                         '      </tr>'+
                         '      <tr>'+
                         '           <td class="required">'+
-                        '               <select id="docLoteSelect" onchange="getCompareDocs(this)"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>'+
+                        '               <select id="docLoteSelect" data-spro-change="getCompareDocs"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>'+
                         '           </td>'+
                         '      </tr>'+
                         '  </table>';
@@ -2676,8 +2676,7 @@ function getNewDocCompareDocs(contentDocument) {
                     '  </table>';
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+htmlBox+'</span>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+htmlBox+'</span>')
         .dialog({
             width: 450,
             title: 'Criar novo documento comparado',
@@ -2720,8 +2719,7 @@ function escolherTipoUploadArvorePro(nomeArquivo, tiposDoc, valorSugerido, callb
     });
     var htmlBox = $('<table style="font-size: 10pt;width: 100%;" class="seiProForm"></table>')
         .append($('<tr>').append($('<td style="vertical-align: top;text-align: left;height: 40px;" class="label"></td>')
-            .append($('<label for="tipoUploadArvorePro"></label>')
-                .append('<i class="iconPopup iconSwitch fas fa-file-upload cinzaColor"></i> ')
+            .append(htmlPro($('<label for="tipoUploadArvorePro"></label>'), '<i class="iconPopup iconSwitch fas fa-file-upload cinzaColor"></i> ', 'append')
                 .append($('<span>').text('N\u00E3o foi poss\u00EDvel identificar o tipo do documento pelo nome do arquivo. Selecione o tipo para envi\u00E1-lo ao processo:')))
             .append($('<div style="margin-top: 8px; font-weight: bold; word-break: break-all;"></div>').text(nomeArquivo))))
         .append($('<tr>').append($('<td class="required"></td>').append(select)));
@@ -2830,8 +2828,7 @@ function openCamposDinamicosForm() {
     });
     htmlBox += '</table>';
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+htmlBox+'</div>')
         .dialog({
             title: "Adicionar campos din\u00E2micos",
         	width: 600,
@@ -2894,7 +2891,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
     } else if (data.mode == 'nivel_acesso') {
         var textTitle = 'Editar n\u00EDvel de acesso';
         var textBox =   '<div class="dialogBoxDiv seiProForm">'+
-                        '   <select id="dialogBoxProcesso" onchange="changeSelectHipoteseLegal(this)" style="font-size: 10pt; width: 100%;">'+
+                        '   <select id="dialogBoxProcesso" data-spro-change="changeSelectHipoteseLegal" style="font-size: 10pt; width: 100%;">'+
                         '       <option value="0" '+(prop.rdoNivelAcesso == '0' ? 'selected' : '')+'>P\u00FAblico</option>'+
                         '       <option value="1" '+(prop.rdoNivelAcesso == '1' ? 'selected' : '')+'>Restrito</option>'+
                         '       <option value="2" '+(prop.rdoNivelAcesso == '2' ? 'selected' : '')+'>Sigiloso</option>'+
@@ -2935,7 +2932,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '          </td>'+
                         '          <td>'+
                         '              <div class="infraAncoraSigla" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangeReabertura(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
+                        '                  <input type="checkbox" data-spro-change="configDatesSwitchChangeReabertura" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
                         '                  <label class="infraAreaDados" for="configDatesBox_setreopen"></label>'+
                         '              </div>'+
                         '          </td>'+
@@ -3018,7 +3015,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '          </td>'+
                         '          <td>'+
                         '              <div class="infraAncoraSigla" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangePrazo(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+(checkPrazo ? 'checked' : '')+'>'+
+                        '                  <input type="checkbox" data-spro-change="configDatesSwitchChangePrazo" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+(checkPrazo ? 'checked' : '')+'>'+
                         '                  <label class="infraAreaDados" for="configDatesBox_setdate"></label>'+
                         '              </div>'+
                         '          </td>'+
@@ -3030,7 +3027,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '          </td>'+
                         '          <td>'+
                         '              <div class="infraAncoraSigla" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(datePrazoDue ? 'checked' : '')+'>'+
+                        '                  <input type="checkbox" data-spro-change="configDatesSwitchChangeHome" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(datePrazoDue ? 'checked' : '')+'>'+
                         '                  <label class="infraAreaDados" for="configDatesBox_duesetdate"></label>'+
                         '              </div>'+
                         '          </td>'+
@@ -3215,8 +3212,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
         }
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+textBox+'</span>')
         .dialog({
             width: (data.mode == 'marcador' || data.mode == 'acompanhamento_especial' ? 570 : 450),
             title: textTitle,
@@ -3246,7 +3242,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                             return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                         }).join('');
 
-                        elementSelect.html('<option value="">&nbsp;</option>'+select_result);
+                        htmlPro(elementSelect, '<option value="">&nbsp;</option>'+select_result);
                         elementSelect.chosen('destroy').chosen({
                             placeholder_text_single: ' ',
                             no_results_text: 'Nenhum resultado encontrado',
@@ -3263,7 +3259,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                             var selected = (txtGroup && txtGroup == v.name) ? 'selected' : '';
                                             return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                         }).join('');
-                        $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
+                        htmlPro($('#configDatesBox_acompesp'), '<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                             placeholder_text_single: ' ',
                             no_results_text: 'Nenhum resultado encontrado',
                             normalize_search_text: function(text) {
@@ -3282,7 +3278,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                     var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                                     return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                                 }).join('');
-                                $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
+                                htmlPro($('#configDatesBox_acompesp'), '<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                                     placeholder_text_single: ' ',
                                     no_results_text: 'Nenhum resultado encontrado',
                                     normalize_search_text: function(text) {
@@ -3681,10 +3677,10 @@ function editFieldProc(this_) {
             var id_protocolo = _this.closest('tr').attr('id');
                 id_protocolo = (typeof id_protocolo !== 'undefined') ? parseInt(id_protocolo.replace('P','')) : false;
             if (id_protocolo) {
-                _info.after('<i class="fas fa-check azulColor sucessEdit" style="margin-left:10px;"></i>');
+                htmlPro(_info, '<i class="fas fa-check azulColor sucessEdit" style="margin-left:10px;"></i>', 'after');
                 updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', value, id_protocolo, function(){ 
                     _content_desc.find('.sucessEdit').remove();
-                    _info.after('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
+                    htmlPro(_info, '<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>', 'after');
                     setTimeout(function(){ _content_desc.find('.sucessEdit').remove(); }, 2000);
 
                 });
@@ -3799,7 +3795,7 @@ function changeSelectHipoteseLegal(this_) {
     if ($(this_).val() == '1' || $(this_).val() == '2') {
         getSelectHipoteseLegal($('.select_hipoteses'), $(this_).val());
     } else {
-        $('.select_hipoteses').html('').chosen('destroy').hide();
+        $('.select_hipoteses').empty().chosen('destroy').hide();
     }
 }
 function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipoteses'), nivelAcesso = 1) {
@@ -3851,7 +3847,7 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback
                 if (element.is(':radio') || element.is(':checkbox')) {
                     element.prop('checked',true).trigger('change');
                     if (idElement == 'optRestrito' || idElement == 'optSigiloso') {
-                        iframe.find('#selHipoteseLegal').after('<input id="selHipoteseLegal" value="'+value+'" name="selHipoteseLegal"></input>').remove();
+                        htmlPro(iframe.find('#selHipoteseLegal'), '<input id="selHipoteseLegal" value="'+value+'" name="selHipoteseLegal"></input>', 'after').remove();
                     }
                 } else {
                     element.val(value);
@@ -3885,7 +3881,7 @@ function viewEspecifacaoProcesso() {
                 tableProc.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').each(function(){
                     var especifProc = extractTooltipToArray($(this).attr('onmouseover'));
                         especifProc = (especifProc) ? removePrefixoNaoVisualizadoPro(especifProc[0]) : false;
-                        if (especifProc) $(this).before('<div class="especifProc">'+especifProc+'</div>');
+                        if (especifProc) htmlPro($(this), '<div class="especifProc">'+especifProc+'</div>', 'before');
                 });
             }
         // console.log(storeGroupTablePro());
@@ -3899,8 +3895,7 @@ function addNewItemSelect(_this) {
                     '</span>';
 
         resetDialogBoxPro('alertBoxPro');
-        alertBoxPro = $('#alertaBoxPro')
-            .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
+        alertBoxPro = htmlPro($('#alertaBoxPro'), '<div class="dialogBoxDiv"> '+textBox+'</span>')
             .dialog({
                 width: 400,
                 title: 'Adicionar novo item',
@@ -3921,7 +3916,7 @@ function saveNewItemSelect(_this) {
     var value = $('#nomeNovoItem').val();
     if ( value != '' ) {
         resetDialogBoxPro('alertBoxPro');
-        $(_this).prepend('<option selected>'+value+'</option>').val(value).change().chosen("destroy").chosen({
+        htmlPro($(_this), '<option selected>'+value+'</option>', 'prepend').val(value).change().chosen("destroy").chosen({
             placeholder_text_single: ' ',
             no_results_text: 'Nenhum resultado encontrado',
             normalize_search_text: function(text) {
@@ -4137,7 +4132,7 @@ function updateDadosArvoreMultIframe(nameLink, values, ifrArvore, callback) {
                     if (element.is(':radio') || element.is(':checkbox')) {
                         element.prop('checked',true).trigger('change');
                         if (idElement == 'optRestrito' || idElement == 'optSigiloso') {
-                            iframe.find('#selHipoteseLegal').after('<input id="selHipoteseLegal" value="'+value+'" name="selHipoteseLegal"></input>').remove();
+                            htmlPro(iframe.find('#selHipoteseLegal'), '<input id="selHipoteseLegal" value="'+value+'" name="selHipoteseLegal"></input>', 'after').remove();
                         }
                     } else {
                         element.val(value);
@@ -4249,7 +4244,7 @@ function getActionsOnSendProcess() {
             var hdnInteressadosProcedimento = v.id+'\u00B1'+v.descricao;
                 hdnInteressadosProcedimento = hdnUnidades.val() != '' ? hdnUnidades.val()+'\u00A5'+hdnInteressadosProcedimento : hdnInteressadosProcedimento;
             ifrVisualizacao.find('#hdnUnidades').val(hdnInteressadosProcedimento);
-            ifrVisualizacao.find('#selUnidades').append('<option value="'+v.id+'">'+v.descricao+'</option>');
+            htmlPro(ifrVisualizacao.find('#selUnidades'), '<option value="'+v.id+'">'+v.descricao+'</option>', 'append');
         });
         ifrVisualizacao.find('#selUnidades option').prop('selected',true);
     }
@@ -4494,14 +4489,14 @@ function goReaberturaProcesso(index = 0) {
     var id_protocolo = (listReabertura && typeof listReabertura[index] !== 'undefined') ? listReabertura[index].id_protocolo : false;
     if (id_protocolo && $.inArray(id_protocolo, selectReabertura) !== -1){
         var td = $('#listReaberturaProcessos tr[data-id="'+id_protocolo+'"] td').eq(2);
-            td.append('<i class="fas fa-spinner fa-spin azulColor" style="margin-left:10px;"></i>');
+            htmlPro(td, '<i class="fas fa-spinner fa-spin azulColor" style="margin-left:10px;"></i>', 'append');
 
         reopenProcessAjax(id_protocolo, function(){
             var next = index+1;
                 goReaberturaProcesso(next);
 
                 td.find('.sucessEdit').remove();
-                td.append('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
+                htmlPro(td, '<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>', 'append');
                 setTimeout(function(){ td.find('.sucessEdit').remove(); }, 2000);
 
             if (next == listReabertura.length) {
@@ -4526,8 +4521,8 @@ function dialogReaberturaProcesso(listReabertura) {
         var htmlBox =   '<div id="listReaberturaProcessos" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
                         '   <table id="reaberturaTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
                         '        <thead>'+
-                        '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
-                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                        '            <tr class="tableHeader" data-spro-mouseout="infraTooltipOcultar" data-spro-args="'+argsPro()+'">'+
+                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" data-spro-click="setSelectAllTr" data-spro-args="'+argsPro('$el', 'SemGrupo')+'"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
                         '                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>'+
                         '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Observa\u00E7\u00F5es</th>'+
                         '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Reabertura</th>'+
@@ -4540,7 +4535,7 @@ function dialogReaberturaProcesso(listReabertura) {
                     if (listaProcessoUnidade && $.inArray(v.processo, listaProcessoUnidade) == -1 && moment() >= moment(v.reabertura, 'DD/MM/YYYY HH:mm')) {
                         htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo" data-id="'+v.id_protocolo+'">'+
                                     '       <td style="text-align: center;">'+
-                                    '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
+                                    '           <input type="checkbox" data-spro-click="followSelecionarItens" name="actionsPro" value="'+v.id_protocolo+'">'+
                                     '       </td>'+
                                     '       <td>'+
                                     '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_protocolo+'" target="_blank">'+
@@ -4560,8 +4555,7 @@ function dialogReaberturaProcesso(listReabertura) {
                                 '</div>';
         
             resetDialogBoxPro('alertBoxPro');
-            alertBoxPro = $('#alertaBoxPro')
-                .html('<div>'+htmlBox+'</div>')
+            alertBoxPro = htmlPro($('#alertaBoxPro'), '<div>'+htmlBox+'</div>')
                 .dialog({
                     title: "Reabertura Programada de Processos",
                     width: 980,
@@ -5009,7 +5003,7 @@ function openDocZipPro(ifrVisualizacao) {
                     var size = infraFormatarTamanhoBytes(zipEntry._data.uncompressedSize);
                         size = !zipEntry.dir ? size : '';
                     var click = zipEntry.dir ? '' : `onclick="parent.getJanelaProcessoPro().openFileZip(${i})"`;
-                    ifrVisualizacao.find('#divZip .files #listing').append(`<li ${click}><a>${name}</a><span class="date">${date}</span><span class="size">${size}</span></li>`);
+                    htmlPro(ifrVisualizacao.find('#divZip .files #listing'), `<li ${click}><a>${name}</a><span class="date">${date}</span><span class="size">${size}</span></li>`, 'append');
                     // console.log(relativePath, name, zipEntry);
                     window.zip[i] = zipEntry;
                     i++;
@@ -5080,10 +5074,10 @@ function insertIconNewTab() {
             var html =  '<a class="openNewTab" style="margin: 10px 5px;padding: 5px;border-radius: 5px 0 0 5px;background-color: #eaeaea;color: #666;text-decoration: none;right: 60px;position: absolute;user-select: none;" href="'+url_host.replace('controlador.php','')+listLinks[0]+'" target="_blank">'+
                         '   <i class="fas fa-external-link-square-alt" style="color:#4285f4"></i> Abrir documento em nova aba'+
                         '</a>'+
-                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (HTML)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" onclick="parent.downloadDocumentVisualizacao(this)" target="_blank">'+
+                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" data-spro-tip="Baixar documento (HTML)" style="margin: 10px 5px;padding: 5px;border-radius: 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" data-spro-click="parent.downloadDocumentVisualizacao" target="_blank">'+
                         '   <i class="fas fa-download" style="color:#4285f4"></i>'+
                         '</a>'+
-                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (DOCX)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 20px;position: absolute;user-select: none;" onclick="parent.downloadDocxVisualizacao(this)" target="_blank">'+
+                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" data-spro-tip="Baixar documento (DOCX)" style="margin: 10px 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 20px;position: absolute;user-select: none;" data-spro-click="parent.downloadDocxVisualizacao" target="_blank">'+
                         '   <i class="fas fa-file-word" style="color:#4285f4"></i>'+
                         '</a>';
 
@@ -5297,9 +5291,9 @@ function setHtmlProtocoloAlterar() {
         ifrVisualizacao.find('div.urgentePro').remove();
         if (NAMESPACE_SPRO == 'SEI Pro Lab') {
             ifrVisualizacao.find('div.trancadoPro').remove();
-            ifrVisualizacao.find('#txtDescricao').css('width','80%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="trancadoPro" style="right: 11%;top: 10px;" onclick="parent.addTrancadPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Trancamento\');" onmouseout="return infraTooltipOcultar();"></div>').after('<div class="urgentePro" style="right: 15%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+            htmlPro(ifrVisualizacao.find('#txtDescricao').css('width','80%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="trancadoPro" style="right: 11%;top: 10px;" data-spro-click="parent.addTrancadPro" data-spro-tip="Adicionar/remover marca de Trancamento"></div>'), '<div class="urgentePro" style="right: 15%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         } else {
-            ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="urgentePro" style="right: 11%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+            htmlPro(ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()), '<div class="urgentePro" style="right: 11%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         }
         formControlerAlterarProcesso(ifrVisualizacao);
     }
@@ -6001,7 +5995,7 @@ function aguardarColetaHistoricoPro(ifrView, esperas = 180, restaurou = false) {
     if (!win) return;
     if (ifrView.find('#avisoColetaHistoricoPro').length == 0) {
         ifrView.find('#tblHistorico, .infraAreaPaginacao, #ancTipoHistorico, #ancTipoHistoricoTotal').css('visibility', 'hidden');
-        ifrView.find('.infraAreaTabela').first().before('<div id="avisoColetaHistoricoPro" style="margin: 10px 0;font-size: 1em;"><i class="fas fa-sync fa-spin" style="margin-right: 5px;"></i> Aguarde... o '+NAMESPACE_SPRO+' est&aacute; consultando o hist&oacute;rico do processo.</div>');
+        htmlPro(ifrView.find('.infraAreaTabela').first(), '<div id="avisoColetaHistoricoPro" style="margin: 10px 0;font-size: 1em;"><i class="fas fa-sync fa-spin" style="margin-right: 5px;"></i> Aguarde... o '+NAMESPACE_SPRO+' est&aacute; consultando o hist&oacute;rico do processo.</div>', 'before');
     }
     if (esperas > 0 && lerColetasHistoricoPro().some(coletaHistoricoAtivaPro)) {
         setTimeout(function () {
@@ -6151,7 +6145,7 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
                     var caption = ifrView.find(tableID).find('caption.infraCaption');
                     var nrRegistros = caption.text();
                         nrRegistros = (nrRegistros.indexOf('-') !== -1) ? nrRegistros.split('-')[0].trim()+'):' : nrRegistros;
-                        caption.html('<span>'+nrRegistros+'</span>');
+                        htmlPro(caption, '<span>'+nrRegistros+'</span>');
                 } else {
                     param['hdnInfraPaginaAtual'] = 0;
                     $.ajax({  method: 'POST', data: param, url: href });
@@ -6161,7 +6155,7 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
                 }
         });
         if (ifrView.find('.loadRemovePag').length == 0) {
-            ifrView.find('.infraAreaPaginacao').prepend('<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.getJanelaProcessoPro().cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>');
+            htmlPro(ifrView.find('.infraAreaPaginacao'), '<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.getJanelaProcessoPro().cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>', 'prepend');
         }
     }
 }
@@ -6912,8 +6906,8 @@ function getDatesPreview(config, dateduepreview=false) {
     var tagAction = (typeof config.action !== 'undefined' && config.action != '') ? config.action : 'parent.filterTagView(this)';
     var htmlDateDue = (config.duedate || config.duesetdate) 
                         ? (resultDate.alertdate) 
-                            ? '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';" onmouseout="return infraTooltipOcultar();"><i class="'+(config.displayicon ? config.displayicon : 'fas fa-exclamation-triangle vermelhoColor')+'" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
-                            : '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';" onmouseout="return infraTooltipOcultar();">'+htmlProgress+'<i class="'+iconDateClass+'" style="color: '+iconDateColor+'; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
+                            ? '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';"><i class="'+(config.displayicon ? config.displayicon : 'fas fa-exclamation-triangle vermelhoColor')+'" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
+                            : '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';">'+htmlProgress+'<i class="'+iconDateClass+'" style="color: '+iconDateColor+'; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
                         : '<i class="'+iconDate+'" style="color: #777; padding-right: 3px; font-size: 12pt;"></i>';
     // console.log('getDatesPreview',resultDate);
    return '<span class="dateboxDisplay tagTableText_'+tagName.value+' '+backgroundDiv+'" data-duesetdate="'+config.duesetdate+'" data-colortag="'+tagName.color+'" data-tagname="'+tagName.value+'" data-nametag="'+tagName.name+'" data-time-sorter="'+resultDate.date+'" data-type="date" onclick="'+tagAction+'">'+htmlDateDue+' '+displayMode+'</span>'+htmlDateDueBox;
@@ -7070,15 +7064,14 @@ function updateTablePrazoProcesso() {
 }
 function openBoxIconsFA(action, nametag, mode) {
     var htmlBox = '<div id="listIconsFontAwesome">'+
-                  '    <input type="text" id="searchIconFA" onkeyup="filterIconsFA()" placeholder="Filtrar pelo nome...">';
+                  '    <input type="text" id="searchIconFA" data-spro-keyup="filterIconsFA" data-spro-args="'+argsPro()+'" placeholder="Filtrar pelo nome...">';
         $.each(listIconsFontAwesome, function(i,value){
             htmlBox += '<span class="iconList" onclick="'+action+'(this, \''+nametag+'\', \''+mode+'\')"><i class="fas fa-'+value+' azulColor"></i> <span class="iconListTxt">'+value+'</span></span>';
         });
         htmlBox += '</div>';
     
         resetDialogBoxPro('alertBoxPro');
-        alertBoxPro = $('#alertaBoxPro')
-            .html('<div>'+htmlBox+'</div>')
+        alertBoxPro = htmlPro($('#alertaBoxPro'), '<div>'+htmlBox+'</div>')
             .dialog({
                 title: "Icones",
                 close: function() { $('#listIconsFontAwesome').remove() },
@@ -7148,7 +7141,7 @@ function configFlashMenuTrPro(value, color, state, mode) {
             '           </td>'+
             '           <td>'+
             '               <div class="infraAncoraSigla">'+
-            '                   <input type="checkbox" data-name="'+value.name+'" onchange="changeFlashMenuPro(this, \''+mode+'\')" name="infraAncoraSigla" class="infraLinkOrgao" id="itemFlashMenu_'+index+'" tabindex="0" '+state+'>'+
+            '                   <input type="checkbox" data-name="'+value.name+'" data-spro-change="changeFlashMenuPro" data-spro-args="'+argsPro('$el', String(mode))+'" name="infraAncoraSigla" class="infraLinkOrgao" id="itemFlashMenu_'+index+'" tabindex="0" '+state+'>'+
             '                   <label class="infraAreaDados" for="itemFlashMenu_'+index+'"></label>'+
             '               </div>'+
             '           </td>'+
@@ -7170,7 +7163,7 @@ function configFlashMenuPro(arrayLinksArvore) {
                     '   <div id="tabs_flashMenuPro">'+
                     '       <h3 style="font-weight: bold; color: #666;">'+
                     '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" data-spro-change="changeFlashMenuGeneralPro" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
                     '              <label class="infraAreaDados" for="optionFlashMenu_proc"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-scroll cinzaColor"></i> Menu r\u00E1pido do processo'+
@@ -7196,7 +7189,7 @@ function configFlashMenuPro(arrayLinksArvore) {
         textBox +=  '   <div id="tabs_flashDocMenuPro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
                     '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" data-spro-change="changeFlashMenuGeneralPro" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
                     '              <label class="infraAreaDados" for="optionFlashMenu_doc"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos'+
@@ -7225,7 +7218,7 @@ function configFlashMenuPro(arrayLinksArvore) {
         textBox +=  '   <div id="tabs_flashDocArvorePro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
                     '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" data-spro-change="changeFlashMenuGeneralPro" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
                     '              <label class="infraAreaDados" for="optionFlashMenu_tree"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-tree cinzaColor"></i> \u00CDcones r\u00E1pidos na \u00E1rvore'+
@@ -7250,7 +7243,7 @@ function configFlashMenuPro(arrayLinksArvore) {
         textBox +=  '   <div id="tabs_flashPanelArvorePro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
                     '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" data-spro-change="changeFlashMenuGeneralPro" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
                     '              <label class="infraAreaDados" for="optionFlashMenu_panelinfo"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-info-circle cinzaColor"></i> Painel de Informa\u00E7\u00F5es na \u00E1rvore'+
@@ -7274,8 +7267,7 @@ function configFlashMenuPro(arrayLinksArvore) {
                     '</div>';
     
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+textBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+textBox+'</div>')
         .dialog({
             title: "Personalizar Menu R\u00E1pido",
         	width: 600,
@@ -7415,8 +7407,7 @@ function dialogCopyNewDoc(doc) {
     removeOptionsPro('currentCloneDoc');
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+textBox+'</span>')
         .dialog({
             width: 450,
             title: 'Copiar documento para outro processo',
@@ -7948,20 +7939,19 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
     if (alertBoxPro) { 
         alertBoxPro.dialog('destroy');
         alertBoxPro = false;
-        $('.alertaAttencionPro').html('');
+        $('.alertaAttencionPro').empty();
     }
     var phraseDiv = '<div class="dialogBoxDiv">Para confirmar, digite <b style="font-weight: bold;">'+phrase.toUpperCase()+'</b>:</div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
                     '   <input id="dialogBoxConfirmFrase" autocomplete="off" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" oninput="if (\''+phrase.toUpperCase()+'\' == $(this).val().trim().toUpperCase()) {updateButtonConfirm(this, true)} else {updateButtonConfirm(this, false)}" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
                     '</div>';
-    alertBoxPro = $('#alertaBoxPro')
-        .html('<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
+    alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
         .dialog({
             title: NAMESPACE_SPRO,
         	width: 550,
         	close: function() { 
                 alertBoxPro = false;
-                $('.alertaAttencionPro').html('');
+                $('.alertaAttencionPro').empty();
                 if (typeof cancel === 'function') {
                     cancel();
                 }
@@ -7996,17 +7986,16 @@ function confirmaBoxPro(text, func, titBtn = 'OK', cancel = false, titBtnCancel 
     if (alertBoxPro) { 
         alertBoxPro.dialog('destroy');
         alertBoxPro = false;
-        $('.alertaAttencionPro').html('');
+        $('.alertaAttencionPro').empty();
     }
-    alertBoxPro = $('#alertaBoxPro')
-        .html('<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>')
+    alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>')
         .dialog({
             title: NAMESPACE_SPRO,
         	width: 500,
         	close: function() { 
                 alertBoxPro = false;
                 if (typeof cancel === 'function') { cancel() }
-                $('.alertaAttencionPro').html('');
+                $('.alertaAttencionPro').empty();
             },
         	buttons: [{
                 text: titBtnCancel,
@@ -8026,14 +8015,13 @@ function confirmaBoxPro(text, func, titBtn = 'OK', cancel = false, titBtnCancel 
 }
 function alertaBoxPro(status, icon, text, func_ok = false) {
     resetDialogBoxPro('alertBoxPro');
-    alertBoxPro = $('#alertaBoxPro')
-        .html('<strong class="alerta'+status+'Pro dialogBoxDiv"><i class="fas fa-'+icon+'" style="margin-right: 5px;"></i> '+text+'</strong>')
+    alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alerta'+status+'Pro dialogBoxDiv"><i class="fas fa-'+icon+'" style="margin-right: 5px;"></i> '+text+'</strong>')
         .dialog({
             title: NAMESPACE_SPRO,
         	width: 400,
         	close: function() { 
                 alertBoxPro = false;
-                $('.alerta'+status+'Pro').html('');
+                $('.alerta'+status+'Pro').empty();
              },
         	buttons: [{
                 text: "OK",
@@ -9242,7 +9230,7 @@ function getHistoryProcessosPro() {
                             '           <div style="color: #666; padding-top: 5px;">'+v.tipo_processo+'</div>'+
                             '           <div style="font-weight: bold; padding: 5px 0;">'+v.descricao+'</div>'+
                             '       <td data-time-sorter="'+v.datetime+'">'+
-                            '           <div onmouseover="return infraTooltipMostrar(\'Acessado em '+moment(v.datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm')+'\');" onmouseout="return infraTooltipOcultar();">'+
+                            '           <div data-spro-tip="Acessado em '+moment(v.datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm')+'">'+
                             '               '+getDatesPreview({date: v.datetime})+
                             '           </div>'+
                             '       <td>'+
@@ -9253,8 +9241,7 @@ function getHistoryProcessosPro() {
                             '</div>';
 
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
             title: 'Hist\u00F3rico de Processos Visitados',
             width: 980,
@@ -9320,19 +9307,19 @@ function getHistoryProcessosPro() {
             });
             setTimeout(function(){ 
                 var htmlFilterHistory =    '<div class="btn-group filterTableHistory" role="group" style="right: 45px;top: 18px;z-index: 999;position: absolute;">'+
-                                            '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                                            '   <button type="button" data-spro-click="downloadTablePro" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                             '       <span class="text">Baixar</span>'+
                                             '   </button>'+
-                                            '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                            '   <button type="button" data-spro-click="copyTablePro" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                             '       <span class="text">Copiar</span>'+
                                             '   </button>'+
-                                            '   <button type="button" onclick="cleanHistoryPro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Apagar" class="btn btn-sm btn-light">'+
+                                            '   <button type="button" data-spro-click="cleanHistoryPro" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Apagar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-trash-alt" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
                                             '       Apagar'+
                                             '   </button>'+
-                                            '   <button type="button" onclick="filterTablePro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(historyTable.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                            '   <button type="button" data-spro-click="filterTablePro" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(historyTable.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
                                             '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
                                             '       Pesquisar'+
                                             '   </button>'+
@@ -10380,7 +10367,7 @@ function getDocsArvore_fillSelect(select, optionBlank = false, disableId = false
             }
         });
     if (contadorDocsValidos === 0) {
-        select.after(`<small class="noFieldsError">N\u00E3o h\u00E1 documentos v\u00E1lidos<small>`);
+        htmlPro(select, `<small class="noFieldsError">N\u00E3o h\u00E1 documentos v\u00E1lidos<small>`, 'after');
     } else {
         select.removeAttr('disabled');
         select.children().remove();
@@ -10626,7 +10613,7 @@ function getHtmlMarcador(id_procedimento, processoAberto) {
             datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
             iconPrazo = (datePrazo) ? parent.getDatesPreview({date: datePrazo}) : false;
             iconPrazo = (datePrazoDue) ? parent.getDatesPreview({date: datePrazoDue}) : iconPrazo;
-            linkPrazo = (iconPrazo) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconPrazo+'</a>' : '';
+            linkPrazo = (iconPrazo) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">'+iconPrazo+'</a>' : '';
             iconMarcador = (typeof dataMarcador.icon !== 'undefined') ? (checkConfigValue('coresmarcadores') ? '<span data-color="true" class="tagUserColorPro">' : '')+'<img src="'+dataMarcador.icon+'" class="imagemStatus" title="'+dataMarcador.tag+'">'+(checkConfigValue('coresmarcadores') ? '</span>' : '')+' '+tagNameClean+(dataMarcador.name ? ': '+dataMarcador.name.replace(/\\r\\n/g, "<br>") : '') : 'Nenhum marcador';
     }
     return {icon: iconMarcador, prazo: linkPrazo, data: dataMarcador};
@@ -11941,10 +11928,9 @@ function DocsToSEI(iframeDoc, mode) {
                 titleTab = (titleTab.length > 0) ? titleTab.text() : false;
                 _this.show();
             if (titleTab) {
-                _this.prepend(   '<p class="Texto_Alinhado_Esquerda"><br></p>'+
+                htmlPro(_this, '<p class="Texto_Alinhado_Esquerda"><br></p>'+
                                 '<p class="Texto_Alinhado_Esquerda"><strong>'+titleTab+'</strong></p>'+
-                                '<p class="Texto_Alinhado_Esquerda"><br></p>'
-                            );
+                                '<p class="Texto_Alinhado_Esquerda"><br></p>', 'prepend');
             }
         });
         iframeDoc.find('body #sheets-viewport').css('display', 'contents');
@@ -12071,7 +12057,7 @@ function ImgToBase64(iframeDoc, TimeOut = 1000) {
     if (TimeOut <= 0) { 
         iframeDoc.find('img').not('.img-base64').each(function(){
             if (!isBase64($(this).attr('src'))) { 
-                $(this).after('<span style="color:#FF0000;"><span style="background-color:#FFFF00;">[!Erro ao converter a imagem!]</span></span>');
+                htmlPro($(this), '<span style="color:#FF0000;"><span style="background-color:#FFFF00;">[!Erro ao converter a imagem!]</span></span>', 'after');
                 $(this).remove();
             }
         });
@@ -12324,7 +12310,7 @@ function printDocumento() {
         window.print();
 
         setTimeout(function(){ 
-            $('#printBoxPro').removeClass('hidePrint').html('');
+            $('#printBoxPro').removeClass('hidePrint').empty();
             $('.infraAreaGlobal').removeClass('hidePrint');
             $('.ui-dialog').removeClass('hidePrint');
         }, 500);
@@ -12360,22 +12346,22 @@ function closeEditorViewBeforeSign(this_) {
     var _parent = _this.closest('.ui-dialog');
     var style_field = 'font-weight: bold;padding: 5px 8px;margin: 5px 0px;display: inline-block;background: #f5f5f5;border-radius: 5px;';
     _parent.find('input[type="time"]').each(function(){
-        $(this).after('<span style="'+style_field+'">'+$(this).val()+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+$(this).val()+'</span>', 'after').remove();
     });
     _parent.find('select').each(function(){
-        $(this).after('<span style="'+style_field+'">'+$(this).find('option:selected').val()+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+$(this).find('option:selected').val()+'</span>', 'after').remove();
     });
     _parent.find('input[type="text"]').each(function(){
-        $(this).after('<span style="'+style_field+'">'+$(this).val()+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+$(this).val()+'</span>', 'after').remove();
     });
     _parent.find('input[type="number"]').each(function(){
-        $(this).after('<span style="'+style_field+'">'+parseInt($(this).val())+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+parseInt($(this).val())+'</span>', 'after').remove();
     });
     _parent.find('input[type="date"]').each(function(){
-        $(this).after('<span style="'+style_field+'">'+moment($(this).val(),'YYYY-MM-DD').format('DD/MM/YYYY')+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+moment($(this).val(),'YYYY-MM-DD').format('DD/MM/YYYY')+'</span>', 'after').remove();
     });
     _parent.find('input[type="datetime-local"]').each(function(){
-        $(this).after('<span style="'+style_field+'">'+moment($(this).val(),'YYYY-MM-DDTHH:mm').format('DD/MM/YYYY HH:mm')+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+moment($(this).val(),'YYYY-MM-DDTHH:mm').format('DD/MM/YYYY HH:mm')+'</span>', 'after').remove();
     });
     _parent.find('input[type="checkbox"]').each(function(){
         if ($(this).attr('checked') == 'checked') {
@@ -12385,7 +12371,7 @@ function closeEditorViewBeforeSign(this_) {
         } else {
             var icone = '[_]';
         }
-        $(this).after('<span style="'+style_field+'">'+icone+'</span>').remove();
+        htmlPro($(this), '<span style="'+style_field+'">'+icone+'</span>', 'after').remove();
     });
 }
 function loadFunctionEditorView(this_) {
@@ -12557,7 +12543,7 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
                     window.print();
 
                     setTimeout(function(){ 
-                        $('#printBoxPro').removeClass('hidePrint').html('');
+                        $('#printBoxPro').removeClass('hidePrint').empty();
                         $('.infraAreaGlobal').removeClass('hidePrint');
                         $('.ui-dialog').removeClass('hidePrint');
                         resetDialogBoxPro('iframeBoxPro');
@@ -12595,8 +12581,7 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
                 }
             }];
         resetDialogBoxPro('iframeBoxPro');
-        iframeBoxPro = $('#iframeBoxPro')
-            .html('<div class="iframeBoxDiv" style="width: 100%; margin: 10% 0; text-align: center;"><i class="fas fa-spinner fa-spin azulColor" style="font-size: 22pt;"></i></div>')
+        iframeBoxPro = htmlPro($('#iframeBoxPro'), '<div class="iframeBoxDiv" style="width: 100%; margin: 10% 0; text-align: center;"><i class="fas fa-spinner fa-spin azulColor" style="font-size: 22pt;"></i></div>')
             .dialog({
                 width: 500,
                 height: 200,
@@ -12654,7 +12639,7 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
                             title: (param.title ? param.title : ''),
                             close: function() { 
                                 iframeBoxPro = false;
-                                $('.iframeBoxPro').html('');
+                                $('.iframeBoxPro').empty();
                             },
                             buttons: btnDialogBoxPro
                         });
@@ -12883,7 +12868,7 @@ function updateChecksumPro(hash) {
                          '    <td><label class="hash hashSHA256">'+hash.hashSHA256+'</label></td>'+
                          '  </tr>'+
                          '</table>'+
-                         '<div><a onclick="hashCompareDocToggle(this)" class="newLink link_line" style="cursor:pointer"><i class="fa fa-chevron-circle-down cinzaColor" style="margin: 3px 3px 0 0;"></i> Comparar documento</a></div>'+
+                         '<div><a data-spro-click="hashCompareDocToggle" class="newLink link_line" style="cursor:pointer"><i class="fa fa-chevron-circle-down cinzaColor" style="margin: 3px 3px 0 0;"></i> Comparar documento</a></div>'+
                          '<div class="hashCompareDoc" style="display:none;">'+
                          '          <input id="inputCompareDoc" style="font-size: 10pt; padding: 15px 10px;" type="file" placeholder="Clique ou arraste para carregar um documento">'+
                          '  <div id="outputompareDoc" style="border-radius: 10px; padding: 0 10px;"></div>'+
@@ -12895,7 +12880,7 @@ function updateChecksumPro(hash) {
         var input = $('#inputCompareDoc')[0];
         if (input.files && input.files[0]) {
             centralizeDialogBox(dialogBoxPro);
-            $('#outputompareDoc').html('<i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...').css('background', '#fff');
+            htmlPro($('#outputompareDoc'), '<i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...').css('background', '#fff');
             var global = global || window;
             const reader = new global.FileReader();
             reader.onload = event => {
@@ -12937,8 +12922,7 @@ function compareChecksumPro(hash) {
 function openChecksumPro() {
     var htmlBox = '<div id="hashIntegrityPro"><i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...</div>';
     resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv">'+htmlBox+'</div>')
             .dialog({
                 title: "Visualizar C\u00F3digo de Integridade",
                 width: 650
@@ -13116,7 +13100,7 @@ function setNewDocDefault() {
     var now = moment().format('DD/MM/YYYY');
     if (form.length > 0 && ifrVisualizacao.find('#txtNumero').length ) {
         ifrVisualizacao.find('div.urgentePro').remove();
-        ifrVisualizacao.find('#txtNumero').css('width','46%').attr('data-oldtext',ifrVisualizacao.find('#txtNumero').val()).after('<div class="urgentePro" style="right: 48%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        htmlPro(ifrVisualizacao.find('#txtNumero').css('width','46%').attr('data-oldtext',ifrVisualizacao.find('#txtNumero').val()), '<div class="urgentePro" style="right: 48%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         formControlerAlterarDocumento(ifrVisualizacao);
     }
     if (form.length > 0 && typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocdefault') ) {
@@ -13167,7 +13151,7 @@ function setNewProcDefault() {
     var now = moment().format('DD/MM/YYYY');
     if (form.length > 0 && $('#txtNumero').length ) {
         $('div.urgentePro').remove();
-        $('#txtDescricao').css('width','46%').attr('data-oldtext',$('#txtDescricao').val()).after('<div class="urgentePro" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        htmlPro($('#txtDescricao').css('width','46%').attr('data-oldtext',$('#txtDescricao').val()), '<div class="urgentePro" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         formControlerAlterarDocumento(ifrVisualizacao);
     }
     if (form.length > 0 && typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocdefault') ) {
@@ -13207,7 +13191,7 @@ function setNewProcDefault() {
                                     if (typeof id_result[0] !== 'undefined') {
                                         var hdnInteressadosProcedimento = id_result[0].id+'\u00B1'+id_result[0].descricao;
                                         $('#hdnInteressadosProcedimento').val(hdnInteressadosProcedimento);
-                                        $('#selInteressadosProcedimento').append('<option value="'+id_result[0].id+'">'+id_result[0].descricao+'</option>');
+                                        htmlPro($('#selInteressadosProcedimento'), '<option value="'+id_result[0].id+'">'+id_result[0].descricao+'</option>', 'append');
                                     }
                                 }
                             });
@@ -13276,7 +13260,7 @@ function insertIconBatchActions() {
 }
 function appendIconBatchActions(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var htmlIconbatchActions =  '<a href="#" id="iconBatchActions" onclick="parent.getDocumentosActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'A\u00E7\u00F5es em Lote\')"  tabindex="452" class="botaoSEI">'+
+    var htmlIconbatchActions =  '<a href="#" id="iconBatchActions" data-spro-click="parent.getDocumentosActions" data-spro-args="'+argsPro()+'" data-spro-tip="A\u00E7\u00F5es em Lote"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/acao_lote.svg" alt="A\u00E7\u00F5es em Lote" title="A\u00E7\u00F5es em Lote">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconBatchActions').length) {
@@ -13289,7 +13273,7 @@ function insertIconAIActions() {
 }
 function appendIconAIActions(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var htmlIconAIActions =  '<a href="#" id="iconAIActions" onclick="parent.initBoxAIActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Agente de IA\')"  tabindex="452" class="botaoSEI">'+
+    var htmlIconAIActions =  '<a href="#" id="iconAIActions" data-spro-click="parent.initBoxAIActions" data-spro-args="'+argsPro()+'" data-spro-tip="Agente de IA"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconAIActions').length) {
@@ -13312,7 +13296,7 @@ function insertIconFerramentasPdf() {
 function appendIconFerramentasPdf(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var titulo = 'Ferramentas de PDF';
-    var htmlIconFerramentasPdf =  '<a href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" id="iconFerramentasPdf" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\')" tabindex="452" class="botaoSEI">'+
+    var htmlIconFerramentasPdf =  '<a href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" id="iconFerramentasPdf" data-spro-tip="'+titulo+'" tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/ferramentas_pdf.svg" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconFerramentasPdf').length == 0) {
@@ -13334,7 +13318,7 @@ function insertIconEstudioFluxo() {
 function appendIconEstudioFluxo(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var titulo = 'Est\u00FAdio de Fluxo';
-    var htmlIconEstudioFluxo =  '<a href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" id="iconEstudioFluxo" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\')" tabindex="452" class="botaoSEI">'+
+    var htmlIconEstudioFluxo =  '<a href="'+URL_SPRO+'html/fluxos.html" target="_blank" rel="noopener" id="iconEstudioFluxo" data-spro-tip="'+titulo+'" tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconEstudioFluxo').length == 0) {
@@ -13355,7 +13339,7 @@ function insertIconHistoricoProcessos() {
 function appendIconHistoricoProcessos(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var titulo = 'Hist\u00F3rico de Processos Visitados';
-    var htmlIconHistorico =  '<a href="#" id="iconHistoricoProcessos" onclick="parent.getHistoryProcessosPro(); return false;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\')" class="botaoSEI">'+
+    var htmlIconHistorico =  '<a href="#" id="iconHistoricoProcessos" onclick="parent.getHistoryProcessosPro(); return false;" data-spro-tip="'+titulo+'" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+iconeHistoricoBarraPro()+'" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconHistoricoProcessos').length == 0) {
@@ -13368,7 +13352,7 @@ function insertIconCompareDocs() {
 }
 function appendIconCompareDocs(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var htmlIconCompareDocs =  '<a href="#" id="iconCompareDocs" onclick="parent.initDialogCompareDocs();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Iniciar Comparador de Documentos\')"  tabindex="452" class="botaoSEI">'+
+    var htmlIconCompareDocs =  '<a href="#" id="iconCompareDocs" data-spro-click="parent.initDialogCompareDocs" data-spro-args="'+argsPro()+'" data-spro-tip="Iniciar Comparador de Documentos"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/compare_doc.svg" alt="Iniciar Comparador de Documentos" title="Iniciar Comparador de Documentos">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconCompareDocs').length == 0) {
@@ -13381,7 +13365,7 @@ function insertIconBatchDocs() {
 }
 function appendIconBatchDocs(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var htmlIconBatchDocs =  '<a href="#" id="iconBatchDocs" onclick="parent.initDocLoteModalSelecaoDoc();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Iniciar Documentos em Lote\')"  tabindex="452" class="botaoSEI">'+
+    var htmlIconBatchDocs =  '<a href="#" id="iconBatchDocs" data-spro-click="parent.initDocLoteModalSelecaoDoc" data-spro-args="'+argsPro()+'" data-spro-tip="Iniciar Documentos em Lote"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/doc_lote.svg" alt="Iniciar Documentos em Lote" title="Iniciar Documentos em Lote">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconBatchDocs').length == 0) {
@@ -13442,7 +13426,7 @@ function appendIconCtrPrescricao(loop = true) {
         var iconLabel = localStorage.getItem('iconLabel');
         var iconBoxSlim = localStorage.getItem('seiSlim');
         var base64IconCtrPrescricao = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAABFJJREFUeJztmG9MG2UYwFeyaTZwcSwx2WzLBjNxGx/mvuAHiYl+WGCML/uDMZWVAHPqNJsxS8acY1sy/DMzQRNzxj8fNNEYPxmTJc4P6jelQLtCS0t71/ZKodcrEOjd296fPr7vXTsKQgbxrsbIk/zy3uV67/3yXNvned9NmzZiI/4D0dba99Khvec+r7e/QhnBQdtZqssx0GiYYHPjFcpe1QH2KqchWCtPwwvH3jtjmGBT41WKTGrTwA+pxLLauH7IHNbKdmg79q5xgq3P91K1O7uhrrpIJ9Tt6FoXtYRqMpJ7O6H9xAfGCc7xcoUkJzfTKamfTskQSKgwEsmvC3eB0ajyBp9UKgiGCRYjzClUmJPBP7l+wSL3oso5w8WMFVT/x4KJKf+nbMILEdYFweDPmLsQmFgb5LPkHob985IpcjmVrxATH1/N0j2Agp0guqyAXLvxuFZ2gTCIR/adblMEScjpO/sRcwVQ+CIII4dAcNnwQ9dGZtAKmeH6lMx/v800QZTntiD2w7sofBlE3wksuEd78IPkRCLoqoGM78ht0+SKIfLf7kbx/l9E+nIeYUlxsOaBmcwM1Sli4PgXIv/VTtMFSSD+xxox9v5PiHk7I461gDD0ZEHGvixzOLsjB+YFf/OXmYU79rLIFUPKTmzPcV8/i2I3f0fhN0EcbcKiTywKDu0T0L2G78TIxcNZObRdgbSlrIJ54C0oz2zJpr55DE0OdKPo9UkxeAZEz9MgeBsjC4GTbRL9+iN5NWUhlFWuNOK8spXm5CN0Ev3GTo3JsekIMHxuMMLnGhJz0kP/mhi/IFtiXG4Pw0mf4AozTypMkRAGS3Ohabk3GFceL7sck5KraE7qwzJsqVgpPtzxeGIquKMq62Wla/RktjzZjKZQJZa7iSXkleUUGE8oWmul119St9WsN5a7wKSkh00XZLhcP40lVsvcOM6ce8VGQYVRVnrLVLnErLqVTkppehU5AnmtK3cyCngiii+eVjebJsgklaMri0mYHCTYX2F84g9wMwoMR+S/ZZDgjalPmSfIKTdCqwjGp8ZgIfAazLibYCzkwTLLBXW8MdlhmmCIk6hSMfKqQykJ2KlxEOnrIPhPauVubrgBfGG/9lr1zJU2rLKZHbVMLc9cdDoG85EByIZ7cIfThusvqcdW4DwvgjccLkiWSRD/eil6SQZnIMPcBkSaWIzgP6W1VsV6nHa3gIeZXZJFjxmLptm0rNVShpNv4f9AIDBJAWbYHwAxlzA9+ohfMelgRJfeA5Ix7ruBJTOapFv/Dp6fS4OFYJhg63PXKG3BvqNbX4iTBXh1Bz4+jXHCvkd19PN2vDh3LKGu2gl78WK9trCAJ3M4jt8ybuHe/EwvZStsfVgL6OftYLt/jNnWUbjuvM/iNYJT2/YwfG/mKBbU9lYM2jyyGS14qqXPUW9/9bOD9rPUP8ZGeJnqcnxk3PZbRkhbCIZNuBEbsRh/AXsKOj5cMZb5AAAAAElFTkSuQmCC';    
-        var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" onclick="parent.getCtrPrescricao();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Gerenciar Prescri\u00E7\u00F5es\')"  tabindex="452" class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+'">'+
+        var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" data-spro-click="parent.getCtrPrescricao" data-spro-args="'+argsPro()+'" data-spro-tip="Gerenciar Prescri\u00E7\u00F5es"  tabindex="452" class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+'">'+
                                     '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconCtrPrescricao+'" alt="Gerenciar Prescri\u00E7\u00F5es" title="Gerenciar Prescri\u00E7\u00F5es">'+
                                     '</a>';
         if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
@@ -13485,7 +13469,7 @@ function appendIconDocCertidao(loop = true) {
 
         var newDocLink = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'] | [0].url");
         var base64IconDocCertidao = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAxNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RUQ3ODhDOEI5OUQyMTFFQzhDNkZBNEM3ODE5MUQ3RkQiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RUQ3ODhDOEE5OUQyMTFFQzhDNkZBNEM3ODE5MUQ3RkQiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIwMjAgTWFjaW50b3NoIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9IjVEODg1QzYyOTVGOENCN0Y5QzcxMzg0RUE0NzVCNTVEIiBzdFJlZjpkb2N1bWVudElEPSI1RDg4NUM2Mjk1RjhDQjdGOUM3MTM4NEVBNDc1QjU1RCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pr+rRM0AAAs8SURBVHjatFh7cFTVHf7OvXd37z6S7CaY94uH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';
-        var htmlIconNewDoc =    '<a href="#" onclick="parent.getDocCertidao();" id="iconDocCertidao" class="botaoSEI">'+
+        var htmlIconNewDoc =    '<a href="#" data-spro-click="parent.getDocCertidao" data-spro-args="'+argsPro()+'" id="iconDocCertidao" class="botaoSEI">'+
                                 '   <img class="infraCorBarraSistema" src="'+base64IconDocCertidao+'" alt="Gerar Certid\u00E3o de Documento Oficial com Sigilo" title="Gerar Certid\u00E3o de Documento Oficial com Sigilo">'+
                                 '</a>';
         var nativo = (id_documento && ifrArvore.find('#anchorImg'+id_documento+' img[src*="'+nameDocInterno+'"]').length) ? true : false;
@@ -13568,7 +13552,7 @@ function appendIconDynamicField(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     if (ifrVisualizacao.find('#iconDynamicField').length == 0 && ifrArvore.find('span.infraArvoreNoSelecionado').closest('a').prev().find('img[src*="formulario1.gif"]').length > 0 ) {
         var base64IconDynamicField = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OTcwNzVBRjk4MkE3MTFFQ0EwQzJFQkVGNzNCNzNCQzciIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OTcwNzVBRkE4MkE3MTFFQ0EwQzJFQkVGNzNCNzNCQzciPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo1ODVFRkVBMjgyOTExMUVDQTBDMkVCRUY3M0I3M0JDNyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5NzA3NUFGODgyQTcxMUVDQTBDMkVCRUY3M0I3M0JDNyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjLf6nQAAAXeSURBVHja7Fhb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';
-        var htmlIconDynamicField =  '<a href="#" id="iconDynamicField" onclick="parent.openCamposDinamicosForm();" tabindex="452" class="botaoSEI">'+
+        var htmlIconDynamicField =  '<a href="#" id="iconDynamicField" data-spro-click="parent.openCamposDinamicosForm" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconDynamicField+'" alt="Adicionar campos din\u00E2micos do formul\u00E1rio" title="Adicionar campos din\u00E2micos do formul\u00E1rio">'+
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconDynamicField);
@@ -13583,7 +13567,7 @@ function appendIconFormSheet(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     if (ifrVisualizacao.find('#iconFormSheet').length == 0 && ifrArvore.find('span.infraArvoreNoSelecionado').closest('a').prev().find('img[src*="formulario1.gif"]').length > 0 ) {
         var base64IconFormSheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA4NpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkNDkxZTA3Ni04ZjNkLTQ0MzctOTAxMS02MDAwOTNlYTQ0OGEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUY1NEE2MzM4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUY1NEE2MzI4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpiMjRmYmE0Mi1iN2UyLTQ0NmEtYWMzMS04MjAzNjhiNTg3YzkiIHN0UmVmOmRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpiNDkyMWRjZi1kZDNhLTI4NGYtOWEyMC1h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';
-        var htmlIconFormSheet =  '<a href="#" id="iconFormSheet" onclick="parent.openFormSheet();" tabindex="452" class="botaoSEI">'+
+        var htmlIconFormSheet =  '<a href="#" id="iconFormSheet" data-spro-click="parent.openFormSheet" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconFormSheet+'" alt="Salvar dados na planilha" title="Salvar dados na planilha">'+
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconFormSheet);
@@ -13606,7 +13590,7 @@ function appendIconIntegrity(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     if (ifrVisualizacao.find('#iconIntegrityPro').length == 0 ) {
         var base64IconIntegrity = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDgxQ0NGRjUyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDgxQ0NGRjYyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowODFDQ0ZGMzI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowODFDQ0ZGNDI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pm2LucYAAAbsSURBVHja7FhZ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';
-        var htmlIconIntegrity =  '<a href="#" id="iconIntegrityPro" onclick="parent.getChecksumPro();" tabindex="452" class="botaoSEI">'+
+        var htmlIconIntegrity =  '<a href="#" id="iconIntegrityPro" data-spro-click="parent.getChecksumPro" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconIntegrity+'" alt="Visualizar C\u00F3digo de Integridade (Hashcode)" title="Visualizar C\u00F3digo de Integridade (Hashcode)">'+
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconIntegrity);
@@ -14102,7 +14086,7 @@ function replaceNewIcons(element) {
             var title = $(this).find('img').attr('title');
             $(this).addClass('iconBoxSlim');
             if (localStorage.getItem('iconLabel') && typeof title !== 'undefined' && title != '') { 
-                $(this).addClass('iconLabel').append('<span class="newIconTitle">'+title+'</span>'); 
+                htmlPro($(this).addClass('iconLabel'), '<span class="newIconTitle">'+title+'</span>', 'append'); 
             } else {
                 $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()');
             }
@@ -14205,12 +14189,11 @@ function initBoxSearchProtocoloSEI() {
                     '       </table>'+
                     '    </div>'+
                     '    <div class="ui-dialog-buttonpane actionsResultProtocoloSEI">'+
-                    '        <button type="button" class="ui-button ui-corner-all ui-widget" onclick="copyTableResultProtocoloSEI()">Copiar Tabela</button>'+
-                    '        <button type="button" class="ui-button ui-corner-all ui-widget" onclick="downloadTableResultProtocoloSEI()">Baixar CSV</button>'+
+                    '        <button type="button" class="ui-button ui-corner-all ui-widget" data-spro-click="copyTableResultProtocoloSEI" data-spro-args="'+argsPro()+'">Copiar Tabela</button>'+
+                    '        <button type="button" class="ui-button ui-corner-all ui-widget" data-spro-click="downloadTableResultProtocoloSEI" data-spro-args="'+argsPro()+'">Baixar CSV</button>'+
                     '    </div>'+
                     '</div>';
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
             title: "Pesquisar Link Permanente",
             width: 300,
