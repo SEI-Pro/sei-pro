@@ -586,25 +586,51 @@ function erroPro(msg, detalhe) {
     try { console.error('[SEIPro] ' + msg, detalhe === undefined ? '' : detalhe); } catch (e) {}
 }
 
-// Sanitiza um fragmento respeitando o contexto de parsing que ele exige.
-function sanitizarFragmentoPro(html, doc) {
+// A mesma configuracao, devolvendo um DocumentFragment: o portao insere NOS, e nenhuma linha daqui
+// atribui innerHTML (o web-ext lint acusava "caixa.innerHTML = limpo" mesmo com o resultado do DOMPurify).
+var SEIPRO_PURIFY_FRAGMENTO = (function () {
+    var c = {};
+    for (var k in SEIPRO_PURIFY_CONFIG) {
+        if (Object.prototype.hasOwnProperty.call(SEIPRO_PURIFY_CONFIG, k)) c[k] = SEIPRO_PURIFY_CONFIG[k];
+    }
+    c.RETURN_DOM_FRAGMENT = true;
+    return c;
+})();
+
+// Sanitiza um fragmento respeitando o contexto de parsing que ele exige, e o devolve como
+// DocumentFragment do documento de destino.
+function fragmentoLimpoPro(html, doc) {
     doc = doc || document;
-    if (html === null || html === undefined) return '';
-    var texto = String(html);
+    var texto = (html === null || html === undefined) ? '' : String(html);
     var achadoTag = /^\s*<\s*([a-zA-Z][\w-]*)/.exec(texto);
     var tag = achadoTag ? achadoTag[1].toLowerCase() : '';
     var abre = ENVELOPES_PRO[tag];
-    if (!abre) return DOMPurify.sanitize(texto, SEIPRO_PURIFY_CONFIG);
-    // '<table><tr>' -> '</tr></table>'
-    var fecha = abre.match(/[a-z]+/g).reverse().map(function (t) { return '</' + t + '>'; }).join('');
-    var limpo = DOMPurify.sanitize(abre + texto + fecha, SEIPRO_PURIFY_CONFIG);
+    var frag;
+    if (!abre) {
+        frag = DOMPurify.sanitize(texto, SEIPRO_PURIFY_FRAGMENTO);
+    } else {
+        // '<table><tr>' -> '</tr></table>'
+        var fecha = abre.match(/[a-z]+/g).reverse().map(function (t) { return '</' + t + '>'; }).join('');
+        var envolto = DOMPurify.sanitize(abre + texto + fecha, SEIPRO_PURIFY_FRAGMENTO);
+        frag = (envolto.ownerDocument || document).createDocumentFragment();
+        // O parser insere <tbody> sozinho, entao a profundidade do desembrulho nao e fixa:
+        // acha-se o primeiro elemento da tag original e levam-se os filhos do pai dele.
+        var achado = envolto.querySelector(tag);
+        if (achado && achado.parentNode) {
+            var pai = achado.parentNode;
+            while (pai.firstChild) frag.appendChild(pai.firstChild);
+        }
+    }
+    return (frag.ownerDocument === doc) ? frag : doc.importNode(frag, true);
+}
+
+// O mesmo resultado em texto (testes e quem precise da marcacao limpa): so LE innerHTML.
+function sanitizarFragmentoPro(html, doc) {
+    doc = doc || document;
+    if (html === null || html === undefined) return '';
     var caixa = doc.createElement('div');
-    caixa.innerHTML = limpo;
-    // O parser insere <tbody> sozinho, entao a profundidade do desembrulho nao e fixa:
-    // acha-se o primeiro elemento da tag original e devolve-se o conteudo do pai dele.
-    var achado = caixa.querySelector(tag);
-    if (!achado || !achado.parentNode) return '';
-    return achado.parentNode.innerHTML;
+    caixa.appendChild(fragmentoLimpoPro(html, doc));
+    return caixa.innerHTML;
 }
 
 // Insere HTML com sanitizacao. E o unico caminho permitido: o verificador
@@ -621,12 +647,12 @@ function htmlPro(alvo, html, modo) {
         // O purify entra por $.getScript, de forma assincrona. Cair para HTML cru aqui
         // derrotaria o proposito do portao, entao texto puro passa e marcacao nao.
         if (/[<&]/.test(texto)) { avisarPro('htmlPro: DOMPurify ausente, insercao abortada', texto.slice(0, 80)); return $alvo; }
-        limpo = texto;
+        limpo = doc.createTextNode(texto);
     } else {
         // Fragmento que COMECA com <style>, <script>, <iframe>... some inteiro e sem passar pelo
         // DOMPurify.removed: o parser o manda para o <head> antes de o sanitizador olhar.
         if (/^\s*<(style|script|iframe|link|meta|object|embed)\b/i.test(texto)) avisarPro('htmlPro: fragmento comeca com uma tag que nunca sobrevive ao portao -- construir por DOM API', texto.slice(0, 60));
-        limpo = sanitizarFragmentoPro(texto, doc);
+        limpo = fragmentoLimpoPro(texto, doc);
         relatarRemocoesPro();
     }
     switch (modo || 'html') {
@@ -635,7 +661,7 @@ function htmlPro(alvo, html, modo) {
         case 'before':  $alvo.before(limpo); break;
         case 'after':   $alvo.after(limpo); break;
         case 'replace': $alvo.replaceWith(limpo); break;
-        default:        $alvo.html(limpo);
+        default:        $alvo.empty().append(limpo);
     }
     if (typeof installActionsPro === 'function' && !installActionsPro(doc)) cobrarDespachantePro(doc);
     return $alvo;
