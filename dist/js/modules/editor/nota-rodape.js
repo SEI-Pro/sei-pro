@@ -190,7 +190,7 @@
 
         var htmlResult = nr_Sobrenome + nr_Nome + nr_Titulo + nr_Edicao + nr_Local + nr_Editora + nr_Ano + nr_Volume + nr_Paginas + nr_Link + nr_Data;
         if (htmlResult != '') {
-            $box.find('#nrABNTResult').show().html(htmlResult + '.');
+            htmlPro($box.find('#nrABNTResult').show(), htmlResult + '.');
         }
     };
 
@@ -256,11 +256,12 @@
                 var ftr = p.querySelector('.ntRodape_footer');
                 var ref = ftr.getAttribute('data-ntrodape-ref');
                 var hasItem = body.querySelector('.ntRodape_item[data-ntrodape-ref="' + ref + '"]');
-                if (hasItem) keep.push({ id: parseInt(ftr.getAttribute('data-ntrodape')), html: p.outerHTML });
+                // O no e guardado e devolvido (P4), sem reparse do outerHTML.
+                if (hasItem) keep.push({ id: parseInt(ftr.getAttribute('data-ntrodape')), no: p });
                 p.parentNode.removeChild(p);
             });
             keep.sort(function (a, b) { return a.id - b.id; });
-            keep.forEach(function (entry) { body.insertAdjacentHTML('beforeend', entry.html); });
+            keep.forEach(function (entry) { body.appendChild(entry.no); });
 
             return body.innerHTML;
         });

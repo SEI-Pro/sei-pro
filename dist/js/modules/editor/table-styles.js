@@ -159,7 +159,7 @@
                     if ($(this).find('p').length) {
                         $(this).find('p').attr('class', classTdP);
                     } else {
-                        $(this).html('<p class="' + classTdP + '">' + $(this).html() + '</p>');
+                        reescreverDocumentoPro($(this), '<p class="' + classTdP + '">' + $(this).html() + '</p>');
                     }
                 });
             });

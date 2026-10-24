@@ -1228,7 +1228,7 @@ const getInitialProcUrl = async () => {
 // Função assíncrona para obter o HTML inicial do procedimento
 const getInitialProcHtml = async (urlInitProc) => {
     const htmlInitProc = await $.ajax({ url: urlInitProc });
-    return $(htmlInitProc);
+    return lerHtmlPro(htmlInitProc);
 };
 
 // Função assíncrona para obter a lista completa de tipos de procedimento
@@ -1423,7 +1423,7 @@ const createProc = async (hrefForm, postData) => {
 
 // Função para extrair ID do procedimento criado
 const extractProcId = (htmlResult) => {
-    const $htmlResult = $(htmlResult);
+    const $htmlResult = lerHtmlPro(htmlResult);
     const linkProc = $htmlResult.find('#ifrArvore').attr('src');
     
     if (!linkProc) return false;

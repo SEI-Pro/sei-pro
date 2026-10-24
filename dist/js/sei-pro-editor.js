@@ -436,6 +436,8 @@ function htmlButton(status) {
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     setTimeout(function(){ 
+        // Os botoes passam pelo portao (htmlPro), que vem do sei-functions-pro.js pedido por $.getScript.
+        if (typeof htmlPro !== 'function') { addButton(TimeOut - 100); return; }
         if (isNewEditor) {
             // frmEditor e lido quando este script carrega. Na primeira abertura do documento (logo depois de
             // cria-lo) o editor CK5 ainda nao tinha montado o .infra-editor__editor-completo e o botao "Inserir
@@ -453,9 +455,9 @@ function addButton(TimeOut = 9000) {
                 // e o item inteiro da barra. Inserido dentro do dropdown, o botao ficava por cima dos seguintes.
                 var item = ref.closest('.ck-toolbar__items').length ? ref.parentsUntil('.ck-toolbar__items').last() : $();
                 if (item.length) ref = item;
-                if (ref.length) ref.after(html); else items.first().append(html);
+                if (ref.length) htmlPro(ref, html, 'after'); else htmlPro(items.first(), html, 'append');
             };
-            items.first().append(htmlButton('').default);
+            htmlPro(items.first(), htmlButton('').default, 'append');
             insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);
             insertAfterOrAppend('button[data-cke-tooltip-text="Lista numerada"]', htmlButton('').beforeList);
             insertAfterOrAppend('span.ck-file-dialog-button', htmlButton('').afterImage);
@@ -465,33 +467,33 @@ function addButton(TimeOut = 9000) {
             // MAIUSCULO ou minusculo".
             insertAfterOrAppend('button[data-cke-tooltip-text^="Transformar o texto"]', htmlButton('').afterletters);
             insertAfterOrAppend('button[data-cke-tooltip-text^="Inserir link ou converter"]', htmlButton('').linkSeiLote);
-            items.first().append(htmlButton('').newBlock);
+            htmlPro(items.first(), htmlButton('').newBlock, 'append');
             setClickButtons();
             initFunctions();
         } else {
             if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
-                    if ( !$('#idEditor').length ) { $(isNewEditor ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
+                    if ( !$('#idEditor').length ) { htmlPro($(isNewEditor ? 'body' : '#divComandos'), '<input style="display:none" type="hidden" id="idEditor">', 'append'); }
                         $(txaEditor).each(function(index){ 
                             var idEditor = $(this).attr('id').replace('cke_', '');
                             if ( getIframeEditorPro(idEditor).contents().find('body').attr('contenteditable') == 'true' ) {
-                                $(this).find('span.cke_toolbox').append(htmlButton('').default);
-                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('').tables);
-                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
-                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
-                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
-                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('').afterImage);
-                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
-                                $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
+                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('').default, 'append');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__table'), htmlButton('').tables, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__minuscula'), htmlButton('').afterletters, 'after');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__cut'), htmlButton('').beforeCut, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__numberedlist'), htmlButton('').beforeList, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__base64image'), htmlButton('').afterImage, 'after');
+                                // htmlPro($(this).find('span.cke_toolgroup .cke_button__save'), htmlButton('').afterSave, 'after');
+                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('').newBlock, 'append');
                                 insertFontIcon('head',getIframeEditorPro(idEditor).contents());
                             } else {
-                                $(this).find('span.cke_toolbox').append(htmlButton('disable').default);
-                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('disable').tables);
-                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
-                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
-                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
-                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('disable').afterImage);
-                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
-                                $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
+                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('disable').default, 'append');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__table'), htmlButton('disable').tables, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__minuscula'), htmlButton('disable').afterletters, 'after');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__cut'), htmlButton('disable').beforeCut, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__numberedlist'), htmlButton('disable').beforeList, 'before');
+                                htmlPro($(this).find('span.cke_toolgroup .cke_button__base64image'), htmlButton('disable').afterImage, 'after');
+                                // htmlPro($(this).find('span.cke_toolgroup .cke_button__save'), htmlButton('disable').afterSave, 'after');
+                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('disable').newBlock, 'append');
                             }
                         });
                     setClickButtons();
@@ -593,13 +595,13 @@ function addStyleIframes(TimeOut = 9000) {
                 if ( $(this).is(editorTitle) || iframe.find('body').attr('contenteditable') == 'true' ) setOnBodyActs(iframe);
             });
             setCKEDITOR_instances();
-            $('head').append("<style type='text/css' data-style='seipro'> "
+            estiloPro(document, 'seipro', " "
                             +"  .divAlignText { display:none; background-image: -webkit-linear-gradient(top,#fff,#e4e4e4); position: absolute; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
                             +"  .divQuickTable { display:none; position: absolute; background: #f1f1f1; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
                             +"  .divQuickTable td { height: 15px; width: 15px; border: 1px solid #ccc; background: #fff; }"
                             +"  .divQuickTable .quickTableInfo { text-align: center; padding: 5px; color: #777; }"
                             +"  .divQuickTable .td_hover { background: #72bae2; }"
-                            +"</style>");
+                            );
             
         } else {
             addStyleIframes(TimeOut - 100);
@@ -609,8 +611,9 @@ function addStyleIframes(TimeOut = 9000) {
 }
 // CSS do SEI Pro no conteudo do documento. escuro: inclui a cor de texto do modo escuro (so no documento
 // isolado do iframe do CK4; no CK5 o conteudo divide a pagina com a interface do editor).
+// So o CSS: quem insere e o estiloPro, com a marca data-style="seipro".
 function cssConteudoSEIPro(escuro) {
-    return '<style type="text/css" data-style="seipro"> \n'
+    return ' \n'
                                     +(escuro ? '   * { color: #fbfbfe; } \n' : '')
                                     +'   span.checkboxSEI {cursor: pointer;} \n'
                                     +'   p .ancoraSei { background: #e4e4e4; } \n'
@@ -657,19 +660,19 @@ function cssConteudoSEIPro(escuro) {
                                     +'   span.reviewSeiPro[data-comment][data-review="add"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
                                     +'   html.dark-mode .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIiA/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgd2lkdGg9IjEzLjY0MDMyODc0MzE5OTIzNCIgaGVpZ2h0PSIxNi4xMjAwMDAwMDAwMDAwMDUiIHZpZXdCb3g9IjMxNC42Njk2NzEyNTY4MDA3NyAzMTEuOTQgMTMuNjQwMzI4NzQzMTk5MjM0IDE2LjEyMDAwMDAwMDAwMDAwNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxkZXNjPkNyZWF0ZWQgd2l0aCBGYWJyaWMuanMgNC42LjA8L2Rlc2M+CjxkZWZzPgo8L2RlZnM+CjxnIHRyYW5zZm9ybT0ibWF0cml4KDAuMDYgMCAwIDAuMDYgMzI0LjU3IDMyMCkiIGlkPSJ3MGQwNHhBNjhSaG1qYldBZWQyTmgiICA+CjxwYXRoIHN0eWxlPSJzdHJva2U6IG5vbmU7IHN0cm9rZS13aWR0aDogMTsgc3Ryb2tlLWRhc2hhcnJheTogbm9uZTsgc3Ryb2tlLWxpbmVjYXA6IGJ1dHQ7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2UtbGluZWpvaW46IG1pdGVyOyBzdHJva2UtbWl0ZXJsaW1pdDogNDsgZmlsbDogcmdiKDI1NSwyNTUsMjU1KTsgZmlsbC1ydWxlOiBldmVub2RkOyBvcGFjaXR5OiAxOyIgdmVjdG9yLWVmZmVjdD0ibm9uLXNjYWxpbmctc3Ryb2tlIiAgdHJhbnNmb3JtPSIgdHJhbnNsYXRlKC0xNTEsIC0xMjYpIiBkPSJNIDE3MCAxNCBMIDIwMC4wMDc1MzcgMTQgQyAyMDIuNzY5MDU3IDE0IDIwNSAxMS43NjM2NDkzIDIwNSA5LjAwNDk3MDkyIEwgMjA1IDQuOTk1MDI5MDggQyAyMDUgMi4yMzM4MjIxMiAyMDIuNzY0Nzk4IDAgMjAwLjAwNzUzNyAwIEwgMTAxLjk5MjQ2MyAwIEMgOTkuMjMwOTQzMSAwIDk3IDIuMjM2MzUwNjkgOTcgNC45OTUwMjkwOCBMIDk3IDkuMDA0OTcwOTIgQyA5NyAxMS43NjYxNzc5IDk5LjIzNTIwMTcgMTQgMTAxLjk5MjQ2MyAxNCBMIDEzMyAxNCBMIDEzMyAyMzggTCAxMDEuOTkyNDYzIDIzOCBDIDk5LjIzMDk0MzEgMjM4IDk3IDI0MC4yMzYzNTEgOTcgMjQyLjk5NTAyOSBMIDk3IDI0Ny4wMDQ5NzEgQyA5NyAyNDkuNzY2MTc4IDk5LjIzNTIwMTcgMjUyIDEwMS45OTI0NjMgMjUyIEwgMjAwLjAwNzUzNyAyNTIgQyAyMDIuNzY5MDU3IDI1MiAyMDUgMjQ5Ljc2MzY0OSAyMDUgMjQ3LjAwNDk3MSBMIDIwNSAyNDIuOTk1MDI5IEMgMjA1IDI0MC4yMzM4MjIgMjAyLjc2NDc5OCAyMzggMjAwLjAwNzUzNyAyMzggTCAxNzAgMjM4IEwgMTcwIDE0IFoiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz4KPC9nPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjA2IDAgMCAwLjA2IDMxOCAzMTkuNDgpIiBpZD0iNjlfbUZlWUc0MzlsTGM2X3FqUHlhIiAgPgo8cGF0aCBzdHlsZT0ic3Ryb2tlOiBub25lOyBzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1kYXNoYXJyYXk6IG5vbmU7IHN0cm9rZS1saW5lY2FwOiBidXR0OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlcjsgc3Ryb2tlLW1pdGVybGltaXQ6IDQ7IGZpbGw6IHJnYigyNTUsMjU1LDI1NSk7IGZpbGwtcnVsZTogZXZlbm9kZDsgb3BhY2l0eTogMTsiIHZlY3Rvci1lZmZlY3Q9Im5vbi1zY2FsaW5nLXN0cm9rZSIgIHRyYW5zZm9ybT0iIHRyYW5zbGF0ZSgtNDcuNTcsIC0xMTcuNzgpIiBkPSJNIDY1IDIyMi4yODA4MjkgQyA2MC42MTMxMTc2IDIyMi4yODA4MjkgNTYuMzc0MjE2MiAyMjIuMjgwODI4IDUyLjk5OTk5OTUgMjIyLjI4MDgyOCBMIDUzIDE3MCBMIDQyIDE3MCBMIDQyIDIyMi41NjA1OTMgQyAzOC42MTMwMjQ2IDIyMi41NjA1OTMgMzQuMzc2MzMwOCAyMjIuNTYwNTkzIDMwLjAwMDAwMDUgMjIyLjU2MDU5NCBMIDMwIDE3MCBMIDE5IDE3MCBMIDE5IDIyMi41NjA1OTUgQyAxNi4zMjQ4NjUgMjIyLjU2MDU5NSAxMy44NDYzMzY5IDIyMi41NjA1OTUgMTEuNzYxMjcyNSAyMjIuNTYwNTk2IEMgLTAuMzY5NTg2NDM4IDIyMi41NjA1OTkgMS4yODM4MTc0NiAyMTEuNTA5MzEzIDEuMjgzODE3NDYgMjExLjUwOTMxMyBDIDEuMjgzODE3NDYgMjExLjUwOTMxMyAwLjM4OTY4OTk0NCAxNzcuNzU2IDAuMzk2NTcxMjc3IDE1OCBMIDk0Ljc0MDgyMzIgMTU4IEMgOTQuNzM5MjczNiAxNzcuNzkzMDg5IDkzLjg1MzUzOTYgMjExLjIyOTU0OCA5My44NTM1Mzk2IDIxMS4yMjk1NDggQyA5My44NTM1Mzk2IDIxMS4yMjk1NDggOTUuNTA2OTQzNSAyMjIuMjgwODM0IDgzLjM3NjA4NDUgMjIyLjI4MDgzMSBDIDgxLjI1NTM3ODIgMjIyLjI4MDgzIDc4LjcyNzY0MTUgMjIyLjI4MDgzIDc2LjAwMDAwMDIgMjIyLjI4MDgzIEwgNzYgMTcwIEwgNjUgMTcwIEwgNjUgMjIyLjI4MDgyOSBaIE0gMC41NzQ1MzQwMzYgMTQ3IEMgMC41Nzk3NjgzODcgMTQ2Ljg5NjE0OSAwLjU4NTEzMTYzOCAxNDYuNzk0NzU1IDAuNTkwNjI1NTE0IDE0Ni42OTU4NjYgQyAxLjI4MzgxNzQ4IDEzNC4yMTg0MDkgLTAuNzk3MTEyMjg2IDEyMi40MzQxNDYgMTYuODc5MjgxNiAxMTYuMTk1NDIyIEMgMzQuNTU1Njc1NSAxMDkuOTU2Njk4IDI4LjY2NjI1MzYgMTA3LjUzMDUyMiAzMC4zOTc4NzkyIDk1Ljc0NjI1NzYgQyAzMi4xMjk1MDQ4IDgzLjk2MTk5MyAyNS44OTIxMjk4IDc4LjA2OTg2MyAyNS44OTIxMzE1IDQ0Ljc5NjY0OTYgQyAyNS44OTIxMzMgMTcuOTYwNzIwNiAzOC41MTY5NDY3IDEzLjkyMjAxNzMgNDUuNTIyMDkzOSAxMy4zNjM3NjE3IEMgNDUuNjA4OTgxNCAxMy4xMzQwNzI3IDQ1LjcwMDI1MDYgMTMuMDE2NDM5MSA0NS43OTYwNjMxIDEzLjAxNjQzOTEgQyA0OS44MzcyMDU2IDEzLjAxNjQzODkgNjkuMjQ1MjIzNyAxMS4yNDM2NzEzIDY5LjI0NTIyNTUgNDQuNTE2ODg0NyBDIDY5LjI0NTIyNzMgNzcuNzkwMDk4MiA2My4wMDc4NTIzIDgzLjY4MjIyODEgNjQuNzM5NDc3OCA5NS40NjY0OTI4IEMgNjYuNDcxMTAzNCAxMDcuMjUwNzU3IDYwLjU4MTY4MTUgMTA5LjY3NjkzMyA3OC4yNTgwNzU0IDExNS45MTU2NTcgQyA5NS45MzQ0NjkzIDEyMi4xNTQzODEgOTMuODUzNTM5NSAxMzMuOTM4NjQ0IDk0LjU0NjczMTUgMTQ2LjQxNjEwMSBDIDk0LjU1NzA1ODYgMTQ2LjYwMTk4OSA5NC41NjY5MjQyIDE0Ni43OTY3MjQgOTQuNTc2MzM5NyAxNDcgTCAwLjU3NDUzNDAzNiAxNDcgWiBNIDQ3LjUgNDEgQyA1Mi4xOTQ0MjA0IDQxIDU2IDM3LjE5NDQyMDQgNTYgMzIuNSBDIDU2IDI3LjgwNTU3OTYgNTIuMTk0NDIwNCAyNCA0Ny41IDI0IEMgNDIuODA1NTc5NiAyNCAzOSAyNy44MDU1Nzk2IDM5IDMyLjUgQyAzOSAzNy4xOTQ0MjA0IDQyLjgwNTU3OTYgNDEgNDcuNSA0MSBaIiBzdHJva2UtbGluZWNhcD0icm91bmQiIC8+CjwvZz4KPC9zdmc+") 12 1, auto !important; } \n'
                                     +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; } \n'
-                                    +'</style>\n';
+                                    +'';
 }
 // CK5 (SEI 5): uma vez por pagina, no head do proprio documento do editor.
 function addStyleConteudoCK5Pro() {
     if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
-        $('head').append(cssConteudoSEIPro(false));
+        estiloPro(document, 'seipro', cssConteudoSEIPro(false));
     }
 }
 // CSS do SEI Pro no documento de um iframe do editor CK4 (uma vez por documento: o <style data-style="seipro"> marca).
 // Chamado no boot por addStyleIframes e, depois, pelo contentDom de cada instancia (setStyleInstanceSEI).
 function addStyleIframeSEIPro(iframe) {
     if ( iframe.find('head').find('style[data-style="seipro"]').length == 0 ) {
-        iframe.find('head').append(cssConteudoSEIPro(localStorage.getItem('darkModePro')));
+        estiloPro(iframe, 'seipro', cssConteudoSEIPro(localStorage.getItem('darkModePro')));
         if (localStorage.getItem('darkModePro')) {
             iframe.find('html').addClass('dark-mode');
             // As classes dark-mode-color-* so tem efeito no modo escuro (regras html.dark-mode acima).
@@ -812,13 +815,13 @@ function initCKEDITOR_SEIPRO(e, TimeOut = 9000) {
 function setDarkModeCkePanel() {
     var iframeCkePanel = $('iframe.cke_panel_frame').contents();
     if (localStorage.getItem('darkModePro') && iframeCkePanel.find('style[data-style="seipro"]').length == 0) {
-    iframeCkePanel.find('head').append('<style type="text/css" data-style="seipro">\n'+
+    estiloPro(iframeCkePanel, 'seipro', '\n'+
         '  body { background-color: #202123 !important; }\n'+
         '  .cke_panel_block * { background: #202123; border: none !important; color: #fff; box-shadow: none !important; text-shadow: none !important;}\n'+
         '  .cke_panel_block a[onclick*="Fundo"] p { background-color: #6f7071; }\n'+
         '  .cke_panel_block a:hover, .cke_panel_block a:hover p { background-color: #017fff !important; }\n'+
         '  .cke_panel_block .cke_selected *  { background: transparent; color: #202123 !important; }\n'+
-        '</style>');
+        '');
     }
 }
 function repareBgTableColor(iframe) {
@@ -978,7 +981,7 @@ function getAllTextEditor(extract_number = false) {
     for (var id in CKEDITOR.instances) {
         textEditor += extract_number 
             ? extrairTextoComNumeracao(CKEDITOR.instances[id].getData())
-            : $('<div>').html(CKEDITOR.instances[id].getData()).text();
+            : lerHtmlPro('<div>'+CKEDITOR.instances[id].getData()+'</div>').text();
     }
 return textEditor
 }
@@ -1186,7 +1189,7 @@ function stylesEditorKeystroke() {
         if (getOptionsPro('stylesEditor')) {
             $('a.cke_combo_button[href*="Estilos de Format"]').on('click',function(){
                 var ckePanel = $('iframe[class="cke_panel_frame"]').contents();
-                var style = '<style type="text/css" data-style="seipro-styleeditor">'+
+                var style = ''+
                             '   .cke_panel_listItem a p {'+
                             '       overflow: hidden;'+
                             '   }'+
@@ -1204,9 +1207,9 @@ function stylesEditorKeystroke() {
                             '       opacity: 0.5;'+
                             '       top: calc(50% - 10px);'+
                             '   }'+
-                            '</style>';
+                            '';
                 if (ckePanel.find('style[data-style="seipro-styleeditor"]').length == 0) {
-                    ckePanel.find('head').append(style);
+                    estiloPro(ckePanel, 'seipro-styleeditor', style);
                 }
                     ckePanel.find('sup').remove();
                     var isMac = navigator.platform.toUpperCase().indexOf('MAC') !== -1 ? true : false;
@@ -1223,7 +1226,7 @@ function stylesEditorKeystroke() {
                             } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_4') {
                                 combinacaoteclas = isMac ? 'OPTION + SHIFT' : 'ALT + SHIFT';
                             }
-                            ckePanel.find('li.cke_panel_listItem a[title="'+v+'"]').prepend('<sup>'+combinacaoteclas+' + <strong>'+String.fromCharCode(key)+'</strong></sup>');
+                            htmlPro(ckePanel.find('li.cke_panel_listItem a[title="'+v+'"]'), '<sup>'+combinacaoteclas+' + <strong>'+String.fromCharCode(key)+'</strong></sup>', 'prepend');
                         }
                     });
             });
@@ -1385,7 +1388,7 @@ function addButtonTarjaSigilo() {
         $(txaEditor).each(function(index){ 
             var idEditor = $(this).attr('id').replace('cke_', '');
             if ( getIframeEditorPro(idEditor).contents().find('body').attr('contenteditable') == 'true' ) {
-                $(this).find('span.cke_toolgroup .getMarkSigiloButton').after(htmlButtonAfterLetters);
+                htmlPro($(this).find('span.cke_toolgroup .getMarkSigiloButton'), htmlButtonAfterLetters, 'after');
             }
         });
         $('.getTarjaSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTarjaSigilo(this) } });
@@ -1466,7 +1469,7 @@ function setDocCertidao() {
                 oEditor = alvoCertidao.editor;
                 oEditor.focus();
                 oEditor.fire('saveSnapshot');
-                iframe.find('body').html(modeloHtml);
+                reescreverDocumentoPro(iframe.find('body'), modeloHtml);
                 // Tarja na secao que recebeu a certidao. Sem o editor, o actionsMarkSigilo do modulo usa a
                 // primeira instancia (no SEI 4.1, o Cabecalho somente leitura) e a certidao seria salva
                 // com o trecho sigiloso a mostra.
@@ -1499,7 +1502,7 @@ function setDocCertidao() {
                 if (typeof oEditor !== 'undefined') {
                     oEditor.focus();
                     oEditor.fire('saveSnapshot');
-                    iframe.find('body').html(modeloHtml);
+                    reescreverDocumentoPro(iframe.find('body'), modeloHtml);
                     actionsMarkSigilo(undefined, 'apply');
                     enableButtonSavePro();
                     
@@ -1544,7 +1547,7 @@ function setDocAutomatico() {
             oEditor = alvoAutomatico.editor;
             oEditor.focus();
             oEditor.fire('saveSnapshot');
-            iframe.find('body').html(dadosDocAutomatico);
+            reescreverDocumentoPro(iframe.find('body'), dadosDocAutomatico);
             // Tarja na secao que recebeu o conteudo (ver setDocCertidao).
             actionsMarkSigilo(undefined, 'apply', false, false, oEditor);
 
@@ -1601,10 +1604,11 @@ function converterLinksProtocoloCK5Pro(raiz) {
 }
 function htmlLinksProtocoloEditorPro(html, ed) {
     if (!ed || !ed.model || typeof html !== 'string' || html.indexOf('lnkSei') === -1) return html;
-    var tpl = document.createElement('template');
-    tpl.innerHTML = html;
-    converterLinksProtocoloCK5Pro(tpl.content);
-    return tpl.innerHTML;
+    // Le num documento inerte (lerHtmlPro), troca os links e serializa de volta (so leitura de innerHTML).
+    var caixa = lerHtmlPro('<div>'+html+'</div>')[0];
+    if (!caixa) return html;
+    converterLinksProtocoloCK5Pro(caixa);
+    return caixa.innerHTML;
 }
 // Caminho da selecao do model (raiz + path) e volta para a mesma posicao, limitada ao que existe depois da troca.
 function caminhoSelecaoCK5Pro(ed) {
@@ -1686,7 +1690,7 @@ function replaceDadosEditor(this_) {
             corpo.find('p').not('.sigiloSEI_sigilo_mark').each(function(){
                 var htmlAtual = $(this).html();
                 var htmlNovo = substituirCampoDinamicoPro(htmlAtual, new RegExp(hashTag+underline, "i"), function(){ if (substituido) count++; return fieldSpan });
-                if (htmlNovo !== htmlAtual) $(this).html(htmlNovo);
+                if (htmlNovo !== htmlAtual) reescreverDocumentoPro($(this), htmlNovo);
             });
         console.log(arrayTags, value, hashTag+underline, fieldSpan, dadosProcesso);
     });
@@ -1711,7 +1715,7 @@ function replaceDadosEditor(this_) {
         // corpoEditor e o <body> (via adapter) ou o document do iframe (via
         // iframeEditor); find() alcanca os descendentes nos dois casos.
         var tagField = corpoEditor.find('span.hashField');
-        if (tagField.length) { tagField.after(tagField.html()).remove() }
+        if (tagField.length) { reescreverDocumentoPro(tagField, tagField.html(), 'after').remove() }
         substituirCampos(corpoEditor);
     }
     if (ed) SeiProEditorAdapter.fire(ed, 'saveSnapshot');
@@ -1719,7 +1723,7 @@ function replaceDadosEditor(this_) {
     var resultDiv = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
                     '  <i class="fas fa-check-circle verdeColor"></i> '+count+' '+(count==1 ? 'campo din\u00E2mico substitu\u00EDdo' : 'campos din\u00E2micos substitu\u00EDdos')+' com sucesso!<br>'+count_error+
                     '</label>';
-    $('#tabReplaceTag_result').show().html(resultDiv);
+    htmlPro($('#tabReplaceTag_result').show(), resultDiv);
 }
 function arrayDadosEditor() {
         setMomentPtBr();

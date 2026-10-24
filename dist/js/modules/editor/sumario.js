@@ -67,9 +67,9 @@
      */
     window.updateSelectDialog = function (element, array) {
         if ($('select#' + element).length) {
-            $('select#' + element).html('');
+            $('select#' + element).empty();
             $.each(array, function (index, value) {
-                $('select#' + element).append('<option value="' + value[1] + '">' + value[0] + '</option>');
+                htmlPro($('select#' + element), '<option value="' + value[1] + '">' + value[0] + '</option>', 'append');
             });
         }
     };
@@ -168,7 +168,7 @@
                 var randRef = randomString(16);
                 htmlSumario += '<p class="Texto_Alinhado_Esquerda"><a href="#bookmark-' + randRef + '">' + $(this).text().trim() + '</a></p>';
                 $(this).find('a.seipro-bookmark').remove();
-                $(this).prepend('<a class="seipro-bookmark" name="bookmark-' + randRef + '"></a>');
+                reescreverDocumentoPro($(this), '<a class="seipro-bookmark" name="bookmark-' + randRef + '"></a>', 'prepend');
             });
             // Insere o sumario imediatamente apos o paragrafo do cursor (fallback:
             // insere na posicao atual se nao houver paragrafo foco).

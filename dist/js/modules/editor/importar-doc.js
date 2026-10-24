@@ -95,7 +95,7 @@
             p.querySelectorAll('del').forEach(function (del) {
                 var text = del.innerHTML;
                 if (text !== '' && text !== '&nbsp;') {
-                    del.insertAdjacentHTML('afterend', '<span style="color:#FF0000;"><s>' + text + '</s></span> ');
+                    reescreverDocumentoPro($(del), '<span style="color:#FF0000;"><s>' + text + '</s></span> ', 'after');
                 }
                 if (del.parentNode) del.parentNode.removeChild(del);
             });
@@ -103,7 +103,7 @@
             p.querySelectorAll('ins').forEach(function (ins) {
                 var text = ins.innerHTML;
                 if (text !== '' && text !== '&nbsp;') {
-                    ins.insertAdjacentHTML('afterend', '<span style="color:#0000FF;"><u>' + text + '</u></span> ');
+                    reescreverDocumentoPro($(ins), '<span style="color:#0000FF;"><u>' + text + '</u></span> ', 'after');
                 }
                 if (ins.parentNode) ins.parentNode.removeChild(ins);
             });

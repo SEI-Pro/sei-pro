@@ -66,8 +66,7 @@
         `);
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
             .dialog({
                 title : 'Inserir refer\u00EAncia interna',
                 width : 600,
@@ -241,7 +240,7 @@
 
                 if (iNumerado) {
                     if (_this.find('a[name*="RefPro_"]').length == 0) {
-                        _this.prepend('<a name="RefPro_'+randRef+'">');
+                        reescreverDocumentoPro(_this, '<a name="RefPro_'+randRef+'">', 'prepend');
                     } else {
                         randRef = _this.find('a[name*="RefPro_"]').attr('name').replace('RefPro_','');
                     }

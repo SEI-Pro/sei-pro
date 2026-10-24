@@ -251,7 +251,7 @@ function getDeclaraLegis(iframe) {
 function checkText(this_, resultText, disp) {
 	var alert = [];
 	var text = $(this_).text().trim();
-	var refDispositivo = $('<div>'+resultText+'</div>').text();
+	var refDispositivo = lerHtmlPro('<div>'+resultText+'</div>').text();
 	var textDispositivo = text.replace(disp+'.', '').trim();
 	var firstChar = textDispositivo.toString().charAt(0);
 	var lastChar = textDispositivo.toString().slice(-1);

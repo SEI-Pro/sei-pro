@@ -103,8 +103,7 @@
         `);
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
             .dialog({
                 title : 'Adicionar Link de Documento P\u00FAblico',
                 width : 600,
@@ -125,7 +124,7 @@
                     });
 
                     getDadosIframeProcessoPublicoPro();
-                    $('#searchPub_result').html('').hide();
+                    $('#searchPub_result').empty().hide();
                     $('#searchPub_load').hide();
                     var processo = (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.processo !== 'undefined') ? dadosProcessoPro.listAndamento.processo : '';
                     $('#processoPub' ).val(processo);
@@ -164,8 +163,8 @@
         if ( ifrPublico.find('#seiSearch').length ) {
             var captcha = ifrPublico.find('#lblCaptcha').find('img').attr('src');
                 captcha = typeof captcha === 'undefined' ? ifrPublico.find('#imgCaptcha').attr('src') : captcha;
-            var htmlCaptcha =   '<img src="'+captcha+'"> <i onclick="getDadosIframeProcessoPublicoPro()" class="fas fa-redo" style="color: #969696; cursor: pointer; padding: 3px 8px;"></i>';
-            $('#searchPub_captcha').html(htmlCaptcha);
+            var htmlCaptcha =   '<img src="'+captcha+'"> <i data-spro-click="getDadosIframeProcessoPublicoPro" data-spro-args="'+argsPro()+'" class="fas fa-redo" style="color: #969696; cursor: pointer; padding: 3px 8px;"></i>';
+            htmlPro($('#searchPub_captcha'), htmlCaptcha);
             $('#searchPub_load').hide();
             // O captcha e' digitado pelo usuario: nao ha IA lendo a imagem.
             $('#captchaPub').val('').focus();
@@ -222,7 +221,7 @@
     // Busca a pagina do processo publico, monta a lista de documentos e o select.
     window.getLinksProcessoPublicoPro = function (href) {
         $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var listDocumentos = [];
                 $html.find("#tblDocumentos").find('tr.infraTrClara').each(function(index){
                     var link = $(this).find('a.ancoraPadraoAzul').attr('onclick');
@@ -242,7 +241,7 @@
                 optionSelectDocumentos += '<option data-url="'+href+'" data-documento="'+processoDoc+'">'+processoDoc+'</option>';
 
             $('.trListDocPublico').show();
-            $('#selectDocPublico').html(optionSelectDocumentos).chosen("destroy").chosen({
+            htmlPro($('#selectDocPublico'), optionSelectDocumentos).chosen("destroy").chosen({
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado',
                 normalize_search_text: function(text) {

@@ -580,7 +580,7 @@
                 var po = orfaos[i].closest ? orfaos[i].closest('p') : null;
                 (po || orfaos[i]).remove();
             }
-            body.insertAdjacentHTML('afterbegin', htmlBgPage);
+            reescreverDocumentoPro(body, htmlBgPage, 'prepend');
             return body.innerHTML;
         });
 
@@ -640,8 +640,7 @@
                 for (var i = 0; i < styles.length; i++) {
                     var p = styles[i].parentNode;
                     if (!ehAncoraOrfa(p)) continue;
-                    p.insertAdjacentHTML('afterbegin',
-                        '<span class="imgBgAncora" title="' + TITULO_RECUPERADO + '">' + ROTULO_ANCORA + '</span>');
+                    reescreverDocumentoPro($(p), '<span class="imgBgAncora" title="' + TITULO_RECUPERADO + '">' + ROTULO_ANCORA + '</span>', 'prepend');
                 }
                 return body.innerHTML;
             });

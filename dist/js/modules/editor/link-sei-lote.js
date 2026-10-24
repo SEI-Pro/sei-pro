@@ -513,8 +513,7 @@
             '</div>';
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(html)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), html)
             .dialog({
                 title: 'Converter n\u00FAmeros SEI em links',
                 width: 620,

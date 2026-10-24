@@ -69,8 +69,8 @@
     // Container do corpo do documento (iframe body no CK4, editable no CK5),
     // como elemento jQuery -- ou jQuery vazio.
     function bodyContainer$(editor) {
-        var body = SeiProEditorAdapter.getBodyContainer(editor);
-        return (body && window.$) ? $(body) : (window.$ ? $() : null);
+        var corpo = SeiProEditorAdapter.getBodyContainer(editor);
+        return (corpo && window.$) ? $(corpo) : (window.$ ? $() : null);
     }
 
     // true se ha selecao nao-colapsada. Usa o helper compartilhado do monolito

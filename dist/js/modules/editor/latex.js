@@ -33,13 +33,13 @@
         resizeHeigthDialogBox(dialogBoxPro);
         var mathTextValue = $('#MathText').val();
         if (mathTextValue != '') {
-            $('#latexPreview').html('<img src="https://latex.codecogs.com/png.latex?' + encodeURI(mathTextValue) + '">');
+            htmlPro($('#latexPreview'), '<img src="https://latex.codecogs.com/png.latex?' + encodeURI(mathTextValue) + '">');
             getBase64Image($('#latexPreview').find('img'));
             setTimeout(function () {
                 resizeHeigthDialogBox(dialogBoxPro);
             }, 500);
         } else {
-            $('#latexPreview').html('');
+            $('#latexPreview').empty();
         }
         resizeHeigthDialogBox(dialogBoxPro);
     };
@@ -74,8 +74,7 @@
         );
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
             .dialog({
                 title: 'Inserir Equa\u00E7\u00E3o',
                 width: 600,
@@ -87,7 +86,7 @@
                     var selectTxt = _nsel ? String(_nsel).trim() : '';
                     var mathText = $('#MathText');
                     setTimeout(function () {
-                        $('#latexPreview').html('');
+                        $('#latexPreview').empty();
                         if (mathText != '') {
                             mathText.val(selectTxt);
                             updatePreviewLatex();

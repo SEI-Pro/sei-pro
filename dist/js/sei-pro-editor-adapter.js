@@ -231,7 +231,7 @@
         var id = def.id || ('seiProDialog_' + (markerSeq++));
         var $existing = $('#' + id);
         if ($existing.length) { try { $existing.dialog('destroy'); } catch (e) {} $existing.remove(); }
-        var $box = $('<div></div>').attr('id', id).html(def.html || '');
+        var $box = htmlPro($('<div></div>').attr('id', id), def.html || '');
         $('body').append($box);
 
         // Religa as acoes declaradas em data-spro-click / data-spro-change (ver
@@ -483,11 +483,11 @@
                 if (editorId) {
                     var ifr = $('iframe[title*="' + editorId + '"]').contents();
                     if (ifr.length) {
-                        ifr.find(referenceEl).before(html);
+                        reescreverDocumentoPro(ifr.find(referenceEl), html, 'before');
                         return;
                     }
                 }
-                $(referenceEl).before(html);
+                reescreverDocumentoPro($(referenceEl), html, 'before');
             }
         },
 
@@ -531,14 +531,14 @@
 
         /** Busca elementos dentro do corpo do documento. Retorna jQuery. */
         findInBody: function (editor, selector) {
-            var body = this.getBodyContainer(editor);
-            return body ? $(body).find(selector) : $();
+            var corpo = this.getBodyContainer(editor);
+            return corpo ? $(corpo).find(selector) : $();
         },
 
         /** Adiciona HTML ao final do corpo do documento. */
         appendToBody: function (editor, html) {
-            var body = this.getBodyContainer(editor);
-            if (body) $(body).append(html);
+            var corpo = this.getBodyContainer(editor);
+            if (corpo) reescreverDocumentoPro($(corpo), html, 'append');
         },
 
         /**
@@ -547,11 +547,11 @@
          */
         transformBodyHtml: function (editor, transformFn) {
             if (!editor || typeof transformFn !== 'function') return;
-            var body = this.getBodyContainer(editor);
-            if (!body) return;
-            var html = $(body).html();
+            var corpo = this.getBodyContainer(editor);
+            if (!corpo) return;
+            var html = $(corpo).html();
             var newHtml = transformFn(html);
-            if (typeof newHtml === 'string' && newHtml !== html) $(body).html(newHtml);
+            if (typeof newHtml === 'string' && newHtml !== html) reescreverDocumentoPro($(corpo), newHtml);
         },
 
         // --- Primitivas adicionais (migracao CK5) ---
@@ -800,8 +800,8 @@
 
         /** Busca elementos dentro do corpo do documento. Retorna jQuery. */
         findInBody: function (editor, selector) {
-            var body = this.getBodyContainer(editor);
-            return (body && window.$) ? $(body).find(selector) : (window.$ ? $() : null);
+            var corpo = this.getBodyContainer(editor);
+            return (corpo && window.$) ? $(corpo).find(selector) : (window.$ ? $() : null);
         },
 
         /**

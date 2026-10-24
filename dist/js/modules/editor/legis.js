@@ -80,7 +80,8 @@
 
     function htmlNoAlvoLegis($alvo, html) {
         if (typeof htmlPro === 'function') return htmlPro($alvo, html);
-        return $alvo.html(html);
+        // Sem o portao (sei-functions-pro.js ainda nao carregou), so o texto: nunca marcacao crua.
+        return $alvo.text(String(html === null || html === undefined ? '' : html).replace(/<[^>]*>/g, ''));
     }
 
     // "Lei n\u00BA 556, de 25 de junho de 1850" -> "Lei n\u00BA 556, de 1850" (citacao repetida).

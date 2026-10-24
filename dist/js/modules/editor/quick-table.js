@@ -66,7 +66,7 @@
 
     window.hideQuickTable = function () {
         $('.divQuickTable').each(function () {
-            $(this).html('').hide();
+            $(this).empty().hide();
         });
         $('.getQuickTableButtom').addClass('cke_button_off').removeClass('cke_button_on');
     };
@@ -92,7 +92,7 @@
                 $(this).addClass('td_hover');
             }
         });
-        $(this_).closest('.divQuickTable').find('.quickTableInfo').html('Tabela ' + (rowThis + 1) + 'x' + (colThis + 1));
+        htmlPro($(this_).closest('.divQuickTable').find('.quickTableInfo'), 'Tabela ' + (rowThis + 1) + 'x' + (colThis + 1));
 
         if (rowThis == parseInt(table.attr('data-row')) && rowThis < 49) {
             var tableAppend = $(this_).closest('table');
@@ -124,12 +124,12 @@
             for (var i = 0; i < rowDefault; i++) {
                 htmlTable += '<tr>';
                 for (var j = 0; j < colDefault; j++) {
-                    htmlTable += '<td onmouseout="quickTableOver(this);" onmouseover="quickTableOver(this);" data-row="' + i + '" data-col="' + j + '" onclick="quickTableClick(this)"></td>';
+                    htmlTable += '<td data-spro-mouseout="quickTableOver" data-spro-mouseover="quickTableOver" data-row="' + i + '" data-col="' + j + '" data-spro-click="quickTableClick"></td>';
                 }
                 htmlTable += '</tr>';
             }
             htmlTable += '</table>';
-            divQuickTable.html(htmlTable).show();
+            htmlPro(divQuickTable, htmlTable).show();
             $(this_).removeClass('cke_button_off').addClass('cke_button_on');
         } else {
             hideQuickTable();
