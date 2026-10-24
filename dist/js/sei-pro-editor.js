@@ -448,8 +448,12 @@ function addButton(TimeOut = 9000) {
             // Fallback: quando o seletor de refer\u00EAncia n\u00E3o existe (comum entre builds
             // do CK5 customizadas), caimos no append ao container principal.
             var insertAfterOrAppend = function(selector, html) {
-                var ref = $(selector);
-                if (ref.length) ref.first().after(html); else items.first().append(html);
+                var ref = $(selector).first();
+                // Ancora que e o botao de um dropdown/splitbutton (ex.: "Transformar o texto"): o vizinho certo
+                // e o item inteiro da barra. Inserido dentro do dropdown, o botao ficava por cima dos seguintes.
+                var item = ref.closest('.ck-toolbar__items').length ? ref.parentsUntil('.ck-toolbar__items').last() : $();
+                if (item.length) ref = item;
+                if (ref.length) ref.after(html); else items.first().append(html);
             };
             items.first().append(htmlButton('').default);
             insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);

@@ -26,7 +26,9 @@
     // botao (on/off) e aplica/remove o modo seiSlim de estilizacao.
     window.getBoxStyleEditor = function (this_) {
         var btn = $('.getNewStyleButton');
-        if (btn.hasClass('cke_button_off')) {
+        // O estado vem da mesma chave que define o botao ao nascer: no CK5 ele nao recebe
+        // cke_button_off, e o primeiro clique caia direto no 'remove'.
+        if (!localStorage.getItem('seiSlim_editor')) {
             btn.addClass('cke_button_on').removeClass('cke_button_off');
             updateStyleEditor('set');
         } else {
@@ -48,7 +50,9 @@
             $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
         } else {
             localStorage.removeItem('seiSlim_editor');
-            $('body').attr('class', '');
+            // So as classes que o 'set' pos: zerar o class do <body> levava junto newSEI/isSEI_5 e
+            // seiEditor, das quais dependem os icones da barra no CK5 (sumiam e nao voltavam mais).
+            $('body').removeClass('seiSlim seiSlim_parent seiSlim_view');
         }
     };
 
