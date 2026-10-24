@@ -23,6 +23,18 @@ export {
   marcadoresDoProcesso,
   type MarcadorProcesso,
 } from "./dominio/acoesProcesso";
+export {
+  blocoInternoDoHistorico,
+  lerAcompanhamento,
+  lerAnotacao,
+  lerAtribuicaoDaPagina,
+  lerRelacionados,
+  type AcompanhamentoProcesso,
+  type AnotacaoProcesso,
+  type AtribuicaoDaPagina,
+  type LinhaAtribuicao,
+  type ProcessoRelacionado,
+} from "./dominio/painelProcesso";
 export { andamentos, andamentosDaArvore, andamentosDoLink, type Andamento, type TipoHistorico } from "./dominio/historico";
 export { lerCaixaDaPagina, lerLinhaCaixa, listarCaixa, type ProcessoNaCaixa } from "./dominio/caixa";
 export {

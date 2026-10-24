@@ -58,7 +58,13 @@ export interface MetadadosProcesso {
   interessados: string[];
   observacoes: string;
   editavel: boolean;
+  /** Nível de acesso lido do formulário (cai no da árvore quando o formulário não o marca, ex.: campo desabilitado). */
+  nivel: NivelAcesso;
+  /** Hipótese legal (só restrito/sigiloso); cai na da árvore quando o formulário não traz a opção marcada. */
+  hipotese?: string;
 }
+
+const NIVEL_POR_VALOR: Record<string, NivelAcesso> = { "0": "publico", "1": "restrito", "2": "sigiloso" };
 
 /**
  * Metadados pelo link que a árvore já aberta oferece, sem buscar a árvore de novo
@@ -67,7 +73,11 @@ export interface MetadadosProcesso {
  */
 export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp): Promise<MetadadosProcesso> {
   const { form, editavel } = await formularioProcesso(http, arv, op);
+  const nivel = NIVEL_POR_VALOR[form.valor("rdoNivelAcesso") ?? ""] ?? arv.nivel;
+  const hipotese = nivel === "publico" ? undefined : textoOpcaoSelecionada(form, "selHipoteseLegal").trim() || arv.hipotese;
   return {
+    nivel,
+    ...(hipotese ? { hipotese } : {}),
     tipo: textoOpcaoSelecionada(form, "selTipoProcedimento") || arv.tipo,
     especificacao: form.valor("txtDescricao") ?? "",
     assuntos: nomes(form.itensLupa("selAssuntos")),
@@ -80,7 +90,7 @@ export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp
 export async function consultarProcesso(sei: Sei, referencia: string, op?: OpcoesHttp): Promise<Processo> {
   const arv = await sei.arvore(referencia, op);
   if (arv.nivel === "sigiloso") throw new ErroSei("SEI_SIGILOSO", "Processo sigiloso: o agente n\u00E3o atua nele.");
-  const meta = await consultarDaArvore(sei.http, arv, op);
+  const { nivel: _nivel, hipotese: _hipotese, ...meta } = await consultarDaArvore(sei.http, arv, op);
   return {
     idProcedimento: arv.idProcedimento,
     protocolo: arv.protocolo,
