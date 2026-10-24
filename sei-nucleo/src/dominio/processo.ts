@@ -65,6 +65,8 @@ export interface MetadadosProcesso {
   nivel: NivelAcesso;
   /** Hipótese legal (só restrito/sigiloso); cai na da árvore quando o formulário não traz a opção marcada. */
   hipotese?: string;
+  /** Data de autuação ("dd/mm/aaaa"), do campo `hdnDtaGeracao` do formulário. Falta quando a tela não o traz. */
+  autuacao?: string;
 }
 
 const NIVEL_POR_VALOR: Record<string, NivelAcesso> = { "0": "publico", "1": "restrito", "2": "sigiloso" };
@@ -78,6 +80,7 @@ export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp
   const { form, editavel } = await formularioProcesso(http, arv, op);
   const nivel = NIVEL_POR_VALOR[form.valor("rdoNivelAcesso") ?? ""] ?? arv.nivel;
   const hipotese = nivel === "publico" ? undefined : textoOpcaoSelecionada(form, "selHipoteseLegal").trim() || arv.hipotese;
+  const autuacao = (form.valor("hdnDtaGeracao") ?? form.valor("txtDtaGeracaoExibir") ?? "").trim();
   return {
     nivel,
     ...(hipotese ? { hipotese } : {}),
@@ -88,6 +91,7 @@ export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp
     observacoes: form.valor("txaObservacoes") ?? "",
     observacoesOutras: observacoesDasOutrasUnidades(form),
     editavel,
+    ...(autuacao ? { autuacao } : {}),
   };
 }
 

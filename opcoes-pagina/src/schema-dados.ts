@@ -478,6 +478,16 @@ export const SECOES_GERAL: Secao[] = [
         padrao: true,
       },
       {
+        nome: "processoparado",
+        rotulo: "Avisar na capa do processo quando ele estiver parado na unidade há mais de (dias; 0 desliga o aviso)",
+        ajuda: "O card \"Na unidade atual\" da capa ganha destaque quando o processo está há mais dias que este limite na sua unidade.",
+        tipo: "numero",
+        icone: "fa fa-hourglass-half",
+        padrao: 15,
+        min: 0,
+        max: 3650,
+      },
+      {
         nome: "resizearvore",
         rotulo: "Redimensionar automaticamente a árvore do processo pela sua largura total",
         tipo: "chave",
