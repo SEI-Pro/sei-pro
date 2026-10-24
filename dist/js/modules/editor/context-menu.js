@@ -90,7 +90,7 @@
             if (SeiProEditorAdapter.version === 5) {
                 SeiProEditorAdapter.insertHtmlBefore(editor, table.nextSibling || table, newLine + htmlTable);
             } else if (window.$) {
-                $(table).after(newLine + htmlTable);
+                reescreverDocumentoPro($(table), newLine + htmlTable, 'after');
             }
         });
     }

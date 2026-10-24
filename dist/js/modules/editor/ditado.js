@@ -507,14 +507,14 @@
             return html;
         }
 
-        var htmlBox =
-            '<div class="dialogBoxDiv seipro-dialog-compact" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">'
-            + '<style>'
-            + '.seipro-dialog-compact, .seipro-dialog-compact * { box-sizing:border-box; font-size:13px; }'
+        // O <style> do dialogo vai por DOM API: dentro do html do dialogo o portao o cortaria.
+        estiloPro(document, 'seipro-dialog-compact',
+            '.seipro-dialog-compact, .seipro-dialog-compact * { box-sizing:border-box; font-size:13px; }'
             + '.seipro-dialog-compact label { display:block; font-size:12px; color:#555; margin-bottom:2px; }'
             + '.seipro-dialog-compact select { font-size:13px; padding:4px 6px; border:1px solid #ccc; border-radius:3px; width:100%; }'
-            + '.seipro-dialog-compact .ds-row { margin-bottom:10px; }'
-            + '</style>'
+            + '.seipro-dialog-compact .ds-row { margin-bottom:10px; }');
+        var htmlBox =
+            '<div class="dialogBoxDiv seipro-dialog-compact" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">'
             + '<div class="ds-row">'
             + '<label for="wslanguages">Idioma</label>'
             + '<select id="wslanguages">' + langHtml + '</select>'
@@ -545,7 +545,7 @@
                     var langVal = parseInt($(this).val(), 10);
                     var firstCultures = ws.getCultures(langVal);
                     var firstVal = (firstCultures.length) ? firstCultures[0][0] : '';
-                    $box.find('#wscultures').html(culturesHtmlFor(langVal, firstVal));
+                    htmlPro($box.find('#wscultures'), culturesHtmlFor(langVal, firstVal));
                     selectCulture = firstVal;
                 });
                 $box.find('#wscultures').on('change', function () {

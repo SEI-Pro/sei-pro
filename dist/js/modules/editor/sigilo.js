@@ -279,7 +279,7 @@
             onOpen: function ($box) {
                 var $tabs = $box.find('#sigiloTabs');
                 if ($tabs.tabs) $tabs.tabs();
-                $box.find('.tabSigilo_result').html('').hide();
+                $box.find('.tabSigilo_result').empty().hide();
                 $box.find('#inputSigiloTexto').val(textSelected);
                 htmlTabSigiloResult($box, editor);
 
@@ -369,8 +369,8 @@
                          '</label>';
             }
             if ($box) {
-                $box.find('#tabSigilo2_result').show().html(result);
-                $box.find('#tabSigilo3_result').hide().html('');
+                htmlPro($box.find('#tabSigilo2_result').show(), result);
+                $box.find('#tabSigilo3_result').hide().empty();
                 htmlTabSigiloResult($box, editor);
             }
 
@@ -388,9 +388,9 @@
                     body.querySelectorAll('span.sigiloSEI_tarja').forEach(function (sp) {
                         var original = sp.getAttribute('data-text');
                         if (typeof original === 'string' && original !== '') {
-                            var tpl = document.createElement('template');
-                            tpl.innerHTML = original;
-                            sp.parentNode.insertBefore(tpl.content, sp);
+                            // Texto original lido num documento inerte (lerHtmlPro) e movido no lugar da tarja.
+                            var caixa = lerHtmlPro('<div>' + original + '</div>')[0];
+                            while (caixa && caixa.firstChild) sp.parentNode.insertBefore(caixa.firstChild, sp);
                             sp.parentNode.removeChild(sp);
                             removed.n++;
                         }
@@ -402,8 +402,8 @@
                 : '  <i class="fas fa-check-circle verdeColor"></i> ' + removed.n + ' ' + (removed.n == 1 ? 'marca' : 'marcas') + ' ' + (removed.n == 1 ? 'removida' : 'removidas') + ' com sucesso!';
             result = '<label style="font-style: italic; color: #616161;">' + displayResultR + '</label>';
             if ($box) {
-                $box.find('#tabSigilo3_result').show().html(result);
-                $box.find('#tabSigilo2_result').hide().html('');
+                htmlPro($box.find('#tabSigilo3_result').show(), result);
+                $box.find('#tabSigilo2_result').hide().empty();
                 htmlTabSigiloResult($box, editor);
             }
             rodapeSigiloMark(editor);
@@ -435,18 +435,18 @@
                          '  <i class="fas fa-check-circle verdeColor"></i> ' + applied.n + ' ' + (applied.n == 1 ? 'marca' : 'marcas') + ' ' + (applied.n == 1 ? 'tarjada' : 'tarjadas') + ' com sucesso!<br>' +
                          '  <i class="fas fa-exclamation-triangle laranjaColor"></i>  ' + (applied.n == 1 ? 'Esta marca tarjada poder\u00E1 ser revertida' : 'Estas marcas tarjadas poder\u00E3o ser revertidas') + ' na aba "Remover marcas"<br> somente enquanto aberto este editor de documentos.' +
                          '</label>';
-                if ($box) $box.find('#tabSigilo1_result').show().html(result);
+                if ($box) htmlPro($box.find('#tabSigilo1_result').show(), result);
             } else if ($box) {
                 htmlTabSigiloResult($box, editor);
             }
             if ($box) {
-                $box.find('#tabSigilo2_result').hide().html('');
-                $box.find('#tabSigilo3_result').hide().html('');
+                $box.find('#tabSigilo2_result').hide().empty();
+                $box.find('#tabSigilo3_result').hide().empty();
             }
             rodapeSigiloMark(editor);
 
         } else if (mode === 'email_cpf') {
-            if ($box) $box.find('#tabSigilo2_result').html('');
+            if ($box) $box.find('#tabSigilo2_result').empty();
             var bodyText = '';
             var bodyEl = SeiProEditorAdapter.getBodyContainer(editor);
             if (bodyEl) bodyText = bodyEl.textContent || bodyEl.innerText || '';
@@ -543,8 +543,7 @@
                     el.parentNode.removeChild(el);
                 });
                 if (countMarks > 0) {
-                    body.insertAdjacentHTML('beforeend',
-                        '<p class="sigiloSEI_sigilo_mark" contenteditable="false" style="font-size: 6pt;color: #ccc;font-family: monospace;">#_contem_' + countMarks + '_marcas_sigilo</p>');
+                    reescreverDocumentoPro(body, '<p class="sigiloSEI_sigilo_mark" contenteditable="false" style="font-size: 6pt;color: #ccc;font-family: monospace;">#_contem_' + countMarks + '_marcas_sigilo</p>', 'append');
                 }
             });
         });
@@ -575,7 +574,7 @@
                      '  <i class="fas fa-info-circle" style="color: #007fff;"></i> ' + i + ' ' + (i == 1 ? 'marca' : 'marcas') + ' de sigilo ' + (i == 1 ? 'encontrada' : 'encontradas') + ' no documento! <br>' +
                      '</label>';
         }
-        $box.find('#tabSigilo1_result').show().html(result);
+        htmlPro($box.find('#tabSigilo1_result').show(), result);
     };
 
     // ----------------------------------------------------------------

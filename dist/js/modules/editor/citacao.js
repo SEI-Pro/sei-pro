@@ -73,8 +73,7 @@
             `);
 
             resetDialogBoxPro('dialogBoxPro');
-            dialogBoxPro = $('#dialogBoxPro')
-                .html(htmlBox)
+            dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
                 .dialog({
                     title : 'Inserir refer\u00EAncia de documento do processo',
                     width : 600,

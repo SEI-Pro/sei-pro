@@ -60,7 +60,7 @@
             width: 720,
             html: htmlBox,
             onOpen: function ($box) {
-                $('#qrCodeResult').html('');
+                $('#qrCodeResult').empty();
                 // Texto selecionado: usa a selecao nativa do DOM (CK4 e CK5).
                 var nativeSel = window.getSelection && window.getSelection();
                 var selectTxt = nativeSel ? String(nativeSel).trim() : '';
@@ -193,7 +193,7 @@
         if (qrCodeTxt != '' && isValidHttpUrl(qrCodeTxt) && qrCodeTxt.length > 50) {
             var htmlTip = '<span id="tipQrCodeUrl" style="float:left; padding: 5px 5px 8px 5px; background: #f9f9dc; border-radius: 5px;">Dica: Experimente <a data-spro-click="convertTinyURL" class="linkDialog"><span style="width: 16px; height: 16px; display: inline-block;'+iconTiny+'"></span>'+
                 'Gerar link curto do TinyURL</a></span>';
-            $('#toggleOptionsQR').before(htmlTip);
+            htmlPro($('#toggleOptionsQR'), htmlTip, 'before');
         }
     };
 

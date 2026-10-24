@@ -33,8 +33,8 @@
     function resolveLinkDoc(iframeDoc) {
         if (iframeDoc && iframeDoc.find) return iframeDoc;
         var editor = SeiProEditorAdapter.getInstance();
-        var body = editor ? SeiProEditorAdapter.getBodyContainer(editor) : null;
-        return body && window.$ ? $(body) : null;
+        var corpo = editor ? SeiProEditorAdapter.getBodyContainer(editor) : null;
+        return corpo && window.$ ? $(corpo) : null;
     }
 
     // ----------------------------------------------------------------
@@ -60,7 +60,7 @@
             if (link.closest('span').attr('contenteditable') == 'false') {
                 link.closest('span').removeAttr('contenteditable');
             }
-            link.after(link.html()).remove();
+            reescreverDocumentoPro(link, link.html(), 'after').remove();
             SeiProEditorAdapter.findInBody(editor, '.linkDisplayPro').remove();
         });
     };
@@ -118,8 +118,7 @@
         );
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
             .dialog({
                 title: 'Editar link',
                 width: 460,
@@ -185,13 +184,14 @@
         var idEditorRef = (typeof idEditor !== 'undefined' && idEditor) ? idEditor : '';
         var html = '<div class="linkDisplayPro" unselectable="on">'
             + '    <span contenteditable="false">'
-            + '        <a onclick="parent.openLinkPro(\'' + linkRef + '\',\'' + idEditorRef + '\')" title="Abrir link"><i class="fas fa-globe-americas" style="padding-right: 5px;"></i><span class="info"></span><strong style="font-size: 13pt;" class="title-linktip" title="' + tLink + '">' + hLinkTiny + '</strong> <i class="fas fa-external-link-alt" style="font-size: 11px; padding: 3px; vertical-align: top;"></i></a> '
-            + '        <a onclick="parent.copyLinkPro(\'' + linkRef + '\',\'' + idEditorRef + '\')" title="Copiar link"><i class="far fa-copy" style="color: #777;"></i></a>'
-            + '        <a onclick="parent.editLinkPro(\'' + idEditorRef + '\')" title="Editar link"><i class="fas fa-pen" style="color: #777;"></i></a>'
-            + '        <a onclick="parent.removeLinkPro(\'' + linkRef + '\',\'' + idEditorRef + '\')" title="Remover link"><i class="fas fa-unlink" style="color: #777;"></i></a>'
+            + '        <a data-spro-click="parent.openLinkPro" data-spro-args="'+argsPro(String(linkRef), String(idEditorRef))+'" title="Abrir link"><i class="fas fa-globe-americas" style="padding-right: 5px;"></i><span class="info"></span><strong style="font-size: 13pt;" class="title-linktip" title="' + tLink + '">' + hLinkTiny + '</strong> <i class="fas fa-external-link-alt" style="font-size: 11px; padding: 3px; vertical-align: top;"></i></a> '
+            + '        <a data-spro-click="parent.copyLinkPro" data-spro-args="'+argsPro(String(linkRef), String(idEditorRef))+'" title="Copiar link"><i class="far fa-copy" style="color: #777;"></i></a>'
+            + '        <a data-spro-click="parent.editLinkPro" data-spro-args="'+argsPro(String(idEditorRef))+'" title="Editar link"><i class="fas fa-pen" style="color: #777;"></i></a>'
+            + '        <a data-spro-click="parent.removeLinkPro" data-spro-args="'+argsPro(String(linkRef), String(idEditorRef))+'" title="Remover link"><i class="fas fa-unlink" style="color: #777;"></i></a>'
             + '    </span>'
             + '</div>';
-        $(this_).attr('data-reflinkpro', linkRef).prepend(html);
+        // A caixa fica DENTRO do link, no documento: P3 (o contenteditable="false" tem de ficar).
+        reescreverDocumentoPro($(this_).attr('data-reflinkpro', linkRef), html, 'prepend');
 
         var boxDisplayLink = $(this_).find('.linkDisplayPro');
         if (!boxDisplayLink.length || !boxDisplayLink.offset()) return;

@@ -327,8 +327,8 @@
                     + '  <i class="fas fa-info-circle" style="color: #007fff;"></i> ' + arrayTags_len + ' '
                     + (arrayTags_len == 1 ? 'campo din\u00E2mico detectado' : 'campos din\u00E2micos detectados') + '!<br>'
                     + '</label>';
-                $('#tabReplaceTag_result').show().html(resultDiv);
-                $('#tabNewDynamicField_alert').hide().html('');
+                htmlPro($('#tabReplaceTag_result').show(), resultDiv);
+                $('#tabNewDynamicField_alert').hide().empty();
 
                 // Chosen no select de dados (so quando a config estiver ativa).
                 if (typeof verifyConfigValue === 'function' && verifyConfigValue('substituiselecao')) {
@@ -391,7 +391,7 @@
             var result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'
                 + '  <i class="fas fa-check-circle verdeColor"></i> Campo din\u00E2mico exclu\u00EDdo com sucesso!<br>'
                 + '</label>';
-            $('#tabNewDynamicField_alert').show().html(result);
+            htmlPro($('#tabNewDynamicField_alert').show(), result);
         });
     };
 
@@ -413,7 +413,7 @@
         var name = (nameInput.val() != '') ? removeAcentos(nameInput.val().split(':')[0].replace('#', '')).replace(/\ /g, '').toLowerCase().trim() : nameInput.val();
         var value = valueInput.val().trim();
         var result = '';
-        $('#tabNewDynamicField_alert').hide().html('');
+        $('#tabNewDynamicField_alert').hide().empty();
         if (name != '' && value != '') {
             if ($.inArray(name, arrayRestictTags) === -1) {
                 var htmlNewDynamicField = '     <tr class="cke_dialog_ui_hbox" data-tag="' + name + '">'
@@ -436,7 +436,7 @@
                     + '     </tr>';
                 var trTagEdit = $('#tabNewDynamicField_result').find('table tbody').find('tr[data-tag="' + name + '"]');
                 if (trTagEdit.length == 0) {
-                    $('#tabNewDynamicField_result').find('table tbody').prepend(htmlNewDynamicField);
+                    htmlPro($('#tabNewDynamicField_result').find('table tbody'), htmlNewDynamicField, 'prepend');
                     $('#tabNewDynamicField_result').find('table tbody').find('tr').eq(0).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
                 } else {
                     trTagEdit.find('td').eq(0).find('b').text('#' + name);
@@ -454,7 +454,7 @@
                     + '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nome restrito para utiliza&#x00E7;&#x00E3;o interna (Lista de campos din&#x00E2;micos). Insira outro nome!'
                     + '</label>';
             }
-            $('#tabNewDynamicField_alert').show().html(result);
+            htmlPro($('#tabNewDynamicField_alert').show(), result);
         }
     };
 
@@ -476,7 +476,7 @@
             var value = $(this).find('td').eq(1).find('em').text().trim();
             // value e texto (lido do <em>): o valor da opcao e HTML inserido no documento, e o atributo e HTML de novo.
             var valueHtml = (typeof textoParaHtmlPro === 'function') ? textoParaHtmlPro(value) : value;
-            $select.append('<option value="' + valueHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '">Personalizado (' + siglaUnidadeAtual + ') #' + name + ': ' + valueHtml + '</option>');
+            htmlPro($select, '<option value="' + valueHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '">Personalizado (' + siglaUnidadeAtual + ') #' + name + ': ' + valueHtml + '</option>', 'append');
             arrayNewDynamicField.push({ name: name, value: value });
             txtObsDynamicField += '#' + name + ': ' + value + '\n';
         });

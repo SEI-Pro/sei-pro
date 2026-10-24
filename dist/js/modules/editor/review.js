@@ -65,8 +65,8 @@
     // Corpo do documento como elemento jQuery (iframe body no CK4, editable
     // inline no CK5) -- ou jQuery vazio.
     function bodyContainer$(editor) {
-        var body = SeiProEditorAdapter.getBodyContainer(editor);
-        return (body && window.$) ? $(body) : (window.$ ? $() : null);
+        var corpo = SeiProEditorAdapter.getBodyContainer(editor);
+        return (corpo && window.$) ? $(corpo) : (window.$ ? $() : null);
     }
 
     // Acesso seguro a helpers globais compartilhados.
@@ -169,8 +169,8 @@
     function resolveReviewDoc(iframeDoc) {
         if (iframeDoc && iframeDoc.find) return iframeDoc;
         var editor = SeiProEditorAdapter.getInstance();
-        var body = editor ? SeiProEditorAdapter.getBodyContainer(editor) : null;
-        return (body && window.$) ? $(body) : null;
+        var corpo = editor ? SeiProEditorAdapter.getBodyContainer(editor) : null;
+        return (corpo && window.$) ? $(corpo) : null;
     }
 
     window.showReviewTips = function (this_, iframeDoc) {
@@ -196,7 +196,8 @@
             text: false
         });
 
-        elem.prepend(html);
+        // A caixa da revisao fica no span do documento: P3.
+        reescreverDocumentoPro(elem, html, 'prepend');
 
         var boxDisplayLink = elem.find('.reviewDisplayPro');
         if (!boxDisplayLink.length || !boxDisplayLink.offset()) return;
@@ -264,15 +265,15 @@
                 : ''
             ) +
             (data.html
-                ? '<div onmouseover="return infraTooltipMostrar(\'Clique para rolar at\u00E9 o texto\');" onmouseout="return infraTooltipOcultar();" class="textReview" onclick="scroolToReview(\'' + data.id_review + '\')">' + data.html + '</div>'
+                ? '<div data-spro-tip="Clique para rolar at\u00E9 o texto" class="textReview" data-spro-click="scroolToReview" data-spro-args="'+argsPro(String(data.id_review))+'">' + data.html + '</div>'
                 : ''
             ) +
             '        <span style="color: #777;font-size: 90%;margin-left:5px;"><i class="fas fa-user" style="padding-right: 5px;font-size: 90%;color: #4285f4;"></i><span class="info"></span><strong class="title-reviewtip" title="' + data.user + '">' + data.user + '</strong></span>' +
             '        <span style="color: #777;font-size: 80%;margin-left:10px;font-style: italic;"><i class="far fa-clock" style="color: #777;"></i> ' + data.date + '</span>' +
-            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="accept" data-type="' + data.type + '" title="Aceitar revis\u00E3o"><i class="fas fa-check-circle" style="color: #9CB639;"></i> Aceitar</span>' +
-            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="reject" data-type="' + data.type + '" title="Rejeitar revis\u00E3o"><i class="fas fa-times-circle" style="color: #E46E64;"></i> Rejeitar</span>' +
+            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #9CB639;" data-spro-click="parent.removeReviewPro" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="accept" data-type="' + data.type + '" title="Aceitar revis\u00E3o"><i class="fas fa-check-circle" style="color: #9CB639;"></i> Aceitar</span>' +
+            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #E46E64;" data-spro-click="parent.removeReviewPro" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="reject" data-type="' + data.type + '" title="Rejeitar revis\u00E3o"><i class="fas fa-times-circle" style="color: #E46E64;"></i> Rejeitar</span>' +
             (currentUser() == data.user && !readonly
-                ? '        <span onclick="parent.addCommentReviewPro(this)" data-info="' + (data.comment == '' ? 'new' : 'update') + '" style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info" style="padding: 3px;">' + textCommentReview + '<span></span>'
+                ? '        <span data-spro-click="parent.addCommentReviewPro" data-info="' + (data.comment == '' ? 'new' : 'update') + '" style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info" style="padding: 3px;">' + textCommentReview + '<span></span>'
                 : (data.comment == '' && !readonly ? '' : '<span style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info">' + textCommentReview + '<span></span>')
             ) +
             '    </span>' +
@@ -288,7 +289,7 @@
         var _this = $(this_);
         var _info = _this.find('.commentReview');
 
-        if (_this.attr('data-info') == 'new') _info.html('');
+        if (_this.attr('data-info') == 'new') _info.empty();
         _info.prop('contenteditable', true).focus().on('keydown', function () {
             setTimeout(function () {
                 var text = _info.text().trim();
@@ -483,11 +484,11 @@
         }
 
         var btnControlReject = '<div style="margin: 10px 0 !important;display: inline-block;width: 95%;">' +
-            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-mode="acceptAll" title="Aceitar todas as revis\u00F5es"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>' +
-            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-mode="rejectAll" title="Rejeitar todas as revis\u00F5es"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>' +
+            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" data-spro-click="parent.removeReviewPro" data-mode="acceptAll" title="Aceitar todas as revis\u00F5es"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>' +
+            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" data-spro-click="parent.removeReviewPro" data-mode="rejectAll" title="Rejeitar todas as revis\u00F5es"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>' +
             '</div>';
 
-        $('#boxReviews').html(listReviews === '' ? alertText : btnControlReject + listReviews);
+        htmlPro($('#boxReviews'), listReviews === '' ? alertText : btnControlReject + listReviews);
     };
 
     // ----------------------------------------------------------------

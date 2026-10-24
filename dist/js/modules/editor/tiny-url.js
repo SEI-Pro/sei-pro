@@ -61,8 +61,7 @@
         `);
 
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), htmlBox)
             .dialog({
                 title : 'Gerar link curto do TinyURL',
                 width : 600,
@@ -73,18 +72,18 @@
                     var _nsel = window.getSelection && window.getSelection();
                     var selectTxt = _nsel ? String(_nsel).trim() : '';
                     setTimeout(function(){
-                        $('#tinyResult').html('');
+                        $('#tinyResult').empty();
                         $('#urlTiny').focus();
                         if ( selectTxt != '' && isValidHttpUrl(selectTxt) ) {
                             $('#urlTiny').val(selectTxt);
                         }
                         $('#aliasTiny').unbind('keyup').keyup(function() {
-                            $('#tinyResult').html('');
+                            $('#tinyResult').empty();
                             var alias = $('#aliasTiny').val();
                             if ( alias != '' ) {
                                 var regex = /^[0-9A-Za-z\-]+$/;
                                 var htmlTinyResult = ( regex.test(alias) ) ? 'Resultado: <a class="linkDialog" style="cursor: auto;">https://tinyurl.com/'+alias+'</a>' : '<strong style="color:red;">O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es.</strong>';
-                                $('#tinyResult').html(htmlTinyResult);
+                                htmlPro($('#tinyResult'), htmlTinyResult);
                             }
                         });
                     }, 100);
