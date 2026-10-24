@@ -1,13 +1,15 @@
 # processo
 
 Tudo o que o SEI Pro desenha em volta da árvore de um processo, em TypeScript: painéis abaixo da árvore, menu do documento,
-capa com cards, histórico de tramitação em Gantt (com comparativo, CSV e impressão) e filtro da árvore.
+capa com cards, histórico de tramitação em Gantt (com comparativo, CSV e impressão), filtro da árvore, título da aba, aviso de
+documentos não assinados no Enviar Processo, edição de assuntos e interessados e a pesquisa dos processos de um interessado.
 Desenho: `docs/superpowers/specs/2026-10-23-processo-design.md`; plano: `docs/superpowers/plans/2026-10-24-processo.md`.
 
 ## Estado
 
-Etapas 1 a 5 concluídas e a etapa 6 (fechamento) feita: base e painéis, menu da árvore, andamentos e Gantt, capa e cards, filtro
-da árvore. Testadas ao vivo no SEI SP de treinamento (4.1.5, CK4), com todas as opções ligadas e com perfil limpo mais só as
+Etapas 1 a 5 concluídas, a etapa 6 (fechamento) feita e a etapa 7 (24/10/2026: título da aba, aviso de não assinados, edição de
+assuntos e interessados, processos do interessado e a pele de post-it do modal da anotação) entregue: base e painéis, menu da árvore,
+andamentos e Gantt, capa e cards, filtro da árvore. Testadas ao vivo no SEI SP de treinamento (4.1.5, CK4), com todas as opções ligadas e com perfil limpo mais só as
 opções do módulo. **O SEI 5 não foi exercitado ao vivo** (sem credencial utilizável sem login manual); só há teste com árvore
 sintética no formato do 5 e leitura do fonte do 5.0.0. Entrega só no `dist/manifest.json` (Lab, MV3).
 
@@ -33,11 +35,14 @@ processo/
   build.mjs            esbuild (IIFE, ASCII) + portões: sem innerHTML & cia, sem endereços que gravam "Processo recebido"
   estatico/processo.css  CSS do módulo (vai DENTRO do bundle e entra numa <style>; tema do SEI, nunca do sistema)
   src/
-    modelo/            SEM DOM: loja do processo (fatias com estado, cache, fila), textos, tipos, constantes
+    modelo/            SEM DOM: loja do processo (fatias com estado, cache, fila), textos, tipos, constantes, lista editável
+                       (assuntos/interessados), pesquisador (busca incremental) e busca de processos do interessado
     repositorio.ts     cache em chrome.storage.local
-    pagina/            quadro da árvore: main, árvore, contexto, leituras, operações, opções, marca (cessão do legado)
-      paineis/ modais/ painéis e edições          menuDoc/ menu vertical e ícones fixos do documento
+    pagina/            quadro da árvore: main, árvore, contexto, leituras, operações, opções, marca (cessão do legado), titulo
+      paineis/ modais/ painéis e edições (lupa.ts: assuntos e interessados; interessado.ts: processos do interessado)
+      menuDoc/ menu vertical e ícones fixos do documento
       filtro/            filtro da árvore (modelo, DOM, barra)
+      aviso/             aviso de não assinados no quadro do Enviar Processo (modelo, DOM, ligar)
     gantt/             modal do histórico: modelo, SVG, dica, comparativo, CSV/impressão, cache de 30 min
     capa/              capa e cards: dados, cards, resumo, QR próprio, parado, controle (vigia)
     ui/                casca do painel, esqueleto, erro com "Tentar de novo"
@@ -59,7 +64,13 @@ Todas na página de opções (`opcoes-pagina/src/schema-dados.ts`, mantido à m�
 | `filtroarvore` | ligada, só no Lab | barra de filtro acima da árvore. Decisão desta etapa: ligada porque só esconde linhas quando o usuário pede, não faz consulta nenhuma, é invisível ao SEI e vale só no pacote do Lab (testadores); quem não quiser desliga na página de opções |
 | `processoparado` | 15 (dias; 0 desliga), só no Lab | destaque do card "Na unidade atual" na capa |
 | `disablequery` | desligada | quando marcada, nenhuma consulta além do que a tela traz (painéis ficam com o que a árvore tem) |
+| `naoassinados` | ligada (padrão do legado) | agora lida pelo módulo: o aviso de documentos não assinados no Enviar Processo (`pagina/aviso/`); desligada, nem o módulo nem o legado mostram o aviso |
 | `reaberturaprogramada`, `citacaodoc`, `uploaddocsexternos`, `acoesemlote` | do legado | lidas, não definidas aqui |
+
+O título da aba não tem opção própria (o legado também não tinha): vale sempre, menos com `disablequery` ligada (sem consulta
+nenhuma, o título do SEI fica como está) e em processo sigiloso. Os filtros "Tramitados na unidade" e "De mesmo tipo" da pesquisa
+do interessado são lembrados nas mesmas chaves do legado (`optionsPro`: `panelDadosArvoreInteressados_tramiteUnidade` e
+`panelDadosArvoreInteressados_mesmaNatureza`).
 
 A personalização do menu e dos painéis é a do legado (mesmas chaves do `localStorage`), para ninguém perder o que já escolheu.
 
@@ -86,6 +97,8 @@ etapa poder ceder sem desligar as outras:
 | `data-seipro-processo-menu` | quadro da árvore | `sei-pro-arvore.js`: `initToolbarDocs`, `setToolbarDocs`, `getToolbarPro`, `addIconActionsArvore` (via `menuCedidoPro()`) |
 | `data-seipro-processo-gantt` | quadro da árvore | `sei-functions-pro.js`: `initGanttHistoryProc` dispara `spro-processo-gantt-abrir` e sai (sem frappe-gantt nem jmespath) |
 | `data-seipro-processo-capa` | janela de topo | `sei-functions-pro.js`: `setCapaProcesso` não desenha a capa antiga |
+| `data-seipro-processo-titulo` | janela de topo (`acao=procedimento_trabalhar`, `document_start`) | `sei-functions-pro.js`: `updateTitlePage`, modo `processo`, não grava mais o `<title>` (o modo `editor` e o `updateUrlPage` da URL amigável seguem do legado) |
+| `data-seipro-processo-aviso` | janela de topo (idem) | `sei-functions-pro.js`: `getActionsOnSendProcess` não chama mais `initCheckNaoAssinados` (o que também acaba com a coleta automática do histórico completo a cada Enviar Processo) |
 
 O filtro da árvore não cede nada (não havia equivalente no legado) e só põe `data-spro-f-oculto` nas linhas que esconde.
 Outros sinais entre peças (diagnóstico e ponte): `data-spro-capa-estado`, `data-spro-capa-coleta`, `data-spro-pm-pedido` (+ evento
@@ -93,15 +106,36 @@ Outros sinais entre peças (diagnóstico e ponte): `data-spro-capa-estado`, `dat
 
 ## O que sobra no legado
 
-O iframe oculto `#frmCheckerProcessoPro` (`initDadosProcesso`, `sei-pro.js`) e a cadeia `dadosProcessoPro` NÃO foram desligados: o
-módulo novo não depende deles (os painéis e a capa leem a árvore da tela e a loja), mas ainda têm consumidor: Favoritos, o editor
-(campos dinâmicos, `arrayDadosEditor`), a edição legada de dados do processo (urgência/trancado, `editDadosArvorePro_`), lista de
-documentos assinados e ações em lote, histórico legado (`getDataRecebimentoPro`, que alimenta `configDataRecebimentoPro`), título da
-página e URL amigável, controle de processos e pesquisa, Atividades e prescrição, upload pela árvore. A lista função a função está em
-"Cessão do legado" da etapa 4, abaixo. Só pode sair quando esses consumidores migrarem. Também seguem do legado: o destaque de
-não assinados (`initDestacarNaoAssinadosPro`), a numeração e as duas linhas da árvore, `jquery.toolbar` (as Atividades usam), Processos
-Relacionados (elemento nativo estilizado) e as janelas "Copiar para outro processo", "Enviar documento externo", "Ações em lote" e
-"Personalizar menu".
+O iframe oculto `#frmCheckerProcessoPro` (`initDadosProcesso`, `sei-pro.js:928`, chamado por `initSeiPro`) e a cadeia
+`dadosProcessoPro` NÃO foram desligados. A etapa 7 tirou mais dois consumidores (o título da aba e o aviso de não assinados) e a
+conta foi refeita função a função (`grep` em `dist/js` por `dadosProcessoPro`, `getDadosIframeProcessoPro`, `frmCheckerProcessoPro`,
+24/10/2026). **Sobram consumidores; por isso a cadeia continua.** O módulo novo não depende dela (painéis, capa, título, aviso, edições
+e pesquisa leem a árvore da tela, a loja e o cache), e com o módulo ativo ela só carrega o que os consumidores abaixo pedem.
+
+Quem cria o iframe: `initDadosProcesso` (modo `processo`, sempre, a não ser com `disablequery`) e, por pedido, `getDadosIframeProcessoPro`
+de Favoritos (`favorites`), do Editor (`editor`) e de Projetos (`projeto`). Consumidores que sobram (função, arquivo):
+
+| Consumidor | Onde lê `dadosProcessoPro` | Observação |
+| --- | --- | --- |
+| Favoritos legado | `sei-pro-favoritos.js`: `initDadosSelectDoc`, `getDadosSelectDoc`, `updateSelectFavorites`, `updateArraySelectFavorites`, `checkDataFavoritePro`, `storeFavoritePro`, `addFavoritePro` | o Favoritos em TS (só no Lab) não precisa, mas o legado segue nos outros pacotes |
+| Editor | `sei-pro-editor.js`: `arrayDadosEditor`, `replaceDadosEditor`; `sei-functions-pro.js`: `camposDinamicosProcesso`, `openCamposDinamicosForm`, `getInteressadosProcesso`, `getListaAtribuicaoProcesso`, `sumTagValue`, título do editor (`updateTitlePage`, modo `editor`) | janela do editor, outro documento: o módulo não roda lá |
+| Edição legada de dados do processo | `editDadosArvorePro_`, `updateDadosArvore*` (Iframe, Mult), `updateDadosProcesso`, `formControlerAlterarProcesso`, `getSelectHipoteseLegal`, `getHipoteseLegal`, `addUrgenteProcessoPro`, `addTrancadoProcessoPro`, `getIsProcUrgente`, `getIsProcTrancado`, `confirmaDadosUrgencia` | chamada pelo menu legado, pelo Enviar Processo (remover marcador/atribuição) e pelas Ações em lote |
+| URL amigável | `updateUrlPage` (opção `urlamigavel`; o título já não passa por ela) | lê o número do processo de `dadosProcessoPro.propProcesso` |
+| Lista de documentos e Ações em lote | `getListDocumentosArvore`, `checkDadosIframeDocumentosPro`, `arrayDadosIframeDocumentosPro`, `getBatchActionsPro`, `fillDocumentosActionsPro`, `refreshDocumentosActionsPro`, `getDocumentosActions`, `resetDocsActions`, `openDialogDoc`, `getNewDocCompareDocs`, `setAppendIconsDocumentosActions` | `initCheckNaoAssinados`/`boxCheckNaoAssinados` (o aviso antigo) só rodam agora sem o módulo |
+| Histórico legado | `mergeAllAndamentosProcesso`, `initMergeAllAndamentosProcesso`, `setHistoryProcessosPro` (opção `historicoproc`), `getDadosAndamentoPro`, `getBlocoProcessoHistorico`/`initBlocoProcessoHistorico`, `getDataRecebimentoPro` (esta alimenta o `configDataRecebimentoPro` que a capa nova lê) | o Gantt e os cards já usam o leitor do núcleo |
+| Controle de processos e pesquisa | `getDadosProcedimentosControlar`, `initCheckDadosProcedimentos`, `newTabDadosProcedimentosControlar`, `breakDadosProcedimentosControlar`, `getDadosPesquisaPro` | |
+| Atividades, prescrição, projetos | `sei-pro-atividades.js` (`getServersPro`, `removeTokenAcessoRevogado`), `sei-pro-prescricoes.js` (`optionSelectDocsPrescricao`, `checkListTipoPrescricaoInProcesso`), `checkTipoPrescricaoProcesso`, `sei-pro-projetos.js` (`updateSelectConcluirProjetoEtapa`), `sei-pro-docs-lote.js` | |
+| Upload pela árvore | `sei-pro.js`: `iniciarUploadArvoreProcessoPro`, `loadIframeProcessUpload`, `setUploadFilesInProcess` | |
+| Outros | `enableConsultasExtras`, `getLinksProcessoPro`, `getAjaxListaAtribuicao`, `setSessionProcessosPro`/`pullDadosProcessoSession`, `getToolbarPro`/`getLinksArvore`/`initPanelPrescricaoProcesso` (árvore) | |
+
+Saíram da lista nesta etapa: o título da aba (modo `processo` de `updateTitlePage`), o aviso de não assinados do Enviar Processo
+(`initCheckNaoAssinados`, que também coletava o histórico completo sozinho) e a pesquisa "processos do interessado"
+(`getDadosInteressadosArvore`, que carregava `protocolo_pesquisar` no iframe oculto): esta última já estava sem chamador, porque
+o painel legado de Interessados (que a chamava) cede por `data-seipro-processo-paineis`.
+
+Também seguem do legado: o destaque de não assinados na árvore (`initDestacarNaoAssinadosPro`), a numeração e as duas linhas da
+árvore, `jquery.toolbar` (as Atividades usam), Processos Relacionados (elemento nativo estilizado) e as janelas "Copiar para outro
+processo", "Enviar documento externo", "Ações em lote" e "Personalizar menu".
 
 ## Limites conhecidos
 
@@ -114,7 +148,9 @@ Relacionados (elemento nativo estilizado) e as janelas "Copiar para outro proces
 - Cards e filtro contam o que a árvore tem na tela. O "Bloco interno" só aparece com o histórico completo em cache.
 - Histórico completo: cada coleta muda o estado do "Consultar Andamento" na sessão do SEI (o módulo restaura); em processo com
   milhares de andamentos há dezenas de POSTs (progresso e cancelamento existem).
-- Edição: Assuntos sem edição, Interessados só retirar, nível sigiloso não se define por aqui. Detalhes em "Divergências e pendências".
+- Edição: o nível sigiloso não se define por aqui. Assuntos e interessados se editam (adicionar e retirar), mas não se criam contatos
+  nem assuntos novos (só os que a pesquisa do SEI devolve); item acrescentado por OUTRA unidade não sai (regra da tela nativa).
+  Detalhes em "Divergências e pendências" e na etapa 7.
 - Modo escuro antigo (`dark-mode` no corpo, sem Estilo Avançado) não foi visto ao vivo; o `data-tema` segue o mesmo teste dos painéis.
 - O primeiro processo aberto num perfil novo, com todas as opções do legado ligadas, às vezes demora até ~3 s para os painéis (a
   variação é do servidor do SEI: 0,6 a 3,1 s em 4 medições); com a sessão aquecida, 0,3 a 0,5 s.
@@ -166,8 +202,8 @@ Variáveis em `estatico/processo.css` (valem no `<html data-seipro-processo-pain
 
 O legado só cede de tamanho com o módulo ativo (`html[data-seipro-processo-paineis]`); sem o módulo nada muda. A anotação voltou à pele do
 post-it do legado (degradê amarelo `#f9efaf` a `#f7e98d`, borda tracejada fina, sombra suave, canto dobrado), amarelo também no escuro,
-com texto escuro reafirmado por `!important` porque `.seiSlim.dark-mode *` pinta todo descendente de claro. A edição é no modal, então
-o rodapé com contador do editor antigo (que encostava nos ícones) não existe no painel.
+com texto escuro reafirmado por `!important` porque `.seiSlim.dark-mode *` pinta todo descendente de claro. A edição é no modal, que desde a
+etapa 7 usa o mesmo papel (ver "Etapa 7", item 5); o rodapé do editor antigo, em que o contador passava por baixo dos ícones, não existe mais.
 
 ## Base e painéis (etapa 1)
 
@@ -349,8 +385,7 @@ jquery.toolbar, `selectedItensPanelArvore` preenchida enquanto houver painel, í
 
 ### Divergências e pendências
 
-- Assuntos: sem edição (o `alterarProcesso` do núcleo não escreve assuntos). Interessados: só retirar; incluir exige a busca
-  de contatos. A pesquisa "processos do interessado" do legado (iframe oculto) não foi portada.
+- Assuntos e interessados: a edição (adicionar e retirar) e a pesquisa dos processos do interessado entraram na etapa 7 (abaixo).
 - Nível: define público e restrito; o sigiloso não se define por aqui (o núcleo não opera processo sigiloso, então no
   sigiloso nenhuma edição aparece).
 - Processos Relacionados continua o elemento nativo estilizado pelo legado (`stylePanelArvore`).
@@ -721,6 +756,133 @@ e as fechadas ficam; abrir as pastas depois reaplica; Tab, Tab, Enter liga o chi
 (`034.00000265/2026-31`, senha pelo modal): barra e filtros funcionam, 0 requisições durante o uso, sem erro de console. Escuro:
 legível (capturas em `scratchpad/live/shots/fim-filtro-*.png`). O botão de limpar do navegador (X dobrado em `type=search`) foi escondido.
 
+## Etapa 7 (24/10/2026): título, aviso de não assinados, assuntos e interessados, processos do interessado, anotação
+
+### 1. Título da aba (`src/pagina/titulo.ts`)
+
+Formato do legado (`updateTitlePage`, modo `processo`): `<especificação> | SEI - Processo <número>`. O quadro da árvore grava o título
+da JANELA DE TOPO (mesma origem) a partir da fatia `dadosProcesso` da loja: o cache pinta na hora, a rede confirma e troca; não há
+iframe oculto. A janela de topo ganha `data-seipro-processo-titulo` em `document_start` (ver "Cessão do legado"); o legado só deixa de
+gravar o texto do título, a URL amigável (`updateUrlPage`) e o título do editor seguem dele.
+
+Divergências do legado: processo sem especificação fica `SEI - Processo <número>` (o legado deixava ` | SEI - Processo ...` com a barra
+sobrando); sigiloso não é tocado (a especificação dele não vai para a tela, spec 8.1); `disablequery` ligada deixa o título do SEI como
+está (como o legado, que nem tinha o dado). O título só se aplica na janela de topo do processo (`acao=procedimento_trabalhar`), não em
+janela auxiliar. A fatia `dadosProcesso` passa a ser carregada mesmo com painéis e menu desligados (um GET do formulário do processo).
+
+### 2. Aviso de documentos não assinados (`src/pagina/aviso/`)
+
+Onde aparece e quando: no quadro do **Enviar Processo** (`acao=procedimento_enviar`, aninhado no visualizador), com a opção
+`naoassinados` ligada (padrão). Uma linha na barra de localização (no lugar do `#checkNaoAssinados` do legado) e o diálogo
+"Documentos pendentes de assinatura", que abre sozinho quando há pendentes (como no legado); "Detalhes" o reabre; clicar num documento
+o seleciona na árvore. O quadro do Enviar lê a árvore do quadro vizinho (`#ifrArvore` da janela de topo): **nenhuma requisição**.
+
+**O que o legado fazia e o que muda (regra da spec 8.2: nenhum recurso coleta histórico sozinho).** O legado, ao abrir o Enviar Processo
+com a opção ligada (que é o padrão), chamava `mergeAllAndamentosProcesso`: coletava o HISTÓRICO COMPLETO do processo (dezenas de POSTs
+em processo longo) só para saber a unidade de cada documento (`listDocumentos[].unidade`) e a data, e então filtrava
+`assinado == false`, `unidade == sigla da unidade atual` e `nativo` (ícone de documento interno). Agora:
+
+| Legado | Módulo |
+| --- | --- |
+| Unidade do documento vinda do histórico completo, coletado a cada Enviar Processo | Unidade vinda da própria árvore (SEI 4+: `unidadeGeradora`, a sigla do `anchorUG`); **sem coleta de histórico, nunca** |
+| Data do documento (do histórico) na lista | Só quando o histórico completo JÁ está no cache de 30 min (coletado por clique, Gantt ou cards): a data de geração aparece na lista; senão a lista vem sem data |
+| `nativo` = ícone `documento_interno` | Documento do editor do SEI: interno **ou circular** (mesmo critério do chip "Não assinados" do filtro da árvore); cancelado não conta |
+| SEI 3.x: unidade pelo histórico | Sem `unidadeGeradora` na árvore (SEI 3.x, fora do alvo) vale o documento, de qualquer unidade |
+| Só os documentos que a árvore tinha na tela | Idem, mais os que o SEI inseriu no DOM ao abrir uma pasta; **e** o aviso diz quantas pastas fechadas faltam verificar, em vez de afirmar "tudo assinado", e oferece "Verificar pastas" |
+| Diálogo navegava o visualizador de volta ao Enviar Processo | Não navega: só seleciona o documento na árvore |
+
+"Verificar pastas" é um clique do usuário que o módulo repete na árvore: clica no "+" (`ancjoinPASTAn`) de cada pasta fechada, uma de cada
+vez, e o SEI carrega a pasta por conta própria (`procedimento_paginar`, o mesmo que o usuário dispararia); depois verifica de novo.
+O nome da pasta (`anchorPASTAn`) abre por `javascript:` no `href`, que o navegador bloqueia quando o clique vem do mundo isolado
+(erro de CSP no console); o "+" tem ouvinte normal, e o clique ainda leva `preventDefault` para não executar o `href`.
+
+Cessão: `data-seipro-processo-aviso` na janela de topo; `getActionsOnSendProcess` não chama mais `initCheckNaoAssinados`. O legado
+continua capaz de tudo isso quando o módulo não está carregado.
+
+### 3. Assuntos e interessados (`src/pagina/modais/lupa.ts`, `src/modelo/lista.ts`, `src/modelo/pesquisador.ts`)
+
+Os painéis ganharam o lápis "Editar assuntos" e (já existia) "Editar interessados": modal `dialog.spro-dialogo` sem Cancelar com a lista do
+processo (Retirar/Manter; item novo mostra "Novo" e "Desfazer"), busca incremental (3 letras, 350 ms, Enter pesquisa na hora, seta para baixo
+vai aos resultados) no AUTOCOMPLETAR DO PRÓPRIO SEI e o botão Salvar, que grava pela lupa do formulário do processo.
+
+- Núcleo: `alterarProcesso` ganhou `assuntos` (`selAssuntos`/`hdnAssuntos`); `lerFormularioDoProcesso` traz `assuntos`, os itens "negados"
+  e `pesquisarAssuntos`/`pesquisarContatos`, que usam o link do `infraAjaxAutoCompletar` lido do script da tela (`hdnIdAssunto` e
+  `hdnIdInteressadoProcedimento`; nunca montado) e a codificação da tela (o de contatos já codifica o termo). `MetadadosProcesso` traz
+  `assuntosItens`, `interessadosItens` e `idTipo`. Os mesmos ids e a mesma codificação no fonte do SEI 5.0.0.
+- Prova de sucesso e fila: igual às demais edições (`alterarProcesso` com `aplicar: true`, o SEI precisa sair de `procedimento_alterar`;
+  fila do processo; só o painel afetado muda). Não aparece em sigiloso (os painéis nem existem) nem em processo não aberto na unidade
+  (sem `editavel`, como Tipo, Nível e Observações).
+- Regras do SEI replicadas: o processo precisa de ao menos um assunto (`Informe os Assuntos.` da tela; o modal e o núcleo recusam antes de
+  gravar); assunto ou interessado acrescentado por OUTRA unidade não se retira (`arrAssuntosNegados`/`arrInteressadosNegados` do script da
+  tela; o modal mostra "Acrescentado por <sigla>" sem botão, e o núcleo lança a mensagem da própria tela).
+- Estados: carregando (formulário), erro com "Tentar de novo" (formulário e pesquisa), "Digite mais N letras", "Pesquisando…" (`aria-busy`),
+  "N resultados", vazio ("Nenhum resultado para ..."), item já no processo desabilitado; `aria-label` em tudo (nenhum `title`); o foco vai ao
+  campo de busca ao abrir e ao próximo "Adicionar" livre depois de adicionar. A resposta de uma busca antiga é descartada e a requisição é abortada.
+
+### 4. Processos do interessado (`sei-nucleo/src/dominio/pesquisa.ts`, `src/pagina/modais/interessado.ts`, `src/modelo/buscaProcessos.ts`)
+
+Na linha de cada interessado do painel, o botão "Processos de <nome>" abre o modal com a lista (número, tipo, unidade com sigla e nome,
+usuário com nome e login, data), os dois filtros do legado ("Tramitados na unidade" = `chkSinTramitacao`; "De mesmo tipo (<tipo>)" =
+`selTipoProcedimentoPesquisa`, pelo `idTipo` do processo) e "Mais resultados (N restantes)" (páginas de 10, `hdnInicio`). Clicar no número
+abre o processo por `abrirProcesso` (`@comum/pagina/abrir`: pesquisa rápida do cabeçalho, nunca um link montado); Ctrl ou Cmd (ou o botão
+do meio) abre em outra aba e mantém o modal.
+
+Núcleo: `pesquisarProcessosDoInteressado(sei, {interessadoId, tramitadoNaUnidade?, tipoProcesso?, inicio?})` é a mesma pesquisa da tela
+(`protocolo_pesquisar`, o formulário do menu, com `rdoPesquisarEm=P` e `hdnIdContato`); só vêm os processos que o usuário pode ver. Lê o
+resultado com `lerResultados` (agora com `idProcedimento`, `unidadeNome`, `usuarioNome` e o total também em "13 resultados", que é como
+a última página escreve). **Com um único resultado o SEI pula direto para o processo** (`procedimento_trabalhar`): o módulo lê só o número
+(título da tela) e o id da URL, sem buscar a árvore. Rede: um GET do formulário da pesquisa e um POST por página. Divergências do
+legado: não usa iframe; sigiloso não tem o painel; o legado montava a URL do processo à mão (`...?acao=procedimento_trabalhar&id_procedimento=`),
+que derruba a sessão no SEI 5.
+
+### 5. Edição da anotação: a pele de post-it (`src/pagina/modais/anotacao.ts`)
+
+O modal usa o mesmo papel do cartão do painel (`spro-p-post-it`: degradê amarelo `#f9efaf` a `#f7e98d`, escuro `#e9dc9b` a `#dccb73`, borda
+tracejada, canto dobrado), amarelo nos dois temas. O texto ocupa o papel (fundo transparente: antes a área de texto saía cinza `#dfdfdf` no
+tema escuro) e o rodapé do papel traz o contador "N caracteres restantes" à esquerda e, à direita, Prioridade (botão com `aria-pressed`), Checklist e
+Data. O contador tem `flex: 1 1 11em` e as ferramentas `margin-left: auto` num `flex-wrap`: quando não cabem lado a lado, descem para a linha
+de baixo; nunca se sobrepõem (medido ao vivo em 900, 520 e 400 px de largura do modal). Salvar e Remover anotação ficam no rodapé do modal.
+
+### Testes (etapa 7)
+
+`processo/tests/verificar-titulo-aviso.ts` (título: formato, cache, rede, erro, sigiloso, `disablequery`; aviso: modelo na árvore real, dialogo,
+datas só com histórico em cache, outra unidade, árvore inacessível, duas cópias da extensão, pastas fechadas e "Verificar pastas", documentos
+do DOM), `verificar-lupa.ts` (lista editável, pesquisador, modais de assuntos e interessados, modal da anotação),
+`verificar-processos-interessado.ts` (paginação, corrida, filtros, modal sobre a pesquisa real). No núcleo: `verificar-lupas-processo.ts`
+(negados, lupa, pesquisa com o XML real, gravação, prova de sucesso) e `verificar-pesquisa-interessado.ts` (páginas reais, único resultado,
+vazio, erro). Fixtures reais anonimizadas do SEI SP em `sei-nucleo/tests/fixtures/sei41` (ver o `LEIAME.md`).
+
+### Resultado ao vivo (24/10/2026, SEI SP de treinamento 4.1.5, unidade TESTE)
+
+| Cenário | Resultado |
+| --- | --- |
+| Título da aba em 5 processos, sem cache | mediana 272 ms depois da árvore (223 a 540 ms); `data-seipro-processo-titulo` na janela de topo, o legado não regrava |
+| Título com cache | no mesmo instante da árvore (a diferença medida foi de -89 a -16 ms: o título chega antes dos nós) |
+| Título: sem especificação; sigiloso; `disablequery` | `SEI - Processo <número>`; sigiloso fica `SEI - <número>` do próprio SEI; com `disablequery` o módulo não mexe |
+| Aviso: banner e diálogo | 0,4 a 1,9 s depois do clique em Enviar Processo (tempo do SEI), nenhuma requisição do módulo; o `#checkNaoAssinados` legado não aparece |
+| Aviso: pastas fechadas | 3 pastas fechadas avisadas; "Verificar pastas" abre as 3 em 3 s; de 1 para 35 pendentes (os mesmos 35 do destaque do legado e do chip do filtro) |
+| Aviso com e sem histórico em cache | sem cache: lista sem datas; com o Gantt aberto antes (cache de 30 min): a data de geração aparece (`18/10/2026`) |
+| Aviso com `naoassinados` desligada; perfil limpo (só 4 opções) | nenhum aviso; no perfil limpo o aviso e o título funcionam (o iframe oculto continua sendo criado: ver "O que sobra") |
+| Assuntos: adicionar, retirar | pesquisa "contrata": 41 resultados; adicionado "004.01.05.005" (painel e SEI atualizados em 0,9 s), retirado: estado final IGUAL ao original, conferido abrindo o formulário de novo |
+| Interessados: adicionar, retirar | pesquisa "seguran": adicionado um contato (id e nome no painel e no SEI), retirado: estado final IGUAL ao original |
+| Processos do interessado | contato órgão com 13 processos: 10 + "Mais resultados (3 restantes)" = 13; "Tramitados na unidade": 2; mais "De mesmo tipo (Decreto)": 1; sem filtros: volta a 13; clique abriu o processo pela pesquisa rápida e o título da aba mudou |
+| Rede do módulo nas edições | só `procedimento_alterar` (GET do formulário, POST de gravação) e o autocompletar (POST); nenhuma `arvore_montar`/`procedimento_visualizar`/`atribuicao_cadastrar` partiu do bundle do módulo (as que apareceram no log vêm do jQuery do legado: iframe oculto) |
+| Modal da anotação | claro e escuro com o papel amarelo; contador e ferramentas sem sobreposição em 900, 520 e 400 px; Prioridade/Checklist/Data funcionam |
+| Console | sem erro nem aviso do módulo em todas as rodadas |
+
+Capturas em `scratchpad/live/shots/`: `aviso-1.png`, `aviso-pastas.png`, `aviso-com-cache.png`, `lupa-assuntos-1..3.png`, `lupa-interessados-1.png`,
+`interessado-1..3.png`, `anotacao-antes-{claro,escuro}.png`, `anotacao-depois2-{claro,escuro}.png`, `anotacao-largura-{900,520,400}.png`,
+`sigiloso-titulo-aviso.png`.
+
+### Divergências e pendências da etapa 7
+
+- SEI 5: não exercitado ao vivo (sem acesso nesta rodada). Os campos e o autocompletar vêm do fonte do 5.0.0; o aviso e o título não dependem
+  de nada específico do 4.1 além de `#divInfraBarraLocalizacao` (que o 5 também tem) e do `unidadeGeradora` da árvore.
+- Aviso: documentos de pastas fechadas só entram depois de "Verificar pastas" (o aviso diz quantas faltam). Circular conta como do editor.
+- Assuntos e interessados: não cria contato nem assunto; um contato que a pesquisa não acha continua precisando da tela do SEI.
+- Pesquisa do interessado: lê só o que o SEI devolve na primeira tela de cada página; um interessado com milhares de processos pede página a página.
+- O título do editor (`updateTitlePage`, modo `editor`) e a URL amigável continuam no legado.
+
 ## Fechamento (etapa 6, Task 13)
 
 ### Fluxo completo ao vivo, numa sessão contínua (SEI SP de treinamento 4.1.5, unidade TESTE, 24/10/2026)
@@ -777,6 +939,16 @@ memória do autor (precisaria de login manual); produção (`sei.mj.gov.br`) nun
 spec, não recebem o módulo). Bytes: os dois bundles e `dist/html/options.js` só ASCII; as linhas que a branch acrescentou em
 `dist/js/sei-pro-arvore.js` e `sei-functions-pro.js` (escritos à mão) não têm nenhum byte acima de 127 (os 381 de
 `sei-functions-pro.js` já eram do master) nem NUL; sem cópias "nome 2.ext" do iCloud.
+
+### Portões da etapa 7 (24/10/2026)
+
+`tipos` sem erro e `verificar` verde em todos os pacotes que importam o núcleo ou o comum: processo 822, sei-nucleo 562, sei-comum 763,
+opcoes-pagina 645 (não foi tocada), acoes-lote 704, agente-ia 1669, documentos-lote 961, favoritos 620, historico 485, processos-lote 723,
+projetos 2588, estilo-avancado 132, link-permanente 117, ferramentas-pdf 6, anotacoes-controle 34, grade-controle, menu-suspenso 17,
+ordem-paineis 41, pesquisa-rapida 19, prazos 58, blocos-assinatura; demandas 1038 com a mesma 1 falha que já existe no master
+(`verificar-integracao-projetos.ts`). `node tools/check-dom-injection.mjs`: 0 erros, 0 avisos; `node tools/patch-manifests.mjs --check`:
+0 manifests a ajustar. Os dois bundles e as linhas novas de `dist/js/sei-functions-pro.js` só têm ASCII (os 381 bytes altos do arquivo já
+eram do master).
 
 ## Comandos
 

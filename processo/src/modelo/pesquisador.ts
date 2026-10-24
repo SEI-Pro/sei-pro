@@ -55,7 +55,8 @@ export class Pesquisador {
   agora(texto: string): void {
     const termo = normalizar(texto);
     const v = this.cancelar();
-    if (termo.length < this.minimo) return this.o.aoMudar(termo ? { tipo: "curto", falta: this.minimo - termo.length } : { tipo: "ocioso" });
+    if (termo.length < this.minimo)
+      return this.o.aoMudar(termo ? { tipo: "curto", falta: this.minimo - termo.length } : { tipo: "ocioso" });
     void this.executar(termo, v);
   }
 
@@ -84,7 +85,11 @@ export class Pesquisador {
       this.o.aoMudar(itens.length ? { tipo: "resultado", termo, itens } : { tipo: "vazio", termo });
     } catch (e) {
       if (v !== this.versao || controle.signal.aborted) return;
-      this.o.aoMudar({ tipo: "erro", termo, mensagem: this.o.mensagemDeErro?.(e) ?? (e instanceof Error ? e.message : "Não foi possível pesquisar.") });
+      this.o.aoMudar({
+        tipo: "erro",
+        termo,
+        mensagem: this.o.mensagemDeErro?.(e) ?? (e instanceof Error ? e.message : "Não foi possível pesquisar."),
+      });
     }
   }
 }

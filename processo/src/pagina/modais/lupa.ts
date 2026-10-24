@@ -61,7 +61,11 @@ export function abrirModalLupa(ctx: ContextoProcesso, cfg: ConfigLupa): void {
       placeholder: "Pesquisar…",
     });
     const estado = h("div", { class: "spro-p-nota spro-p-lupa-estado", role: "status", "aria-live": "polite" });
-    const resultados = h("ul", { class: "spro-p-lista-modal spro-p-resultados", id: "spro-p-lupa-resultados", "aria-label": "Resultados da pesquisa" });
+    const resultados = h("ul", {
+      class: "spro-p-lista-modal spro-p-resultados",
+      id: "spro-p-lupa-resultados",
+      "aria-label": "Resultados da pesquisa",
+    });
     const situacao = h("span", { class: "spro-p-nota spro-p-lupa-situacao", "aria-live": "polite" });
     const salvar = botaoPrimario("Salvar", () => void enviar());
     let ultimaBusca: EstadoDaBusca = { tipo: "ocioso" };

@@ -14,10 +14,10 @@ import { h, icone } from "@comum/ui/dom";
 import type { Arvore, DocumentoArvore } from "@nucleo/dominio/arvore";
 import { pastasFechadas } from "../../capa/cards";
 import { aguardar } from "../comum";
+import { garantirEstilo, temaEscuro } from "../estilo";
 import { lerDocumentoDoDom } from "../filtro/dom";
 import { DocumentosDaTela, idDoNo } from "../menuDoc/documentos";
 import { abrirDialogo } from "../modais/comum";
-import { garantirEstilo, temaEscuro } from "../estilo";
 import { comDatas, type Pendente, pendentesDaUnidade } from "./modelo";
 
 export const ID_AVISO = "spro-na-nao-assinados";
@@ -104,7 +104,12 @@ export function montarAviso(d: DepsAviso): Aviso | null {
   let primeira = true;
 
   const sigla = (): HTMLElement => h("strong", {}, d.unidade);
-  const pintar = (estado: "pendente" | "ok" | "falha", icon: Parameters<typeof icone>[0], texto: Array<Node | string>, ...acoes: HTMLElement[]) => {
+  const pintar = (
+    estado: "pendente" | "ok" | "falha",
+    icon: Parameters<typeof icone>[0],
+    texto: Array<Node | string>,
+    ...acoes: HTMLElement[]
+  ) => {
     raiz.className = `spro-na ${estado}`;
     raiz.replaceChildren(h("span", { class: "spro-na-icone", "aria-hidden": "true" }, icone(icon, 15)), h("span", {}, ...texto), ...acoes);
   };
@@ -195,17 +200,28 @@ export function montarAviso(d: DepsAviso): Aviso | null {
     const quadro = d.quadroDaArvore();
     const arv = quadro ? d.lerArvore(quadro) : null;
     if (!quadro || !arv) {
-      pintar("falha", "alerta", ["Não foi possível verificar os documentos não assinados na unidade ", sigla()], link("Tentar de novo", verificar));
+      pintar(
+        "falha",
+        "alerta",
+        ["Não foi possível verificar os documentos não assinados na unidade ", sigla()],
+        link("Tentar de novo", verificar),
+      );
       return;
     }
     const documentos = documentosDaArvore(quadro, arv);
     const pendentes = pendentesDaUnidade(documentos, d.unidade);
     const fechadas = pastasFechadas({ pagina: arv.pagina, documentos });
-    const rotuloPastas = fechadas.length === 1 ? "1 pasta fechada ainda não foi verificada" : `${fechadas.length} pastas fechadas ainda não foram verificadas`;
+    const rotuloPastas =
+      fechadas.length === 1 ? "1 pasta fechada ainda não foi verificada" : `${fechadas.length} pastas fechadas ainda não foram verificadas`;
     const botaoPastas = fechadas.length ? link("Verificar pastas", () => void verificarPastas(quadro, fechadas)) : null;
     if (!pendentes.length) {
       if (botaoPastas) {
-        pintar("falha", "alerta", ["Nenhum documento não assinado na unidade ", sigla(), ` na árvore aberta; ${rotuloPastas}`], botaoPastas);
+        pintar(
+          "falha",
+          "alerta",
+          ["Nenhum documento não assinado na unidade ", sigla(), ` na árvore aberta; ${rotuloPastas}`],
+          botaoPastas,
+        );
       } else {
         pintar("ok", "check", ["Todos os documentos foram assinados na unidade ", sigla()]);
       }

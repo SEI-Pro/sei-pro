@@ -5,9 +5,9 @@
 import { areaChrome } from "@comum/armazenamento/area";
 import { opcaoLegadaLigada } from "@comum/opcoes/legadas";
 import { documentoTopo } from "@nucleo/sessao/pagina";
+import { historicoGuardado } from "../../gantt/coleta";
 import { OPCAO_NAO_ASSINADOS } from "../../modelo/constantes";
 import { LojaProcesso } from "../../modelo/loja";
-import { historicoGuardado } from "../../gantt/coleta";
 import { escopoDoUsuario, lerUsuarioEUnidade } from "../contexto";
 import { aguardarArvore, tentarLerArvore } from "../leituraArvore";
 import { type Aviso, montarAviso } from "./aviso";

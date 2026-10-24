@@ -72,7 +72,13 @@ export function abrirModalAnotacao(ctx: ContextoProcesso, atual: AnotacaoProcess
       "div",
       { class: "spro-p-post-it-rodape" },
       contador,
-      h("div", { class: "spro-p-post-it-ferramentas" }, prioridade, checklist, h("span", { class: "spro-p-post-it-data-rotulo" }, icone("calendario", 14), data)),
+      h(
+        "div",
+        { class: "spro-p-post-it-ferramentas" },
+        prioridade,
+        checklist,
+        h("span", { class: "spro-p-post-it-data-rotulo" }, icone("calendario", 14), data),
+      ),
     ),
   );
 

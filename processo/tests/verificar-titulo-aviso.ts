@@ -11,18 +11,19 @@ import type { Andamento } from "@nucleo/dominio/historico";
 import { definirAnalisador } from "@nucleo/sessao/dom";
 import { paginaDe } from "@nucleo/sessao/pagina";
 import { DOMParser } from "linkedom";
-import { LojaProcesso } from "../src/modelo/loja";
 import { pastasFechadas } from "../src/capa/cards";
+import { LojaProcesso } from "../src/modelo/loja";
 import { documentosDaArvore, montarAviso } from "../src/pagina/aviso/aviso";
-import { comDatas, datasDeGeracao, pendentesDaUnidade } from "../src/pagina/aviso/modelo";
 import { ehEnviarProcesso } from "../src/pagina/aviso/ligar";
+import { comDatas, datasDeGeracao, pendentesDaUnidade } from "../src/pagina/aviso/modelo";
 import { ehTopoDoProcesso, marcarTituloEAviso } from "../src/pagina/marca";
-import { montarTitulo, ligarTitulo } from "../src/pagina/titulo";
+import { ligarTitulo, montarTitulo } from "../src/pagina/titulo";
 import { fingirDialogos } from "./dialogo";
 import { checar, instalarDom, secao, tique } from "./util";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
-const fixture = (arquivo: string) => readFileSync(join(AQUI, "../../sei-nucleo/tests/fixtures/sei41", arquivo), "utf8").replace(/^<!-- url: .*? -->\n/, "");
+const fixture = (arquivo: string) =>
+  readFileSync(join(AQUI, "../../sei-nucleo/tests/fixtures/sei41", arquivo), "utf8").replace(/^<!-- url: .*? -->\n/, "");
 const URL_ARVORE = "https://treinamento.sei.sp.gov.br/sei/controlador.php?acao=procedimento_visualizar&id_procedimento=148265";
 definirAnalisador((html) => new DOMParser().parseFromString(html, "text/html") as unknown as Document);
 
@@ -30,14 +31,29 @@ const novoDoc = (html: string): Document => new DOMParser().parseFromString(html
 
 const dadosProcesso = (especificacao: string) => ({
   disponivel: true,
-  valor: { tipo: "T", especificacao, assuntos: [], interessados: [], observacoes: "", observacoesOutras: [], editavel: true, nivel: "publico" },
+  valor: {
+    tipo: "T",
+    especificacao,
+    assuntos: [],
+    interessados: [],
+    observacoes: "",
+    observacoesOutras: [],
+    editavel: true,
+    nivel: "publico",
+  },
 });
 
 export async function verificarTituloEAviso(): Promise<void> {
   secao("titulo: formato do legado");
-  checar("com especificacao", montarTitulo("Compra de canetas", "99906.713-630.000032/2025-82") === "Compra de canetas | SEI - Processo 99906.713-630.000032/2025-82");
+  checar(
+    "com especificacao",
+    montarTitulo("Compra de canetas", "99906.713-630.000032/2025-82") === "Compra de canetas | SEI - Processo 99906.713-630.000032/2025-82",
+  );
   checar("espacos repetidos e quebras viram um espaco", montarTitulo("  A   B\nC ", "1") === "A B C | SEI - Processo 1");
-  checar("sem especificacao: sem a barra sobrando", montarTitulo("", "1") === "SEI - Processo 1" && montarTitulo("   ", "1") === "SEI - Processo 1");
+  checar(
+    "sem especificacao: sem a barra sobrando",
+    montarTitulo("", "1") === "SEI - Processo 1" && montarTitulo("   ", "1") === "SEI - Processo 1",
+  );
   checar("marcas (URGENTE) entram como no legado", montarTitulo("Contrato (URGENTE)", "1") === "Contrato (URGENTE) | SEI - Processo 1");
 
   secao("titulo: a partir da loja, sem iframe oculto");
@@ -97,27 +113,87 @@ export async function verificarTituloEAviso(): Promise<void> {
   const arvDoc = novoDoc(fixture("arvore_completa.html"));
   const arv = lerArvore(paginaDe(arvDoc, URL_ARVORE));
   const pend = pendentesDaUnidade(arv.documentos, "TESTE");
-  checar("pendentes da unidade TESTE: so editor, sem assinatura, nao cancelado", pend.length > 10 && pend.every((p) => arv.documentos.find((d) => d.id === p.id)?.assinado === false), pend.length);
+  checar(
+    "pendentes da unidade TESTE: so editor, sem assinatura, nao cancelado",
+    pend.length > 10 && pend.every((p) => arv.documentos.find((d) => d.id === p.id)?.assinado === false),
+    pend.length,
+  );
   checar(
     "o mesmo conjunto do chip Nao assinados do filtro",
-    pend.length === arv.documentos.filter((d) => d.formato === "interno" && !d.assinado && !d.cancelado && d.unidadeGeradora === "TESTE").length,
+    pend.length ===
+      arv.documentos.filter((d) => d.formato === "interno" && !d.assinado && !d.cancelado && d.unidadeGeradora === "TESTE").length,
   );
   checar("outra unidade: nada pendente (a geradora e TESTE)", pendentesDaUnidade(arv.documentos, "OUTRA").length === 0);
   checar("sigla sem caixa", pendentesDaUnidade(arv.documentos, "teste").length === pend.length);
   const sem = arv.documentos.map((d) => ({ ...d, unidadeGeradora: undefined }));
   checar("sem unidade geradora na arvore (SEI 3.x): vale o documento", pendentesDaUnidade(sem, "QUALQUER").length >= pend.length);
+  {
+    // formato do SEI 5 (a unidade geradora vem em UNIDADE_GERADORA; cancelado e externo nao contam; circular conta)
+    const doc = (id: string, o: Partial<(typeof arv.documentos)[number]>) =>
+      ({
+        ...arv.documentos[0],
+        id,
+        numero: `00${id}`,
+        titulo: `Doc ${id}`,
+        assinado: false,
+        cancelado: false,
+        externo: false,
+        formato: "interno",
+        unidadeGeradora: "TESTE",
+        ...o,
+      }) as (typeof arv.documentos)[number];
+    const lista = [
+      doc("1", {}),
+      doc("2", { unidadeGeradora: "OUTRA" }),
+      doc("3", { cancelado: true }),
+      doc("4", { assinado: true }),
+      doc("5", { externo: true, formato: "pdf" }),
+      doc("6", { externo: true, formato: "circular" }),
+      doc("7", { unidadeGeradora: "teste" }),
+    ];
+    checar(
+      "so o do editor da unidade, nao assinado e nao cancelado (circular entra; sigla sem caixa)",
+      pendentesDaUnidade(lista, "TESTE")
+        .map((x) => x.id)
+        .join() === "1,6,7",
+      pendentesDaUnidade(lista, "TESTE").map((x) => x.id),
+    );
+  }
   const andamentos: Andamento[] = [
-    { data: "10/10/2026 09:00", unidade: "TESTE", usuario: "u", descricao: `Gerado documento Despacho (${pend[0]?.numero})`, nrSei: pend[0]?.numero },
-    { data: "09/10/2026 08:00", unidade: "TESTE", usuario: "u", descricao: `Gerado documento Despacho (${pend[0]?.numero})`, nrSei: pend[0]?.numero },
+    {
+      data: "10/10/2026 09:00",
+      unidade: "TESTE",
+      usuario: "u",
+      descricao: `Gerado documento Despacho (${pend[0]?.numero})`,
+      nrSei: pend[0]?.numero,
+    },
+    {
+      data: "09/10/2026 08:00",
+      unidade: "TESTE",
+      usuario: "u",
+      descricao: `Gerado documento Despacho (${pend[0]?.numero})`,
+      nrSei: pend[0]?.numero,
+    },
     { data: "08/10/2026 08:00", unidade: "TESTE", usuario: "u", descricao: "Processo recebido na unidade" },
   ];
   const datas = datasDeGeracao(andamentos);
   checar("data de geracao: o andamento mais antigo", datas.get(pend[0]?.numero ?? "") === "09/10/2026" && datas.size === 1);
   checar("comDatas so poe a data onde ha", comDatas(pend, datas)[0]?.data === "09/10/2026" && comDatas(pend, datas)[1]?.data === undefined);
-  checar("sem historico: sem datas", comDatas(pend, null).every((p) => p.data === undefined));
+  checar(
+    "sem historico: sem datas",
+    comDatas(pend, null).every((p) => p.data === undefined),
+  );
 
   secao("aviso: banner e dialogo");
-  const montar = (o: { unidade?: string; quadro?: Document | null; arvore?: ReturnType<typeof lerArvore> | null; datas?: Map<string, string> | null; html?: string } = {}) => {
+  const montar = (
+    o: {
+      unidade?: string;
+      quadro?: Document | null;
+      arvore?: ReturnType<typeof lerArvore> | null;
+      datas?: Map<string, string> | null;
+      html?: string;
+    } = {},
+  ) => {
     const doc = instalarDom(o.html ?? fixture("p_procedimento_enviar.html"));
     const restaurar = fingirDialogos(doc);
     let leu = 0;
@@ -143,12 +219,31 @@ export async function verificarTituloEAviso(): Promise<void> {
     const c = montar();
     const banner = c.doc.getElementById("spro-na-nao-assinados");
     checar("o banner entra na barra de localizacao", banner?.parentElement?.id === "divInfraBarraLocalizacao");
-    checar("pendentes: classe, texto e Detalhes", banner?.classList.contains("pendente") === true && /Existem documentos não assinados na unidade TESTE/.test(banner.textContent ?? "") && /Detalhes/.test(banner.textContent ?? ""));
+    checar(
+      "pendentes: classe, texto e Detalhes",
+      banner?.classList.contains("pendente") === true &&
+        /Existem documentos não assinados na unidade TESTE/.test(banner.textContent ?? "") &&
+        /Detalhes/.test(banner.textContent ?? ""),
+    );
     const dlg = c.doc.querySelector("dialog.spro-dialogo");
-    checar("abre o dialogo sozinho (como o legado), sem Cancelar", dlg?.hasAttribute("open") === true && ![...dlg.querySelectorAll("button")].some((b) => /cancelar/i.test(b.textContent ?? "")));
-    checar("o dialogo lista os pendentes", dlg?.querySelectorAll("li.spro-p-linha-modal").length === pend.length, dlg?.querySelectorAll("li").length);
-    checar("lista com aria-label e botoes com aria-label", dlg?.querySelector("ul")?.getAttribute("aria-label") === "Documentos não assinados" && /Selecionar na árvore: /.test(dlg?.querySelector("li button")?.getAttribute("aria-label") ?? ""));
-    checar("nenhum title (so aria-label)", banner?.querySelector("[title]") === null && dlg?.querySelector("[title]") === null && !dlg?.hasAttribute("title"));
+    checar(
+      "abre o dialogo sozinho (como o legado), sem Cancelar",
+      dlg?.hasAttribute("open") === true && ![...dlg.querySelectorAll("button")].some((b) => /cancelar/i.test(b.textContent ?? "")),
+    );
+    checar(
+      "o dialogo lista os pendentes",
+      dlg?.querySelectorAll("li.spro-p-linha-modal").length === pend.length,
+      dlg?.querySelectorAll("li").length,
+    );
+    checar(
+      "lista com aria-label e botoes com aria-label",
+      dlg?.querySelector("ul")?.getAttribute("aria-label") === "Documentos não assinados" &&
+        /Selecionar na árvore: /.test(dlg?.querySelector("li button")?.getAttribute("aria-label") ?? ""),
+    );
+    checar(
+      "nenhum title (so aria-label)",
+      banner?.querySelector("[title]") === null && dlg?.querySelector("[title]") === null && !dlg?.hasAttribute("title"),
+    );
     checar("sem rede nenhuma", c.rede.length === 0);
     // fechar e reabrir por Detalhes
     (dlg as HTMLDialogElement).close();
@@ -169,24 +264,45 @@ export async function verificarTituloEAviso(): Promise<void> {
   {
     const c = montar({ unidade: "OUTRA" });
     const banner = c.doc.getElementById("spro-na-nao-assinados");
-    checar("tudo assinado na unidade: verde, sem dialogo", banner?.classList.contains("ok") === true && /Todos os documentos foram assinados na unidade OUTRA/.test(banner.textContent ?? "") && c.doc.querySelector("dialog") === null);
+    checar(
+      "tudo assinado na unidade: verde, sem dialogo",
+      banner?.classList.contains("ok") === true &&
+        /Todos os documentos foram assinados na unidade OUTRA/.test(banner.textContent ?? "") &&
+        c.doc.querySelector("dialog") === null,
+    );
     c.restaurar();
   }
   {
     const c = montar({ quadro: null });
     const banner = c.doc.getElementById("spro-na-nao-assinados");
-    checar("arvore inacessivel: aviso de falha com Tentar de novo", banner?.classList.contains("falha") === true && /Tentar de novo/.test(banner.textContent ?? ""));
+    checar(
+      "arvore inacessivel: aviso de falha com Tentar de novo",
+      banner?.classList.contains("falha") === true && /Tentar de novo/.test(banner.textContent ?? ""),
+    );
     c.restaurar();
   }
   {
     const c = montar();
-    const outra = montarAviso({ doc: c.doc, topo: c.doc, quadroDaArvore: () => arvDoc, lerArvore: () => arv, unidade: "TESTE", datas: async () => null });
-    checar("montar de novo no mesmo quadro nao duplica (duas copias da extensao)", outra === null && c.doc.querySelectorAll("#spro-na-nao-assinados").length === 1);
+    const outra = montarAviso({
+      doc: c.doc,
+      topo: c.doc,
+      quadroDaArvore: () => arvDoc,
+      lerArvore: () => arv,
+      unidade: "TESTE",
+      datas: async () => null,
+    });
+    checar(
+      "montar de novo no mesmo quadro nao duplica (duas copias da extensao)",
+      outra === null && c.doc.querySelectorAll("#spro-na-nao-assinados").length === 1,
+    );
     c.restaurar();
   }
   {
     const c = montar({ html: "<html><body><form id='frmAtividadeListar'></form></body></html>" });
-    checar("sem a barra de localizacao: entra antes do formulario", c.doc.getElementById("spro-na-nao-assinados")?.nextElementSibling?.id === "frmAtividadeListar");
+    checar(
+      "sem a barra de localizacao: entra antes do formulario",
+      c.doc.getElementById("spro-na-nao-assinados")?.nextElementSibling?.id === "frmAtividadeListar",
+    );
     c.restaurar();
   }
   {
@@ -199,12 +315,23 @@ export async function verificarTituloEAviso(): Promise<void> {
     const arvFechadas = novoDoc(fixture("arvore.html"));
     const arv2 = lerArvore(paginaDe(arvFechadas, URL_ARVORE));
     const pendCom = pendentesDaUnidade(arv2.documentos, "TESTE");
-    checar("fixture com 2 pastas fechadas e 3 pendentes", pastasFechadas(arv2).length === 2 && pendCom.length === 3, [pastasFechadas(arv2), pendCom.length]);
+    checar("fixture com 2 pastas fechadas e 3 pendentes", pastasFechadas(arv2).length === 2 && pendCom.length === 3, [
+      pastasFechadas(arv2),
+      pendCom.length,
+    ]);
     const montarFechadas = (unidade: string, abrirPasta: (q: Document, id: string) => Promise<boolean>) => {
       const doc = instalarDom(fixture("p_procedimento_enviar.html"));
       const restaurar = fingirDialogos(doc);
       const quadro = novoDoc(fixture("arvore.html"));
-      const aviso = montarAviso({ doc, topo: doc, quadroDaArvore: () => quadro, lerArvore: () => arv2, unidade, datas: async () => null, abrirPasta });
+      const aviso = montarAviso({
+        doc,
+        topo: doc,
+        quadroDaArvore: () => quadro,
+        lerArvore: () => arv2,
+        unidade,
+        datas: async () => null,
+        abrirPasta,
+      });
       return { doc, quadro, aviso, restaurar, banner: () => doc.getElementById("spro-na-nao-assinados") };
     };
     // Um nó novo na pasta aberta, como o SEI insere (a arvore real so tem os nos em script, aqui o DOM e montado a mao).
@@ -249,14 +376,26 @@ export async function verificarTituloEAviso(): Promise<void> {
         return true;
       });
       const t = c.banner()?.textContent ?? "";
-      checar("sem pendentes mas com pastas fechadas: nao diz que esta tudo assinado", c.banner()?.classList.contains("falha") === true && !/Todos os documentos/.test(t) && /2 pastas fechadas ainda n\u00E3o foram verificadas/.test(t), t);
-      const botao = [...(c.banner()?.querySelectorAll("button") ?? [])].find((b) => b.textContent === "Verificar pastas") as HTMLButtonElement;
+      checar(
+        "sem pendentes mas com pastas fechadas: nao diz que esta tudo assinado",
+        c.banner()?.classList.contains("falha") === true &&
+          !/Todos os documentos/.test(t) &&
+          /2 pastas fechadas ainda n\u00E3o foram verificadas/.test(t),
+        t,
+      );
+      const botao = [...(c.banner()?.querySelectorAll("button") ?? [])].find(
+        (b) => b.textContent === "Verificar pastas",
+      ) as HTMLButtonElement;
       checar("oferece Verificar pastas", !!botao);
       botao.click();
       await tique(30);
       checar("abre as pastas fechadas, uma de cada vez, em ordem", pedidas.join() === "PASTA1,PASTA2", pedidas);
       const t2 = c.banner()?.textContent ?? "";
-      checar("depois: tudo verificado (as pastas ja tem documento), verde", c.banner()?.classList.contains("ok") === true && /Todos os documentos foram assinados na unidade OUTRA/.test(t2), t2);
+      checar(
+        "depois: tudo verificado (as pastas ja tem documento), verde",
+        c.banner()?.classList.contains("ok") === true && /Todos os documentos foram assinados na unidade OUTRA/.test(t2),
+        t2,
+      );
       c.restaurar();
     }
     {
@@ -265,13 +404,25 @@ export async function verificarTituloEAviso(): Promise<void> {
         return true;
       });
       const dlg = c.doc.querySelector("dialog.spro-dialogo");
-      checar("com pendentes e pastas fechadas: o dialogo avisa e oferece Verificar pastas", /2 pastas fechadas n\u00E3o foram verificadas/.test(dlg?.textContent ?? "") && !![...(dlg?.querySelectorAll("button") ?? [])].find((b) => b.textContent === "Verificar pastas"));
+      checar(
+        "com pendentes e pastas fechadas: o dialogo avisa e oferece Verificar pastas",
+        /2 pastas fechadas n\u00E3o foram verificadas/.test(dlg?.textContent ?? "") &&
+          !![...(dlg?.querySelectorAll("button") ?? [])].find((b) => b.textContent === "Verificar pastas"),
+      );
       checar("tres pendentes antes", dlg?.querySelectorAll("li").length === 3, dlg?.querySelectorAll("li").length);
       ([...(dlg?.querySelectorAll("button") ?? [])].find((b) => b.textContent === "Verificar pastas") as HTMLButtonElement).click();
       await tique(30);
       const dlg2 = c.doc.querySelector("dialog.spro-dialogo");
-      checar("depois de verificar as pastas o dialogo reabre com os 5 pendentes", dlg2?.querySelectorAll("li").length === 5, dlg2?.querySelectorAll("li").length);
-      checar("e nao ha mais pastas fechadas no aviso", !/pastas? fechadas?/.test(c.doc.getElementById("spro-na-nao-assinados")?.textContent ?? "") && !/pastas? fechadas? n/.test(dlg2?.textContent ?? ""));
+      checar(
+        "depois de verificar as pastas o dialogo reabre com os 5 pendentes",
+        dlg2?.querySelectorAll("li").length === 5,
+        dlg2?.querySelectorAll("li").length,
+      );
+      checar(
+        "e nao ha mais pastas fechadas no aviso",
+        !/pastas? fechadas?/.test(c.doc.getElementById("spro-na-nao-assinados")?.textContent ?? "") &&
+          !/pastas? fechadas? n/.test(dlg2?.textContent ?? ""),
+      );
       c.restaurar();
     }
     {
@@ -286,7 +437,11 @@ export async function verificarTituloEAviso(): Promise<void> {
       checar("documentos do DOM entram alem dos do modelo", docs.length === arv2.documentos.length + 3, docs.length);
       const p = pendentesDaUnidade(docs, "TESTE").map((x) => x.numero);
       checar("assinado e de outra unidade nao pendem", p.includes("0997001") && !p.includes("0997002") && !p.includes("0997003"), p);
-      checar("a pasta que ganhou documento deixa de ser fechada", !pastasFechadas({ pagina: arv2.pagina, documentos: docs }).includes("PASTA1") && pastasFechadas({ pagina: arv2.pagina, documentos: docs }).includes("PASTA2"));
+      checar(
+        "a pasta que ganhou documento deixa de ser fechada",
+        !pastasFechadas({ pagina: arv2.pagina, documentos: docs }).includes("PASTA1") &&
+          pastasFechadas({ pagina: arv2.pagina, documentos: docs }).includes("PASTA2"),
+      );
     }
   }
 }

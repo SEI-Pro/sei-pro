@@ -11,16 +11,25 @@ import { documentoTopo } from "@nucleo/sessao/pagina";
 import proprio from "../../estatico/processo.css";
 import { restaurarBlocoInterno } from "../gantt/coleta";
 import { ligarGantt } from "../gantt/ligar";
-import { LojaProcesso } from "../modelo/loja";
 import { OPCAO_FILTRO_ARVORE } from "../modelo/constantes";
+import { LojaProcesso } from "../modelo/loja";
 import { paineisHabilitados } from "../modelo/paineis";
 import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
+import { ehEnviarProcesso, ligarAviso } from "./aviso/ligar";
 import { type ContextoProcesso, criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
-import { criarLeituras } from "./leituras";
-import { dentroDoVerificadorOculto, ehQuadroDaArvore, ehTopoDoProcesso, marcarAtivo, marcarCapa, marcarGantt, marcarMenu, marcarTituloEAviso } from "./marca";
-import { ehEnviarProcesso, ligarAviso } from "./aviso/ligar";
 import { ligarFiltro } from "./filtro/barra";
+import { criarLeituras } from "./leituras";
+import {
+  dentroDoVerificadorOculto,
+  ehQuadroDaArvore,
+  ehTopoDoProcesso,
+  marcarAtivo,
+  marcarCapa,
+  marcarGantt,
+  marcarMenu,
+  marcarTituloEAviso,
+} from "./marca";
 import { ligarMenuDaArvore } from "./menuDoc/ligar";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";

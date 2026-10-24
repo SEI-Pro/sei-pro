@@ -203,8 +203,13 @@ export async function verificarPaineis(): Promise<void> {
       "tem os botoes de editar quando o processo esta aberto na unidade",
       painel(c3.doc, "descricao")?.querySelectorAll(".spro-p-acao").length === 3,
     );
-    const rotulos = (tipo: string) => [...(painel(c3.doc, tipo)?.querySelectorAll(".spro-p-acao") ?? [])].map((b) => b.getAttribute("aria-label"));
-    checar("assuntos: acao Editar assuntos (adicionar e retirar), com aria-label", rotulos("assuntos").join() === "Editar assuntos", rotulos("assuntos"));
+    const rotulos = (tipo: string) =>
+      [...(painel(c3.doc, tipo)?.querySelectorAll(".spro-p-acao") ?? [])].map((b) => b.getAttribute("aria-label"));
+    checar(
+      "assuntos: acao Editar assuntos (adicionar e retirar), com aria-label",
+      rotulos("assuntos").join() === "Editar assuntos",
+      rotulos("assuntos"),
+    );
     checar(
       "interessados: Editar interessados e, em cada um, Processos de <nome>",
       rotulos("interessados").includes("Editar interessados") && rotulos("interessados").includes("Processos de Maria Souza (CPF 1)"),
@@ -413,7 +418,10 @@ export async function verificarPaineis(): Promise<void> {
     const aviso = painel(c.doc, "bloco_interno")?.querySelector<HTMLElement>(".spro-p-nota");
     checar(
       "coleta que falha: avisa e devolve o link (nao fica carregando para sempre)",
-      aviso?.hidden === false && /N\u00E3o foi poss\u00EDvel/.test(aviso.textContent ?? "") && link?.disabled === false && link.textContent === "Carregar do histórico",
+      aviso?.hidden === false &&
+        /N\u00E3o foi poss\u00EDvel/.test(aviso.textContent ?? "") &&
+        link?.disabled === false &&
+        link.textContent === "Carregar do histórico",
     );
 
     // Coleta que dá certo: o botão mostra o progresso e, no fim, a fatia é publicada e o painel redesenha sozinho.
@@ -425,7 +433,15 @@ export async function verificarPaineis(): Promise<void> {
         concluir = r;
       });
       return {
-        andamentos: [{ data: "01/10/2026 09:00", dataISO: "2026-10-01T09:00:00", unidade: "TESTE", usuario: "u", descricao: "Processo inserido no bloco interno 7 (Bloco Z)" }],
+        andamentos: [
+          {
+            data: "01/10/2026 09:00",
+            dataISO: "2026-10-01T09:00:00",
+            unidade: "TESTE",
+            usuario: "u",
+            descricao: "Processo inserido no bloco interno 7 (Bloco Z)",
+          },
+        ],
         total: 1,
         hash: "h",
         completo: true,
@@ -443,7 +459,11 @@ export async function verificarPaineis(): Promise<void> {
     );
     concluir?.();
     await tique(30);
-    checar("coleta pronta: o painel mostra o bloco do historico, sem novo clique", /bloco interno 7/.test(corpoTexto(c.doc, "bloco_interno")), corpoTexto(c.doc, "bloco_interno"));
+    checar(
+      "coleta pronta: o painel mostra o bloco do historico, sem novo clique",
+      /bloco interno 7/.test(corpoTexto(c.doc, "bloco_interno")),
+      corpoTexto(c.doc, "bloco_interno"),
+    );
 
     let pediu = 0;
     const c2 = cenario();

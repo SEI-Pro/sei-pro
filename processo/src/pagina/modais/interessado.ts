@@ -51,7 +51,9 @@ function linhaDoProcesso(p: ResultadoPesquisa, abrir: (p: ResultadoPesquisa, nov
 export function abrirModalProcessosDoInteressado(ctx: ContextoProcesso, alvo: AlvoInteressado): void {
   const filtro = lerFiltroDoInteressado(ctx.armazenamento);
   const tramitado = interruptor("Tramitados na unidade", filtro.tramitadoNaUnidade, () => recomecar());
-  const natureza = interruptor(alvo.tipoNome ? `De mesmo tipo (${alvo.tipoNome})` : "De mesmo tipo", filtro.mesmaNatureza, () => recomecar());
+  const natureza = interruptor(alvo.tipoNome ? `De mesmo tipo (${alvo.tipoNome})` : "De mesmo tipo", filtro.mesmaNatureza, () =>
+    recomecar(),
+  );
   natureza.input.disabled = !alvo.tipo;
   const resumo = h("div", { class: "spro-p-nota", role: "status", "aria-live": "polite" });
   const lista = h("ul", { class: "spro-p-lista-processos", "aria-label": `Processos de ${alvo.nome}` });
@@ -113,7 +115,14 @@ export function abrirModalProcessosDoInteressado(ctx: ContextoProcesso, alvo: Al
     rodapeLista.replaceChildren();
     if (e.carregando && !e.processos.length) {
       resumo.textContent = "Pesquisando os processos do interessado…";
-      lista.append(h("li", { class: "spro-p-esqueleto", "aria-hidden": "true" }, h("span", { class: "spro-p-barra" }), h("span", { class: "spro-p-barra", style: "width:62%" })));
+      lista.append(
+        h(
+          "li",
+          { class: "spro-p-esqueleto", "aria-hidden": "true" },
+          h("span", { class: "spro-p-barra" }),
+          h("span", { class: "spro-p-barra", style: "width:62%" }),
+        ),
+      );
       return;
     }
     if (e.erro && !e.processos.length) {

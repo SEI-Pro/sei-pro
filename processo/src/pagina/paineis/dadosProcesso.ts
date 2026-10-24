@@ -212,10 +212,7 @@ export const painelAssuntos: DefPainel = {
     return {
       estado: f.estado,
       desenho: {
-        acoes:
-          dadoDe(ctx) && editavel(ctx)
-            ? [{ icone: "lapis", rotulo: "Editar assuntos", aoClicar: () => abrirModalAssuntos(ctx) }]
-            : [],
+        acoes: dadoDe(ctx) && editavel(ctx) ? [{ icone: "lapis", rotulo: "Editar assuntos", aoClicar: () => abrirModalAssuntos(ctx) }] : [],
         corpo: comDados(ctx, (v) =>
           v.valor.assuntos.length ? v.valor.assuntos.map((a) => linha(copiavel(ctx, a))) : [vazio("Sem assuntos.")],
         ),
