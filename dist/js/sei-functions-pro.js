@@ -10435,7 +10435,7 @@ function getDocsArvore_fillSelect(select, optionBlank = false, disableId = false
     } else {
         select.removeAttr('disabled');
         select.children().remove();
-        select.append(resultado);
+        htmlPro(select, resultado, 'append');
     }
     select.trigger('chosen:updated');
     $('#'+select.attr('id')+'_chosen').removeClass('chosenLoading');
@@ -10740,7 +10740,7 @@ function getDocCertidao(this_) {
     if (href !== null) {
         alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Gerando Certid\u00E3o de Documento Oficial com Sigilo');
         $.ajax({ url: href }).done(function (htmlInitDoc) {
-            var $htmlInitDoc = $(htmlInitDoc);
+            var $htmlInitDoc = lerHtmlPro(htmlInitDoc);
             var form = $htmlInitDoc.find('#frmDocumentoEscolherTipo');
             var hrefForm = form.attr('action');
             var param = {};
@@ -10756,7 +10756,7 @@ function getDocCertidao(this_) {
                     data: param,
                     url: hrefForm
                 }).done(function (htmlFullList) {
-                    var $htmlFullList = $(htmlFullList);
+                    var $htmlFullList = lerHtmlPro(htmlFullList);
                     $htmlFullList.find('#tblSeries tbody tr').each(function (v) {
                         var text = $(this).data('desc').trim();
                         var value = $(this).find('input').val();
@@ -10768,7 +10768,7 @@ function getDocCertidao(this_) {
                             if (reg.test(parent.removeAcentos(nameDoc.trim().toLowerCase()))) {
                                 if (typeof urlDoc !== 'undefined' && text != 'externo') {
                                     itemSelected = getFormDocPro($htmlFullList, urlDoc, value, function (htmlDoc) {
-                                        var $htmlDoc = $(htmlDoc);
+                                        var $htmlDoc = lerHtmlPro(htmlDoc);
                                         var form = $htmlDoc.find('#frmDocumentoCadastro');
                                         var hrefForm = form.attr('action');
                                         var param = {};
@@ -10826,7 +10826,7 @@ function getDocCertidao(this_) {
                                                 var text_icon = '';
                                                 if (status) {
                                                     alertaBoxPro('Sucess', 'check-circle', 'Certid\u00E3o gerada com sucesso');
-                                                    var $htmlResult = $(htmlResult);
+                                                    var $htmlResult = lerHtmlPro(htmlResult);
                                                     var urlEditor = [];
                                                     var idUser = false;
                                                     $.each($htmlResult.text().split('\n'), function(i, v){
@@ -11024,7 +11024,7 @@ function changeInputDateTime(this_) {
             var timeValue = partValue[1];
             var dateInput = $(this).clone()
                                 .prop('id', id+'_clone_date')
-                                .removeAttr('onchange')
+                                .removeAttr('onchange data-spro-change')
                                 .removeAttr('data-key')
                                 .removeAttr('data-type')
                                 .removeAttr('data-name')
@@ -11035,12 +11035,12 @@ function changeInputDateTime(this_) {
                                 .attr('value',dateValue)
                                 .prop('type', 'date')
                                 .attr('style','width: 50% !important;float: left;')
-                                .attr('onchange', 'updateInputDateTime(this)')
+                                .attr('data-spro-change', 'updateInputDateTime')
                                 .val(dateValue)
                                 .addClass('cloneDateTime');
             var timeInput = $(this).clone()
                                 .prop('id', id+'_clone_time')
-                                .removeAttr('onchange')
+                                .removeAttr('onchange data-spro-change')
                                 .removeAttr('data-key')
                                 .removeAttr('data-type')
                                 .removeAttr('data-name')
@@ -11051,7 +11051,7 @@ function changeInputDateTime(this_) {
                                 .attr('value',timeValue)
                                 .prop('type', 'time')
                                 .attr('style','width: 30% !important;float: right;')
-                                .attr('onchange', 'updateInputDateTime(this)')
+                                .attr('data-spro-change', 'updateInputDateTime')
                                 .val(timeValue)
                                 .addClass('cloneDateTime');
             $(this).after(timeInput).after(dateInput).hide();
@@ -11410,9 +11410,7 @@ function loadCSSResize(iframe) {
 	var cssScript = 'img::selection{color:transparent}img.ckimgrsz{outline:1px dashed #000}#ckimgrsz{position:absolute;margin:-8px -8px;width:0;height:0;cursor:default;z-index:10001}#ckimgrsz span{display:none;position:absolute;top:0;left:0;width:0;height:0;background-size:100% 100%;opacity:.65;outline:1px dashed #000}#ckimgrsz i{position:absolute;display:block;width:5px;height:5px;background:#fff;border:1px solid #000}#ckimgrsz i.active,#ckimgrsz i:hover{background:#000}#ckimgrsz i.br,#ckimgrsz i.tl{cursor:nwse-resize}#ckimgrsz i.bm,#ckimgrsz i.tm{cursor:ns-resize}#ckimgrsz i.bl,#ckimgrsz i.tr{cursor:nesw-resize}#ckimgrsz i.lm,#ckimgrsz i.rm{cursor:ew-resize}body.dragging-br,body.dragging-br *,body.dragging-tl,body.dragging-tl *{cursor:nwse-resize!important}body.dragging-bm,body.dragging-bm *,body.dragging-tm,body.dragging-tm *{cursor:ns-resize!important}body.dragging-bl,body.dragging-bl *,body.dragging-tr,body.dragging-tr *{cursor:nesw-resize!important}body.dragging-lm,body.dragging-lm *,body.dragging-rm,body.dragging-rm *{cursor:ew-resize!important}';
 	
 	if ( iframe.find('head').find('style[data-style="seipro-resizeimg"]').length == 0 ) {
-		iframe.find('head').append("<style type='text/css' data-style='seipro-resizeimg'> "
-								   +cssScript
-								   +"</style>");
+		estiloPro(iframe, 'seipro-resizeimg', ' '+cssScript);
 	
 	}
 }
@@ -11844,7 +11842,7 @@ function loadGoogleDocs(url, iframeDoc, mode) {
                     oEditor.focus();
                     oEditor.fire('saveSnapshot');
                     if ( $((mode == 'sheets' ? '#replaceTextSheets' : '#replaceTextDocs')).val() == true ) {
-                        iframeDoc.find('body').html(data);
+                        reescreverDocumentoPro(iframeDoc.find('body'), data);
                         oEditor.fire('saveSnapshot');
                         enableButtonSavePro();
                         DocsToSEI(iframeDoc, mode);
@@ -11852,7 +11850,7 @@ function loadGoogleDocs(url, iframeDoc, mode) {
                         var select = oEditor.getSelection().getStartElement();
                         var pElement = $(select.$).closest('p');
                         if ( pElement.length > 0 ) {
-                            iframeDoc.find(pElement).before(data);
+                            reescreverDocumentoPro(iframeDoc.find(pElement), data, 'before');
                             oEditor.fire('saveSnapshot');
                             enableButtonSavePro();
                             DocsToSEI(iframeDoc, mode);
@@ -12167,7 +12165,7 @@ function openSEINrPro(this_, nrSEI){
         _this.find('i').attr('class', 'fas fa-spinner fa-spin');
     getIDProtocoloSEI(nrSEI,  
         function(html){
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var param = getParamsUrlPro($html.find('#ifrArvore').attr('src'));
                 param.title = title;
             console.log(param);
@@ -12366,9 +12364,9 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
     }
 }
 function printDocumento() {
-    var htmlPrint = ($('.signed').length) ? $('#view_doc').html()+$('.signed')[0].outerHTML : $('#view_doc').html();
-
-        $('#printBoxPro').addClass('hidePrint').html(htmlPrint);
+    // Copia dos nos (P4), nao reparse: o documento e a tarja de assinatura vao inteiros para a impressao.
+    var printBox = $('#printBoxPro').addClass('hidePrint').empty().append($('#view_doc').contents().clone());
+        if ($('.signed').length) printBox.append($('.signed').first().clone());
         $('.infraAreaGlobal').addClass('hidePrint');
         $('.ui-dialog').addClass('hidePrint');
         window.print();
@@ -12578,8 +12576,8 @@ function openDialogAnexo(this_) {
         }
     }];
     resetDialogBoxPro('iframeBoxPro');
-    iframeBoxPro = $('#iframeBoxPro')
-        .html('<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"><iframe src="'+data.url+'" frameborder="0" height="100%" width="100%"></iframe></div>')
+    iframeBoxPro = htmlPro($('#iframeBoxPro'), '<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"></div>')
+        .find('.iframeBoxDiv').append(iframePro({ src: data.url, frameborder: 0, height: '100%', width: '100%' })).end()
         .dialog({
             width: 950,
             height: $(window).height(),
@@ -12601,7 +12599,8 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
                 icon: 'ui-icon-print',
                 click: function(event) {
                     var htmlPrint = $('.iframeBoxDiv iframe').contents().find('html');
-                    $('#printBoxPro').addClass('hidePrint').html(htmlPrint);
+                    // htmlPrint e o <html> do iframe (objeto, nao texto): o .html(objeto) do jQuery era isto.
+                    $('#printBoxPro').addClass('hidePrint').empty().append(htmlPrint);
                     $('.infraAreaGlobal').addClass('hidePrint');
                     $('.ui-dialog').addClass('hidePrint');
                     window.print();
@@ -12655,7 +12654,7 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
     }
 
     $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
+        let $html = lerHtmlPro(html);
         var urlArvore = $html.find("#ifrArvore").attr('src');
         $.ajax({ url: urlArvore }).done(function (htmlArvore) {
             var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
@@ -12695,8 +12694,8 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
 
                 } else {
                     resetDialogBoxPro('iframeBoxPro');
-                    iframeBoxPro = $('#iframeBoxPro')
-                        .html('<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"><iframe src="'+urlVisualizacao+'" frameborder="0" height="100%" width="100%"></iframe></div>')
+                    iframeBoxPro = htmlPro($('#iframeBoxPro'), '<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"></div>')
+                        .find('.iframeBoxDiv').append(iframePro({ src: urlVisualizacao, frameborder: 0, height: '100%', width: '100%' })).end()
                         .dialog({
                             width: 950,
                             height: $(window).height(),
@@ -12736,7 +12735,7 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
 function getContentDocSEI(param, callback) {
     var urlProcesso = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+param.id_procedimento+'&id_documento='+param.id_documento;
     $.ajax({ url: urlProcesso }).done(function (html) {
-        let $html = $(html);
+        let $html = lerHtmlPro(html);
         var urlArvore = $html.find("#ifrArvore").attr('src');
         $.ajax({ url: urlArvore }).done(function (htmlArvore) {
             var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
@@ -12937,7 +12936,7 @@ function updateChecksumPro(hash) {
                          '          <input id="inputCompareDoc" style="font-size: 10pt; padding: 15px 10px;" type="file" placeholder="Clique ou arraste para carregar um documento">'+
                          '  <div id="outputompareDoc" style="border-radius: 10px; padding: 0 10px;"></div>'+
                          '</div>';
-    $('#hashIntegrityPro').html(tableIntegrity).find('label.hash').on('mouseup', function() { 
+    htmlPro($('#hashIntegrityPro'), tableIntegrity).find('label.hash').on('mouseup', function() { 
         selectTextPro($(this)[0]);
     });
     $('#inputCompareDoc').on('change', function() {
@@ -12975,8 +12974,7 @@ function compareChecksumPro(hash) {
                                  '    <td><label class="hash hashSHA256_compare">'+hash.hashSHA256+'</label></td>'+
                                  '  </tr>'+
                                  '</table>';
-    $('#outputompareDoc')
-        .html(tableIntegrityCompare)
+    htmlPro($('#outputompareDoc'), tableIntegrityCompare)
         .css('background',statusCompare.background)
         .find('label.hash').on('mouseup', function() { 
             selectTextPro($(this)[0]);
