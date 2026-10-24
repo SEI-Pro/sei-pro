@@ -676,6 +676,25 @@ function estiloPro(alvo, chave, css, opcoes) {
     return el;
 }
 
+// <iframe> por DOM API: o portao corta <iframe> de qualquer fragmento (com ou sem tag por fora).
+function iframePro(atributos, doc) {
+    var el = (doc || document).createElement('iframe');
+    for (var k in atributos) {
+        if (Object.prototype.hasOwnProperty.call(atributos, k)) el.setAttribute(k, String(atributos[k]));
+    }
+    return el;
+}
+
+// O que o velho "textarea.innerHTML = s; return textarea.value" fazia, sem innerHTML: entidades
+// decodificadas e tags mantidas como TEXTO (o conteudo do <textarea> e RCDATA), num documento inerte.
+// O "\n" depois da abertura existe porque o parser descarta a primeira quebra de linha do textarea.
+function decodificarEntidadesPro(s) {
+    var texto = (s === null || s === undefined) ? '' : String(s);
+    var doc = new DOMParser().parseFromString('<textarea>\n' + texto.replace(/<\/textarea/gi, '&lt;/textarea') + '</textarea>', 'text/html');
+    var t = doc.querySelector('textarea');
+    return t ? t.value : '';
+}
+
 // Eventos que podem carregar acao em data-spro-<evento>.
 // Quanto se espera pela copia da pagina antes de reclamar que o documento ficou sem
 // despachante. E generoso de proposito: a copia da pagina entra por $.getScript, assincrono.
@@ -2473,8 +2492,8 @@ function getInteressadosProcessoAjax(link, txtInteressado, callback) {
             palavras_pesquisa: txtInteressado
         },
         success: function(result){
-            var html_result = $(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
-            var id_result = $(html_result).map(function(){ return {id: $(this).attr('id'), descricao: $(this).attr('descricao')} }).get();
+            var html_result = lerHtmlPro(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
+            var id_result = lerHtmlPro(html_result).map(function(){ return {id: $(this).attr('id'), descricao: $(this).attr('descricao')} }).get();
             // console.log(id_result);
             if (typeof callback === 'function') callback(id_result);
         }
@@ -2558,9 +2577,7 @@ function extractDataFormulario(output = 'obj', allFields = false) {
                     : stringOut;
 }
 function decodeHtml(html) {
-    var txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
+    return decodificarEntidadesPro(html);
 }
 function initDialogCompareDocs(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -2608,8 +2625,8 @@ function openDialogCompareDocs() {
                         '  </table>';
                         
         resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'<div class="iframeBoxDiv" style="display:none;width: 100%; height: calc(100vh - 320px); margin: 0;"><iframe src="about:blank" frameborder="0" height="100%" width="100%"></iframe></div></div>')
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'<div class="iframeBoxDiv" style="display:none;width: 100%; height: calc(100vh - 320px); margin: 0;"></div></div>')
+            .find('#dialogBoxDocLote .iframeBoxDiv').append(iframePro({ src: 'about:blank', frameborder: 0, height: '100%', width: '100%' })).end()
             .dialog({
                 title: 'Comparar Documentos',
                 width: 950,
@@ -2771,8 +2788,19 @@ function getCompareDocs(this_) {
     }
     if (!!id_procedimento && !!id_documento) {
         dialogBoxPro.dialog('option','height', $(window).height()-80);
-        var htmlLoad = '<html><head><link rel="stylesheet" type="text/css" datastyle="seipro-fonticon" href="'+URL_SPRO+'css/fontawesome.pro.min.css"></head><div style="text-align: center;font-size: 5em;padding-top: calc(50% - 2em);color: #ccc;"><i class="fas fa-sync fa-spin" style=""></i></div></html>';
-        $('.iframeBoxDiv').show().find('iframe').contents().find('html').html(htmlLoad);
+        // Tela de espera no iframe do diff: marcacao da extensao, por DOM API (o <link> nao passa no portao).
+        var docLoad = $('.iframeBoxDiv').show().find('iframe').contents()[0];
+        var raizLoad = docLoad.documentElement;
+        while (raizLoad.firstChild) raizLoad.removeChild(raizLoad.firstChild);
+        var headLoad = docLoad.createElement('head'), bodyLoad = docLoad.createElement('body'), linkLoad = docLoad.createElement('link');
+        linkLoad.setAttribute('rel', 'stylesheet');
+        linkLoad.setAttribute('type', 'text/css');
+        linkLoad.setAttribute('datastyle', 'seipro-fonticon');
+        linkLoad.setAttribute('href', URL_SPRO+'css/fontawesome.pro.min.css');
+        headLoad.appendChild(linkLoad);
+        raizLoad.appendChild(headLoad);
+        raizLoad.appendChild(bodyLoad);
+        htmlPro(bodyLoad, '<div style="text-align: center;font-size: 5em;padding-top: calc(50% - 2em);color: #ccc;"><i class="fas fa-sync fa-spin" style=""></i></div>');
         $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", true).addClass("ui-state-disabled");
 
         getContentDocSEI(param, function(compareHTML) {
@@ -2801,7 +2829,7 @@ function getCompareDocs(this_) {
                 $('.iframeBoxDiv iframe').contents().find("[onclick]").each(function(){ $(this).removeAttr('onclick')});
             }, 200);
             
-            $('.iframeBoxDiv iframe').contents().find('html').html(output);
+            reescreverDocumentoPro($('.iframeBoxDiv iframe').contents().find('html'), output);
             $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", false).removeClass("ui-state-disabled");
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log({originalHTML:originalHTML, compareHTML:compareHTML});
         });
@@ -2875,7 +2903,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
     if (data.mode == 'descricao') {
         var textTitle = 'Editar especifica\u00E7\u00E3o do processo';
         var textBox =   '<div class="dialogBoxDiv seiProForm">'+
-                        '   <input maxlength="100" value="'+prop.txtDescricao+'" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 100%;">'+
+                        '   <input maxlength="100" value="'+prop.txtDescricao+'" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 100%;">'+
                         '</div>';
     } else if (data.mode == 'tipo_procedimento') {
         var textTitle = 'Editar tipo de procedimento';
@@ -2940,7 +2968,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '               <i class="iconPopup fas fa-clock azulColor"></i> <span>Data de Reabertura</span>'+
                         '          </td>'+
                         '          <td class="input" style="position:relative">'+
-                        '               <input type="datetime-local" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
+                        '               <input type="datetime-local" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
                         '           </td>'+
                         '      </tr>'+
                         '': '')+
@@ -3036,8 +3064,8 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '          </td>'+
                         '          <td class="input" style="position:relative">'+
                         '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(datePrazoDue ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
-                        '               <input type="date" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
-                        '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+ 
+                        '               <input type="date" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
+                        '               <input type="time" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+ 
                         '           </td>'+
                         '      </tr>'+
                         '      <tr style="height: 40px;">'+
@@ -3296,7 +3324,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                             var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                             return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                         }).join('');
-                        $('#configDatesBox_tag').html(htmlOptions).chosenImage().trigger('chosen:activate');
+                        htmlPro($('#configDatesBox_tag'), htmlOptions).chosenImage().trigger('chosen:activate');
                     } else {
                         var ifrArvore = $('#ifrArvore');
                         var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
@@ -3313,7 +3341,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                     var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                                     return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                                 }).join('');
-                                $('#configDatesBox_tag').html(htmlOptions).chosenImage().trigger('chosen:activate');
+                                htmlPro($('#configDatesBox_tag'), htmlOptions).chosenImage().trigger('chosen:activate');
                             });
                         }
                     }
@@ -3369,7 +3397,7 @@ function getRemoverMarcador(alert = true, callback = false) {
         concluirRemoverMarcadorPro();
     };
     $.ajax({ url: href }).done(function (html) {
-        var $html = $(html);
+        var $html = lerHtmlPro(html);
         var urlRemover = (String(html).match(/'([^']*acao=andamento_marcador_remover[^']*)'/) || [])[1];
         // Formulario de cadastro do SEI 4.1/5 (frmAndamentoMarcadorCadastro): o SEI so abre ele direto quando o
         // processo nao tem marcador na unidade. Gravar o marcador vazio ali so da "Marcador nao informado".
@@ -3449,9 +3477,7 @@ function getMarcadoresListagemPro($html) {
 // para HTML e JavaScript (\' e &quot;) e com " - DESATIVADO" quando o marcador foi desativado; o da listagem e o
 // salvo pelo painel vem sem escape. Os dois lados passam pela mesma normalizacao.
 function normalizarNomeMarcadorPro(nome) {
-    var t = document.createElement('textarea');
-        t.innerHTML = String(nome || '');
-    return t.value.replace(/\\(['"\\])/g, '$1').replace(/\s+-\s+DESATIVADO\s*$/, '').trim();
+    return decodificarEntidadesPro(String(nome || '')).replace(/\\(['"\\])/g, '$1').replace(/\s+-\s+DESATIVADO\s*$/, '').trim();
 }
 // Entrada do cache dadosMarcadoresProcessoPro a partir de um item de getMarcadoresListagemPro. O painel da arvore
 // (getHtmlMarcador) poe marcador e texto direto no HTML: o cache da tela inicial vem do tooltip do SEI, ainda escapado
@@ -3481,7 +3507,7 @@ function postRemoverMarcadoresListagemPro(href, $html, html, ids, callback, call
         // mexe no documento aberto na visualizacao).
         var urlArvoreRemover = (String(htmlRemover).match(/getElementById\(\s*['"]ifrArvore['"]\s*\)\.src\s*=\s*'([^']+)'/) || [])[1];
         $.ajax({ url: href }).done(function (htmlDepois) {
-            var $htmlDepois = $(htmlDepois);
+            var $htmlDepois = lerHtmlPro(htmlDepois);
             // Sem marcador, o SEI troca a listagem pelo formulario de cadastro (#hdnIdMarcador).
             var paginaValida = $htmlDepois.find('#frmGerenciarMarcador, #hdnIdMarcador').length > 0;
             var marcadoresRestantes = getMarcadoresListagemPro($htmlDepois);
@@ -3505,7 +3531,7 @@ function getLinkArvoreProcessoPro(idProcedimento, nameLink, callback) {
         if (hrefArvore) { callback(hrefArvore); return; }
     }
     $.ajax({ url: 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento }).done(function (html) {
-        var urlArvore = $(html).find('#ifrArvore').attr('src');
+        var urlArvore = lerHtmlPro(html).find('#ifrArvore').attr('src');
         if (!urlArvore) { callback(false); return; }
         $.ajax({ url: urlArvore }).done(function (htmlArvore) {
             var hrefAjax = jmespath.search(getLinksArvoreAjax(String(htmlArvore)), "[?name=='"+nameLink+"'].url | [0]");
@@ -3574,7 +3600,7 @@ function setMarcadorProcessoPro(idProcedimento, valuesIframe, removerMarcador, c
     getLinkArvoreProcessoPro(idProcedimento, 'Gerenciar Marcador', function(href){
         if (!href) { erroMarcador(); return; }
         $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
+            var $html = lerHtmlPro(html);
             // SEI 4.1/5 sem marcador no processo: o link abre direto o formulario de cadastro.
             if ($html.find('#frmAndamentoMarcadorCadastro').length) {
                 if (idMarcador == '') { concluirMarcador(); return; }
@@ -3605,10 +3631,10 @@ function setMarcadorProcessoPro(idProcedimento, valuesIframe, removerMarcador, c
             var urlForm = getUrlBotaoAdicionarPro($html);
             if (!urlForm) { erroMarcador(); return; }
             $.ajax({ url: urlForm }).done(function (htmlForm) {
-                postFormCadastroMarcadorPro($(htmlForm), idMarcador, texto, function(){
+                postFormCadastroMarcadorPro(lerHtmlPro(htmlForm), idMarcador, texto, function(){
                     if (typeof removerMarcador !== 'function') { concluirMarcador(); return; }
                     $.ajax({ url: href }).done(function (htmlListagem) {
-                        removerDaListagem($(htmlListagem), htmlListagem);
+                        removerDaListagem(lerHtmlPro(htmlListagem), htmlListagem);
                     }).fail(function(){ erroMarcador(); });
                 }, erroMarcador);
             }).fail(function(){ erroMarcador(); });
@@ -3655,7 +3681,7 @@ function getAjaxListaMarcador(callback = false) {
             data: param,
             url: href
         }).done(function (html) {
-            var listaMarcadoresSEI = getListaMarcadores($(html));
+            var listaMarcadoresSEI = getListaMarcadores(lerHtmlPro(html));
             if (typeof callback === 'function' && listaMarcadoresSEI.array.length > 0) callback();
         });
     }
@@ -3703,7 +3729,7 @@ function getSelectAtribuicaoProcesso(callback = false, iframe = false) {
     var href = jmespath.search(arrayLinksArvore, "[?name=='Atribuir Processo'].url | [0]");
     if (href !== null) {
         $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
+            var $html = lerHtmlPro(html);
             var selectAtribuicao = $html.find('#selAtribuicao option').map(function(){ if($(this).text().trim() != '') { return {name: $(this).text().trim(), value: $(this).val()} } }).get();
                 setOptionsPro('arrayListUsersSEI',selectAtribuicao);
             if (selectAtribuicao.length && typeof callback === 'function') {
@@ -3798,7 +3824,7 @@ function changeSelectHipoteseLegal(this_) {
 }
 function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipoteses'), nivelAcesso = 1) {
     getHipoteseLegal(dadosProcessoPro.propProcesso.urlHipoteseLegal, nivelAcesso, function(html_result){
-        elementHipotese.show().html(html_result);
+        htmlPro(elementHipotese.show(), html_result);
         if (dadosProcessoPro.propProcesso.selHipoteseLegal) {
             elementHipotese.val(dadosProcessoPro.propProcesso.selHipoteseLegal);
         }
@@ -3945,7 +3971,7 @@ function getProcessoNaoLido() {
         var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
         if (href !== null) {
             $.ajax({ url: href }).done(function (html) {
-                var $html = $(html);
+                var $html = lerHtmlPro(html);
                 var urlArvore = $html.find("#ifrArvore").attr('src');
                 $.ajax({ url: urlArvore }).done(function (htmlArvore) {
                     var arrayLinksArvore = getLinksArvoreAjax(htmlArvore);
@@ -3955,7 +3981,7 @@ function getProcessoNaoLido() {
                     if (urlAndamento !== null && urlEnviar !== null) {
 
                         $.ajax({ url: urlAndamento }).done(function (htmlDoc) {
-                            var $htmlDoc = $(htmlDoc);
+                            var $htmlDoc = lerHtmlPro(htmlDoc);
                             var form = $htmlDoc.find('#frmAtividadeListar');
                             var hrefForm = form.attr('action');
                             var param = {};
@@ -4010,7 +4036,7 @@ function getProcessoNaoLido() {
                                 if (status) {
                         
                                     $.ajax({ url: urlEnviar }).done(function (htmlDoc) {
-                                        var $htmlDoc = $(htmlDoc);
+                                        var $htmlDoc = lerHtmlPro(htmlDoc);
                                         var form = $htmlDoc.find('#frmAtividadeListar');
                                         var hrefForm = form.attr('action');
                                         var param = {};
@@ -7400,7 +7426,7 @@ function addTrancadoProcessoPro() {
 function dialogCopyNewDoc(doc) {
     var textBox =   '<div>Digite o n\u00FAmero do processo que deseja copiar o documento <span style="display: inline-block; padding: 3px 5px; margin: 3px 5px;background: #eaeaea; border-radius: 5px; color: #666;">'+doc.text().trim()+'</span></div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
-                    '   <input onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 80%;">'+
+                    '   <input data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 80%;">'+
                     '</div>';
     removeOptionsPro('currentCloneDoc');
 
@@ -7933,10 +7959,11 @@ function checkFormRequiredPro(elementForm) {
     });
     return required;
 }
-// Campo da frase de confirmacao: Enter confirma, e o botao so acende com a frase certa.
-function teclaConfirmaFrasePro(el, ev) {
+// Enter num campo de dialogo aciona o botao de confirmar (o .confirm do jQuery UI).
+function enterConfirmaDialogoPro(el, ev) {
     if (ev.which == 13) { $(el).closest('.ui-dialog').find('.confirm.ui-button').trigger('click'); }
 }
+// A frase de confirmacao: o botao so acende com a frase certa.
 function conferirFrasePro(el, ev, frase) {
     updateButtonConfirm(el, frase == $(el).val().trim().toUpperCase());
 }
@@ -7948,7 +7975,7 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
     }
     var phraseDiv = '<div class="dialogBoxDiv">Para confirmar, digite <b style="font-weight: bold;">'+phrase.toUpperCase()+'</b>:</div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
-                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" data-spro-keypress="teclaConfirmaFrasePro" data-spro-input="conferirFrasePro" data-spro-args="'+argsPro('$el', '$ev', phrase.toUpperCase())+'" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
+                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" data-spro-keypress="enterConfirmaDialogoPro" data-spro-input="conferirFrasePro" data-spro-args="'+argsPro('$el', '$ev', phrase.toUpperCase())+'" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
                     '</div>';
     alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
         .dialog({
@@ -9517,7 +9544,7 @@ function batchActionsPro(this_) {
                                             '   </div>'+
                                             '   <div class="configBoxPro_pwdSenha" style="margin-top:20px">'+
                                             '       <label style="margin-bottom: 10px;display: block;">Senha</label>'+
-                                            '       <input id="configBoxPro_pwdSenha" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" autocomplete="off" type="password" style="font-size: 10pt; width: 96%;">'+
+                                            '       <input id="configBoxPro_pwdSenha" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" autocomplete="off" type="password" style="font-size: 10pt; width: 96%;">'+
                                             '   </div>'+
                                             '</div>';
                                 resetDialogBoxPro('configBoxPro');
