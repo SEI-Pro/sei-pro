@@ -59,8 +59,24 @@ function encodeUrlUploadArvore(response, params) {
 
     return hdnAnexos;
 }
+// A selecao dos paineis da arvore (Painel de Informacoes) nao depende do menu rapido: o initStylePanelArvore
+// espera por ela. Antes ela so era lida dentro do setToolbarDocs, entao com o menu rapido desligado (ou cedido ao
+// modulo processo/) o painel legado nunca era estilizado.
+function loadSelectedItensPanelArvorePro() {
+    selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
+    return selectedItensPanelArvore;
+}
+// Com o modulo processo/ o menu rapido da arvore (menu do processo e dos documentos, icones fixos) e dele.
+function menuCedidoPro() {
+    return document.documentElement.hasAttribute('data-seipro-processo-menu');
+}
 function initToolbarDocs(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
+    if (menuCedidoPro()) {
+        loadSelectedItensPanelArvorePro();
+        if (typeof getTooltipOnSign === 'function') getTooltipOnSign();
+        return;
+    }
     if (typeof jmespath !== 'undefined' && typeof typeof $().toolbar !== 'undefined') { 
         setToolbarDocs();
     } else {
@@ -75,7 +91,8 @@ function setToolbarDocs() {
     var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? (function(l){ return Array.isArray(l) ? l.map(function(v){ return (v && v[0] == 'A\u00E7\u00F5es em lote') ? ['A\u00E7\u00F5es em Lote'] : v; }) : l; })(localStorageRestorePro('configViewFlashMenuPro')) : [['Copiar n\u00FAmero do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['A\u00E7\u00F5es em Lote'],['Atribuir Processo'],['Add/Remover Urg\u00EAncia']];
     var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento'],['Duplicar documento'],['Copiar para...']];
     var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
-        selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
+        selectedItensPanelArvore = loadSelectedItensPanelArvorePro();
+    if (menuCedidoPro()) { getTooltipOnSign(); return; }
     
     var htmlToolbarProc =   '<div id="toolbar-options-proc" class="hidden">';
         if (getOptionsPro('optionsFlashMenu_menuproc') != 'disabled') {
@@ -121,6 +138,24 @@ function setToolbarDocs() {
     var click = ( jmespath.search(selectedItensDocMenu, "[?[0]=='Ativar menu ao clicar'] | length(@)") > 0 ) ? true : false;
     getToolbarPro(click); 
     getTooltipOnSign();
+}
+// Pedidos do modulo processo/ (mundo isolado) para as telas que o legado ainda desenha: o modulo grava o pedido no
+// <html> e dispara o evento; aqui (mundo da pagina) o pedido e lido e apagado na hora. Registrado uma vez so por janela.
+if (!window.__seiProMenuPonteArvore) {
+    window.__seiProMenuPonteArvore = true;
+    document.addEventListener('seipro-processo-menu', function () {
+        var partes = (document.documentElement.getAttribute('data-spro-pm-pedido') || '').split('|');
+        document.documentElement.removeAttribute('data-spro-pm-pedido');
+        if (partes[0] == 'copiar-para') {
+            parent.dialogCopyNewDoc($('#anchor' + partes[1]));
+        } else if (partes[0] == 'enviar-externo') {
+            openModalDropzone();
+        } else if (partes[0] == 'acoes-em-lote') {
+            parent.getDocumentosActions();
+        } else if (partes[0] == 'personalizar') {
+            parent.configFlashMenuPro(arrayLinksArvore);
+        }
+    });
 }
 function getTooltipOnSign() {
     $('img[id*="iconA"], img[id*="iconCD"], img[id*="iconNA"]').each(function(){ 
@@ -296,6 +331,7 @@ function checkToolbarToClose() {
     }, 1000);
 }
 function getToolbarPro(click) {
+    if (menuCedidoPro()) { return; }
     if ( typeof parent.dadosProcessoPro !== 'undefined') {
         let elemProc = parent.isSEI_5
             ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
@@ -577,6 +613,7 @@ function initChangeUrl() {
     });
 }
 function addIconActionsArvore(param) {
+    if (menuCedidoPro()) { return; }
     $(containerUpload).find('.action-'+param.mode).remove();
     $(containerUpload).find(`a[target="${parent.ifrVisualizacao_}"]`).each(function(){
         var name = (param.alt == '') ? param.name : param.alt;
@@ -2635,6 +2672,7 @@ function stylePanelArvore() {
 function initStylePanelArvore(TimeOut = 9000) {
 
     if (TimeOut <= 0 || (!parent.isSEI_5 && (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
+    if (!selectedItensPanelArvore && typeof localStorageRestorePro === 'function' && typeof $ === 'function') loadSelectedItensPanelArvorePro();
     if (
         typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
         selectedItensPanelArvore.length && 

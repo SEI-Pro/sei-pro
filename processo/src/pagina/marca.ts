@@ -4,7 +4,7 @@
  * Observações, Bloco Interno). O content script roda no document_start, então o atributo existe antes de o
  * legado olhar. Só nos quadros da árvore (acao=procedimento_visualizar), nunca na janela de topo.
  */
-import { ATRIBUTO_PAINEIS } from "./../modelo/constantes";
+import { ATRIBUTO_MENU, ATRIBUTO_PAINEIS } from "./../modelo/constantes";
 
 export function ehQuadroDaArvore(janela: Pick<Window, "location" | "top">): boolean {
   return janela !== janela.top && /[?&]acao=procedimento_visualizar(&|$)/.test(janela.location.search);
@@ -12,6 +12,15 @@ export function ehQuadroDaArvore(janela: Pick<Window, "location" | "top">): bool
 
 export function marcarAtivo(doc: Document): void {
   doc.documentElement?.setAttribute(ATRIBUTO_PAINEIS, "1");
+}
+
+/**
+ * Sinal para o legado: com este atributo, o `sei-pro-arvore.js` não monta mais o menu rápido da árvore (o menu do
+ * processo e dos documentos, feito com jquery.toolbar) nem os ícones fixos ao lado dos documentos. Quem os desenha é
+ * `menuDoc/`. Também síncrono, no document_start, só nos quadros da árvore.
+ */
+export function marcarMenu(doc: Document): void {
+  doc.documentElement?.setAttribute(ATRIBUTO_MENU, "1");
 }
 
 /**

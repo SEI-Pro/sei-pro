@@ -5,8 +5,8 @@
  */
 import type { Arvore } from "@nucleo/dominio/arvore";
 import { type AcoesDoPainel, acoesDoPainel } from "@nucleo/dominio/painelProcesso";
-import { lerContexto, Sei } from "@nucleo/sei";
-import type { Pagina } from "@nucleo/sessao/http";
+import { type Localizado, lerContexto, Sei } from "@nucleo/sei";
+import type { OpcoesHttp, Pagina } from "@nucleo/sessao/http";
 import { paginaDe } from "@nucleo/sessao/pagina";
 import type { LojaProcesso } from "../modelo/loja";
 import type { TipoPainel } from "../modelo/paineis";
@@ -64,6 +64,20 @@ export class SeiDaPagina extends Sei {
 
   override async arvore(): Promise<Arvore> {
     return this.daTela();
+  }
+
+  /**
+   * O processo da tela e os documentos dela se resolvem sem a pesquisa rápida (que seria uma requisição a mais, e
+   * abriria a árvore de novo). Qualquer outra referência segue o caminho de sempre.
+   */
+  override async localizar(referencia: string, op?: OpcoesHttp): Promise<Localizado> {
+    const arv = this.daTela();
+    const ref = referencia.trim();
+    const digitos = ref.replace(/\D/g, "");
+    if (ref === arv.protocolo) return { idProcedimento: arv.idProcedimento, linkArvore: arv.linkProcesso };
+    const d = digitos ? arv.documentos.find((x) => x.numero.replace(/\D/g, "") === digitos) : undefined;
+    if (d) return { idProcedimento: arv.idProcedimento, idDocumento: d.id, linkArvore: arv.linkProcesso };
+    return super.localizar(referencia, op);
   }
 }
 

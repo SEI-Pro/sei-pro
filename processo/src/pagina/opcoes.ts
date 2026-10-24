@@ -30,7 +30,7 @@ export function lerSelecao(a: Armazenamento): string[] | null {
   return nomes.length ? nomes : null;
 }
 
-function opcoes(a: Armazenamento): Record<string, unknown> {
+export function opcoes(a: Armazenamento): Record<string, unknown> {
   const v = json(a, CHAVE_OPCOES);
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
@@ -52,4 +52,20 @@ export function gravarAberto(a: Armazenamento, tipo: TipoPainel, aberto: boolean
   } catch {
     // sem localStorage (janela privada, cota): o painel só não lembra o estado
   }
+}
+
+/**
+ * Lista personalizada do menu (`configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro`):
+ * `[["Copiar número SEI"],["Duplicar documento"],...]`, na ordem escolhida. null = nunca personalizou (vale o padrão).
+ */
+export function lerListaDoMenu(a: Armazenamento, chave: string): string[] | null {
+  const v = json(a, chave);
+  if (!Array.isArray(v) || !v.length) return null;
+  const nomes = v.map((x) => (Array.isArray(x) ? x[0] : x)).filter((x): x is string => typeof x === "string");
+  return nomes.length ? nomes : null;
+}
+
+/** O bloco do menu (`menuproc`, `menudoc`, `iconstree`) está ligado? O legado só desliga com "disabled". */
+export function blocoDoMenuLigado(a: Armazenamento, bloco: "menuproc" | "menudoc" | "iconstree"): boolean {
+  return opcoes(a)[`optionsFlashMenu_${bloco}`] !== "disabled";
 }

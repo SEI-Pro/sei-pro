@@ -24,7 +24,7 @@ const dadoDe = (ctx: ContextoProcesso) => {
 /** Pode editar: o processo está aberto na unidade e não é sigiloso. */
 const editavel = (ctx: ContextoProcesso): boolean => !ctx.sigiloso && Boolean(dadoDe(ctx)?.editavel);
 
-async function alternar(ctx: ContextoProcesso, marca: MarcaEspecificacao): Promise<void> {
+export async function alternarMarcaDoProcesso(ctx: ContextoProcesso, marca: MarcaEspecificacao): Promise<void> {
   const d = dadoDe(ctx);
   if (!d) return;
   const ligar = !temMarca(d.especificacao, marca);
@@ -75,14 +75,14 @@ export const painelDescricao: DefPainel = {
         icone: "alerta",
         rotulo: temMarca(d.especificacao, "URGENTE") ? "Remover a marca de urgência" : "Marcar como urgente",
         ativa: temMarca(d.especificacao, "URGENTE"),
-        aoClicar: () => void alternar(ctx, "URGENTE"),
+        aoClicar: () => void alternarMarcaDoProcesso(ctx, "URGENTE"),
       });
       if (ctx.usaTrancado)
         acoes.push({
           icone: "cadeado",
           rotulo: temMarca(d.especificacao, "TRANCADO") ? "Remover o trancamento" : "Trancar para peticionamento intercorrente",
           ativa: temMarca(d.especificacao, "TRANCADO"),
-          aoClicar: () => void alternar(ctx, "TRANCADO"),
+          aoClicar: () => void alternarMarcaDoProcesso(ctx, "TRANCADO"),
         });
       acoes.push({
         icone: "lapis",

@@ -43,6 +43,9 @@ const PROIBIDOS = [
 
 // marca.ts so LE a propria URL para saber se este quadro e o da arvore (acao=procedimento_visualizar); nao busca nada.
 const SO_LEITURA_DA_PROPRIA_URL = new Set(["src/pagina/marca.ts"]);
+// O catalogo do menu da arvore cita enderecos de acao (ex.: o botao "Atribuir Processo" do processo) so como DADO,
+// para casar com os links assinados que a arvore ja traz; nao busca nada. Quem navega ate la e o proprio botao nativo.
+const SO_CITA_ENDERECOS = new Set(["src/pagina/menuDoc/catalogo.ts"]);
 
 async function fontes(dir) {
   const saida = [];
@@ -62,7 +65,7 @@ for (const dir of ["src/pagina", "src/capa", "src/ui", "src/gantt"]) {
     const codigo = (await readFile(f, "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     const rel = f.replace(`${AQUI}/`, "");
     for (const [re, motivo] of PROIBIDOS) {
-      if (re.test(codigo) && !(SO_LEITURA_DA_PROPRIA_URL.has(rel) && motivo.startsWith("endereco"))) {
+      if (re.test(codigo) && !((SO_LEITURA_DA_PROPRIA_URL.has(rel) || SO_CITA_ENDERECOS.has(rel)) && motivo.startsWith("endereco"))) {
         console.error(`ERRO: ${f.replace(AQUI + "/", "")} contem ${motivo}.`);
         process.exit(1);
       }

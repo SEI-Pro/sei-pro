@@ -15,12 +15,16 @@ import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
 import { criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
 import { criarLeituras } from "./leituras";
-import { dentroDoVerificadorOculto, ehQuadroDaArvore, marcarAtivo } from "./marca";
+import { dentroDoVerificadorOculto, ehQuadroDaArvore, marcarAtivo, marcarMenu } from "./marca";
+import { ligarMenuDaArvore } from "./menuDoc/ligar";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
 
 definirCss(`${base}\n${proprio}`);
-if (ehQuadroDaArvore(window)) marcarAtivo(document);
+if (ehQuadroDaArvore(window)) {
+  marcarAtivo(document);
+  marcarMenu(document);
+}
 
 const global = window as unknown as { __seiProProcessoPaineis?: boolean };
 if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVerificadorOculto(window)) {
@@ -33,7 +37,9 @@ if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVeri
 async function principal(): Promise<void> {
   if (!document.querySelector("#topmenu") && !document.querySelector("#divArvore") && !document.getElementById("frmArvore")) return;
   const { dataValues } = (await chrome.storage.sync.get("dataValues")) as { dataValues?: unknown };
-  if (!opcaoLegadaLigada(dataValues, "infoarvore") || !painelLigado(localStorage)) return;
+  const comPaineis = opcaoLegadaLigada(dataValues, "infoarvore") && painelLigado(localStorage);
+  const comMenu = opcaoLegadaLigada(dataValues, "menurapido");
+  if (!comPaineis && !comMenu) return;
   const arv = await aguardarArvore(document);
   if (!arv) {
     console.warn("[SEI Pro] painéis do processo: a árvore não chegou no prazo.");
@@ -65,7 +71,10 @@ async function principal(): Promise<void> {
       if (buscar) void loja.carregar(n, buscar);
     },
   });
-  manterMontagem(ctx);
-  ligarMarcaDoMenu(ctx);
-  for (const n of fatiasNecessarias(ctx)) ctx.recarregar(n);
+  if (comPaineis) {
+    manterMontagem(ctx);
+    ligarMarcaDoMenu(ctx);
+    for (const n of fatiasNecessarias(ctx)) ctx.recarregar(n);
+  }
+  if (comMenu) ligarMenuDaArvore({ ctx, dataValues, http });
 }
