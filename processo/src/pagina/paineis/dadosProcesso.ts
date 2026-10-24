@@ -7,7 +7,9 @@ import { corpoPorEstado, nota, vazio } from "../../ui/estados";
 import type { AcaoPainel } from "../../ui/painel";
 import { avisarNoTopo, ICONE_DO_NIVEL, mensagemDeErro, ROTULO_DO_NIVEL } from "../comum";
 import type { ContextoProcesso } from "../contexto";
+import { abrirModalProcessosDoInteressado } from "../modais/interessado";
 import {
+  abrirModalAssuntos,
   abrirModalEspecificacao,
   abrirModalInteressados,
   abrirModalNivel,
@@ -169,9 +171,31 @@ export const painelInteressados: DefPainel = {
             : [],
         corpo: comDados(ctx, (v) =>
           v.valor.interessados.length
-            ? v.valor.interessados.map((nome) =>
-                h("div", { class: "spro-p-linha interessado" }, ...partesDoInteressado(nome).map((p) => copiavel(ctx, p))),
-              )
+            ? v.valor.interessados.map((nome, i) => {
+                const doCadastro = v.valor.interessadosItens?.[i];
+                const id = doCadastro && doCadastro.texto === nome ? doCadastro.id : undefined;
+                return h(
+                  "div",
+                  { class: "spro-p-linha interessado" },
+                  ...partesDoInteressado(nome).map((p) => copiavel(ctx, p)),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "spro-p-acao spro-p-proc-do-interessado",
+                      "aria-label": `Processos de ${nome}`,
+                      onclick: () =>
+                        abrirModalProcessosDoInteressado(ctx, {
+                          nome,
+                          ...(id ? { id } : {}),
+                          ...(v.valor.idTipo ? { tipo: v.valor.idTipo } : {}),
+                          ...(v.valor.tipo ? { tipoNome: v.valor.tipo } : {}),
+                        }),
+                    },
+                    icone("busca", 14),
+                  ),
+                );
+              })
             : [vazio("Sem interessados.")],
         ),
       },
@@ -188,6 +212,10 @@ export const painelAssuntos: DefPainel = {
     return {
       estado: f.estado,
       desenho: {
+        acoes:
+          dadoDe(ctx) && editavel(ctx)
+            ? [{ icone: "lapis", rotulo: "Editar assuntos", aoClicar: () => abrirModalAssuntos(ctx) }]
+            : [],
         corpo: comDados(ctx, (v) =>
           v.valor.assuntos.length ? v.valor.assuntos.map((a) => linha(copiavel(ctx, a))) : [vazio("Sem assuntos.")],
         ),

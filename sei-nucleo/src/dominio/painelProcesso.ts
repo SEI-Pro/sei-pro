@@ -19,6 +19,7 @@ import { acaoNaArvore, type Arvore } from "./arvore";
 import type { Andamento } from "./historico";
 import { hipotesesDoFormulario } from "./escrita";
 import { Formulario, type ItemLupa } from "../formulario/formulario";
+import { lerNegados, linkAutoCompletar, pesquisarNoAutoCompletar, valorCodificadoNoAutoCompletar } from "./lupas";
 import { linkDaAcao } from "../links/links";
 import { lerString } from "../sessao/literais";
 import { analisarHtml, textoDe } from "../sessao/dom";
@@ -395,6 +396,14 @@ export interface FormularioDoProcesso {
   nivel: string;
   hipoteseAtual?: string;
   interessados: ItemLupa[];
+  assuntos: ItemLupa[];
+  /** id do item -> sigla da unidade que o acrescentou: esta unidade não pode retirá-lo (regra da tela nativa). */
+  interessadosNegados: ReadonlyMap<string, string>;
+  assuntosNegados: ReadonlyMap<string, string>;
+  /** Pesquisa de assuntos pelo autocompletar da própria tela (link colhido do script dela, nunca montado). */
+  pesquisarAssuntos(termo: string, sinal?: AbortSignal): Promise<ItemLupa[]>;
+  /** Pesquisa de contatos (interessados) pelo autocompletar da própria tela. */
+  pesquisarContatos(termo: string, sinal?: AbortSignal): Promise<ItemLupa[]>;
   /** Hipóteses legais de um nível ("1" restrito, "2" sigiloso): a tela só as preenche por AJAX. */
   hipoteses(nivel: string, sinal?: AbortSignal): Promise<OpcaoLista[]>;
 }
@@ -413,8 +422,27 @@ export async function lerFormularioDoProcesso(sei: Sei, arv: Arvore, op?: Opcoes
     nivel: f.valor("rdoNivelAcesso") ?? "",
     ...(hip ? { hipoteseAtual: hip } : {}),
     interessados: f.itensLupa("selInteressadosProcedimento"),
+    assuntos: f.itensLupa("selAssuntos"),
+    interessadosNegados: lerNegados(f.pagina.html, "interessado"),
+    assuntosNegados: lerNegados(f.pagina.html, "assunto"),
+    pesquisarAssuntos: (termo, sinal) => pesquisarNaTelaDoProcesso(sei, f, "hdnIdAssunto", "assuntos", termo, sinal),
+    pesquisarContatos: (termo, sinal) => pesquisarNaTelaDoProcesso(sei, f, "hdnIdInteressadoProcedimento", "contatos", termo, sinal),
     async hipoteses(nivel, sinal) {
       return (await hipotesesDoFormulario(sei, f, nivel, sinal)).map((h) => ({ valor: h.id, texto: h.texto }));
     },
   };
+}
+
+/** Autocompletar da tela "Consultar/Alterar Processo" já aberta: o link vem do script da tela. */
+async function pesquisarNaTelaDoProcesso(
+  sei: Sei,
+  f: Formulario,
+  hdnId: string,
+  nome: string,
+  termo: string,
+  sinal?: AbortSignal,
+): Promise<ItemLupa[]> {
+  const link = linkAutoCompletar(f.pagina.html, hdnId);
+  if (!link) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", `A tela de altera\u00E7\u00E3o do processo n\u00E3o tem a pesquisa de ${nome}.`);
+  return pesquisarNoAutoCompletar(sei, link, termo, sinal, valorCodificadoNoAutoCompletar(f.pagina.html, hdnId));
 }

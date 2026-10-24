@@ -69,3 +69,33 @@ export function lerListaDoMenu(a: Armazenamento, chave: string): string[] | null
 export function blocoDoMenuLigado(a: Armazenamento, bloco: "menuproc" | "menudoc" | "iconstree"): boolean {
   return opcoes(a)[`optionsFlashMenu_${bloco}`] !== "disabled";
 }
+
+/**
+ * Filtros da pesquisa "processos deste interessado", com as MESMAS chaves do legado (`optionsPro`): a escolha de quem já
+ * usava não se perde. O legado gravava um booleano; aceita também o texto.
+ */
+export interface FiltroDoInteressado {
+  tramitadoNaUnidade: boolean;
+  mesmaNatureza: boolean;
+}
+
+const verdadeiro = (v: unknown): boolean => v === true || v === "true";
+
+export function lerFiltroDoInteressado(a: Armazenamento): FiltroDoInteressado {
+  const o = opcoes(a);
+  return {
+    tramitadoNaUnidade: verdadeiro(o.panelDadosArvoreInteressados_tramiteUnidade),
+    mesmaNatureza: verdadeiro(o.panelDadosArvoreInteressados_mesmaNatureza),
+  };
+}
+
+export function gravarFiltroDoInteressado(a: Armazenamento, f: FiltroDoInteressado): void {
+  try {
+    const o = opcoes(a);
+    o.panelDadosArvoreInteressados_tramiteUnidade = f.tramitadoNaUnidade;
+    o.panelDadosArvoreInteressados_mesmaNatureza = f.mesmaNatureza;
+    a.setItem(CHAVE_OPCOES, JSON.stringify(o));
+  } catch {
+    // sem localStorage: o filtro só vale nesta abertura
+  }
+}

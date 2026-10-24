@@ -1,8 +1,8 @@
 import { h } from "@comum/ui/dom";
 import type { FormularioDoProcesso, OpcaoLista } from "@nucleo/dominio/painelProcesso";
-import type { ItemLupa } from "@nucleo/formulario/formulario";
 import type { ContextoProcesso } from "../contexto";
 import { abrirDialogo, botaoPrimario, campo, type Dialogo, listaComBusca, rodape } from "./comum";
+import { abrirModalLupa, type CargaLupa } from "./lupa";
 
 /** Dados que os modais do "Consultar/Alterar Processo" precisam do que já está na tela. */
 export interface AtualDoProcesso {
@@ -137,44 +137,38 @@ export function abrirModalObservacoes(ctx: ContextoProcesso, atual: AtualDoProce
   };
 }
 
-/** Interessados: retirar os que não cabem mais (incluir novos continua na tela “Consultar/Alterar Processo” do SEI). */
+const aoCarregarDoFormulario = (ctx: ContextoProcesso, qual: "interessados" | "assuntos") => async (): Promise<CargaLupa> => {
+  const fp = await ctx.op.formularioDoProcesso();
+  return qual === "assuntos"
+    ? { atuais: fp.assuntos, negados: fp.assuntosNegados, pesquisar: (t, sinal) => fp.pesquisarAssuntos(t, sinal) }
+    : { atuais: fp.interessados, negados: fp.interessadosNegados, pesquisar: (t, sinal) => fp.pesquisarContatos(t, sinal) };
+};
+
+/** Interessados: retirar e acrescentar (pesquisa de contatos no próprio SEI). */
 export function abrirModalInteressados(ctx: ContextoProcesso): void {
-  const lugar = carregando("Carregando os interessados…");
-  const d = abrirDialogo(ctx, { titulo: "Interessados do processo", icone: "pessoa", conteudo: [lugar] });
-  void comFormulario(ctx, d, lugar, (fp) => {
-    const restantes = new Map<string, ItemLupa>(fp.interessados.map((i) => [i.id, i]));
-    const linhas = fp.interessados.map((i) => {
-      const retirar = h(
-        "button",
-        { type: "button", class: "spro-p-acao perigo", "aria-pressed": "false", "aria-label": `Retirar ${i.texto}` },
-        "Retirar",
-      );
-      const linha = h("li", { class: "spro-p-linha-modal" }, h("span", { class: "spro-p-texto-modal" }, i.texto), retirar);
-      retirar.addEventListener("click", () => {
-        const sai = restantes.has(i.id);
-        if (sai) restantes.delete(i.id);
-        else restantes.set(i.id, i);
-        linha.toggleAttribute("data-retirado", sai);
-        retirar.textContent = sai ? "Manter" : "Retirar";
-        retirar.setAttribute("aria-pressed", String(sai));
-        salvar.disabled = restantes.size === fp.interessados.length;
-      });
-      return linha;
-    });
-    const salvar = botaoPrimario("Salvar", async () => {
-      const ok = await d.gravar(
-        () => ctx.op.alterarProcesso({ interessados: fp.interessados.filter((i) => restantes.has(i.id)) }),
-        [salvar],
-      );
-      if (ok) ctx.recarregar("dadosProcesso");
-    });
-    salvar.disabled = true;
-    lugar.replaceChildren(
-      linhas.length
-        ? h("ul", { class: "spro-p-lista-modal" }, ...linhas)
-        : h("p", { class: "spro-p-nota" }, "O processo não tem interessados."),
-      h("p", { class: "spro-p-nota" }, "Para incluir um interessado, use Consultar/Alterar Processo no SEI."),
-      rodape(salvar),
-    );
+  abrirModalLupa(ctx, {
+    titulo: "Interessados do processo",
+    icone: "pessoa",
+    nome: "interessado",
+    nomePlural: "interessados",
+    dica: "Digite o nome do contato para pesquisar.",
+    carregar: aoCarregarDoFormulario(ctx, "interessados"),
+    gravar: (itens) => ctx.op.alterarProcesso({ interessados: itens }),
+    depois: () => ctx.recarregar("dadosProcesso"),
+  });
+}
+
+/** Assuntos: retirar e acrescentar (pesquisa de assuntos no próprio SEI). O SEI exige ao menos um. */
+export function abrirModalAssuntos(ctx: ContextoProcesso): void {
+  abrirModalLupa(ctx, {
+    titulo: "Assuntos do processo",
+    icone: "etiqueta",
+    nome: "assunto",
+    nomePlural: "assuntos",
+    dica: "Digite o código ou parte da descrição do assunto.",
+    carregar: aoCarregarDoFormulario(ctx, "assuntos"),
+    gravar: (itens) => ctx.op.alterarProcesso({ assuntos: itens }),
+    depois: () => ctx.recarregar("dadosProcesso"),
+    obrigatorio: "O processo precisa ter ao menos um assunto.",
   });
 }

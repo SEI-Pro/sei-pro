@@ -203,6 +203,19 @@ export async function verificarPaineis(): Promise<void> {
       "tem os botoes de editar quando o processo esta aberto na unidade",
       painel(c3.doc, "descricao")?.querySelectorAll(".spro-p-acao").length === 3,
     );
+    const rotulos = (tipo: string) => [...(painel(c3.doc, tipo)?.querySelectorAll(".spro-p-acao") ?? [])].map((b) => b.getAttribute("aria-label"));
+    checar("assuntos: acao Editar assuntos (adicionar e retirar), com aria-label", rotulos("assuntos").join() === "Editar assuntos", rotulos("assuntos"));
+    checar(
+      "interessados: Editar interessados e, em cada um, Processos de <nome>",
+      rotulos("interessados").includes("Editar interessados") && rotulos("interessados").includes("Processos de Maria Souza (CPF 1)"),
+      rotulos("interessados"),
+    );
+    c3.loja.definir("dadosProcesso", { estado: "pronto", dado: { disponivel: true, valor: { ...meta.valor, editavel: false } }, em: 99 });
+    checar(
+      "processo nao aberto na unidade: assuntos sem edicao; a pesquisa dos processos do interessado continua (so leitura)",
+      rotulos("assuntos").length === 0 && rotulos("interessados").join() === "Processos de Maria Souza (CPF 1)",
+      [rotulos("assuntos"), rotulos("interessados")],
+    );
   }
 
   secao("paineis: Tipo e Nivel aparecem sem rede, da propria arvore");

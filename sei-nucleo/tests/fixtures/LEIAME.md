@@ -39,6 +39,19 @@ Histórico completo (`hdnTipoHistorico=P`), capturado pelo POST do formulário d
 | `sei41/historico_completo_p0.html`, `historico_completo_p1.html` | Páginas 0 e 1 do histórico completo de um processo com 150 andamentos (100 + 50, sem `select` de páginas: só o link de próxima), remessa para várias unidades, reabertura, conclusão, unidades que nunca abriram o processo e linhas `andamentoAberto`. Aqui "Chefia de Gabinete" é o nome de cinco unidades de órgãos diferentes e a sigla SSP-CG aparece com dois nomes. |
 | `sei41/historico_completo_siglas.html` | Histórico completo de um processo com 60 andamentos (uma página): a sigla CGE-CG com dois nomes. |
 
+## Capturas do SEI SP Treinamento (4.1.5) para assuntos, interessados e a pesquisa do interessado, 24/10/2026
+
+Somente leitura: a pesquisa (`protocolo_pesquisar`) e o autocompletar (`controlador_ajax.php`) são consultas do próprio SEI, feitas com a sessão do usuário. Hashes de sessão zerados; o login `pedro.soares` virou `usuario.teste` (inclusive no prefixo do cookie `GESP-TREINAMENTO_SEI_usuario_teste`), o nome do usuário virou `Fulano de Tal` e um login de terceiros (`fendi`) virou `usuario03`. Nomes de unidade, de tipo de processo e de contato são os genéricos do ambiente de treinamento (órgãos e empresas, nenhuma pessoa física).
+
+| Arquivo | Origem |
+|---|---|
+| `sei41/p_pesquisa_interessado_p0.html`, `p_pesquisa_interessado_p1.html` | Pesquisa de PROCESSOS com `hdnIdContato` de um contato órgão (Secretaria da Segurança Pública) que tem 13 processos: página 1 ("Exibindo 1 - 10 de 13") e página 2 (`hdnInicio=10`, a barra diz só "13 resultados"). Cada resultado: número, tipo, unidade (sigla e nome), usuário (login e nome) e data de inclusão. |
+| `sei41/p_pesquisa_interessado_unico.html` | O que o SEI devolve quando a pesquisa por um interessado acha UM só processo: pula direto para `procedimento_trabalhar` (o título da tela traz o número do processo, a URL o `id_procedimento`). |
+| `sei41/ajax_assunto_autocompletar.xml` | Resposta de `assunto_auto_completar_RI1223` para "contratação" (itens `<item id descricao>`, descrição com acentos). |
+| `sei41/ajax_contato_autocompletar.xml` | Resposta de `contato_auto_completar_contexto_RI1225` para "segurança" (a tela envia o termo codificado duas vezes). |
+
+Ainda sem captura do SEI 5.0.4 para estas telas: os ids dos campos e do autocompletar foram conferidos no fonte do 5.0.0 (`procedimento_cadastro.php`: `hdnIdAssunto`, `hdnIdInteressadoProcedimento`, `arrAssuntosNegados`, `arrInteressadosNegados`).
+
 ## Fixtures sintéticas (não são captura)
 
 | Arquivo | Origem | Substituir |

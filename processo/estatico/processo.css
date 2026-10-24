@@ -1377,3 +1377,105 @@ html[data-seipro-processo-paineis] #divRelacionadosParciais a {
   font-size: 12px;
   color: var(--spro-suave);
 }
+
+/* ---------- Modal de lista com pesquisa (assuntos e interessados) ---------- */
+dialog.spro-p-dialogo .spro-p-lupa-titulo {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--spro-suave);
+}
+dialog.spro-p-dialogo .spro-p-lupa-busca {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--spro-borda);
+}
+dialog.spro-p-dialogo .spro-p-lupa-estado {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 1.4em;
+}
+dialog.spro-p-dialogo .spro-p-resultados,
+dialog.spro-p-dialogo .spro-p-lista-modal[aria-label$="no processo"] {
+  max-height: 220px;
+  overflow-y: auto;
+}
+dialog.spro-p-dialogo .spro-p-lista-modal[aria-label$="no processo"] {
+  max-height: 200px;
+}
+dialog.spro-p-dialogo .spro-p-linha-modal[data-estado="novo"] {
+  background: color-mix(in srgb, var(--spro-ok) 9%, var(--spro-fundo-2));
+}
+dialog.spro-p-dialogo .spro-p-linha-modal[data-estado="retirado"] .spro-p-texto-modal {
+  color: var(--spro-fraco);
+  text-decoration: line-through;
+}
+dialog.spro-p-dialogo .spro-p-linha-modal .spro-p-acao:disabled {
+  color: var(--spro-fraco);
+  cursor: default;
+}
+dialog.spro-p-dialogo .spro-p-lupa-situacao {
+  margin-right: auto;
+  align-self: center;
+}
+dialog.spro-p-dialogo .spro-p-vazio {
+  padding: 6px 2px;
+  color: var(--spro-fraco);
+}
+
+/* ---------- Processos do interessado ---------- */
+.spro-p-linha.interessado .spro-p-proc-do-interessado {
+  margin-left: auto;
+  flex: none;
+}
+dialog.spro-p-dialogo .spro-p-interessado-nome {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+dialog.spro-p-dialogo .spro-p-lista-processos {
+  display: grid;
+  gap: 6px;
+  max-height: min(420px, 55vh);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+dialog.spro-p-dialogo .spro-p-processo {
+  display: grid;
+  gap: 2px;
+  padding: 7px 10px;
+  background: var(--spro-fundo-2);
+  border-radius: var(--spro-raio-p, 6px);
+}
+dialog.spro-p-dialogo .spro-p-processo-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+dialog.spro-p-dialogo .spro-p-proc-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+}
+dialog.spro-p-dialogo .spro-p-processo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 12px;
+  color: var(--spro-suave);
+}
+dialog.spro-p-dialogo .spro-p-processos-rodape {
+  display: flex;
+  justify-content: center;
+}
+dialog.spro-p-dialogo .spro-p-esqueleto {
+  padding: 8px 10px;
+  list-style: none;
+}

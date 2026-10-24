@@ -14,6 +14,7 @@
 import { acaoNaArvore, type Arvore, type NivelAcesso } from "./arvore";
 import { hipotesesDoFormulario, mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
 import { escolherItem, Formulario, type ItemLupa } from "../formulario/formulario";
+import { lerNegados } from "./lupas";
 import { linkDaAcao, parametros } from "../links/links";
 import { textoDe } from "../sessao/dom";
 import { ErroSei } from "../sessao/erros";
@@ -54,9 +55,14 @@ function nomes(itens: ItemLupa[]): string[] {
 
 export interface MetadadosProcesso {
   tipo: string;
+  /** Id do tipo de processo (`hdnIdTipoProcedimento`), quando a tela o traz. */
+  idTipo?: string;
   especificacao: string;
   assuntos: string[];
   interessados: string[];
+  /** Os mesmos assuntos e interessados com o id que o formulário guarda (a lupa), na mesma ordem. */
+  assuntosItens?: ItemLupa[];
+  interessadosItens?: ItemLupa[];
   observacoes: string;
   /** Observações das OUTRAS unidades (tabela `#divObservacoesOutras`), quando a tela as mostra. */
   observacoesOutras: Array<{ unidade: string; observacao: string }>;
@@ -80,14 +86,18 @@ export async function consultarDaArvore(http: Http, arv: Arvore, op?: OpcoesHttp
   const { form, editavel } = await formularioProcesso(http, arv, op);
   const nivel = NIVEL_POR_VALOR[form.valor("rdoNivelAcesso") ?? ""] ?? arv.nivel;
   const hipotese = nivel === "publico" ? undefined : textoOpcaoSelecionada(form, "selHipoteseLegal").trim() || arv.hipotese;
+  const idTipo = (form.valor("hdnIdTipoProcedimento") ?? "").trim();
   const autuacao = (form.valor("hdnDtaGeracao") ?? form.valor("txtDtaGeracaoExibir") ?? "").trim();
   return {
     nivel,
     ...(hipotese ? { hipotese } : {}),
     tipo: textoOpcaoSelecionada(form, "selTipoProcedimento") || arv.tipo,
+    ...(idTipo ? { idTipo } : {}),
     especificacao: form.valor("txtDescricao") ?? "",
     assuntos: nomes(form.itensLupa("selAssuntos")),
     interessados: nomes(form.itensLupa("selInteressadosProcedimento")),
+    assuntosItens: form.itensLupa("selAssuntos"),
+    interessadosItens: form.itensLupa("selInteressadosProcedimento"),
     observacoes: form.valor("txaObservacoes") ?? "",
     observacoesOutras: observacoesDasOutrasUnidades(form),
     editavel,
@@ -130,6 +140,22 @@ export interface AlteracaoProcesso {
   observacoes?: string;
   /** Substitui a lista de interessados (nomes exatamente como cadastrados, com id). */
   interessados?: ItemLupa[];
+  /** Substitui a lista de assuntos (com id). O SEI exige ao menos um. */
+  assuntos?: ItemLupa[];
+}
+
+/**
+ * Itens que o SEI não deixa esta unidade retirar (acrescentados por outra): a tela nativa avisa e não tira; aqui a mesma
+ * regra vale antes de enviar, com a mesma mensagem.
+ */
+function conferirNegados(atuais: ItemLupa[], novos: ItemLupa[], negados: Map<string, string>, rotulo: "Assunto" | "Interessado"): void {
+  const ficam = new Set(novos.map((i) => i.id));
+  for (const a of atuais) {
+    const sigla = negados.get(a.id);
+    if (sigla !== undefined && !ficam.has(a.id)) {
+      throw new ErroSei("ARGUMENTO_INVALIDO", `${rotulo} "${a.texto}" n\u00E3o pode ser removido porque foi adicionado pela unidade ${sigla}.`);
+    }
+  }
 }
 
 /** Altera os metadados de um processo. Ver `escrita.ts` para `aplicar`. */
@@ -176,8 +202,17 @@ export async function alterarProcesso(
     form.definir({ txaObservacoes: alt.observacoes });
   }
   if (alt.interessados !== undefined) {
-    mudancas.push(...mudanca("Interessados", nomes(form.itensLupa("selInteressadosProcedimento")).join("; "), nomes(alt.interessados).join("; ")));
+    const atuais = form.itensLupa("selInteressadosProcedimento");
+    conferirNegados(atuais, alt.interessados, lerNegados(form.pagina.html, "interessado"), "Interessado");
+    mudancas.push(...mudanca("Interessados", nomes(atuais).join("; "), nomes(alt.interessados).join("; ")));
     form.definirLupa("selInteressadosProcedimento", alt.interessados);
+  }
+  if (alt.assuntos !== undefined) {
+    if (!alt.assuntos.length) throw new ErroSei("ARGUMENTO_INVALIDO", "Informe os assuntos: o processo precisa ter ao menos um.");
+    const atuais = form.itensLupa("selAssuntos");
+    conferirNegados(atuais, alt.assuntos, lerNegados(form.pagina.html, "assunto"), "Assunto");
+    mudancas.push(...mudanca("Assuntos", nomes(atuais).join("; "), nomes(alt.assuntos).join("; ")));
+    form.definirLupa("selAssuntos", alt.assuntos);
   }
 
   const base: ResultadoEscrita = { alvo: arv.protocolo, mudancas, aplicado: false, resumo: "" };

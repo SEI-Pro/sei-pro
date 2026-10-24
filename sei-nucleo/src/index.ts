@@ -97,7 +97,14 @@ export { Pseudonimos, type Categoria, type OpcoesAnonimizacao } from "./privacid
 export { listarOpcoes, type ListaOpcoes, type OpcaoSei } from "./dominio/opcoes";
 export { enviarProcesso, assinarDocumento, type Envio, type Assinatura } from "./dominio/tramitacao";
 export { excluirDocumento, cancelarDocumento, cancelarAssinatura, darCiencia } from "./dominio/acoesDocumento";
-export { pesquisar, type CriteriosPesquisa, type ResultadoPesquisa } from "./dominio/pesquisa";
+export {
+  pesquisar,
+  pesquisarProcessosDoInteressado,
+  type CriteriosInteressado,
+  type CriteriosPesquisa,
+  type PaginaDeProcessos,
+  type ResultadoPesquisa,
+} from "./dominio/pesquisa";
 export {
   criarArmazemTextoPadrao,
   type ArmazemTextoPadrao,

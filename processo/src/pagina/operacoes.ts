@@ -16,6 +16,7 @@ import {
   lerOpcoesMarcador,
   type OpcaoLista,
 } from "@nucleo/dominio/painelProcesso";
+import { type CriteriosInteressado, type PaginaDeProcessos, pesquisarProcessosDoInteressado } from "@nucleo/dominio/pesquisa";
 import { type AlteracaoProcesso, alterarProcesso } from "@nucleo/dominio/processo";
 import type { Sei } from "@nucleo/sei";
 import type { LojaProcesso } from "../modelo/loja";
@@ -39,6 +40,8 @@ export interface Operacoes {
   opcoesMarcador(): Promise<OpcaoLista[]>;
   opcoesAcompanhamento(): Promise<{ grupos: OpcaoLista[]; atual?: string }>;
   formularioDoProcesso(): Promise<FormularioDoProcesso>;
+  /** Processos em que um contato é interessado (a pesquisa do SEI: só os que o usuário pode ver). Só leitura; fora da fila. */
+  processosDoInteressado(c: CriteriosInteressado, sinal?: AbortSignal): Promise<PaginaDeProcessos>;
 }
 
 export function operacoesDe(sei: Sei, arv: Arvore, loja: LojaProcesso): Operacoes {
@@ -66,5 +69,6 @@ export function operacoesDe(sei: Sei, arv: Arvore, loja: LojaProcesso): Operacoe
     opcoesMarcador: () => lerOpcoesMarcador(sei.http, arv),
     opcoesAcompanhamento: () => lerOpcoesAcompanhamento(sei.http, arv),
     formularioDoProcesso: () => lerFormularioDoProcesso(sei, arv),
+    processosDoInteressado: (c, sinal) => pesquisarProcessosDoInteressado(sei, c, sinal),
   };
 }
