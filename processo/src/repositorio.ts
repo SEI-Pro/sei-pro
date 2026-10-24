@@ -1,12 +1,24 @@
 import type { Area } from "@comum/armazenamento/area";
 import { obterPorPrefixo } from "@comum/armazenamento/colecao";
-import { chaveCache, escopoValido, MAX_BYTES_CACHE, MAX_BYTES_ENTRADA, MAX_PROCESSOS_CACHE, PODA_A_CADA, prefixoCache } from "./modelo/constantes";
+import {
+  chaveCache,
+  escopoValido,
+  MAX_BYTES_CACHE,
+  MAX_BYTES_ENTRADA,
+  MAX_PROCESSOS_CACHE,
+  PODA_A_CADA,
+  prefixoCache,
+} from "./modelo/constantes";
 import type { EntradaCache } from "./modelo/tipos";
 
 let gravacoes = 0;
 
 const entradaValida = (v: unknown): v is EntradaCache =>
-  !!v && typeof v === "object" && typeof (v as EntradaCache).em === "number" && !!(v as EntradaCache).fatias && typeof (v as EntradaCache).fatias === "object";
+  !!v &&
+  typeof v === "object" &&
+  typeof (v as EntradaCache).em === "number" &&
+  !!(v as EntradaCache).fatias &&
+  typeof (v as EntradaCache).fatias === "object";
 
 /**
  * Cache dos processos em `chrome.storage.local`, uma chave por processo. Tolerante: qualquer falha do storage

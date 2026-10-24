@@ -198,7 +198,7 @@ function linhasDaMensagem(html: string): Array<{ texto: string; ancoras: Array<{
   const linhas: Array<{ texto: string; ancoras: Array<{ sigla: string; nome: string }> }> = [];
   let atual = { texto: "", ancoras: [] as Array<{ sigla: string; nome: string }> };
   const fechar = () => {
-    const texto = atual.texto.replace(/[\s ]+/g, " ").trim();
+    const texto = atual.texto.replace(/\s+/g, " ").trim();
     if (texto) linhas.push({ texto, ancoras: atual.ancoras });
     atual = { texto: "", ancoras: [] };
   };
@@ -228,12 +228,12 @@ export function lerAtribuicaoDaPagina(arv: Arvore, unidadeAtual?: string): Atrib
   for (const l of brutas) {
     if (!l.ancoras.length) continue;
     // Sigiloso: "com o usuário <login> / <unidade>" -- é credencial, não atribuição.
-    const sigiloso = /\bcom (?:o|os) usu[aá]rios?\b/i.test(l.texto);
+    const sigiloso = /\bcom (?:o|os) usu.rios?\b/i.test(l.texto);
     if (sigiloso) {
       linhas.push({ texto: l.texto, unidade: l.ancoras[1]?.sigla ?? "", usuario: null });
       continue;
     }
-    const atribuido = /atribu[ií]do para/i.test(l.texto) && l.ancoras.length > 1 ? l.ancoras[1] : null;
+    const atribuido = /atribu.do para/i.test(l.texto) && l.ancoras.length > 1 ? l.ancoras[1] : null;
     linhas.push({ texto: l.texto, unidade: l.ancoras[0].sigla, usuario: atribuido?.sigla ?? null, ...(atribuido?.nome ? { nomeUsuario: atribuido.nome } : {}) });
   }
   const sigla = (unidadeAtual ?? lerContexto(arv.pagina).unidade.sigla).trim().toLowerCase();

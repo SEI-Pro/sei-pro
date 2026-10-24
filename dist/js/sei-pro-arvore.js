@@ -1965,6 +1965,8 @@ function setStickNoteCheck() {
     });
 }
 function getDadosAnotacao() {
+    // As anotacoes agora sao do modulo processo/ (sem o iframe oculto).
+    if (document.documentElement.hasAttribute('data-seipro-processo-paineis')) { return; }
     var urlAnotacao = jmespath.search(arrayLinksPage,"[?name=='Anota\u00E7\u00F5es'] | [0].url");
     if (urlAnotacao && !parent.checkHostLimit()) {
         $.ajax({ url: urlAnotacao }).done(function (html) {
@@ -2116,12 +2118,36 @@ function getHtmlPrazoNativoArvore() {
         return '';
     }
 }
+// Efeitos de setDadosProcessoArvore que nao sao painel: o cache de marcador que a capa legada le (getHtmlMarcador),
+// a capa, as cores dos marcadores e o dado corporativo. Sai quando a capa nova (Etapa 4 do modulo processo/) existir.
+function setDadosProcessoArvoreEfeitosPro(prop, id_procedimento) {
+    if (typeof prop === 'undefined') { return; }
+    var processoAberto = (jmespath.search(arrayLinksArvore, "[?name=='Consultar/Alterar Processo'] | [0]") !== null) ? true : false;
+    var dataMarcador = parent.getHtmlMarcador(id_procedimento, processoAberto).data;
+    if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();
+    if (!dataMarcador && processoAberto) {
+        getDataMarcadorProcesso();
+    }
+    if (typeof parent.setCapaProcesso === 'function') {
+        parent.setCapaProcesso();
+    }
+    if (typeof replaceColorsIcons !== 'undefined' && checkConfigValue('coresmarcadores')) {
+        replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"], .tagUserColorPro'));
+    }
+    if (typeof parent.getDadosCorporativo === 'function' ) parent.getDadosCorporativo();
+}
 function setDadosProcessoArvore(dadosProcessoPro = false) {
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
         id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
 
     var prop = (dadosProcessoPro) ? dadosProcessoPro.propProcesso : parent.dadosProcessoPro.propProcesso;
+    // Os paineis abaixo da arvore agora sao do modulo processo/ (content script init_processo_arvore.js), que
+    // marca o <html> com este atributo no document_start. Aqui ficam so os efeitos de que a capa legada ainda depende.
+    if (document.documentElement.hasAttribute('data-seipro-processo-paineis')) {
+        setDadosProcessoArvoreEfeitosPro(prop, id_procedimento);
+        return;
+    }
     if (typeof prop !== 'undefined') {
         var processoAberto = (jmespath.search(arrayLinksArvore, "[?name=='Consultar/Alterar Processo'] | [0]") !== null) ? true : false;
         var txtDescricao = typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao ? prop.txtDescricao : false;
@@ -2418,10 +2444,20 @@ function initAtividadesProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function setAtividadesProcesso() {
+function setAtividadesProcesso(tentativas = 20) {
     var htmlAtividades = getAtividadesProcessoArvore();
-    $('.panelDadosArvore_atividades').remove();
-    $('.panelDadosArvore').eq(0).before(htmlAtividades);
+    if (document.documentElement.hasAttribute('data-seipro-processo-paineis')) {
+        // O modulo processo/ deixa um espaco vazio no lugar certo; as Atividades (servidor externo) continuam do legado.
+        var slotAtividades = $('[data-spro-slot="atividades"]');
+        if (!slotAtividades.length) {
+            if (tentativas > 0) setTimeout(function(){ setAtividadesProcesso(tentativas - 1); }, 500);
+            return;
+        }
+        slotAtividades.html(htmlAtividades);
+    } else {
+        $('.panelDadosArvore_atividades').remove();
+        $('.panelDadosArvore').eq(0).before(htmlAtividades);
+    }
 
     if (htmlAtividades != '') {
         $('.kanban-item .checklist_progress').each(function(){
@@ -2569,7 +2605,9 @@ function stylePanelArvore() {
                             </div>`;
             disableQuery = checkHostLimit() ? disableQuery : '';
 
-        $('#frmArvore').append(htmlAtividades+htmlResponsaveis+disableQuery);
+        // Com o modulo processo/, a Atribuicao e o espaco das Atividades ([data-spro-slot="atividades"]) sao dele.
+        var moduloPaineisPro = document.documentElement.hasAttribute('data-seipro-processo-paineis');
+        $('#frmArvore').append((moduloPaineisPro ? '' : htmlAtividades+htmlResponsaveis)+disableQuery);
 
         initDadosProcessoArvore();
         initDadosProcessoArvoreSession();

@@ -1,1 +1,1 @@
-export { checar, lanca, resumo, secao, tique } from "../../sei-comum/tests/util";
+export { checar, disparar, instalarDom, lanca, resumo, secao, tique } from "../../sei-comum/tests/util";

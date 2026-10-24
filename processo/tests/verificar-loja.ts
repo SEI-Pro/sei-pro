@@ -31,7 +31,10 @@ export async function verificarLoja(): Promise<void> {
       throw new Error("sessao expirou");
     });
     const f = loja.ler("marcador");
-    checar("carregar com falha tenta de novo e vira erro", chamadas === 2 && f.estado === "erro" && f.erro === "sessao expirou", { chamadas, f });
+    checar("carregar com falha tenta de novo e vira erro", chamadas === 2 && f.estado === "erro" && f.erro === "sessao expirou", {
+      chamadas,
+      f,
+    });
     let n = 0;
     await loja.carregar("marcador", async () => {
       n++;
@@ -40,7 +43,14 @@ export async function verificarLoja(): Promise<void> {
     });
     checar("segunda tentativa que da certo vira pronto", loja.ler("marcador").estado === "pronto" && n === 2);
     let outras = 0;
-    await loja.carregar("anotacao", async () => { outras++; throw "texto"; }, { tentativas: 3 });
+    await loja.carregar(
+      "anotacao",
+      async () => {
+        outras++;
+        throw "texto";
+      },
+      { tentativas: 3 },
+    );
     checar("tentativas configuravel e erro nao-Error", outras === 3 && loja.ler("anotacao").erro === "texto", loja.ler("anotacao"));
   }
 
@@ -50,15 +60,23 @@ export async function verificarLoja(): Promise<void> {
     const a = new LojaProcesso(area, ESCOPO, "10", deps());
     await a.carregar("anotacao", async () => ({ texto: "guardado" }));
     await a.carregar("atribuicao", async () => ({ usuario: "fulano" }));
-    const bruto = (await area.obter(chaveCache(ESCOPO, "10")))[chaveCache(ESCOPO, "10")] as { fatias: Record<string, { dado: unknown }> } | undefined;
-    checar("grava as fatias prontas numa chave por processo", !!bruto && Object.keys(bruto.fatias).sort().join() === "anotacao,atribuicao", bruto);
+    const bruto = (await area.obter(chaveCache(ESCOPO, "10")))[chaveCache(ESCOPO, "10")] as
+      | { fatias: Record<string, { dado: unknown }> }
+      | undefined;
+    checar(
+      "grava as fatias prontas numa chave por processo",
+      !!bruto && Object.keys(bruto.fatias).sort().join() === "anotacao,atribuicao",
+      bruto,
+    );
 
     const b = new LojaProcesso(area, ESCOPO, "10", deps({ agora: () => 5000 }));
     const vistos: Array<Fatia<unknown>> = [];
     let liberar!: (v: unknown) => void;
     const p = b.carregar("anotacao", () => {
       vistos.push(b.ler("anotacao"));
-      return new Promise((r) => { liberar = r; });
+      return new Promise((r) => {
+        liberar = r;
+      });
     });
     await new Promise((r) => setTimeout(r, 5));
     checar(
@@ -68,10 +86,15 @@ export async function verificarLoja(): Promise<void> {
     );
     liberar({ texto: "novo" });
     await p;
-    checar("depois da busca vira pronto com o dado novo", b.ler("anotacao").estado === "pronto" && (b.ler("anotacao").dado as { texto: string }).texto === "novo");
+    checar(
+      "depois da busca vira pronto com o dado novo",
+      b.ler("anotacao").estado === "pronto" && (b.ler("anotacao").dado as { texto: string }).texto === "novo",
+    );
 
     const c = new LojaProcesso(area, ESCOPO, "10", deps());
-    await c.carregar("anotacao", async () => { throw new Error("rede"); });
+    await c.carregar("anotacao", async () => {
+      throw new Error("rede");
+    });
     const fc = c.ler("anotacao");
     checar("erro mantem o dado antigo do cache", fc.estado === "erro" && (fc.dado as { texto: string }).texto === "novo", fc);
 
@@ -83,16 +106,37 @@ export async function verificarLoja(): Promise<void> {
   secao("loja: cota cheia");
   {
     const base = areaMemoria();
-    const cheia: Area = { ...base, gravar: async () => { throw new Error("QUOTA_BYTES quota exceeded"); } };
+    const cheia: Area = {
+      ...base,
+      gravar: async () => {
+        throw new Error("QUOTA_BYTES quota exceeded");
+      },
+    };
     const loja = new LojaProcesso(cheia, ESCOPO, "10", deps());
     let erro: unknown = null;
     try {
       await loja.carregar("anotacao", async () => ({ texto: "x" }));
       await loja.carregar("marcador", async () => ["m"]);
-    } catch (e) { erro = e; }
-    checar("cota cheia nao quebra", erro === null && loja.ler("anotacao").estado === "pronto" && loja.ler("marcador").estado === "pronto", erro);
+    } catch (e) {
+      erro = e;
+    }
+    checar(
+      "cota cheia nao quebra",
+      erro === null && loja.ler("anotacao").estado === "pronto" && loja.ler("marcador").estado === "pronto",
+      erro,
+    );
     const area2 = areaMemoria();
-    const loja2 = new LojaProcesso({ ...area2, obter: async () => { throw new Error("storage indisponivel"); } }, ESCOPO, "10", deps());
+    const loja2 = new LojaProcesso(
+      {
+        ...area2,
+        obter: async () => {
+          throw new Error("storage indisponivel");
+        },
+      },
+      ESCOPO,
+      "10",
+      deps(),
+    );
     await loja2.carregar("anotacao", async () => 7);
     checar("leitura do cache que falha tambem nao quebra", loja2.ler("anotacao").dado === 7);
   }
@@ -103,19 +147,25 @@ export async function verificarLoja(): Promise<void> {
     const ordem: string[] = [];
     let ativas = 0;
     let max = 0;
-    const tarefa = (nome: string, ms: number, falha = false) => () => {
-      ativas++;
-      max = Math.max(max, ativas);
-      ordem.push(`ini ${nome}`);
-      return new Promise<string>((res, rej) =>
-        setTimeout(() => {
-          ativas--;
-          ordem.push(`fim ${nome}`);
-          falha ? rej(new Error(nome)) : res(nome);
-        }, ms),
-      );
-    };
-    const r = await Promise.allSettled([loja.enfileirar(tarefa("a", 20)), loja.enfileirar(tarefa("b", 1, true)), loja.enfileirar(tarefa("c", 1))]);
+    const tarefa =
+      (nome: string, ms: number, falha = false) =>
+      () => {
+        ativas++;
+        max = Math.max(max, ativas);
+        ordem.push(`ini ${nome}`);
+        return new Promise<string>((res, rej) =>
+          setTimeout(() => {
+            ativas--;
+            ordem.push(`fim ${nome}`);
+            falha ? rej(new Error(nome)) : res(nome);
+          }, ms),
+        );
+      };
+    const r = await Promise.allSettled([
+      loja.enfileirar(tarefa("a", 20)),
+      loja.enfileirar(tarefa("b", 1, true)),
+      loja.enfileirar(tarefa("c", 1)),
+    ]);
     checar("fila serializa gravacoes", max === 1 && ordem.join() === "ini a,fim a,ini b,fim b,ini c,fim c", ordem);
     checar(
       "falha de uma nao trava as seguintes e propaga a quem pediu",
@@ -151,11 +201,18 @@ export async function verificarLoja(): Promise<void> {
       await loja.carregar("anotacao", async () => ({ i }));
     }
     const chaves = (await area.chaves!()).filter((k) => k.startsWith("processo/"));
-    checar("poda os mais antigos acima de 200 processos", chaves.length <= 200 && chaves.includes(chaveCache(ESCOPO, "204")) && !chaves.includes(chaveCache(ESCOPO, "0")), chaves.length);
+    checar(
+      "poda os mais antigos acima de 200 processos",
+      chaves.length <= 200 && chaves.includes(chaveCache(ESCOPO, "204")) && !chaves.includes(chaveCache(ESCOPO, "0")),
+      chaves.length,
+    );
 
     const area2 = areaMemoria();
     const grande = new LojaProcesso(area2, ESCOPO, "1", deps());
     await grande.carregar("dadosProcesso", async () => ({ texto: "x".repeat(200_000) }));
-    checar("entrada acima do teto fica so na memoria", (await area2.chaves!()).length === 0 && grande.ler("dadosProcesso").estado === "pronto");
+    checar(
+      "entrada acima do teto fica so na memoria",
+      (await area2.chaves!()).length === 0 && grande.ler("dadosProcesso").estado === "pronto",
+    );
   }
 }

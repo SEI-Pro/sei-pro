@@ -4,7 +4,7 @@
  *
  *   dist/js/init_processo_arvore.js  content script do quadro da arvore (IIFE, mundo isolado)   [src/pagina/main.ts]
  *   dist/js/init_processo_capa.js    content script do quadro do visualizador (IIFE)            [src/capa/main.ts]
- *   dist/css/processo.css            sei-comum/src/ui/base.css + estatico/processo.css           [se existir]
+ * O CSS (sei-comum/src/ui/base.css + estatico/processo.css) vai DENTRO do JS, como texto, e entra numa <style>.
  * Entradas que ainda nao existem sao puladas (o pacote cresce por etapas).
  * Portoes: JS todo ASCII; nada de innerHTML & cia; e, no codigo que roda na pagina, nenhum dos enderecos
  * que gravam "Processo recebido" em nome do usuario (procedimento_visualizar, arvore_montar,
@@ -41,6 +41,9 @@ const PROIBIDOS = [
   [/procedimento_visualizar|arvore_montar|procedimento_atribuicao_cadastrar/, "endereco que grava \"Processo recebido\""],
 ];
 
+// marca.ts so LE a propria URL para saber se este quadro e o da arvore (acao=procedimento_visualizar); nao busca nada.
+const SO_LEITURA_DA_PROPRIA_URL = new Set(["src/pagina/marca.ts"]);
+
 async function fontes(dir) {
   const saida = [];
   for (const e of await readdir(dir, { withFileTypes: true })) {
@@ -57,8 +60,9 @@ for (const dir of ["src/pagina", "src/capa", "src/ui", "src/gantt"]) {
   if (!existsSync(abs)) continue;
   for (const f of await fontes(abs)) {
     const codigo = (await readFile(f, "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const rel = f.replace(`${AQUI}/`, "");
     for (const [re, motivo] of PROIBIDOS) {
-      if (re.test(codigo)) {
+      if (re.test(codigo) && !(SO_LEITURA_DA_PROPRIA_URL.has(rel) && motivo.startsWith("endereco"))) {
         console.error(`ERRO: ${f.replace(AQUI + "/", "")} contem ${motivo}.`);
         process.exit(1);
       }
@@ -72,13 +76,6 @@ for (const { fonte, saida } of ENTRADAS) {
   await mkdir(dirname(join(DIST, saida)), { recursive: true });
   await build({ ...comum, entryPoints: [resolve(AQUI, fonte)], outfile: join(DIST, saida), format: "iife" });
   geradas.push(saida);
-}
-
-if (existsSync(resolve(AQUI, "estatico/processo.css"))) {
-  await mkdir(join(DIST, "css"), { recursive: true });
-  const css = await Promise.all(["../sei-comum/src/ui/base.css", "estatico/processo.css"].map((f) => readFile(resolve(AQUI, f), "utf8")));
-  await writeFile(join(DIST, "css", "processo.css"), `/* GERADO por processo/build.mjs. NAO EDITE ESTE ARQUIVO. */\n${css.join("\n")}`);
-  geradas.push("css/processo.css");
 }
 
 for (const f of geradas.filter((g) => g.endsWith(".js"))) {
