@@ -13248,8 +13248,8 @@ function setNewProcDefault() {
                                     palavras_pesquisa: siglaUnidadePesquisa
                                 },
                                 success: function(result){
-                                    var html_result = $(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
-                                    var id_result = $(html_result).map(function(){ if ($(this).attr('descricao').indexOf('('+siglaUnidadePesquisa+')') !== -1) return {id: $(this).attr('id'), descricao: $(this).attr('descricao')} }).get();
+                                    var html_result = lerHtmlPro(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
+                                    var id_result = lerHtmlPro(html_result).map(function(){ if ($(this).attr('descricao').indexOf('('+siglaUnidadePesquisa+')') !== -1) return {id: $(this).attr('id'), descricao: $(this).attr('descricao')} }).get();
                                     if (typeof id_result[0] !== 'undefined') {
                                         var hdnInteressadosProcedimento = id_result[0].id+'\u00B1'+id_result[0].descricao;
                                         $('#hdnInteressadosProcedimento').val(hdnInteressadosProcedimento);
@@ -13326,7 +13326,7 @@ function appendIconBatchActions(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/acao_lote.svg" alt="A\u00E7\u00F5es em Lote" title="A\u00E7\u00F5es em Lote">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconBatchActions').length) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconbatchActions);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconbatchActions, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconBatchActions', appendIconBatchActions); }
 }
@@ -13339,7 +13339,7 @@ function appendIconAIActions(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconAIActions').length) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconAIActions);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconAIActions, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconAIActions', appendIconAIActions); }
 }
@@ -13362,7 +13362,7 @@ function appendIconFerramentasPdf(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/ferramentas_pdf.svg" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconFerramentasPdf').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconFerramentasPdf);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconFerramentasPdf, 'append');
     }
     // O iframe da visualizacao recarrega a cada clique num documento da arvore e
     // leva os icones junto: o reagendamento e o que os traz de volta. Usar o
@@ -13384,7 +13384,7 @@ function appendIconEstudioFluxo(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/fluxos.svg" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconEstudioFluxo').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconEstudioFluxo);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconEstudioFluxo, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconEstudioFluxo', appendIconEstudioFluxo); }
 }
@@ -13401,11 +13401,11 @@ function insertIconHistoricoProcessos() {
 function appendIconHistoricoProcessos(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var titulo = 'Hist\u00F3rico de Processos Visitados';
-    var htmlIconHistorico =  '<a href="#" id="iconHistoricoProcessos" onclick="parent.getHistoryProcessosPro(); return false;" data-spro-tip="'+titulo+'" class="botaoSEI">'+
+    var htmlIconHistorico =  '<a href="#" id="iconHistoricoProcessos" data-spro-click="parent.getHistoryProcessosPro" data-spro-args="'+argsPro()+'" data-spro-tip="'+titulo+'" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+iconeHistoricoBarraPro()+'" alt="'+titulo+'" title="'+titulo+'">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconHistoricoProcessos').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconHistorico);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconHistorico, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconHistoricoProcessos', appendIconHistoricoProcessos); }
 }
@@ -13418,7 +13418,7 @@ function appendIconCompareDocs(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/compare_doc.svg" alt="Iniciar Comparador de Documentos" title="Iniciar Comparador de Documentos">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconCompareDocs').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCompareDocs);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconCompareDocs, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconCompareDocs', appendIconCompareDocs); }
 }
@@ -13431,7 +13431,7 @@ function appendIconBatchDocs(loop = true) {
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/doc_lote.svg" alt="Iniciar Documentos em Lote" title="Iniciar Documentos em Lote">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconBatchDocs').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconBatchDocs);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconBatchDocs, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconBatchDocs', appendIconBatchDocs); }
 }
@@ -13492,7 +13492,7 @@ function appendIconCtrPrescricao(loop = true) {
                                     '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconCtrPrescricao+'" alt="Gerenciar Prescri\u00E7\u00F5es" title="Gerenciar Prescri\u00E7\u00F5es">'+
                                     '</a>';
         if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
-            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCtrPrescricao);
+            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconCtrPrescricao, 'append');
         }
         if (loop) { reagendarIconeBarraPro('appendIconCtrPrescricao', appendIconCtrPrescricao); }
     }
@@ -13537,7 +13537,7 @@ function appendIconDocCertidao(loop = true) {
         var nativo = (id_documento && ifrArvore.find('#anchorImg'+id_documento+' img[src*="'+nameDocInterno+'"]').length) ? true : false;
         var assinado = (id_documento && ifrArvore.find('#iconA'+id_documento).length) ? true : false;
         if (newDocLink !== null && newDocLink != '' && ifrVisualizacao.find('#iconDocCertidao').length == 0 && nativo && assinado) {
-            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconNewDoc);
+            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconNewDoc, 'append');
         }
 
         if (loop) {
@@ -13589,7 +13589,7 @@ function appendIconNewDoc(loop = true) {
                             '   <img class="infraCorBarraSistema" src="imagens/sei_incluir_documento.gif" alt="Incluir Documento" title="Incluir Documento">'+
                             '</a>';
     if (newDocLink !== null && newDocLink != '' && ifrVisualizacao.find('a.botaoSEI[href*="acao=documento_escolher_tipo"]').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').prepend(htmlIconNewDoc);
+        htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconNewDoc, 'prepend');
     }
     if (loop) { reagendarIconeBarraPro('appendIconNewDoc', appendIconNewDoc); }
 }
@@ -13617,7 +13617,7 @@ function appendIconDynamicField(loop = true) {
         var htmlIconDynamicField =  '<a href="#" id="iconDynamicField" data-spro-click="parent.openCamposDinamicosForm" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconDynamicField+'" alt="Adicionar campos din\u00E2micos do formul\u00E1rio" title="Adicionar campos din\u00E2micos do formul\u00E1rio">'+
                                  '</a>';
-            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconDynamicField);
+            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconDynamicField, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconDynamicField', appendIconDynamicField); }
 }
@@ -13632,7 +13632,7 @@ function appendIconFormSheet(loop = true) {
         var htmlIconFormSheet =  '<a href="#" id="iconFormSheet" data-spro-click="parent.openFormSheet" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconFormSheet+'" alt="Salvar dados na planilha" title="Salvar dados na planilha">'+
                                  '</a>';
-            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconFormSheet);
+            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconFormSheet, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconFormSheet', appendIconFormSheet); }
 }
@@ -13655,7 +13655,7 @@ function appendIconIntegrity(loop = true) {
         var htmlIconIntegrity =  '<a href="#" id="iconIntegrityPro" data-spro-click="parent.getChecksumPro" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
                                  '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconIntegrity+'" alt="Visualizar C\u00F3digo de Integridade (Hashcode)" title="Visualizar C\u00F3digo de Integridade (Hashcode)">'+
                                  '</a>';
-            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconIntegrity);
+            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconIntegrity, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconIntegrity', appendIconIntegrity); }
 }
@@ -14002,7 +14002,7 @@ function getUnidadesPermissaoSEI() {
                 $.ajax({ 
                     url: url
                 }).done(function (html) {
-                    var $html = $(html);
+                    var $html = lerHtmlPro(html);
                     var param = [];
                         $html.find('form#frmInfraSelecaoUnidade div#divInfraAreaTabela table tbody tr').each(function() {
                             let _this = $(this);
@@ -14035,7 +14035,7 @@ function changeUnidadeSEI(url, idUnidade) {
         $.ajax({ 
             url: url
         }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             let param = {};
             let form = $html.find('form#frmProcedimentoControlar');
                 form.find("input[type=hidden]").map(function () {
@@ -14063,9 +14063,9 @@ function setSelectUnidadePro() {
                                 let selected = $('#lnkInfraUnidade').text() == v.sigla ? 'selected' : '';
                                 return `<option value="${v.id}" ${selected}>${v.sigla} (${v.orgao})</option>`  
                                 }).join('');
-        let htmlSelect = `<select data-url="${url}" style="width: 200px;" onchange="_changeUnidadeSEI(this)" id="changeUnidadeSEIPro">${htmlOptionsUnidades}</select>`;
+        let htmlSelect = `<select data-url="${url}" style="width: 200px;" data-spro-change="_changeUnidadeSEI" id="changeUnidadeSEIPro">${htmlOptionsUnidades}</select>`;
         $('#changeUnidadeSEIPro').remove();
-        $('#divInfraBarraSistemaPadraoD .input-group.align-self-center').html(htmlSelect);
+        htmlPro($('#divInfraBarraSistemaPadraoD .input-group.align-self-center'), htmlSelect);
         if (verifyConfigValue('substituiselecao') && typeof $().chosen === 'function') {
             $('#changeUnidadeSEIPro').chosen({
                 placeholder_text_single: ' ', 
@@ -14109,7 +14109,7 @@ function appendStyleNewIcons(ifrVisualizacao, backgroundColor) {
 
     if (ifrVisualizacao.find('style[data-style="seipro-styleicon"]').length == 0) {
         var color = (backgroundColor && getBrightnessColor(backgroundColor) > 125) ? '#515151' : '#ffffff';
-        ifrVisualizacao.find('head').prepend("<style type='text/css' data-style='seipro-styleicon'>"
+        estiloPro(ifrVisualizacao, 'seipro-styleicon', ""
                         +"   body.seiSlim .iconBoxSlim.botaoSEI:hover {\n"
                         +"      background: "+backgroundColor+" !important;\n"
                         +"   }\n"
@@ -14117,7 +14117,7 @@ function appendStyleNewIcons(ifrVisualizacao, backgroundColor) {
                         +"   .seiSlim .iconBoxSlim.botaoSEI:hover::before {\n"
                         +"      color: "+color+" !important;\n"
                         +"   }\n"
-                        +"</style>");
+                        , { posicao: 'prepend' });
         ifrVisualizacao.find('body').addClass('seiSlim').addClass('seiSlim_view');
         if (localStorage.getItem('darkModePro')) {
             ifrVisualizacao.find('body').addClass('dark-mode');
@@ -14327,20 +14327,20 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
     if (!checkProcessoSigiloso()) {
         var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
         $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var urlArvore = $html.find("#ifrArvore").attr('src');
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
-                var $htmlArvore = $(htmlArvore);
+                var $htmlArvore = lerHtmlPro(htmlArvore);
                 var textLink = $htmlArvore.filter('script').not('[src*="js"]').text();
                 var arrayLinksArvoreDoc = getLinksInText(textLink);
                 var urlNewDoc = arrayLinksArvoreDoc.filter(function(v){ return v.indexOf('acao=documento_escolher_tipo') !== -1 });
                 if (urlNewDoc) {
                     $.ajax({ url: urlNewDoc }).done(function (htmlNewDoc) {
-                        let $htmlNewDoc = $(htmlNewDoc);
+                        let $htmlNewDoc = lerHtmlPro(htmlNewDoc);
                         var urlDoc = $htmlNewDoc.find('a[href*="&id_serie='+id_tipo_documento+'&"]').attr('href');
                         console.log(urlDoc, id_tipo_documento);
                             if (!getFormDocPro($htmlNewDoc, urlDoc, id_tipo_documento, function (htmlDoc) {
-                                    var $htmlDoc = $(htmlDoc);
+                                    var $htmlDoc = lerHtmlPro(htmlDoc);
                                     var form = $htmlDoc.find('#frmDocumentoCadastro');
                                     var hrefForm = form.attr('action');
                                     var param = {};
@@ -14397,7 +14397,7 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                                             var ifrArvore = $('#ifrArvore');
                                             if (status) {
                                                 console.log('Documento gerado com sucesso');
-                                                var $htmlResult = $(htmlResult);
+                                                var $htmlResult = lerHtmlPro(htmlResult);
                                                 var urlEditor = [];
                                                 var idUser = false;
                                                 $.each($htmlResult.text().split('\n'), function(i, v){
@@ -14448,7 +14448,7 @@ function setNewProc(id_tipo_procedimento, id_tipo_documento) {
     var urlInitProc = $(mainMenu+' a[href*="acao=procedimento_escolher_tipo"]').attr('href');
     if (urlInitProc !== null) {
         $.ajax({ url: urlInitProc }).done(function (htmlInitProc) {
-            var $htmlInitProc = $(htmlInitProc);
+            var $htmlInitProc = lerHtmlPro(htmlInitProc);
             var form = $htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
             var hrefForm = form.attr('action');
             var param = {};
@@ -14464,11 +14464,11 @@ function setNewProc(id_tipo_procedimento, id_tipo_documento) {
                     data: param,
                     url: hrefForm
                 }).done(function (htmlFullList) {
-                    let $htmlFullList = $(htmlFullList);
+                    let $htmlFullList = lerHtmlPro(htmlFullList);
                     var urlProc = $htmlFullList.find('a[href*="procedimento_escolher_tipo&id_tipo_procedimento='+id_tipo_procedimento+'"]').attr('href');
                     if (urlProc !== null) {
                         $.ajax({ url: urlProc }).done(function (htmlFormProc) {
-                            var $htmlFormProc = $(htmlFormProc);
+                            var $htmlFormProc = lerHtmlPro(htmlFormProc);
                             var form = $htmlFormProc.find('#frmProcedimentoCadastro');
                             var hrefForm = form.attr('action');
                             var param = {};
@@ -14522,7 +14522,7 @@ function setNewProc(id_tipo_procedimento, id_tipo_documento) {
                                 }).done(function (htmlResult) {
                                     var status = (xhr.responseURL.indexOf('controlador.php?acao=procedimento_trabalhar&acao_origem=procedimento_gerar') !== -1) ? true : false;
                                     if (status) {
-                                        var $htmlResult = $(htmlResult);
+                                        var $htmlResult = lerHtmlPro(htmlResult);
                                         var linkProc = $htmlResult.find('#ifrArvore').attr('src');
                                         var id_procedimento = (linkProc !== null) ? getParamsUrlPro(linkProc).id_procedimento : false;
                                             id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
@@ -14546,8 +14546,7 @@ function setNewProc(id_tipo_procedimento, id_tipo_documento) {
     }
 }
 function setSizeIframePro(tLeft, saveSize = true) {
-      $('head').find('style[data-style="seipro-sizeiframe"]').remove();
-      $('head').prepend(  "<style type='text/css' data-style='seipro-sizeiframe'> "
+      estiloPro(document, 'seipro-sizeiframe', " "
                           +"  .seiSlim:not(.newSEI) iframe#ifrArvore {\n"
                           +"      width: "+(tLeft-6)+"px !important;\n"
                           +"  }\n"
@@ -14559,7 +14558,7 @@ function setSizeIframePro(tLeft, saveSize = true) {
                           +"  .seiSlim:not(.newSEI) iframe#ifrConteudoVisualizacao {\n"
                           +"      width: calc(78vw - "+(tLeft-6)+"px) !important;\n"
                           +"  }\n"
-                          +"</style>");
+                          , { posicao: 'prepend' });
     if (saveSize) setOptionsPro('iframeSizeSlimPro',tLeft);
     if (isNewSEI) $('#divIframeArvore').css('width',tLeft);
 }
@@ -14774,7 +14773,8 @@ function fnJqueryPro() {
         $(this).contents().each(function () {
             if (this.nodeType === 3) //Node.TEXT_NODE
             {
-                $(this).replaceWith(getText(this).replace(regex, replacement));
+                // O texto do no e TEXTO: escapado antes de ganhar as tags do destaque.
+                htmlPro($(this), atributoPro(getText(this)).replace(regex, replacement), 'replace');
             }
             else if (!opts.ignoreChildNodes) {
                 $(this).wrapInTag(opts);
