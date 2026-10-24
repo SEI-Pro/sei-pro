@@ -1,12 +1,155 @@
 # processo
 
-Painéis abaixo da árvore, menu do documento, capa com cards e Gantt de tramitação, em TypeScript.
+Tudo o que o SEI Pro desenha em volta da árvore de um processo, em TypeScript: painéis abaixo da árvore, menu do documento,
+capa com cards, histórico de tramitação em Gantt (com comparativo, CSV e impressão) e filtro da árvore.
 Desenho: `docs/superpowers/specs/2026-10-23-processo-design.md`; plano: `docs/superpowers/plans/2026-10-24-processo.md`.
 
 ## Estado
 
-Etapas 1 (base e painéis), 2 (menu da árvore), 3 (andamentos e Gantt) e 4 (capa e cards) concluídas e testadas ao vivo no SEI SP
-de treinamento (4.1.5). Falta o filtro da árvore (etapa 5). O SEI 5 ainda não foi exercitado ao vivo.
+Etapas 1 a 5 concluídas e a etapa 6 (fechamento) feita: base e painéis, menu da árvore, andamentos e Gantt, capa e cards, filtro
+da árvore. Testadas ao vivo no SEI SP de treinamento (4.1.5, CK4), com todas as opções ligadas e com perfil limpo mais só as
+opções do módulo. **O SEI 5 não foi exercitado ao vivo** (sem credencial utilizável sem login manual); só há teste com árvore
+sintética no formato do 5 e leitura do fonte do 5.0.0. Entrega só no `dist/manifest.json` (Lab, MV3).
+
+## Visão geral
+
+Dois content scripts, ambos `all_frames` e no mundo isolado, só no `dist/manifest.json` do Lab:
+
+| Bundle | Roda em | O que faz |
+| --- | --- | --- |
+| `js/init_processo_arvore.js` (`src/pagina/main.ts`, `document_start`) | quadro da árvore (`acao=procedimento_visualizar`) e janela de topo do processo (só para marcar a capa) | painéis, menu do documento, Gantt (modal), filtro da árvore, ponte de dados para a capa |
+| `js/init_processo_capa.js` (`src/capa/main.ts`, `document_idle`) | quadro do visualizador que traz `#divArvoreHtml` | capa com cards, copiar resumo, QR, alerta de parado |
+
+Os dois quadros não compartilham memória: o quadro da árvore é o dono da escrita (loja do processo, cache, coleta do histórico) e
+a capa só lê o cache (`chrome.storage.onChanged`) e pede por evento. A árvore do processo é SEMPRE a que o quadro já tem na tela
+(`lerArvore(paginaDe(document))`): nenhum recurso do módulo busca `procedimento_visualizar`, `arvore_montar` ou
+`procedimento_atribuicao_cadastrar` (que gravam "Processo recebido"); o `build.mjs` reprova esses endereços. O histórico completo
+só é coletado por clique (cache de 30 min).
+
+## Estrutura
+
+```
+processo/
+  build.mjs            esbuild (IIFE, ASCII) + portões: sem innerHTML & cia, sem endereços que gravam "Processo recebido"
+  estatico/processo.css  CSS do módulo (vai DENTRO do bundle e entra numa <style>; tema do SEI, nunca do sistema)
+  src/
+    modelo/            SEM DOM: loja do processo (fatias com estado, cache, fila), textos, tipos, constantes
+    repositorio.ts     cache em chrome.storage.local
+    pagina/            quadro da árvore: main, árvore, contexto, leituras, operações, opções, marca (cessão do legado)
+      paineis/ modais/ painéis e edições          menuDoc/ menu vertical e ícones fixos do documento
+      filtro/            filtro da árvore (modelo, DOM, barra)
+    gantt/             modal do histórico: modelo, SVG, dica, comparativo, CSV/impressão, cache de 30 min
+    capa/              capa e cards: dados, cards, resumo, QR próprio, parado, controle (vigia)
+    ui/                casca do painel, esqueleto, erro com "Tentar de novo"
+  tests/               tsx + linkedom (verificar-*.ts); fixtures reais em ../sei-nucleo/tests/fixtures
+```
+
+No núcleo (`sei-nucleo/src/dominio`): `painelProcesso.ts` (leituras e escritas dos painéis), `historico.ts` + `historicoSessao.ts`
+(coleta do histórico completo com cache incremental e restauro da sessão), `passagens.ts` (passagens por unidade), e acréscimos
+em `arvore.ts`/`processo.ts`. Em `sei-comum`: ícones novos em `ui/dom.ts` e `valorOpcaoLegada` exportada.
+
+## Opções
+
+Todas na página de opções (`opcoes-pagina/src/schema-dados.ts`, mantido à mão), gravadas em `chrome.storage.sync` (`dataValues`):
+
+| Opção | Padrão | Efeito |
+| --- | --- | --- |
+| `infoarvore` | ligada | painéis abaixo da árvore (respeita também a personalização `configViewFlashPanelArvorePro`) |
+| `menurapido` | ligada | menu do documento e do processo e ícones fixos (independente de `infoarvore`) |
+| `filtroarvore` | ligada, só no Lab | barra de filtro acima da árvore. Decisão desta etapa: ligada porque só esconde linhas quando o usuário pede, não faz consulta nenhuma, é invisível ao SEI e vale só no pacote do Lab (testadores); quem não quiser desliga na página de opções |
+| `processoparado` | 15 (dias; 0 desliga), só no Lab | destaque do card "Na unidade atual" na capa |
+| `disablequery` | desligada | quando marcada, nenhuma consulta além do que a tela traz (painéis ficam com o que a árvore tem) |
+| `reaberturaprogramada`, `citacaodoc`, `uploaddocsexternos`, `acoesemlote` | do legado | lidas, não definidas aqui |
+
+A personalização do menu e dos painéis é a do legado (mesmas chaves do `localStorage`), para ninguém perder o que já escolheu.
+
+## Chaves de storage
+
+| Onde | Chave | Quem |
+| --- | --- | --- |
+| `chrome.storage.local` | `processo/<host\|login>/<idProcedimento>` | cache das fatias do processo (teto de 200 processos e 2 MB; entrada acima de 64 KB só em memória; sigiloso nunca grava) |
+| `chrome.storage.local` | `processo-historico/<host\|login>/<idProcedimento>` | histórico completo coletado por clique (30 min; até 900 KB por entrada, 12 processos, 24 h) |
+| `localStorage` do SEI | `seiProHistoricoRestauro` | pendência de restauro da paginação do histórico (10 min) |
+| `localStorage` do SEI | `configViewFlashPanelArvorePro`, `optionsPro` (`panelDadosArvorePro_<tipo>`, `optionsFlashMenu_*`), `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro` | personalização do legado, lida e (os painéis recolhidos) gravada |
+| `localStorage` do SEI | `configDataRecebimentoPro` | SÓ LEITURA: data de recebimento que o legado guarda; alimenta o alerta de parado quando não há histórico |
+
+O filtro da árvore NÃO persiste nada (o estado vive na tela; recarregar a árvore volta ao filtro limpo).
+
+## Cessão do legado (atributos `data-seipro-processo-*`)
+
+Cada peça do legado cede por um atributo no `<html>`, posto em `document_start` (síncrono, antes de o legado olhar), para cada
+etapa poder ceder sem desligar as outras:
+
+| Atributo | Posto em | O que o legado deixa de fazer (`dist/js/…`) |
+| --- | --- | --- |
+| `data-seipro-processo-paineis` | quadro da árvore | `sei-pro-arvore.js`: `setDadosProcessoArvore` (só os efeitos de que a capa legada ainda dependia), `getDadosAnotacao`, `stylePanelArvore` (sem Atribuição nem o espaço das Atividades), `setAtividadesProcesso` preenche o espaço do módulo |
+| `data-seipro-processo-menu` | quadro da árvore | `sei-pro-arvore.js`: `initToolbarDocs`, `setToolbarDocs`, `getToolbarPro`, `addIconActionsArvore` (via `menuCedidoPro()`) |
+| `data-seipro-processo-gantt` | quadro da árvore | `sei-functions-pro.js`: `initGanttHistoryProc` dispara `spro-processo-gantt-abrir` e sai (sem frappe-gantt nem jmespath) |
+| `data-seipro-processo-capa` | janela de topo | `sei-functions-pro.js`: `setCapaProcesso` não desenha a capa antiga |
+
+O filtro da árvore não cede nada (não havia equivalente no legado) e só põe `data-spro-f-oculto` nas linhas que esconde.
+Outros sinais entre peças (diagnóstico e ponte): `data-spro-capa-estado`, `data-spro-capa-coleta`, `data-spro-pm-pedido` (+ evento
+`seipro-processo-menu`), `data-spro-slot="atividades"`, `data-spro-tema`.
+
+## O que sobra no legado
+
+O iframe oculto `#frmCheckerProcessoPro` (`initDadosProcesso`, `sei-pro.js`) e a cadeia `dadosProcessoPro` NÃO foram desligados: o
+módulo novo não depende deles (os painéis e a capa leem a árvore da tela e a loja), mas ainda têm consumidor: Favoritos, o editor
+(campos dinâmicos, `arrayDadosEditor`), a edição legada de dados do processo (urgência/trancado, `editDadosArvorePro_`), lista de
+documentos assinados e ações em lote, histórico legado (`getDataRecebimentoPro`, que alimenta `configDataRecebimentoPro`), título da
+página e URL amigável, controle de processos e pesquisa, Atividades e prescrição, upload pela árvore. A lista função a função está em
+"Cessão do legado" da etapa 4, abaixo. Só pode sair quando esses consumidores migrarem. Também seguem do legado: o destaque de
+não assinados (`initDestacarNaoAssinadosPro`), a numeração e as duas linhas da árvore, `jquery.toolbar` (as Atividades usam), Processos
+Relacionados (elemento nativo estilizado) e as janelas "Copiar para outro processo", "Enviar documento externo", "Ações em lote" e
+"Personalizar menu".
+
+## Limites conhecidos
+
+- SEI 5: não exercitado ao vivo (a árvore sintética no formato do 5 e o fonte do 5.0.0 estão nos testes). Só o SEI SP 4.1.5.
+- Entrega só no Lab MV3: os manifests derivados (oficial, whitelabels, Firefox) não têm o módulo, e as opções novas só aparecem no Lab.
+- Filtro da árvore: pasta fechada não entra (o SEI só traz os documentos da pasta quando o usuário a abre; a barra avisa); a
+  linha de um processo anexado/relacionado nunca é escondida; "Não assinados" mostra os documentos do editor da unidade do usuário
+  (a unidade geradora só vem no SEI 4+; sem ela vale o documento); os chips somam (um ou outro) e a busca restringe; o estado não
+  sobrevive à recarga da árvore.
+- Cards e filtro contam o que a árvore tem na tela. O "Bloco interno" só aparece com o histórico completo em cache.
+- Histórico completo: cada coleta muda o estado do "Consultar Andamento" na sessão do SEI (o módulo restaura); em processo com
+  milhares de andamentos há dezenas de POSTs (progresso e cancelamento existem).
+- Edição: Assuntos sem edição, Interessados só retirar, nível sigiloso não se define por aqui. Detalhes em "Divergências e pendências".
+- Modo escuro antigo (`dark-mode` no corpo, sem Estilo Avançado) não foi visto ao vivo; o `data-tema` segue o mesmo teste dos painéis.
+- O primeiro processo aberto num perfil novo, com todas as opções do legado ligadas, às vezes demora até ~3 s para os painéis (a
+  variação é do servidor do SEI: 0,6 a 3,1 s em 4 medições); com a sessão aquecida, 0,3 a 0,5 s.
+
+## Como testar
+
+```
+cd processo && npm run tipos && npm run verificar && npm run build   # build = verificar + gera os dois bundles em ../dist/js
+cd ../sei-nucleo && npm run tipos && npm run verificar
+cd ../opcoes-pagina && npm run tipos && npm run build                # build = verificar + dist/html/options.js
+```
+
+Portões na raiz do repositório (a pasta `tools/` é ignorada pelo git: ver "Alteração necessária em `tools/`"):
+`node tools/check-dom-injection.mjs` e `node tools/patch-manifests.mjs --check`.
+
+Ao vivo (SEI SP de treinamento 4.1.5, unidade TESTE; nunca enviar, tramitar nem concluir processo): Chrome for Testing com
+`puppeteer.launch({ enableExtensions: true, pipe: true, ignoreDefaultArgs: ["--disable-extensions"], args: ["--remote-debugging-port=PORTA"] })`
+e `browser.installExtension("<repo>/dist")`; ligar as opções abrindo `chrome-extension://<id>/html/options.html` e gravando
+`chrome.storage.sync.set({ dataValues: JSON.stringify([{ configGeral: [{ name, value }] }]) })` (perfil limpo lê TODA opção como
+desligada; nunca ligar `disablequery` junto; reinstalar a extensão zera esse storage). Ao pesquisar o processo, usar sempre a
+pesquisa rápida ou links assinados (URL sem `infra_hash` derruba a sessão do SEI 5). Para o teste de perfil limpo, perfil novo e só
+`infoarvore`, `menurapido` e `filtroarvore` ligadas.
+
+### Alteração necessária em `tools/` (gitignorado)
+
+`tools/check-dom-injection.mjs` precisa conhecer os bundles novos. Em `ARQUIVOS_GERADOS`, acrescentar:
+
+```js
+  'dist/js/init_processo_arvore.js',
+  'dist/js/init_processo_capa.js'
+```
+
+(Aplicado só na cópia local da worktree; no clone principal a mesma alteração deve ser feita à mão.)
+
+## Base e painéis (etapa 1)
 
 ### O que existe
 
@@ -509,12 +652,118 @@ Chrome for Testing com a extensão de `dist/`, opções todas ligadas menos `dis
 - O Estilo Avançado desligado + modo noturno ANTIGO (`dark-mode` no corpo, sem `data-spro-tema`) não foi visto ao vivo (nem a etapa 3 o pintou): o `data-tema` segue o mesmo teste dos painéis.
 - A capa legada deixou de ser desenhada; o iframe oculto e a cadeia `dadosProcessoPro` ficaram (lista acima).
 
+## Filtro da árvore (etapa 5, Task 12): `src/pagina/filtro/`
+
+Barra acima da lista da árvore, no quadro `#frmArvore` (logo antes de `#divArvore`): campo de busca, três chips (Não assinados,
+Externos, Cancelados), botão de limpar e uma linha de estado ("21 de 60 documentos", e o aviso de pastas fechadas). Liga com a opção
+`filtroarvore`, independente de `infoarvore` e `menurapido`. Sem rede, sem tocar na árvore do SEI.
+
+- `filtro.ts` (sem DOM): `aplicarFiltro(arv, f, {unidade})` devolve os ids à vista (documentos que casam e as pastas com algum
+  deles); `documentoCasa`, `naoAssinado`, `eExterno`, `contar`. Regras: os chips SOMAM (com mais de um ligado vale quem casa com
+  qualquer um; "e" daria sempre vazio), a busca RESTRINGE (todas as palavras, sem acento e sem caixa, no nome da árvore ou no número
+  SEI; `normalizarTexto` do `@comum`) e combina com os chips em "e". "Não assinados" = documento do editor (interno ou circular),
+  sem assinatura, não cancelado e, quando a árvore diz a unidade geradora (SEI 4+), da unidade do usuário: é o mesmo conjunto que o
+  destaque do legado (`naoAssinadoPro`) pinta. O núcleo marca o circular como "externo" (o ícone dele não está na lista de internos);
+  o filtro corrige (`eExterno`).
+- `dom.ts`: a árvore do SEI é plana (cada nó são irmãos terminados por `<span><br></span>`; os filhos de uma pasta ficam num `<div>`
+  à parte), então esconder um nó é pôr `data-spro-f-oculto` em cada irmão da linha (numeração, ligação, ícone, nome, duas linhas,
+  ícones rápidos, estrela, unidade geradora, quebra) e o CSS faz `display: none !important`. Nenhum nó muda de lugar; nenhuma classe,
+  id, `href` ou ouvinte do SEI ou dos outros módulos é tocado (o destaque do legado refaz a própria classe sem conflito); limpar
+  devolve o HTML idêntico (teste). A pasta fica à vista se algum documento dela ficar; o `<div>` dos filhos some junto com a pasta.
+  Pasta sem documento conhecido (fechada: só o "Aguarde...") fica à vista e conta no aviso; o nó do processo e qualquer nó que não
+  seja documento (processo anexado) nunca somem. Documento que a árvore mostra mas o modelo não conhece (a leitura do `#ifrPasta` ainda
+  não aconteceu) é classificado pelo DOM (ícone, assinatura `anchorA`, unidade `anchorUG`), igual ao núcleo.
+- `barra.ts`: a barra (`role=search`, `aria-label`; busca `type=search` com `aria-label`; chips são `<button aria-pressed>` com
+  `aria-label` completo; limpar com `aria-label`; estado em `role=status aria-live=polite`; sem `title`). Teclado: Tab percorre busca,
+  limpar e chips; Enter/Espaço alterna o chip; Esc na busca limpa o filtro inteiro e mantém o foco. Digitar espera 90 ms. Um
+  `MutationObserver` (só `childList`: o filtro mexe em atributos e não pode se disparar) reaplica quando a árvore muda por baixo
+  (pasta aberta sob demanda, numeração, duas linhas): logo, no fim da mesma tarefa (para um nó novo numa linha escondida não piscar),
+  e uma vez mais 120 ms depois. Se algo tirar a barra da página, ela volta no mesmo lugar com o mesmo estado. Processo sem documentos
+  nem pastas: a barra se esconde. Tema pelo `data-tema` (Estilo Avançado ou `dark-mode`).
+- Pastas abertas sob demanda: o SEI carrega os documentos da pasta no `#ifrPasta`; `ctx.documentos` (o mesmo mapa do menu) os lê a
+  cada `load`, e o observador reaplica. Pasta aberta depois entra no filtro; o aviso "Pastas fechadas não entram" some quando não há mais.
+- Opção `filtroarvore` (e `processoparado`) com `visivelEm: "lab"` em `opcoes-pagina/src/schema-dados.ts` (a mão; `gerar-schema.mjs`
+  não foi rodado) e a página rebuildada (`dist/html/options.js`).
+
+### Testes e resultado ao vivo
+
+`tests/verificar-filtro.ts` (99 conferências; o pacote todo, 680): modelo na fixture real do 4.1 (43 documentos: cada chip, união,
+busca por nome, sem acento e sem caixa, por número, várias palavras, texto + chip, pastas) e numa árvore sintética no formato do 5
+(cancelado, circular, formulário, outra unidade geradora); DOM montado como a `InfraArvore.js` do SEI monta (linha inteira com
+numeração, duas linhas, ícones rápidos e estrela; pasta fechada; pasta aberta depois; documento só do DOM; processo anexado;
+HTML idêntico ao limpar; ouvintes e classe do destaque do legado intactos; a regra de CSS existe); barra (aria, teclado, Esc,
+contagem, observador, barra tirada que volta, mudança dentro da barra que não reaplica, tema); borda (sem documentos, sem árvore,
+processo de nível sigiloso, com `fetch` que lança: nada de rede).
+
+Ao vivo (SEI SP 4.1.5, processo de 60 documentos em 4 pastas): Não assinados 35 de 60 (os mesmos 35 do destaque do legado),
+Externos 21, Cancelados 1, Despacho + Maria 2, número `0103947` 1; pasta sem documento à vista some (PASTA4 com o filtro de externos)
+e as fechadas ficam; abrir as pastas depois reaplica; Tab, Tab, Enter liga o chip; Esc limpa; botão de limpar. Processo sigiloso
+(`034.00000265/2026-31`, senha pelo modal): barra e filtros funcionam, 0 requisições durante o uso, sem erro de console. Escuro:
+legível (capturas em `scratchpad/live/shots/fim-filtro-*.png`). O botão de limpar do navegador (X dobrado em `type=search`) foi escondido.
+
+## Fechamento (etapa 6, Task 13)
+
+### Fluxo completo ao vivo, numa sessão contínua (SEI SP de treinamento 4.1.5, unidade TESTE, 24/10/2026)
+
+Processo `99906.713-630.000032/2025-82` (60 documentos, 169 andamentos em 2 páginas). Sequência: abrir (sem cache) → painéis → editar uma
+anotação e desfazer → menu do documento (copiar número SEI) → capa → Calcular → Gantt → comparativo → exportar CSV → filtro (chips,
+busca, Esc) → reabrir com cache → limpar o cache e reabrir. Duas configurações: TODAS as opções ligadas (menos `disablequery`) e PERFIL
+LIMPO (Chrome novo) só com `infoarvore`, `menurapido` e `filtroarvore`. Em ambas: todas as etapas passaram, a anotação voltou idêntica ao
+original (conferida reabrindo o modal), a área de transferência recebeu `0105060`, o CSV saiu com BOM, `;` e 6 linhas, o "Consultar
+Andamento" nativo não foi tocado, **0 erros de console** (nem avisos `[SEI Pro]`). Marco zero da tabela de painéis e capa: a árvore na tela.
+
+| Medida | Todas as opções | Perfil limpo + só do módulo |
+| --- | --- | --- |
+| Árvore na tela, contada do pedido (1º processo do perfil, sem cache) | 3,2 / 5,6 / 6,2 / 1,8 s (4 medições; servidor do SEI) | 1,9 s |
+| Painéis prontos depois da árvore, 1º processo do perfil, sem cache | 0,6 a 3,1 s (3,1 / 1,6 / 2,7 / 0,6 s) | 0,29 s |
+| Painéis prontos depois da árvore, sessão aquecida, sem cache | 0,33 s | 0,45 s |
+| Painéis prontos depois da árvore, com cache (o conteúdo do cache aparece junto com a árvore; a rede confirma) | 0,49 s | 0,36 s |
+| Capa depois da árvore (o visualizador chega depois, ritmo do SEI): 1º processo / com cache / aquecida | 1,4 a 1,8 / 1,3 / 0,6 s | 1,4 / 0,6 / 1,3 s |
+| Barra do filtro | junto com a árvore (até 0,2 s antes de os nós serem desenhados) | idem |
+| Editar anotação (salvar e o painel mostrar o novo texto) / desfazer | 0,8 a 1,8 s / 0,5 a 2,7 s (SEI) | 2,2 s / 0,46 s |
+| Menu do documento abre (inclui os 150 ms de espera do mouse) | 0,17 a 0,19 s | 0,18 s |
+| Calcular (169 andamentos, 2 páginas: 2 GET + 3 POST) | 1,6 s | 1,6 s |
+| Gantt abre com o histórico em cache / comparativo / CSV | 34 a 101 ms / 17 a 23 ms / 76 a 135 ms | 34 ms / 22 ms / 66 ms |
+| Filtro: aplicar um chip (60 documentos) | 1,2 a 1,9 ms | 2,7 ms |
+
+Metas da spec: 300 ms com cache e 2 s por painel sem cache. Com cache e na sessão aquecida, cumpridas no sentido de "o primeiro conteúdo
+aparece junto com a árvore"; "todos os painéis fora de carregando ou desatualizado" leva 0,33 a 0,49 s (a rede confirma o cache). No PRIMEIRO
+processo de um perfil novo, com todas as opções do legado ligadas, 2 das 4 medições passaram de 2 s (3,1 e 2,7 s); a quarta, feita com log de
+rede, deu 0,6 s e mostrou os 6 GETs de dados do módulo terminando entre 0,1 e 0,6 s depois de pedidos. Não consegui reproduzir uma medição
+lenta com log de rede, então a causa (servidor do SEI e o legado pedindo muita coisa ao mesmo tempo no primeiro processo) é hipótese, não
+prova. Fica como pendência de acompanhamento.
+
+### SEI 5
+
+Não testado no SEI 5. A única credencial de teste do SEI 5 conhecida é a do ambiente de homologação do MJ, e ela não consta com senha na
+memória do autor (precisaria de login manual); produção (`sei.mj.gov.br`) nunca se usa. Fica como a pendência número 1.
+
+### Portões (24/10/2026, na worktree, branch `feat/processo-ts`)
+
+| Pacote | `tipos` | `verificar` |
+| --- | --- | --- |
+| processo | ok | 680 ok |
+| sei-nucleo (+ `build`) | ok | 511 ok |
+| sei-comum | ok (havia 1 erro de tipo antigo em `tests/verificar-opcoes.ts`, que já existia no master; corrigido) | 763 ok |
+| opcoes-pagina (+ `build`) | ok | 645 ok |
+| acoes-lote / agente-ia / documentos-lote / favoritos / historico / processos-lote | ok | 704 / 1669 / 961 / 620 / 485 / 723 ok |
+| estilo-avancado / link-permanente / ferramentas-pdf | ok | 132 / 117 / 6 ok |
+| projetos | ok | 2588 ok |
+| anotacoes-controle / grade-controle / menu-suspenso / ordem-paineis / pesquisa-rapida / prazos / blocos-assinatura | ok | verdes (34 / "tudo certo" / 17 / 41 / 19 / 58 / OK) |
+| demandas | ok | 1038 ok, **1 falha que já existe no master** ("sem projeto com etapas abertas": `tests/verificar-integracao-projetos.ts`), reproduzida num `git archive` do master; não tem relação com o módulo |
+
+`node tools/check-dom-injection.mjs` (com os dois bundles em `ARQUIVOS_GERADOS`): 0 erros, 0 avisos. `node tools/patch-manifests.mjs
+--check`: 0 manifests a ajustar (a worktree só tem o `dist/manifest.json` do Lab; os derivados são gerados do Lab e, por decisão da
+spec, não recebem o módulo). Bytes: os dois bundles e `dist/html/options.js` só ASCII; as linhas que a branch acrescentou em
+`dist/js/sei-pro-arvore.js` e `sei-functions-pro.js` (escritos à mão) não têm nenhum byte acima de 127 (os 381 de
+`sei-functions-pro.js` já eram do master) nem NUL; sem cópias "nome 2.ext" do iCloud.
+
 ## Comandos
 
 ```
 npm run tipos       # tsc --noEmit
 npm run verificar   # testes (tsx + linkedom)
-npm run build       # verificar + build.mjs (pula entradas que ainda não existem)
+npm run build       # verificar + build.mjs (gera init_processo_arvore.js e init_processo_capa.js em ../dist/js)
 ```
 
 O `build.mjs` reprova, no código que roda na página, `innerHTML` & cia e os endereços que gravam
