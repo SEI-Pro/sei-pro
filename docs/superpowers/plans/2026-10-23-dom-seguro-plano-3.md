@@ -70,6 +70,24 @@ Manuais por área (linhas de hoje; o executor relocaliza pelo nome):
 `importar-doc.js:98, 106`, `nota-rodape.js:263`, `sigilo.js:392, 546` — os sete escrevem no **documento
 do usuário** (P3).
 
+## Decisões do autor (23/10/2026)
+
+1. **Estilo avançado antigo sai de vez** (há o novo, `estilo-avancado/` em TS): `setDarkModePro`,
+   `loadStyleDesign` e o resto do estilo antigo ficam fora do escopo e saem do pacote do Firefox.
+2. **Tabela antiga do Controle** (coleta, agrupamento, quadro, paginação, células de prazo) fica fora.
+3. **Funções que só o Atividades chama** ficam fora (`openEditorDoc`, `openEditorViewDoc`,
+   `openConfigBoxPro`, `togglePainelPro`, `setProgressBarOnProcesso`, `ganttAutoProgressPercent`,
+   `configDatesPreview`).
+4. **O código fora do escopo sai do pacote do Firefox** (não vai à AMO com `on*=`). Consequências, já
+   assumidas neste plano (Task 13): no **oficial** do Firefox entram também o estilo novo
+   (`init_estilo.js`) e a grade nova (`init_grade_controle.js`), que a receita do oficial do Chrome
+   ainda trata como "só do Lab" — senão o oficial do Firefox ficaria sem estilo e sem a tabela agrupada.
+   O Chrome não muda.
+
+**O conserto do canal dos módulos TS no Firefox já existe** (branch `fix/firefox-ponte-ts`, commit
+`c988856`; memória `reference_firefox_porta_iframe`): relé `dist/js/ponte-firefox.js` como background
+do MV2. A Task 13 parte do master com esse branch mesclado (ou mescla antes de começar).
+
 ## Global Constraints
 
 - Tudo do plano 2b continua: ES5 em `dist/js` fora de template literal; acentos em `dist/js` como
@@ -110,8 +128,9 @@ do usuário** (P3).
 4. **Ação definida só no mundo isolado:** a cópia isolada do `sei-functions-pro.js` monta HTML com
    `data-spro-*`, mas o despachante resolve no mundo da página; nome que só exista no isolado vira órfão.
    → `auditActionsPro` em toda tela das Tasks 3 a 8 (órfãos = []).
-5. **Função excluída que outro código chama:** excluir não remove nada, mas o que fica com `on*=`
-   continua no zip e a AMO vê. → contagem "fora do escopo" no fechamento e decisão do autor (Task 14).
+5. **Função esvaziada no pacote do Firefox que outro código chama** (decisão 4): o chamador recebe
+   `undefined` e quebra em silêncio (ou estoura). → classificação de chamadores (Task 13, Step 0b) e o ao
+   vivo no Firefox com o pacote esvaziado.
 
 ---
 
@@ -384,16 +403,35 @@ O `web-ext lint` acusa `caixa.innerHTML = limpo` (`:602`) mesmo sendo o resultad
 
 ## Task 13: Pacote do Firefox
 
-**Depende de:** o conserto do canal dos módulos TS no Firefox (memória `reference_firefox_porta_iframe`,
-plano próprio). Sem ele, os módulos TS com iframe abrem e não conversam.
+**Depende de:** o branch `fix/firefox-ponte-ts` mesclado (relé do Firefox). Sem ele, os módulos TS
+com iframe abrem e não conversam.
+
+**Retirar do pacote o código fora do escopo (decisão 4).** O gerador (`tools/gerar-pacote-firefox.mjs`)
+ganha `--sem-fora-do-escopo`, que, **só na cópia do pacote**, troca o corpo de cada função listada em
+`tools/fora-do-escopo.json` (todos os arquivos) por um corpo vazio que devolve o que um chamador espera
+(`return;`, ou `return '';` para quem devolve HTML/texto — a lista diz qual), e retira do zip os arquivos
+listados com `"*"`. No oficial, tira `init_estilo.js` e `init_grade_controle.js` (e as pastas deles) de
+`SO_LAB` (decisão 4).
+
+- [ ] **Step 0a: Teste que falha (`tests/ferramentas/pacote-firefox.test.mjs`)**: com
+  `--sem-fora-do-escopo`, nenhuma função da lista mantém `on*=` no pacote; os arquivos `"*"` não estão no
+  zip; o código do Chrome (`dist/`) fica intocado; o oficial leva `js/init_estilo.js` e
+  `js/init_grade_controle.js`.
+- [ ] **Step 0b: Chamadores.** Para cada função esvaziada, listar (acorn) quem a chama no código que fica
+  e classificar: chamador também esvaziado / chamador trata `undefined` / precisa de stub com valor. Tabela
+  no ledger; nenhum chamador sem destino. Esperado: 0 casos "sem destino".
+- [ ] **Step 0c: Implementar e GREEN.** Rodar a suíte inteira.
 
 - [ ] **Step 1:** `node tools/gerar-pacote-firefox.mjs <versao> --sem-atividades` e
   `--oficial --sem-atividades`; `arquivos citados ausentes: 0`.
 - [ ] **Step 2: `web-ext lint`** nos dois: 0 erros; **nenhum `UNSAFE_*` fora de `js/lib/`,
   `vendor/` e dos bundles do pdf.js (`js/agente/pdf-*.js`, `js/ferramentas-pdf/pdf-*.js`)**.
 - [ ] **Step 3: Ao vivo no Firefox** (`tests/ao-vivo/firefox-base.mjs`, pacote **Lab**, que tem ID —
-  o oficial temporário sem ID quebra o `storage.sync`): Controle, Pesquisa, processo com árvore e painéis,
-  editor (fechar sem salvar), e cada módulo TS abrindo uma vez.
+  o oficial temporário sem ID quebra o `storage.sync`), com `--sem-atividades --sem-fora-do-escopo`:
+  Controle (a grade nova ligada pelo botão do título; sem ela, a lista nativa do SEI sem erro), Pesquisa,
+  processo com árvore e painéis, editor (fechar sem salvar), o estilo novo, e cada módulo TS abrindo uma
+  vez (os cinco modais ficam abertos = contato com o app). Zero `pageerror` novo (os herdados
+  `redeclaration of const` são do 2.9).
 - [ ] **Step 4:** zips em `release/` só quando o autor pedir.
 
 ---
@@ -404,8 +442,8 @@ plano próprio). Sem ele, os módulos TS com iframe abrem e não conversam.
   "fora do escopo" por arquivo.
 - [ ] **Step 2: Revisão final** em contexto novo (modelo mais capaz), com este plano, o spec, o Review
   Focus e os `Ruling:` do ledger.
-- [ ] **Step 3: Decisão do autor (Review Focus 5):** o código fora do escopo (zonas cinzentas, legado
-  substituído, Atividades) segue no zip com `on*=` e a AMO vê. Opções: (a) enviar assim, explicando; (b)
-  apagar do pacote do Firefox o que é código morto lá; (c) esperar o TS virar padrão e apagar o legado.
+- [ ] **Step 3: Conferência da decisão 4:** no zip do Firefox, `check-dom-injection` sobre o pacote
+  (todos os arquivos do SEI Pro, fora `js/lib/`) sem `on*=` nem inserção crua; `web-ext lint` sem
+  `UNSAFE_*` fora das bibliotecas e dos bundles do pdf.js.
 - [ ] **Step 4:** memória (`project_dom_seguro_firefox`, `project_dom_seguro_licoes_conversao`);
   versão, `pages/HISTORICO.md`, merge e envio à AMO — com o autor.
