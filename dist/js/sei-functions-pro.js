@@ -2674,7 +2674,9 @@ function openDialogCompareDocs() {
                         }
                     })
                     $('#docLoteSelect_chosen').addClass('chosenLoading');
-                    docsLote_getDocsArvore(true, idRef);
+                    // Lista de documentos da arvore no select (era o docsLote_getDocsArvore do sei-pro-docs-lote.js,
+                    // que nao vai no pacote do Firefox): as duas funcoes moram aqui.
+                    getDocsArvore($('#docLoteSelect'), function(select, optionBlank, disableId) { getDocsArvore_fillSelect(select, optionBlank, disableId); }, function() {}, true, idRef);
                     $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", true).addClass("ui-state-disabled");
                 },
                 buttons: [{
