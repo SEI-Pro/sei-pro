@@ -9,7 +9,7 @@
  */
 
 /** Valor gravado da opção; `undefined` quando não há configuração legível. */
-function valorOpcaoLegada(dataValues: unknown, nome: string): unknown {
+export function valorOpcaoLegada(dataValues: unknown, nome: string): unknown {
   let perfis: unknown = dataValues;
   if (typeof dataValues === "string") {
     if (!dataValues.trim()) return undefined;

@@ -257,6 +257,38 @@ export const ICONES = {
     ["circle", { cx: "17.6", cy: "17.6", r: "4.2" }],
     ["path", { d: "m15.6 17.7 1.5 1.5 2.5-3" }],
   ],
+  // Menu do documento na árvore (módulo Processo).
+  link: [
+    ["path", { d: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" }],
+    ["path", { d: "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" }],
+  ],
+  novaAba: [
+    ["path", { d: "M13.5 4.5H19.5V10.5" }],
+    ["path", { d: "M19.5 4.5 11 13" }],
+    ["path", { d: "M17.5 14v4a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V8A1.5 1.5 0 0 1 6 6.5h4" }],
+  ],
+  imprimir: [
+    ["path", { d: "M7 9V4.5h10V9" }],
+    ["rect", { x: "4", y: "9", width: "16", height: "8", rx: "2" }],
+    ["path", { d: "M7 14h10v5.5H7z" }],
+  ],
+  caneta: [
+    ["path", { d: "M14.5 5.5 18.5 9.5" }],
+    ["path", { d: "M4.5 19.5 5.6 15 16 4.6a1.5 1.5 0 0 1 2.1 0l1.3 1.3a1.5 1.5 0 0 1 0 2.1L9 18.4z" }],
+    ["path", { d: "M13 20h7" }],
+  ],
+  cancelar: [
+    ["circle", { cx: "12", cy: "12", r: "8.5" }],
+    ["path", { d: "M6 6l12 12" }],
+  ],
+  duplicar: [
+    ["rect", { x: "8.5", y: "8.5", width: "11", height: "11", rx: "2" }],
+    ["path", { d: "M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" }],
+  ],
+  email: [
+    ["rect", { x: "3.5", y: "5.5", width: "17", height: "13", rx: "2" }],
+    ["path", { d: "M4 7.5l8 6 8-6" }],
+  ],
 } satisfies Record<string, Forma[]>;
 
 export type NomeIcone = keyof typeof ICONES;

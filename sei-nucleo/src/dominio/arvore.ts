@@ -63,6 +63,12 @@ export interface DocumentoArvore {
   acoes: string[];
   /** Títulos dos botões da barra do documento ("Excluir", "Ciência", "Assinar Documento"...): o que o SEI oferece ao usuário. */
   botoes: string[];
+  /**
+   * Nomes das funções dos botões sem endereço (`onclick="excluirDocumento()"`: excluirDocumento, cienciaDocumento,
+   * assinarDocumento, editarConteudo, enviarEmailDocumento...). Identificam a ação sem depender do rótulo, que muda
+   * com o idioma e com a versão do SEI.
+   */
+  funcoes?: string[];
 }
 
 export interface Arvore {
@@ -78,6 +84,8 @@ export interface Arvore {
   acoesProcesso: string[];
   /** Títulos dos botões da barra do processo. */
   botoesProcesso: string[];
+  /** Nomes das funções dos botões do processo sem endereço (cienciaProcesso, reabrirProcesso, incluirEmBloco...). */
+  funcoesProcesso?: string[];
   /** Link assinado da tela do processo (`arvore_visualizar` do nó raiz). */
   linkProcesso: string;
   /** Ações sinalizadas no processo (NosAcoes com idPai = processo). */
@@ -137,19 +145,15 @@ function botoesDe(html: string): string[] {
   return [...new Set([...html.matchAll(/<img[^>]*\btitle="([^"]+)"/g)].map((m) => texto(m[1])))];
 }
 
+/** Nomes das funções chamadas por `onclick="nome(...)"` numa barra de ações. */
+function funcoesDe(html: string): string[] {
+  return [...new Set([...html.matchAll(/onclick=\\?"([A-Za-z_]\w*)\(/g)].map((m) => m[1]))];
+}
+
 const SEM_NUMERO = /\s*\(\d{5,}\)\s*$/;
 
-/** Analisa o HTML da árvore. Não faz requisição. */
-export function lerArvore(pagina: Pagina): Arvore {
-  const html = pagina.html;
-  const nos = lerNos(html);
-  const sinais = lerAcoes(html);
-  const raiz = nos.find((n) => n.args[0] === "PROCESSO");
-  if (!raiz) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A \u00E1rvore do processo n\u00E3o tem o n\u00F3 do processo.");
-  const idProcedimento = texto(raiz.args[1]);
-  const nivelProc = nivelDe(sinais, idProcedimento);
-
-  const documentos: DocumentoArvore[] = nos
+function documentosDe(nos: No[], sinais: AcaoArvore[]): DocumentoArvore[] {
+  return nos
     .filter((n) => n.args[0] === "DOCUMENTO")
     .map((n) => {
       const id = texto(n.args[1]);
@@ -176,8 +180,31 @@ export function lerArvore(pagina: Pagina): Arvore {
         src,
         acoes: linksAssinados(n.props.acoes ?? ""),
         botoes: botoesDe(n.props.acoes ?? ""),
+        funcoes: funcoesDe(n.props.acoes ?? ""),
       };
     });
+}
+
+/**
+ * Documentos de uma página que NÃO é a árvore inteira: a resposta de uma pasta aberta sob demanda
+ * (`procedimento_paginar`, que o SEI carrega no `#ifrPasta`) traz os `Nos[n]` dos documentos da pasta, sem o nó do
+ * processo. Não faz requisição.
+ */
+export function lerDocumentosDaPagina(pagina: Pick<Pagina, "html">): DocumentoArvore[] {
+  return documentosDe(lerNos(pagina.html), lerAcoes(pagina.html));
+}
+
+/** Analisa o HTML da árvore. Não faz requisição. */
+export function lerArvore(pagina: Pagina): Arvore {
+  const html = pagina.html;
+  const nos = lerNos(html);
+  const sinais = lerAcoes(html);
+  const raiz = nos.find((n) => n.args[0] === "PROCESSO");
+  if (!raiz) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "A \u00E1rvore do processo n\u00E3o tem o n\u00F3 do processo.");
+  const idProcedimento = texto(raiz.args[1]);
+  const nivelProc = nivelDe(sinais, idProcedimento);
+
+  const documentos = documentosDe(nos, sinais);
 
   return {
     idProcedimento,
@@ -191,6 +218,7 @@ export function lerArvore(pagina: Pagina): Arvore {
     documentos,
     acoesProcesso: linksAssinados(raiz.props.acoes ?? ""),
     botoesProcesso: botoesDe(raiz.props.acoes ?? ""),
+    funcoesProcesso: funcoesDe(raiz.props.acoes ?? ""),
     linkProcesso: texto(raiz.args[3]).replace(/&amp;/g, "&"),
     sinais: sinais.filter((s) => s.idPai === idProcedimento),
     links: linksAssinados(html),

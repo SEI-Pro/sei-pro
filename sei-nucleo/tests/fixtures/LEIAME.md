@@ -22,6 +22,14 @@ Somente leitura (GET), na unidade TESTE. Hashes de sessão zerados; o login `283
 | `sei41/p_acompanhamento_alterar.html` | `acompanhamento_alterar` do mesmo acompanhamento: formulário com `hdnIdAcompanhamento`, grupo e observação preenchidos. |
 | `sei41/p_anotacao_prioridade.html` | `anotacao_registrar` do processo 148265: anotação com texto em checklist e prioridade marcada. |
 
+## Capturas do SEI SP Treinamento (4.1.5) para o menu da árvore, 24/10/2026
+
+| Arquivo | Origem |
+|---|---|
+| `sei41/pasta_paginar.html` | O que o SEI deixa no `#ifrPasta` depois de abrir a Pasta I do processo 148265 (resposta de `procedimento_paginar`): os `Nos[n]` e `Nos[n].acoes` de 20 documentos da pasta (inclusive um processo anexado e um documento movido), sem o nó do processo. A resposta é JavaScript que o navegador guarda como comentário; o arquivo é o `outerHTML` do documento do iframe, com o `<html>` sem os atributos da extensão e os hashes de sessão zerados. |
+
+Não há captura real de árvore do SEI 5 nas fixtures: os testes do menu usam a mesma árvore do 4.1 com a âncora do 5 montada a partir do fonte do 5.0.0 (`arvore_montar.js`: `data-serialtip` no `anchorImg`), marcada como sintética nos próprios testes.
+
 ## Fixtures sintéticas (não são captura)
 
 | Arquivo | Origem | Substituir |
