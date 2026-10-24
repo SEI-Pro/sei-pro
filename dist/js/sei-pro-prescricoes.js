@@ -165,7 +165,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
                     buttons: []
             });
             $('#dialogBoxPro .prazoPrescricaoPro').each(function () {
-                htmlCruPro($(this), prazosPrescricaoPro[parseInt($(this).attr('data-indice'), 10)] || '', 'html', 'plano-3: getDatesPreview');
+                htmlPro($(this), prazosPrescricaoPro[parseInt($(this).attr('data-indice'), 10)] || '');
             });
     }
 }

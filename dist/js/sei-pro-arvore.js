@@ -1908,7 +1908,7 @@ function sticknoteDates(this_) {
         htmlDateStick = (checkDate !== null) ? parent.getDatesPreview({date: moment(checkDate[0], 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss')}) : '';
         htmlDateStick = (htmlDateStick != '') ? lerHtmlArvorePro(htmlDateStick).html() : htmlDateStick;
     var htmlStick = (htmlDateStick || userStick) ? '<span class="dateboxDisplay" style="'+(checkDate !== null && moment(checkDate[0], 'DD/MM/YYYY') < moment() ? 'background: #fac3c4 !important;' : '')+'" >'+htmlDateStick+userStick+'</span>' : '';
-    htmlCruArvorePro(_parent.find('.stickNoteDate'), htmlStick, 'html', 'plano-3: getDatesPreview');
+    htmlArvorePro(_parent.find('.stickNoteDate'), htmlStick);
 }
 function sticknotePriority(this_) {
     var _this = $(this_);
@@ -2279,7 +2279,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   </div>'+
                                     '</div>';
         var marcadorProcessoPro = parent.getHtmlMarcador(id_procedimento, processoAberto);
-        var iconMarcador = marcadorProcessoPro.icon; // spro-limpo: <img> e texto do marcador, sem on*= (getHtmlMarcador)
+        var iconMarcador = marcadorProcessoPro.icon;
         // O prazo do marcador vem do getHtmlMarcador (sei-functions-pro.js, plano 3), ainda com onclick,
         // onmouseover e o selo do getDatesPreview: o portao os arrancaria. O painel continua sanitizado e
         // so esse trecho entra depois, cru, no ponto reservado. O prazo nativo do SEI ja e marcacao limpa.
@@ -2348,7 +2348,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         // O selo vem do getDatesPreview (sei-functions-pro.js, plano 3), com onclick: entra cru depois, no ponto
         // reservado, como o prazo do marcador. O link em volta continua pelo portao.
         var seloReaberturaCruPro = (dataAcompEsp && dataAcompEsp.config && dataAcompEsp.config.hasOwnProperty('Reabertura')) ? parent.getDatesPreview({date: moment(dataAcompEsp.config.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') }) : false;
-        var iconReabertura = (seloReaberturaCruPro) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">Reabertura: '+dataAcompEsp.config.Reabertura+'<span class="seloReaberturaArvorePro"></span></a>' : ''; // spro-limpo: o selo so e testado, entra depois pelo ponto reservado
+        var iconReabertura = (seloReaberturaCruPro) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" data-spro-click="parent.copyTextThis" data-spro-tip="Clique para copiar">Reabertura: '+dataAcompEsp.config.Reabertura+'<span class="seloReaberturaArvorePro"></span></a>' : '';
 
         var htmlAcompEsp =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="acompanhamento_especial">'+
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
@@ -2476,8 +2476,8 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
 
         $('.panelDadosArvorePro').remove();
         htmlArvorePro($('#frmArvore'), htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes, 'append');
-        htmlCruArvorePro($('#frmArvore .prazoMarcadorArvorePro'), prazoMarcadorCruPro || '', 'replace', 'plano-3: getHtmlMarcador');
-        htmlCruArvorePro($('#frmArvore .seloReaberturaArvorePro'), seloReaberturaCruPro || '', 'replace', 'plano-3: getDatesPreview');
+        htmlArvorePro($('#frmArvore .prazoMarcadorArvorePro'), prazoMarcadorCruPro || '', 'replace');
+        htmlArvorePro($('#frmArvore .seloReaberturaArvorePro'), seloReaberturaCruPro || '', 'replace');
         if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();  
         if (!dataMarcador && processoAberto) {
             getDataMarcadorProcesso();
