@@ -1,4 +1,5 @@
 import { resumo } from "./util";
+import { verificarAnotacao } from "./verificar-anotacao";
 import { verificarCapa } from "./verificar-capa";
 import { verificarFiltro } from "./verificar-filtro";
 import { verificarGantt } from "./verificar-gantt";
@@ -15,6 +16,7 @@ verificarTexto();
 await verificarPaineis();
 await verificarMenu();
 await verificarLupa();
+await verificarAnotacao();
 await verificarProcessosDoInteressado();
 await verificarGantt();
 await verificarCapa();

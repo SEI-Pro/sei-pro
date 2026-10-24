@@ -166,6 +166,64 @@ export function alternarChecklist(texto: string, de: number, ate: number): strin
   return juntarLinhas(l);
 }
 
+/** Índice (a partir de 0) da linha que contém a posição `pos` (0 a `texto.length`). */
+export function linhaDaPosicao(texto: string, pos: number): number {
+  let n = 0;
+  const fim = Math.min(Math.max(pos, 0), texto.length);
+  for (let i = 0; i < fim; i++) if (texto[i] === "\n") n += 1;
+  return n;
+}
+
+/** Posição do primeiro caractere da linha `linha` (a partir de 0); depois da última linha, o fim do texto. */
+export function posicaoDaLinha(texto: string, linha: number): number {
+  let atual = 0;
+  for (let i = 0; i < texto.length; i++) {
+    if (atual === linha) return i;
+    if (texto[i] === "\n") atual += 1;
+  }
+  return atual === linha ? texto.length : texto.length;
+}
+
+/**
+ * Move as linhas `de..ate` uma linha para cima (`-1`) ou para baixo (`1`), trocando com a vizinha. Devolve o texto novo e a
+ * faixa nova (as mesmas linhas, agora em outro lugar), ou `null` quando já está na ponta.
+ */
+export function moverLinhas(texto: string, de: number, ate: number, sentido: -1 | 1): { texto: string; de: number; ate: number } | null {
+  const linhas = texto.replace(/\r\n?/g, "\n").split("\n");
+  if (de < 0 || ate >= linhas.length || de > ate) return null;
+  if (sentido === -1 ? de === 0 : ate === linhas.length - 1) return null;
+  const faixa = linhas.slice(de, ate + 1);
+  if (sentido === -1) {
+    const vizinha = linhas[de - 1] as string;
+    linhas.splice(de - 1, faixa.length + 1, ...faixa, vizinha);
+    return { texto: linhas.join("\n"), de: de - 1, ate: ate - 1 };
+  }
+  const vizinha = linhas[ate + 1] as string;
+  linhas.splice(de, faixa.length + 1, vizinha, ...faixa);
+  return { texto: linhas.join("\n"), de: de + 1, ate: ate + 1 };
+}
+
+/**
+ * Enter dentro de uma checklist: no fim (ou no meio) de um item abre o próximo item ABERTO, levando o que sobrar da linha; em item
+ * vazio tira a marca (sai da lista). `null` = não é com a checklist (o campo faz a quebra de sempre).
+ */
+export function continuarChecklist(texto: string, pos: number): { texto: string; pos: number } | null {
+  const ini = posicaoDaLinha(texto, linhaDaPosicao(texto, pos));
+  const quebra = texto.indexOf("\n", ini);
+  const fim = quebra === -1 ? texto.length : quebra;
+  const linha = texto.slice(ini, fim);
+  const m = MARCA.exec(linha);
+  if (!m || pos < ini + m[0].length) return null;
+  const resto = linha.slice(m[0].length);
+  if (resto.trim() === "" && pos >= fim) {
+    return { texto: `${texto.slice(0, ini)}${texto.slice(fim)}`, pos: ini };
+  }
+  const antes = texto.slice(0, pos);
+  const depois = texto.slice(pos);
+  const novo = `${antes}\n[ ] ${depois.replace(/^[ \t]+/, "")}`;
+  return { texto: novo, pos: antes.length + 5 };
+}
+
 export function dataDaAnotacao(texto: string): string | null {
   const m = DATA.exec(semAcento(texto));
   return m ? `${dois(Number(m[1]))}/${dois(Number(m[2]))}/${m[3]}` : null;

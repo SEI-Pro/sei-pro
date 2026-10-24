@@ -8,7 +8,6 @@ import type { ItemLupa } from "@nucleo/formulario/formulario";
 import { ListaEditavel } from "../src/modelo/lista";
 import { type EstadoDaBusca, Pesquisador } from "../src/modelo/pesquisador";
 import type { ContextoProcesso } from "../src/pagina/contexto";
-import { abrirModalAnotacao } from "../src/pagina/modais/anotacao";
 import { abrirModalAssuntos, abrirModalInteressados } from "../src/pagina/modais/processo";
 import { fingirDialogos } from "./dialogo";
 import { checar, disparar, instalarDom, secao, tique } from "./util";
@@ -386,73 +385,5 @@ export async function verificarLupa(): Promise<void> {
     })(),
   );
   fechar();
-  secao("modal da anotacao: pele de post-it e rodape sem sobreposicao");
-  {
-    const gravadas: Array<{ texto: string; prioridade: boolean }> = [];
-    const ctxA = {
-      topo: doc,
-      doc,
-      op: {
-        anotar: async (a: { texto: string; prioridade: boolean }): Promise<ResultadoEscrita> => (
-          gravadas.push(a), { alvo: "x", mudancas: [], aplicado: true, resumo: "Anotacao gravada." }
-        ),
-      },
-      recarregar: () => void (recarregou += 1),
-    } as unknown as ContextoProcesso;
-    abrirModalAnotacao(ctxA, { texto: "Aguardando parecer.\n[ ] Item", prioridade: false });
-    const d = dlg();
-    const papel = d?.querySelector(".spro-p-post-it.spro-p-post-it-edicao");
-    checar(
-      "o texto mora no papel do post-it (a mesma classe do cartao)",
-      !!papel && papel.querySelector("textarea.spro-p-post-it-texto") !== null,
-    );
-    const rodapePapel = papel?.querySelector(".spro-p-post-it-rodape");
-    const filhos = [...(rodapePapel?.children ?? [])].map((e) => e.className);
-    checar(
-      "rodape do papel: contador primeiro, ferramentas depois (cada um no seu bloco, nunca um dentro do outro)",
-      filhos.length === 2 &&
-        /spro-p-contador/.test(filhos[0] ?? "") &&
-        /spro-p-post-it-ferramentas/.test(filhos[1] ?? "") &&
-        rodapePapel?.querySelector(".spro-p-contador")?.parentElement === rodapePapel,
-      filhos,
-    );
-    checar(
-      "ferramentas: prioridade, checklist e data, cada uma com aria-label",
-      ["Prioridade", "Transformar as linhas selecionadas em checklist", "Data para inserir na anotação"].every(
-        (r) => papel?.querySelector(`[aria-label="${r}"]`) !== null,
-      ),
-    );
-    checar("contador com o que resta", /\d+ caracteres restantes/.test(papel?.querySelector(".spro-p-contador")?.textContent ?? ""));
-    checar(
-      "sem Cancelar; Salvar e Remover anotacao no rodape do modal",
-      !botao("Cancelar") && !!botao("Salvar") && !!botao("Remover anotação"),
-    );
-    checar("sem title", d?.querySelector("[title]") === null);
-    const prio = botao("Prioridade") as HTMLButtonElement;
-    checar("prioridade comeca desligada (aria-pressed)", prio.getAttribute("aria-pressed") === "false");
-    prio.click();
-    checar("clicar liga a prioridade", prio.getAttribute("aria-pressed") === "true");
-    const area = d?.querySelector("textarea") as HTMLTextAreaElement;
-    area.value = "Novo texto";
-    disparar(area, "input");
-    checar(
-      "o contador acompanha a digitacao",
-      /490 caracteres restantes/.test(papel?.querySelector(".spro-p-contador")?.textContent ?? ""),
-      papel?.querySelector(".spro-p-contador")?.textContent,
-    );
-    botao("Salvar")?.click();
-    await tique(20);
-    checar(
-      "Salvar grava texto e prioridade e refaz o painel",
-      gravadas[0]?.texto === "Novo texto" && gravadas[0].prioridade === true && dlg() === null && recarregou >= 1,
-      gravadas,
-    );
-    abrirModalAnotacao(ctxA, null);
-    checar(
-      "anotacao nova: titulo de adicionar e sem Remover",
-      dlg()?.querySelector("h2")?.textContent === "Adicionar anotação" && !botao("Remover anotação"),
-    );
-    dlg()?.close();
-  }
   restaurar();
 }

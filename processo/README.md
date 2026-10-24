@@ -8,7 +8,7 @@ Desenho: `docs/superpowers/specs/2026-10-23-processo-design.md`; plano: `docs/su
 ## Estado
 
 Etapas 1 a 5 concluídas, a etapa 6 (fechamento) feita e a etapa 7 (24/10/2026: título da aba, aviso de não assinados, edição de
-assuntos e interessados, processos do interessado e a pele de post-it do modal da anotação) entregue: base e painéis, menu da árvore,
+assuntos e interessados, processos do interessado e a pele de post-it do modal da anotação) entregue; a rodada seguinte (24/10/2026) igualou os cabeçalhos dos painéis ao rótulo nativo "Consultar Andamento" e trocou o modal da anotação pela edição no próprio painel (ver "Escala de tamanhos" e a etapa 7, item 5). Base e painéis: base e painéis, menu da árvore,
 andamentos e Gantt, capa e cards, filtro da árvore. Testadas ao vivo no SEI SP de treinamento (4.1.5, CK4), com todas as opções ligadas e com perfil limpo mais só as
 opções do módulo. **O SEI 5 não foi exercitado ao vivo** (sem credencial utilizável sem login manual); só há teste com árvore
 sintética no formato do 5 e leitura do fonte do 5.0.0. Entrega só no `dist/manifest.json` (Lab, MV3).
@@ -39,13 +39,14 @@ processo/
                        (assuntos/interessados), pesquisador (busca incremental) e busca de processos do interessado
     repositorio.ts     cache em chrome.storage.local
     pagina/            quadro da árvore: main, árvore, contexto, leituras, operações, opções, marca (cessão do legado), titulo
-      paineis/ modais/ painéis e edições (lupa.ts: assuntos e interessados; interessado.ts: processos do interessado)
+      paineis/ modais/ painéis e edições (lupa.ts: assuntos e interessados; interessado.ts: processos do interessado;
+                         paineis/anotacaoEditor.ts: editor da anotação no próprio painel, sem modal)
       menuDoc/ menu vertical e ícones fixos do documento
       filtro/            filtro da árvore (modelo, DOM, barra)
       aviso/             aviso de não assinados no quadro do Enviar Processo (modelo, DOM, ligar)
     gantt/             modal do histórico: modelo, SVG, dica, comparativo, CSV/impressão, cache de 30 min
     capa/              capa e cards: dados, cards, resumo, QR próprio, parado, controle (vigia)
-    ui/                casca do painel, esqueleto, erro com "Tentar de novo"
+    ui/                casca do painel, glifos preenchidos (SVG próprio), esqueleto, erro com "Tentar de novo"
   tests/               tsx + linkedom (verificar-*.ts); fixtures reais em ../sei-nucleo/tests/fixtures
 ```
 
@@ -189,21 +190,61 @@ pesquisa rápida ou links assinados (URL sem `infra_hash` derruba a sessão do S
 
 Variáveis em `estatico/processo.css` (valem no `<html data-seipro-processo-paineis>`, nos painéis `.spro-p-raiz` e no filtro). Medido ao vivo no SEI SP (quadro de 373 px, 24/10/2026); os modais e o menu do documento não mudam.
 
+**Regra da harmonia (24/10/2026): o cabeçalho de cada painel é o rótulo nativo "Consultar Andamento".** O legado desenha esse rótulo como
+`a.newLink` com `i.fas.fa-search.azulColor.iconDadosProcesso`; os painéis do módulo (e "Processos Relacionados", que o legado estiliza) copiam o
+estilo medido, não o estilo que parecia certo:
+
+| Variável (`processo.css`) | Valor | Origem |
+| --- | --- | --- |
+| `--spro-p-fonte-titulo` | 13,5 px, peso 400, `line-height` 18,9 px, `letter-spacing: normal`, mesma família (Roboto) | `a.newLink` com o módulo ativo |
+| `--spro-p-cor-titulo` | claro `#666666`; escuro `#fbfbfe` | `a.newLink` (`#666`) e a regra `.seiSlim.dark-mode *` do legado |
+| `--spro-p-cor-icone` | claro `#4285f4`; escuro `#0494c7` | `azulColor` e `.seiSlim.dark-mode i.azulColor` |
+| `--spro-p-icone`, `--spro-p-gap-icone` | 16 px; 5 px | a lupa (`font-size: 16px`) e a margem de 5 px do ícone |
+| `--spro-p-recuo` | 17,4 px | 8 (quadro) + 2,4 (padding de `#divConsultarAndamento`) + 5 (margem do link) + 5 (padding do link) = lupa em x 25,4 px; o texto sai 21 px depois (x 46,4 px) |
+| `--spro-p-cor-corpo` | claro `#444b52`; escuro `#dfe2e6` | corpo um degrau abaixo do título em tamanho (`--spro-p-fonte-corpo`, 13 px) e cinza escuro, não preto |
+| `--spro-p-alvo` | 26 px | botões de ação e de recolher (cinza, preenchidos, `--spro-suave`; azul só no hover) |
+
+Os ícones são SVG PREENCHIDOS próprios (`src/ui/glifos.ts`, grade de 24, `currentColor`): sem Font Awesome, sem jQuery, mesmo peso visual dos `fas fa-*`.
+Equivalências: Anotações = sticky-note, Atribuição = user-tie, Marcador = tags, Acompanhamento = eye, Bloco Interno = book, Especificação = comment-dots,
+Tipo = inbox, Nível de Acesso = globe-americas / lock / user-slash (o ícone do cabeçalho troca com o nível, como no legado), Interessados = users,
+Assuntos = bookmark, Observações = comment-alt; ações: lápis, lixeira, mais, exclamação (prioridade, urgência), cadeado, chevron, lupa, disquete,
+checklist, calendário, fechar. No modo escuro antigo o SEI Pro pinta todo descendente de claro com `!important`; o ícone reafirma o azul com `!important`.
+O ícone fica na linha de cima da caixa do texto, como no link nativo (o `a.newLink` alinha a lupa pela linha de base: o ícone sobe 2,0 px em relação ao topo do texto);
+o cabeçalho é `header > .spro-p-titulo (ícone + h3) + ações + recolher`.
+
+### Computed styles: Consultar Andamento x cabeçalhos (SEI SP, quadro de 373 px, 24/10/2026)
+
+Alvo: diferença de 0 nos pares. `x` é a posição absoluta no quadro; `dY` é a distância entre o topo do ícone e o topo da caixa do texto. Antes: o cabeçalho tinha 650
+de peso, `#1b1f24`, ícone traçado de 1,8 px em `#1f5fbf` na coluna x 12 e o texto em x 34.
+
+| Linha | cor do texto | tamanho / peso / altura de linha | cor do ícone | ícone | ícone x | texto x | dY |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Consultar Andamento (nativo), claro | `rgb(102,102,102)` | 13,5 px / 400 / 18,9 px | `rgb(66,133,244)` | 16 x 16, glifo FA 900 | 25,4 | 46,4 | -2 |
+| Cabeçalhos ANTES (todos, claro) | `rgb(27,31,36)` | 13,5 px / **650** / 18,9 px | `rgb(31,95,191)` | 16 x 16, traço | **12** | **34** | -0,05 |
+| Cabeçalhos DEPOIS (11 painéis, claro) | `rgb(102,102,102)` | 13,5 px / 400 / 18,9 px | `rgb(66,133,244)` | 16 x 16, preenchido | 25,4 | 46,4 | -2 |
+| Processos Relacionados ANTES (claro) | `rgb(33,37,41)` | 13,5 px / 400 / 18,9 px | `rgb(66,133,244)` | **20** x 16 | **27,4** | **52,4** | -2 |
+| Processos Relacionados DEPOIS (claro) | `rgb(102,102,102)` | 13,5 px / 400 / 18,9 px | `rgb(66,133,244)` | 16 x 16 | 25,4 | 46,4 | -2 |
+| Consultar Andamento (nativo), escuro | `rgb(251,251,254)` | 13,5 px / 400 / 18,9 px | `rgb(4,148,199)` | 16 x 16 | 25,4 | 46,4 | -2 |
+| Cabeçalhos ANTES (escuro) | `rgb(251,251,254)` | 13,5 px / **650** / 18,9 px | **`rgb(251,251,254)`** (o `*` do legado pintava o ícone de branco) | 16 x 16 | **12** | **34** | -0,05 |
+| Cabeçalhos DEPOIS (11 painéis, escuro) | `rgb(251,251,254)` | 13,5 px / 400 / 18,9 px | `rgb(4,148,199)` | 16 x 16 | 25,4 | 46,4 | -2 |
+
+Capturas lado a lado (antes | depois): `scratchpad/live/shots/lado-a-lado-{claro,escuro}-{topo,paineis}.png` (e as originais `antes-*` / `depois-*`).
+
+### Escala geral (24/10/2026, antes da harmonia dos cabeçalhos)
+
 | Elemento | Antes | Depois |
 | --- | --- | --- |
 | "Consultar Andamento" (legado `a.newLink`) | 14,4 px, lupa 17,3 px | 13,5 px (`--spro-p-fonte-titulo`), lupa 16 px (`--spro-p-icone`) |
 | "Processos Relacionados" (rótulo / itens) | 14 px, ícone 16,8 px / 14 px | 13,5 px, ícone 16 px / 13 px |
-| Cabeçalho do painel (h3) / ícone | 12 px (650) / 15 px | 13,5 px (650) / 16 px |
 | Corpo, vazio, erro, link, status do filtro | 12 / 11,5 px | 13 px (`--spro-p-fonte-corpo`) |
 | Chips, chips do filtro | 11 / 11,5 px | 12 px (`--spro-p-fonte-pequena`) |
 | Botões de ação e de recolher | 22 px | 26 px (`--spro-p-alvo`) |
 | Ícone dentro de chip e do nível | 11 a 13 px | 13 px (`--spro-p-icone-mini`) |
 | Campo de busca do filtro / chip do filtro | 28 / 22 px | 30 / 26 px |
 
-O legado só cede de tamanho com o módulo ativo (`html[data-seipro-processo-paineis]`); sem o módulo nada muda. A anotação voltou à pele do
-post-it do legado (degradê amarelo `#f9efaf` a `#f7e98d`, borda tracejada fina, sombra suave, canto dobrado), amarelo também no escuro,
-com texto escuro reafirmado por `!important` porque `.seiSlim.dark-mode *` pinta todo descendente de claro. A edição é no modal, que desde a
-etapa 7 usa o mesmo papel (ver "Etapa 7", item 5); o rodapé do editor antigo, em que o contador passava por baixo dos ícones, não existe mais.
+O legado só cede de tamanho com o módulo ativo (`html[data-seipro-processo-paineis]`); sem o módulo nada muda. A anotação segue a pele do post-it do legado
+(degradê amarelo `#f9efaf` a `#f7e98d`, borda tracejada fina, sombra suave, canto dobrado), amarelo também no escuro, com texto escuro reafirmado por
+`!important` porque `.seiSlim.dark-mode *` pinta todo descendente de claro. A edição é no próprio painel (etapa 7, item 5).
 
 ## Base e painéis (etapa 1)
 
@@ -835,19 +876,42 @@ a última página escreve). **Com um único resultado o SEI pula direto para o p
 legado: não usa iframe; sigiloso não tem o painel; o legado montava a URL do processo à mão (`...?acao=procedimento_trabalhar&id_procedimento=`),
 que derruba a sessão no SEI 5.
 
-### 5. Edição da anotação: a pele de post-it (`src/pagina/modais/anotacao.ts`)
+### 5. Edição da anotação NO LUGAR, sem modal (`src/pagina/paineis/anotacaoEditor.ts`, `anotacoes.ts`)
 
-O modal usa o mesmo papel do cartão do painel (`spro-p-post-it`: degradê amarelo `#f9efaf` a `#f7e98d`, escuro `#e9dc9b` a `#dccb73`, borda
-tracejada, canto dobrado), amarelo nos dois temas. O texto ocupa o papel (fundo transparente: antes a área de texto saía cinza `#dfdfdf` no
-tema escuro) e o rodapé do papel traz o contador "N caracteres restantes" à esquerda e, à direita, Prioridade (botão com `aria-pressed`), Checklist e
-Data. O contador tem `flex: 1 1 11em` e as ferramentas `margin-left: auto` num `flex-wrap`: quando não cabem lado a lado, descem para a linha
-de baixo; nunca se sobrepõem (medido ao vivo em 900, 520 e 400 px de largura do modal). Salvar e Remover anotação ficam no rodapé do modal.
+O modal de edição da anotação foi apagado (a pele de post-it e o rodapé que se sobrepunha ao contador ficaram para trás). Clicar no papel do cartão, no
+lápis, no "+" ou em "Adicionar anotação" troca o cartão, no mesmo painel, por um editor com a mesma pele do post-it (amarelo nos dois temas):
+
+- **Área de texto** (`aria-label="Anotação"`) que CRESCE com o conteúdo (mede o `scrollHeight`; teto de 60% da altura do quadro, depois rola), limite de **500
+  caracteres** (o SEI: `definirAnotacao` corta em 500 e o legado tem `maxlength=500`), contador "N caracteres restantes" e, no limite, "Você atingiu o número máximo
+  de caracteres.". O texto gravado é aparado.
+- **Barra de ferramentas** em linha própria (`role=toolbar`, quebra de linha em vez de sobrepor, qualquer largura): Salvar, Prioridade (`aria-pressed`), Checklist
+  (alterna `[ ]` nas linhas selecionadas, como o legado), subir e descer linhas, data (`<input type=date>`: coloca ou troca a primeira data `dd/mm/aaaa` do texto),
+  Remover (só anotação existente, com confirmação) e Descartar. Todos os botões têm `aria-label`; alvos de 26 px; sem `title`.
+- **Checklist**: Enter no fim (ou no meio) de um item abre o próximo item ABERTO levando o resto da linha; Enter em item vazio tira a marca e sai da lista;
+  Alt+seta para cima/baixo move as linhas selecionadas (com o cursor sem seleção, ele continua na mesma coluna: digitar não apaga nada). Marcar e desmarcar
+  itens continua direto no cartão, sem entrar em edição: grava na hora (`alternarItemDaAnotacao`, lendo a anotação dentro da fila) e o painel relê.
+- **Atalhos**: Ctrl/Cmd+Enter salva; Esc descarta, e só pergunta ("Descartar as alterações desta anotação?") se houver mudança (texto OU prioridade).
+- **Quando grava (decisão pelo legado, `sticknoteSave_`)**: o legado gravava ao SAIR do campo (blur, com 500 ms de espera e sem gravar se o mouse estava na barra) e
+  tinha o botão salvar; o editor faz as duas coisas. Sair do campo grava só se mudou, e só com **gesto do usuário**: clique fora do editor neste quadro, Tab, ou o foco
+  ir para OUTRO quadro visível do SEI (o visualizador do documento). O foco que some sem gesto (captura de tela, diálogo, script da página, trocar de aba) NÃO grava, nem
+  fecha o editor. Sair sem mudança fecha o editor. Texto apagado nunca grava sozinho (apagar tudo e Salvar pergunta "Tem certeza que deseja remover esta anotação?").
+- **Estados**: "Salvando…" (campo só de leitura, botões travados, `aria-busy`); em erro o editor continua aberto com o texto digitado, a mensagem do SEI (`role=alert`) e
+  "Tentar de novo". Quando a escrita do núcleo (`definirAnotacao`, `{aplicar: true}`, na fila da loja) confirma, o valor gravado entra na fatia como pronto (sem piscar o
+  texto antigo) e a releitura confere com o SEI.
+- **O painel não derruba o editor**: o painel devolve sempre o MESMO elemento e a casca (`sincronizarFilhos` em `ui/painel.ts`) só mexe no DOM do que mudou, em vez de
+  `replaceChildren` (que tirava o campo da página e perdia o foco). Se a fatia mudar enquanto se escreve, o editor só marca `data-desatualizado` e mostra "Esta anotação mudou no
+  SEI enquanto você editava. Se salvar, a sua versão substitui a do SEI." com "Usar a versão do SEI" (nada do que foi digitado se perde sem pedir). Se a árvore se refizer e
+  o painel for remontado, o editor volta com o texto (o foco não).
+- Sigiloso e processo não aberto na unidade seguem só de leitura (sem lápis, sem "+", sem clique no papel).
+
+Divergências do legado: o legado não tinha reordenar linhas nem Enter de checklist (só alternava a marca nas linhas); gravava ao perder o foco da janela; apagar tudo e sair
+gravava a remoção sem perguntar.
 
 ### Testes (etapa 7)
 
 `processo/tests/verificar-titulo-aviso.ts` (título: formato, cache, rede, erro, sigiloso, `disablequery`; aviso: modelo na árvore real, dialogo,
 datas só com histórico em cache, outra unidade, árvore inacessível, duas cópias da extensão, pastas fechadas e "Verificar pastas", documentos
-do DOM), `verificar-lupa.ts` (lista editável, pesquisador, modais de assuntos e interessados, modal da anotação),
+do DOM), `verificar-lupa.ts` (lista editável, pesquisador, modais de assuntos e interessados), `verificar-anotacao.ts` (o editor inline: abrir, digitar, contador, salvar, erro sem perder o texto, fatia mudando durante a edição, checklist, atalhos, sair do foco, descartar e remover) e, em `verificar-paineis.ts`, o painel (lápis, clique no papel, a fatia atualizando sem refazer o campo, `sincronizarFilhos`),
 `verificar-processos-interessado.ts` (paginação, corrida, filtros, modal sobre a pesquisa real). No núcleo: `verificar-lupas-processo.ts`
 (negados, lupa, pesquisa com o XML real, gravação, prova de sucesso) e `verificar-pesquisa-interessado.ts` (páginas reais, único resultado,
 vazio, erro). Fixtures reais anonimizadas do SEI SP em `sei-nucleo/tests/fixtures/sei41` (ver o `LEIAME.md`).
@@ -867,12 +931,43 @@ vazio, erro). Fixtures reais anonimizadas do SEI SP em `sei-nucleo/tests/fixture
 | Interessados: adicionar, retirar | pesquisa "seguran": adicionado um contato (id e nome no painel e no SEI), retirado: estado final IGUAL ao original |
 | Processos do interessado | contato órgão com 13 processos: 10 + "Mais resultados (3 restantes)" = 13; "Tramitados na unidade": 2; mais "De mesmo tipo (Decreto)": 1; sem filtros: volta a 13; clique abriu o processo pela pesquisa rápida e o título da aba mudou |
 | Rede do módulo nas edições | só `procedimento_alterar` (GET do formulário, POST de gravação) e o autocompletar (POST); nenhuma `arvore_montar`/`procedimento_visualizar`/`atribuicao_cadastrar` partiu do bundle do módulo (as que apareceram no log vêm do jQuery do legado: iframe oculto) |
-| Modal da anotação | claro e escuro com o papel amarelo; contador e ferramentas sem sobreposição em 900, 520 e 400 px; Prioridade/Checklist/Data funcionam |
+| Edição da anotação (substituída no item 5) | ver a tabela "Edição da anotação no lugar" abaixo |
 | Console | sem erro nem aviso do módulo em todas as rodadas |
 
 Capturas em `scratchpad/live/shots/`: `aviso-1.png`, `aviso-pastas.png`, `aviso-com-cache.png`, `lupa-assuntos-1..3.png`, `lupa-interessados-1.png`,
 `interessado-1..3.png`, `anotacao-antes-{claro,escuro}.png`, `anotacao-depois2-{claro,escuro}.png`, `anotacao-largura-{900,520,400}.png`,
 `sigiloso-titulo-aviso.png`.
+
+### Edição da anotação no lugar: resultado ao vivo (24/10/2026, SEI SP de treinamento 4.1.5, unidade TESTE, processo `99906.713-630.000032/2025-82`)
+
+Tudo num processo só; o estado inicial foi guardado (texto exato e prioridade) e o final conferido reabrindo o processo pela pesquisa rápida: **igual ao original**
+(`Aguardando parecer da área técnica.` + 3 itens de checklist, com prioridade). Teclado de verdade pelo `page.keyboard` do Puppeteer.
+
+| Cenário | Resultado |
+| --- | --- |
+| Abrir pelo lápis e clicando no texto do cartão | o editor entra no lugar do cartão, com o foco no campo; nenhum `<dialog>` aberto (nem no quadro nem no topo) |
+| Digitar, contador, Enter em checklist, Enter em item vazio, Alt+seta | `[ ] item` abre o próximo item; Enter em item vazio sai da lista; Alt+cima move a linha e o cursor continua na coluna |
+| Crescer com o conteúdo | 137 px (7 linhas) para 254 px (13 linhas); contador "249 caracteres restantes" |
+| Ctrl+Enter | "Salvando…", depois o cartão com o texto novo; reaberto no SEI o texto é o mesmo |
+| Marcar item no cartão | não entra em edição; gravou (reaberto: `[true,false,false,true]`) |
+| Sair do campo clicando em outro lugar do quadro | gravou sozinho (reaberto no SEI) |
+| Sair do campo clicando no quadro do visualizador (outro quadro) | gravou sozinho |
+| Captura de tela, diálogo e troca de janela | NÃO gravam nem fecham o editor (o foco do quadro oculto `frmCheckerProcessoPro` não conta) |
+| Erro: `setOfflineMode(true)` e Salvar | o editor segue aberto, "Falha ao falar com o SEI: Failed to fetch" + "Tentar de novo", o texto digitado preservado; de novo com rede: gravou |
+| Painel refeito com o editor aberto (a raiz dos painéis removida da página) | os painéis voltam sozinhos e o editor volta com o texto; o foco não volta |
+| Esc com mudança | confirmação ("Descartar as alterações desta anotação?"); "Cancelar" mantém o editor e o texto; "Descartar" volta ao cartão sem gravar |
+| Remover (lixeira do cartão) e "Adicionar anotação" | confirmou, o SEI ficou sem anotação ("Sem anotação."); o editor novo abre vazio e sem "Remover"; recriada com o texto e a prioridade originais |
+| Claro e escuro | papel amarelo nos dois; área de texto sem fundo próprio; botões legíveis (`shots/editor-{claro,escuro}.png`) |
+| Larguras do papel de 170, 230 e 240 px | a barra quebra em 4 a 7 linhas e nenhum item se sobrepõe a outro nem sai do papel; o contador fica sobre a barra (`shots/ed-6-largura-*.png`) |
+| Console | nenhum erro ou aviso do módulo |
+
+Capturas em `scratchpad/live/shots/`: `ed-1-aberto-claro.png`, `ed-3-cresce-claro.png`, `ed-4-confirma-descartar.png`, `ed-5-aberto-escuro.png`, `ed-6-largura-{240,300,520}.png`,
+`ed-7-digitado-claro.png`, `ed-8-cartao-salvo-claro.png`, `ed-9-erro-{claro,escuro}.png`, `ed-10-vazio-claro.png`, `ed-11-final-restaurado.png`, `editor-{claro,escuro}.png`, `editor-largura-{240,300}.png`.
+
+Armadilhas da rodada: (1) o Chrome for Testing recente DESABILITA extensão descompactada com o perfil sem "modo desenvolvedor" (`unsupportedDeveloperExtension`): `chrome.developerPrivate.updateProfileConfiguration({inDeveloperMode: true})`
+na página `chrome://extensions` e reativar; `chrome.developerPrivate.reload(id)` serve para recarregar o `dist/` e mantém o storage; (2) `page.screenshot` tira o foco do quadro (`WINBLUR`) e põe o foco
+em um iframe OCULTO (`frmCheckerProcessoPro`): uma primeira versão do editor tratava isso como "foco foi para outro quadro" e gravava sozinha; (3) no macOS, Ctrl+End não vai ao fim do texto.
+**Não visto ao vivo**: o aviso "mudou no SEI enquanto você editava" (sem um segundo usuário/aba para mudar a anotação durante a edição; coberto nos testes com o `linkedom`).
 
 ### Divergências e pendências da etapa 7
 
@@ -882,6 +977,8 @@ Capturas em `scratchpad/live/shots/`: `aviso-1.png`, `aviso-pastas.png`, `aviso-
 - Assuntos e interessados: não cria contato nem assunto; um contato que a pesquisa não acha continua precisando da tela do SEI.
 - Pesquisa do interessado: lê só o que o SEI devolve na primeira tela de cada página; um interessado com milhares de processos pede página a página.
 - O título do editor (`updateTitlePage`, modo `editor`) e a URL amigável continuam no legado.
+- Anotação inline: SEI 5 não exercitado ao vivo (o editor só usa o formulário de `definirAnotacao`, já provado nos dois SEI nos testes do núcleo). O foco não volta ao campo quando a árvore se refaz e o painel é remontado.
+  "Sair do campo grava" depende de `topo.activeElement` (quadro visível) para distinguir clique em outro quadro de captura de tela: em SEI com outra estrutura de quadros esse caso pode não gravar, o botão Salvar e o Ctrl+Enter continuam valendo.
 
 ## Fechamento (etapa 6, Task 13)
 
@@ -949,6 +1046,11 @@ ordem-paineis 41, pesquisa-rapida 19, prazos 58, blocos-assinatura; demandas 103
 (`verificar-integracao-projetos.ts`). `node tools/check-dom-injection.mjs`: 0 erros, 0 avisos; `node tools/patch-manifests.mjs --check`:
 0 manifests a ajustar. Os dois bundles e as linhas novas de `dist/js/sei-functions-pro.js` só têm ASCII (os 381 bytes altos do arquivo já
 eram do master).
+
+### Portões da rodada de harmonia e anotação inline (24/10/2026)
+
+`tipos` sem erro e `verificar` verde: processo 909 (eram 822), sei-nucleo 562. `node tools/check-dom-injection.mjs`: 0 erros, 0 avisos. Os dois bundles só têm ASCII.
+`sei-comum` e `opcoes-pagina` não foram tocados (o módulo ganhou glifos próprios em vez de acrescentar ícones ao `ui/dom.ts` compartilhado).
 
 ## Comandos
 

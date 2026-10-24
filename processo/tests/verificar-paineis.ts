@@ -18,7 +18,8 @@ import { aguardarArvore, fatiasNecessarias, manterMontagem, montarPaineis } from
 import { type ContextoProcesso, criarContexto } from "../src/pagina/contexto";
 import { criarLeituras, type Leituras } from "../src/pagina/leituras";
 import type { Operacoes } from "../src/pagina/operacoes";
-import { checar, disparar, instalarDom, secao, tique } from "./util";
+import { sincronizarFilhos } from "../src/ui/painel";
+import { botao, checar, disparar, instalarDom, secao, tique } from "./util";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const HTML_ARVORE = readFileSync(join(AQUI, "../../sei-nucleo/tests/fixtures/sei41/arvore.html"), "utf8").replace(
@@ -344,6 +345,158 @@ export async function verificarPaineis(): Promise<void> {
       p?.querySelector(".spro-p-chip.vencido") !== null && /01\/10\/2026/.test(p?.textContent ?? ""),
     );
     checar("acoes: prioridade, editar e remover", p?.querySelectorAll(".spro-p-acoes .spro-p-acao").length === 3);
+  }
+
+  secao("paineis: editar a anotacao NO LUGAR (sem modal)");
+  {
+    const gravadas: Array<{ texto: string; prioridade: boolean }> = [];
+    const alternadas: number[] = [];
+    let atual = { texto: "Aguardando parecer\n[ ] minuta\n[X] revisao", prioridade: false };
+    let recarregou = 0;
+    const c = cenario({
+      leituras: {
+        anotacao: async () => {
+          recarregou += 1;
+          return { disponivel: true, valor: atual };
+        },
+      } as Leituras,
+    });
+    c.ctx.op = {
+      anotar: async (a: { texto: string; prioridade: boolean }) => (
+        gravadas.push(a), (atual = a), { alvo: "x", mudancas: [], aplicado: true, resumo: "ok" }
+      ),
+      alternarItemDaAnotacao: async (i: number) => (alternadas.push(i), { alvo: "x", mudancas: [], aplicado: true, resumo: "ok" }),
+    } as unknown as Operacoes;
+    montarPaineis(c.ctx);
+    await c.loja.carregar("anotacao", async () => ({ disponivel: true, valor: atual }));
+    const p = () => painel(c.doc, "anotacoes") as HTMLElement;
+    checar(
+      "cartao com o texto e a checklist",
+      /Aguardando parecer/.test(p().textContent ?? "") && p().querySelectorAll("textarea").length === 0,
+    );
+
+    // abrir pelo lapis
+    (p().querySelector('[aria-label="Editar anotação"]') as HTMLButtonElement).click();
+    const campo = () => p().querySelector("textarea") as HTMLTextAreaElement | null;
+    checar(
+      "o lapis troca o cartao pelo editor, no proprio painel",
+      !!campo() && p().querySelector(".spro-p-post-it-edicao") !== null && c.doc.querySelector("dialog") === null,
+    );
+    checar(
+      "o editor traz o texto atual e as acoes do cabecalho somem",
+      campo()?.value === atual.texto && p().querySelectorAll(".spro-p-acoes .spro-p-acao").length === 0,
+    );
+    checar("o cartao nao fica ao lado do editor", p().querySelectorAll(".spro-p-nota-linha").length === 0);
+
+    // escrever e a fatia mudar no meio: o campo e o texto ficam
+    const no = campo();
+    if (no) {
+      no.value = "Aguardando parecer\n[ ] item novo\nmais isto que estou escrevendo";
+      disparar(no, "input");
+    }
+    await c.loja.carregar("anotacao", async () => ({ disponivel: true, valor: { texto: "mudou la no SEI", prioridade: true } }));
+    checar(
+      "fatia atualizada durante a edicao: o MESMO campo, com o texto digitado",
+      campo() === no && campo()?.value === "Aguardando parecer\n[ ] item novo\nmais isto que estou escrevendo",
+    );
+    checar(
+      "... com o aviso de que mudou no SEI e o painel marcado",
+      p().querySelector(".spro-p-post-it-aviso.desatualizado:not([hidden])") !== null &&
+        p().querySelector(".spro-p-post-it-edicao")?.hasAttribute("data-desatualizado") === true,
+    );
+    c.loja.renotificar("anotacao");
+    checar("redesenho puro (sem dado novo) tambem nao refaz o campo", campo() === no);
+
+    // salvar
+    (p().querySelector('[aria-label="Salvar anotação"]') as HTMLButtonElement).click();
+    await tique(30);
+    checar(
+      "salvar grava pela escrita do nucleo",
+      gravadas.length === 1 && gravadas[0]?.texto === "Aguardando parecer\n[ ] item novo\nmais isto que estou escrevendo",
+      gravadas,
+    );
+    checar(
+      "volta ao cartao com o texto gravado e a releitura foi pedida",
+      campo() === null && /mais isto que estou escrevendo/.test(p().textContent ?? "") && recarregou >= 1,
+    );
+
+    // clicar na checklist nao abre o editor; marcar grava na hora
+    const caixa = p().querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+    caixa?.click();
+    disparar(caixa as HTMLElement, "change");
+    await tique(20);
+    checar("marcar um item grava na hora e NAO entra em edicao", campo() === null && alternadas.length === 1, alternadas);
+
+    // clicar no papel abre o editor
+    (p().querySelector(".spro-p-nota-linha") as HTMLElement).click();
+    checar("clicar no texto do cartao abre o editor", campo() !== null);
+    // descartar sem mudar
+    (p().querySelector('[aria-label="Descartar alterações (Esc)"]') as HTMLButtonElement).click();
+    await tique(20);
+    checar("descartar sem mudanca volta ao cartao sem gravar", campo() === null && gravadas.length === 1);
+
+    // erro de gravacao
+    c.ctx.op = {
+      anotar: async () => {
+        throw new Error("SEI fora do ar");
+      },
+    } as unknown as Operacoes;
+    (p().querySelector('[aria-label="Editar anotação"]') as HTMLButtonElement).click();
+    const c2 = campo();
+    if (c2) {
+      c2.value = "texto que nao pode se perder";
+      disparar(c2, "input");
+    }
+    (p().querySelector('[aria-label="Salvar anotação"]') as HTMLButtonElement).click();
+    await tique(30);
+    checar(
+      "erro: o editor segue aberto, com o texto e 'Tentar de novo'",
+      campo() === c2 &&
+        c2?.value === "texto que nao pode se perder" &&
+        /SEI fora do ar/.test(p().textContent ?? "") &&
+        !!botao(p(), "Tentar de novo"),
+    );
+
+    // anotacao nova
+    const v = cenario();
+    montarPaineis(v.ctx);
+    await v.loja.carregar("anotacao", async () => ({ disponivel: true, valor: null }));
+    (painel(v.doc, "anotacoes")?.querySelector(".spro-p-vazio .spro-p-link") as HTMLButtonElement).click();
+    checar(
+      "'Adicionar anotacao' abre o editor vazio no painel",
+      (painel(v.doc, "anotacoes")?.querySelector("textarea") as HTMLTextAreaElement | null)?.value === "",
+    );
+
+    // so leitura: sigiloso/nao aberto na unidade nao oferece edicao
+    const r = cenario();
+    montarPaineis(r.ctx);
+    await r.loja.carregar("anotacao", async () => ({ disponivel: false, motivo: "consultas" }));
+    checar(
+      "sem permissao de consulta: so a nota, sem lapis nem editor",
+      painel(r.doc, "anotacoes")?.querySelector("textarea") === null && painel(r.doc, "anotacoes")?.querySelector(".spro-p-acao") === null,
+    );
+  }
+
+  secao("paineis: a casca nao recoloca o que ja esta no lugar (o foco do editor)");
+  {
+    const c = cenario();
+    montarPaineis(c.ctx);
+    await c.loja.carregar("anotacao", async () => ({ disponivel: true, valor: { texto: "a", prioridade: false } }));
+    const corpo = painel(c.doc, "anotacoes")?.querySelector(".spro-p-corpo") as HTMLElement;
+    const filho = corpo.firstElementChild as HTMLElement;
+    let toques = 0;
+    for (const m of ["insertBefore", "removeChild", "appendChild", "replaceChildren"] as const) {
+      const o = (corpo as unknown as Record<string, (...a: unknown[]) => unknown>)[m] as (...a: unknown[]) => unknown;
+      (corpo as unknown as Record<string, unknown>)[m] = (...a: unknown[]) => (toques++, o.apply(corpo, a));
+    }
+    sincronizarFilhos(corpo, [filho]);
+    checar("mesmos nos na mesma ordem: nenhuma operacao no DOM", toques === 0 && corpo.firstElementChild === filho, toques);
+    const novo = c.doc.createElement("div");
+    sincronizarFilhos(corpo, [novo, "texto"]);
+    checar(
+      "nos diferentes entram e os sobrando saem",
+      corpo.childNodes.length === 2 && corpo.firstChild === novo && corpo.lastChild?.textContent === "texto",
+    );
   }
 
   secao("paineis: marcador com icone, prazo e texto");

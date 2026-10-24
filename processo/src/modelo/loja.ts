@@ -47,9 +47,8 @@ export class LojaProcesso {
     return (this.fatias.get(n) as Fatia<T> | undefined) ?? { estado: "carregando", em: 0 };
   }
 
-  /** Troca a fatia, avisa os ouvintes e, se estiver pronta, guarda no cache. */
-  definir<T>(n: NomeFatia, f: Fatia<T>): void {
-    this.fatias.set(n, f);
+  /** Avisa os ouvintes de que a fatia deve ser redesenhada, SEM mudar o dado (ex.: abrir ou fechar um editor no painel). */
+  renotificar(n: NomeFatia): void {
     for (const cb of [...this.ouvintes]) {
       try {
         cb(n);
@@ -57,6 +56,12 @@ export class LojaProcesso {
         // um painel com defeito não pode impedir os outros de redesenhar
       }
     }
+  }
+
+  /** Troca a fatia, avisa os ouvintes e, se estiver pronta, guarda no cache. */
+  definir<T>(n: NomeFatia, f: Fatia<T>): void {
+    this.fatias.set(n, f);
+    this.renotificar(n);
     if (f.estado === "pronto" && f.dado !== undefined) {
       const dado = f.dado;
       this.gravando = this.gravando.then(() => this.guardar(n, dado, f.em)).catch(() => undefined);
