@@ -819,7 +819,7 @@ function urgenteProMoveOnTop() {
 function checkLoadedTableSorter() {
     return typeof tableHomePro !== 'undefined' && typeof tableHomePro[0] !== 'undefined' && typeof tableHomePro[0].data('tablesorter') !== 'undefined' && typeof tableHomePro[0].data('tablesorter').$filters !== 'undefined';
 }
-function getFilterTableHome(this_) {
+function getFilterTableHome(this_, tentativa = 0) {
     if (tableHomePro.length > 0 && $('.filterTableProcessos').length > 0) {
         if (!checkLoadedTableSorter()) removeAllTags(false, 2);
         if ($('#selectGroupTablePro').val() != '') {
@@ -830,7 +830,7 @@ function getFilterTableHome(this_) {
         var data = _this.find('option:selected').data();
         var filters = [];
         if (data.type == 'user') {
-            filters[3] = (value == '' ? '""' : '('+value+')');
+            filters[3] = (value == 'sem-atribuicao' ? '""' : '('+value+')');
         } else if (data.type == 'proc') {
             value = (value != '') ? extractOnlyAlphaNum(removeAcentos(value)) : value;
             filters[2] = (value == '' ? '""' : value);
@@ -859,8 +859,11 @@ function getFilterTableHome(this_) {
             sessionStorageRemovePro('setFiltersTableHome');
         }
         // console.log('getFilterTableHome', data, filters);
-    } else {
-        tableHomeDestroy(true);
+    } else if (tentativa < 10) {
+        // Tabela ainda montando (comum na primeira abertura do navegador): a escolha era descartada e,
+        // como o select ja ficava com ela, escolher de novo nao disparava o onchange. Reaplica quando ficar pronta.
+        if (tentativa == 0) tableHomeDestroy(true);
+        setTimeout(function(){ getFilterTableHome(this_, tentativa + 1); }, 1000);
     }
 }
 function selectFilterTableHome() {
@@ -895,7 +898,7 @@ function selectFilterTableHome() {
 
         if (users.length > 0) {
             html += '   <optgroup label="Por atribui\u00E7\u00E3o">'+
-                    '       <option value="" data-type="user">Processos sem atribui\u00E7\u00E3o</option>';
+                    '       <option value="sem-atribuicao" data-type="user">Processos sem atribui\u00E7\u00E3o</option>';
             $.each(users, function(i, v){
                 html += '       <option value="'+v+'" data-type="user">Atribu\u00EDdos \u00E0 '+v+'</option>';
             });
@@ -1766,6 +1769,7 @@ function setTableSorterHome() {
                 if (typeof filterStore !== 'undefined' && filterStore !== null && filterStore.length > 0) {
                     var filterUser = filterStore[tableHomePro[0].find('td.spro-anotacao-coluna').length ? 4 : 3];
                         filterUser = (typeof filterUser !== 'undefined' && filterUser !== null) ? filterUser.replace('(','').replace(')','') : false;
+                        filterUser = (filterUser == '""') ? 'sem-atribuicao' : filterUser;
                     if (filterUser) {
                         $('#filterTableHome').val(filterUser).trigger('chosen:updated');
                     }
