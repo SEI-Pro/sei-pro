@@ -3,6 +3,18 @@
  * As cores vêm dos tokens --spro-* de sei-comum/src/ui/base.css (anexado antes deste arquivo). O escuro vem de
  * data-tema="escuro" na raiz dos painéis e no diálogo (o quadro e a janela de topo são documentos diferentes).
  */
+/* Escala unica de tamanhos do quadro da arvore (README, "Escala de tamanhos"). Vale no <html> do quadro (para o que o legado
+   desenha: Consultar Andamento e Processos Relacionados) e nos nossos paineis. Os modais e o menu do documento nao usam. */
+html[data-seipro-processo-paineis],
+.spro-p-raiz,
+.spro-f-barra {
+  --spro-p-fonte-titulo: 13.5px;
+  --spro-p-fonte-corpo: 13px;
+  --spro-p-fonte-pequena: 12px;
+  --spro-p-icone: 16px;
+  --spro-p-icone-mini: 13px;
+  --spro-p-alvo: 26px;
+}
 /* Os tokens do base.css seguem o esquema de cores do SISTEMA quando ninguem fixou o tema; aqui o tema e o do SEI
    (claro por padrao, escuro quando o SEI esta escuro), nunca o do sistema operacional. */
 .spro-p-raiz,
@@ -59,7 +71,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   margin: 0;
   padding: 0;
   font-family: var(--spro-fonte);
-  font-size: 12px;
+  font-size: var(--spro-p-fonte-corpo);
   line-height: 1.4;
   color: var(--spro-texto);
 }
@@ -85,14 +97,14 @@ dialog.spro-dialogo[data-tema="escuro"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 24px;
+  min-height: var(--spro-p-alvo);
 }
 .spro-p-painel > header h3 {
   flex: 1;
   min-width: 0;
   margin: 0;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--spro-p-fonte-titulo);
   font-weight: 650;
   letter-spacing: 0.01em;
   color: var(--spro-texto);
@@ -105,6 +117,10 @@ dialog.spro-dialogo[data-tema="escuro"] {
   flex: none;
   color: var(--spro-destaque);
 }
+.spro-p-raiz .spro-icone {
+  width: var(--spro-p-icone);
+  height: var(--spro-p-icone);
+}
 .spro-p-acoes {
   display: inline-flex;
   flex: none;
@@ -116,8 +132,8 @@ dialog.spro-dialogo[data-tema="escuro"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: var(--spro-p-alvo);
+  height: var(--spro-p-alvo);
   margin: 0;
   padding: 0;
   font: inherit;
@@ -156,7 +172,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-corpo {
   display: grid;
   gap: 3px;
-  padding: 4px 0 0 21px;
+  padding: 4px 0 0 calc(var(--spro-p-icone) + 6px);
 }
 .spro-p-painel[data-estado="desatualizado"] > header h3::after {
   content: "";
@@ -223,8 +239,8 @@ dialog.spro-dialogo[data-tema="escuro"] {
 }
 .spro-p-copiavel img,
 .spro-p-marcador-icone {
-  width: 14px;
-  height: 14px;
+  width: var(--spro-p-icone);
+  height: var(--spro-p-icone);
   margin-right: 5px;
   vertical-align: -2px;
 }
@@ -260,14 +276,20 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-vazio,
 .spro-p-nota {
   color: var(--spro-fraco);
-  font-size: 11.5px;
+  font-size: var(--spro-p-fonte-corpo);
+}
+.spro-p-raiz .spro-p-chip .spro-icone,
+.spro-p-raiz .spro-p-erro-texto .spro-icone,
+.spro-p-raiz .spro-p-nivel .spro-icone {
+  width: var(--spro-p-icone-mini);
+  height: var(--spro-p-icone-mini);
 }
 .spro-p-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 7px;
-  font-size: 11px;
+  padding: 1px 8px;
+  font-size: var(--spro-p-fonte-pequena);
   font-weight: 550;
   line-height: 1.5;
   color: var(--spro-suave);
@@ -291,7 +313,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   margin: 0;
   padding: 1px 3px;
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--spro-p-fonte-corpo);
   font-weight: 600;
   color: var(--spro-destaque);
   background: transparent;
@@ -311,20 +333,66 @@ dialog.spro-dialogo[data-tema="escuro"] {
 }
 
 /* ---------- Anotação (post-it) ---------- */
+/* A pele é a do post-it do legado (.stickNotePro): amarelo em degradê, borda tracejada fina, sombra suave e canto dobrado.
+   O papel é amarelo nos dois temas (como um post-it de verdade), por isso as cores de texto e de estado são fixas aqui. */
 .spro-p-post-it {
+  --spro-texto: #3b3320;
+  --spro-suave: #5c5230;
+  --spro-fraco: #7a6f45;
+  --spro-perigo: #b3261e;
+  --spro-aviso: #8f4a00;
+  --spro-ok: #0d6b4c;
+  --spro-destaque: #1f5fbf;
+  position: relative;
   display: grid;
-  gap: 2px;
-  padding: 7px 9px;
-  background: color-mix(in srgb, var(--spro-estrela) 14%, var(--spro-fundo));
-  border: 1px solid color-mix(in srgb, var(--spro-estrela) 38%, var(--spro-borda));
-  border-radius: var(--spro-raio);
+  gap: 3px;
+  margin-top: 2px;
+  padding: 10px 14px 12px;
+  line-height: 1.5;
+  color: var(--spro-texto);
+  background: linear-gradient(#f9efaf, #f7e98d);
+  border: 1px dashed rgb(150 125 30 / 55%);
+  border-radius: 3px;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+  overflow: hidden;
 }
-.spro-p-post-it.prioridade {
-  border-left: 3px solid var(--spro-perigo);
+.spro-p-raiz[data-tema="escuro"] .spro-p-post-it {
+  background: linear-gradient(#e9dc9b, #dccb73);
+  border-color: rgb(110 90 15 / 60%);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 40%);
+}
+.spro-p-post-it::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, transparent 50%, rgb(140 115 20 / 28%) 50%);
+  pointer-events: none;
+}
+.spro-p-post-it.prioridade,
+.spro-p-raiz[data-tema="escuro"] .spro-p-post-it.prioridade {
+  border-left: 4px solid var(--spro-perigo);
 }
 .spro-p-post-it .spro-p-chip {
   justify-self: start;
   margin-top: 3px;
+  color: var(--spro-suave);
+  background: rgb(120 95 10 / 14%);
+}
+.spro-p-post-it .spro-p-chip.vencido {
+  color: #fff;
+  background: var(--spro-perigo);
+}
+.spro-p-post-it .spro-p-chip.aviso,
+.spro-p-post-it .spro-p-chip.atencao {
+  color: var(--spro-aviso);
+  background: rgb(143 74 0 / 16%);
+}
+.spro-p-post-it .spro-p-chip.ok {
+  color: var(--spro-ok);
+  background: rgb(13 107 76 / 14%);
 }
 .spro-p-nota-linha {
   min-height: 1.2em;
@@ -334,7 +402,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-nota-linha.item {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   white-space: normal;
 }
@@ -344,8 +412,33 @@ dialog.spro-dialogo[data-tema="escuro"] {
 }
 .spro-p-nota-linha.item input {
   flex: none;
+  width: 16px;
+  height: 16px;
   margin: 2px 0 0;
   accent-color: var(--spro-destaque);
+}
+
+/* O modo escuro do SEI Pro pinta todo descendente (.seiSlim.dark-mode *) de claro com !important; o papel segue amarelo,
+   então o texto e os chips do post-it reafirmam as cores escuras com mais especificidade. */
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha,
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha span {
+  color: var(--spro-texto) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-nota-linha.item.feito span {
+  color: var(--spro-fraco) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip {
+  color: var(--spro-suave) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.vencido {
+  color: #fff !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.aviso,
+.spro-p-raiz .spro-p-post-it .spro-p-chip.atencao {
+  color: var(--spro-aviso) !important;
+}
+.spro-p-raiz .spro-p-post-it .spro-p-chip.ok {
+  color: var(--spro-ok) !important;
 }
 
 /* ---------- Esqueleto e erro ---------- */
@@ -356,10 +449,10 @@ dialog.spro-dialogo[data-tema="escuro"] {
 }
 .spro-p-barra {
   display: block;
-  height: 10px;
+  height: 12px;
   background: linear-gradient(90deg, var(--spro-fundo-3) 25%, var(--spro-fundo-2) 50%, var(--spro-fundo-3) 75%);
   background-size: 200% 100%;
-  border-radius: 5px;
+  border-radius: 6px;
   animation: spro-p-brilho 1.2s linear infinite;
 }
 @keyframes spro-p-brilho {
@@ -373,7 +466,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   align-items: center;
   gap: 4px 8px;
   color: var(--spro-perigo);
-  font-size: 11.5px;
+  font-size: var(--spro-p-fonte-corpo);
 }
 .spro-p-erro-texto {
   display: inline-flex;
@@ -1095,7 +1188,7 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   margin: 0 0 6px;
   padding: 6px 4px 4px;
   font-family: var(--spro-fonte);
-  font-size: 12px;
+  font-size: var(--spro-p-fonte-corpo);
   line-height: 1.4;
   color: var(--spro-texto);
   border-bottom: 1px solid var(--spro-borda);
@@ -1116,7 +1209,7 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 }
 .spro-f-lupa {
   position: absolute;
-  left: 8px;
+  left: 9px;
   display: inline-flex;
   color: var(--spro-fraco);
   pointer-events: none;
@@ -1124,9 +1217,9 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 .spro-f-busca {
   flex: 1 1 auto;
   min-width: 0;
-  height: 28px;
+  height: 30px;
   margin: 0;
-  padding: 0 28px 0 27px;
+  padding: 0 30px 0 30px;
   font: inherit;
   color: var(--spro-texto);
   background: var(--spro-fundo);
@@ -1154,8 +1247,8 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   color: var(--spro-suave);
   background: transparent;
@@ -1174,15 +1267,15 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   margin-top: 5px;
 }
 .spro-f-chip {
-  height: 22px;
+  height: 26px;
   margin: 0;
-  padding: 0 9px;
+  padding: 0 10px;
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--spro-p-fonte-pequena);
   color: var(--spro-suave);
   background: var(--spro-fundo-2);
   border: 1px solid var(--spro-borda-forte);
-  border-radius: 11px;
+  border-radius: 13px;
   cursor: pointer;
 }
 .spro-f-chip:hover {
@@ -1197,7 +1290,7 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 .spro-f-status {
   margin-top: 5px;
   color: var(--spro-suave);
-  font-size: 11.5px;
+  font-size: var(--spro-p-fonte-corpo);
 }
 .spro-f-status-texto {
   font-weight: 600;
@@ -1209,4 +1302,22 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 }
 .spro-f-dica:empty {
   display: none;
+}
+
+/* ---------- Legado no quadro da arvore (Consultar Andamento, Processos Relacionados) na mesma escala ---------- */
+/* O legado estiliza esses dois por classe (.newLink: 1.2em sobre 12px = 14,4px, lupa de 17px); com o modulo ativo eles descem
+   um pouco e os nossos paineis sobem, para o cabecalho de cada painel pesar o mesmo que o rotulo "Consultar Andamento". */
+html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink,
+html[data-seipro-processo-paineis] #divRelacionados label.newLink {
+  font-size: var(--spro-p-fonte-titulo);
+  line-height: 1.4;
+}
+html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink i.iconDadosProcesso,
+html[data-seipro-processo-paineis] #divRelacionados label.newLink i.iconDadosProcesso {
+  font-size: var(--spro-p-icone);
+  line-height: 1;
+}
+html[data-seipro-processo-paineis] #divRelacionados .divRelacionadosParcial a,
+html[data-seipro-processo-paineis] #divRelacionadosParciais a {
+  font-size: var(--spro-p-fonte-corpo);
 }

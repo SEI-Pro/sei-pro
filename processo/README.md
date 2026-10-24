@@ -149,6 +149,26 @@ pesquisa rápida ou links assinados (URL sem `infra_hash` derruba a sessão do S
 
 (Aplicado só na cópia local da worktree; no clone principal a mesma alteração deve ser feita à mão.)
 
+## Escala de tamanhos do quadro da árvore
+
+Variáveis em `estatico/processo.css` (valem no `<html data-seipro-processo-paineis>`, nos painéis `.spro-p-raiz` e no filtro). Medido ao vivo no SEI SP (quadro de 373 px, 24/10/2026); os modais e o menu do documento não mudam.
+
+| Elemento | Antes | Depois |
+| --- | --- | --- |
+| "Consultar Andamento" (legado `a.newLink`) | 14,4 px, lupa 17,3 px | 13,5 px (`--spro-p-fonte-titulo`), lupa 16 px (`--spro-p-icone`) |
+| "Processos Relacionados" (rótulo / itens) | 14 px, ícone 16,8 px / 14 px | 13,5 px, ícone 16 px / 13 px |
+| Cabeçalho do painel (h3) / ícone | 12 px (650) / 15 px | 13,5 px (650) / 16 px |
+| Corpo, vazio, erro, link, status do filtro | 12 / 11,5 px | 13 px (`--spro-p-fonte-corpo`) |
+| Chips, chips do filtro | 11 / 11,5 px | 12 px (`--spro-p-fonte-pequena`) |
+| Botões de ação e de recolher | 22 px | 26 px (`--spro-p-alvo`) |
+| Ícone dentro de chip e do nível | 11 a 13 px | 13 px (`--spro-p-icone-mini`) |
+| Campo de busca do filtro / chip do filtro | 28 / 22 px | 30 / 26 px |
+
+O legado só cede de tamanho com o módulo ativo (`html[data-seipro-processo-paineis]`); sem o módulo nada muda. A anotação voltou à pele do
+post-it do legado (degradê amarelo `#f9efaf` a `#f7e98d`, borda tracejada fina, sombra suave, canto dobrado), amarelo também no escuro,
+com texto escuro reafirmado por `!important` porque `.seiSlim.dark-mode *` pinta todo descendente de claro. A edição é no modal, então
+o rodapé com contador do editor antigo (que encostava nos ícones) não existe no painel.
+
 ## Base e painéis (etapa 1)
 
 ### O que existe
