@@ -8,18 +8,16 @@ import type { DocumentoArvore } from "@nucleo/dominio/arvore";
 import type { DocumentoDaPassagem } from "@nucleo/dominio/passagens";
 import { avisarNoTopo } from "../pagina/comum";
 import type { ContextoProcesso } from "../pagina/contexto";
-import { DocumentosDaTela } from "../pagina/menuDoc/documentos";
 import { abrirDialogo } from "../pagina/modais/comum";
 
-export function acharDocumento(ctx: Pick<ContextoProcesso, "arv" | "doc">, d: DocumentoDaPassagem): DocumentoArvore | null {
+export function acharDocumento(ctx: Pick<ContextoProcesso, "arv" | "doc" | "documentos">, d: DocumentoDaPassagem): DocumentoArvore | null {
   const procurar = (docs: readonly DocumentoArvore[]) =>
     docs.find((x) => (d.idDocumento && x.id === d.idDocumento) || (d.nrSei && x.numero === d.nrSei)) ?? null;
   const daArvore = procurar(ctx.arv.documentos);
   if (daArvore) return daArvore;
-  // Documento de pasta aberta depois: o SEI o traz no #ifrPasta.
-  const tela = new DocumentosDaTela(ctx.arv.documentos);
-  tela.lerDoIframe(ctx.doc);
-  return procurar(tela.todos());
+  // Documento de pasta aberta depois: o SEI o traz no #ifrPasta (o que já foi aberto está acumulado no contexto).
+  ctx.documentos.lerDoIframe(ctx.doc);
+  return procurar(ctx.documentos.todos());
 }
 
 /** Abre o documento num diálogo com o conteúdo. Devolve `false` (e avisa) se não há como mostrá-lo. */

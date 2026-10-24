@@ -865,7 +865,7 @@ dialog.spro-g-dialogo .spro-dialogo-corpo {
 .spro-g-svg .texto-barra {
   font-size: 10.5px;
   font-weight: 600;
-  fill: #ffffff;
+  fill: var(--spro-destaque-texto);
   pointer-events: none;
 }
 .spro-g-svg .spro-g-barra.pendente .texto-barra {

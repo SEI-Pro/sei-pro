@@ -4,10 +4,15 @@
  * (processo de 150 andamentos do SEI SP: remessa múltipla, reabertura, conclusão, pendentes e em curso).
  * O linkedom não simula <dialog> modal: o `<dialog>` e a visualização rápida se provam ao vivo.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { areaMemoria } from "@comum/armazenamento/area";
+import { lerArvore } from "@nucleo/dominio/arvore";
 import { type Andamento, lerHistorico } from "@nucleo/dominio/historico";
 import { calcularPassagens, type Passagem, relogioDe } from "@nucleo/dominio/passagens";
 import { ErroSei } from "@nucleo/sessao/erros";
+import { paginaDe } from "@nucleo/sessao/pagina";
 import { fixture } from "../../sei-nucleo/tests/util";
 import { type ContextoColeta, obterHistorico, ProcessoSigilosoErro, restaurarBlocoInterno } from "../src/gantt/coleta";
 import { resumoDoTempo, tempoPorUnidade } from "../src/gantt/comparativo";
@@ -26,9 +31,11 @@ import {
 } from "../src/gantt/modelo";
 import { ALTURA_CABECALHO, ALTURA_RAIA, fixarEixos, LARGURA_ROTULOS, montarGantt } from "../src/gantt/svg";
 import { type DepsVisao, montarVisao } from "../src/gantt/visao";
+import { acharDocumento } from "../src/gantt/visualizacao";
 import { chaveHistorico, prefixoHistorico } from "../src/modelo/constantes";
 import { type HistoricoGuardado, VALIDADE_HISTORICO_MS } from "../src/modelo/dados";
 import { LojaProcesso } from "../src/modelo/loja";
+import { DocumentosDaTela } from "../src/pagina/menuDoc/documentos";
 import { checar, disparar, instalarDom, secao, tique } from "./util";
 
 const ESCOPO = "treinamento.sei.sp.gov.br|usuario.teste";
@@ -315,6 +322,35 @@ export async function verificarGantt(): Promise<void> {
     checar("aria da pendente diz que a unidade ainda nao abriu", /ainda não abriu/.test(rotulo("B")), rotulo("B"));
     checar("aria da mantida aberta cita a remessa mantendo aberto", /mantendo o processo aberto/.test(rotulo("C")), rotulo("C"));
     checar("aria da concluida traz duracao e documento", /Duração 4 d/.test(rotulo("A")) && /1 documento/.test(rotulo("A")), rotulo("A"));
+  }
+
+  secao("gantt: visualizacao rapida acha o documento so pelo que a arvore ja tem");
+  {
+    const doc = instalarDom(
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../sei-nucleo/tests/fixtures/sei41/arvore.html"), "utf8").replace(
+        /^<!-- url: .*? -->\n/,
+        "",
+      ),
+    );
+    const arv = lerArvore(
+      paginaDe(doc, "https://treinamento.sei.sp.gov.br/sei/controlador.php?acao=procedimento_visualizar&id_procedimento=148265"),
+    );
+    const ctx = { arv, doc, documentos: new DocumentosDaTela(arv.documentos) };
+    const d0 = arv.documentos.find((x) => x.src) ?? arv.documentos[0];
+    const porId = acharDocumento(ctx, { idDocumento: d0.id, em: new Date(), titulo: "x" });
+    const porNr = acharDocumento(ctx, { nrSei: d0.numero, em: new Date(), titulo: "x" });
+    checar(
+      "acha por id_documento e por numero SEI, com o link colhido da arvore (nunca montado)",
+      porId?.id === d0.id && porNr?.id === d0.id && (porId?.src ?? "").includes("infra_hash"),
+      porId?.src,
+    );
+    checar(
+      "documento fora da tela (excluido ou pasta fechada): nulo",
+      acharDocumento(ctx, { idDocumento: "999999999", nrSei: "9999999", em: new Date(), titulo: "x" }) === null,
+    );
+    checar("sem id nem numero: nulo", acharDocumento(ctx, { em: new Date(), titulo: "x" }) === null);
+    ctx.documentos.somarDaPasta("");
+    instalarDom();
   }
 
   secao("gantt: eixos fixos na rolagem");

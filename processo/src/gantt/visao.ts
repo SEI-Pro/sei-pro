@@ -164,7 +164,7 @@ export function montarVisao(deps: DepsVisao): VisaoGantt {
       protocolo: ctx.protocolo,
       passagens: d.passagens,
       agora: relogioDe(ctx.agora()),
-      coletadoEm: new Date(d.coletadoEm),
+      coletadoEm: relogioDe(new Date(d.coletadoEm)),
     });
   });
 
@@ -424,6 +424,11 @@ export function montarVisao(deps: DepsVisao): VisaoGantt {
   }
 
   desenhar();
+  // O “há quanto tempo” do rodapé não pode ficar parado no “agora há pouco”.
+  const relogioDoRodape = setInterval(() => {
+    if (!destruida) desenharRodape();
+  }, 30_000);
+  (relogioDoRodape as unknown as { unref?: () => void }).unref?.();
   const pronta = (async () => {
     if (ctx.sigiloso) return;
     // Dentro de 30 minutos: do cache, sem rede. Vencido: mostra o que há, desatualizado, e atualiza.
@@ -442,6 +447,7 @@ export function montarVisao(deps: DepsVisao): VisaoGantt {
     estado: () => estado,
     destruir() {
       destruida = true;
+      clearInterval(relogioDoRodape);
       controle?.abort();
       desligarEixos?.();
     },

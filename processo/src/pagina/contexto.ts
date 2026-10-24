@@ -13,6 +13,7 @@ import { type ColetorHistorico, obterHistorico } from "../gantt/coleta";
 import type { LojaProcesso } from "../modelo/loja";
 import type { TipoPainel } from "../modelo/paineis";
 import type { NomeFatia } from "../modelo/tipos";
+import { DocumentosDaTela } from "./menuDoc/documentos";
 import { type Operacoes, operacoesDe } from "./operacoes";
 
 type Armazenamento = Pick<Storage, "getItem" | "setItem">;
@@ -23,6 +24,8 @@ export interface ContextoProcesso {
   /** A janela de topo (os modais abrem lá, onde cabem). */
   topo: Document;
   arv: Arvore;
+  /** Os documentos da árvore e os das pastas que o usuário já abriu (o SEI as traz no #ifrPasta, uma de cada vez). */
+  documentos: DocumentosDaTela;
   idProcedimento: string;
   protocolo: string;
   host: string;
@@ -122,10 +125,14 @@ export function criarContexto(d: DepsContexto): ContextoProcesso {
     () => d.arv,
     () => paginaDe(d.topo),
   );
+  const documentos = new DocumentosDaTela(d.arv.documentos);
+  documentos.lerDoIframe(d.doc);
+  documentos.acompanharPastas(d.doc);
   const ctx: ContextoProcesso = {
     doc: d.doc,
     topo: d.topo,
     arv: d.arv,
+    documentos,
     idProcedimento: d.arv.idProcedimento,
     protocolo: d.arv.protocolo,
     host: d.host,

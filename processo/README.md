@@ -7,7 +7,7 @@ Desenho: `docs/superpowers/specs/2026-10-23-processo-design.md`; plano: `docs/su
 
 Etapa 1 (base e painéis) e etapa 2 (menu da árvore) concluídas e testadas ao vivo no SEI SP de treinamento (4.1.5).
 Etapa 3 em andamento: o leitor de andamentos e o cálculo das passagens (Task 7, no `sei-nucleo`) estão prontos e validados ao
-vivo; o modal Gantt (Task 8) ainda não existe. Capa e filtro da árvore são das etapas seguintes.
+vivo; o modal Gantt (Tasks 8 e 9, `src/gantt/`) está pronto e testado ao vivo. Capa e filtro da árvore são das etapas seguintes.
 
 ### O que existe
 
@@ -323,6 +323,57 @@ ordem do mesmo minuto (a unidade que recebe e devolve no mesmo minuto ficava em 
 conferências (leitura; coleta, cache, uma coleta por vez, cancelamento, falha e pendência com um SEI falso que guarda tipo e página
 da sessão; passagens reais e montadas: vazio, siglas repetidas, reabertura, remessa múltipla, em curso, mesmo minuto, mantido
 aberto, documentos, datas e fuso).
+
+## Gantt de tramitação (etapa 3, Tasks 8 e 9): `src/gantt/`
+
+Ponto de entrada: o link “Histórico de tramitação do processo” da capa LEGADA. `initGanttHistoryProc` (`sei-functions-pro.js`) tem uma
+guarda no começo: se o `<html>` do `#ifrArvore` tem `data-seipro-processo-gantt` (marcado em `document_start` por `marcarGantt`), dispara
+`spro-processo-gantt-abrir` nesse documento e sai (sem frappe-gantt, sem jmespath). `gantt/ligar.ts` escuta o evento (sempre, com ou sem
+painéis e menu ligados) e chama `abrirGantt(ctx)`, que a capa nova (Etapa 4) reusa. O contexto agora tem `coletarHistorico`,
+`documentos` (árvore + pastas abertas) e o gancho `aoPedirHistorico(aoProgresso)` ligado (Bloco Interno: coleta com “página x de y”).
+
+- `modelo.ts` (sem DOM): raias por unidade (“GPF 3x”), escalas Dia 28 / Semana 9 / Mês 2,2 px por dia (teto de 30 mil px; escala
+  inicial = a mais detalhada que cabe), eixo em duas faixas, durações, texto das dicas. `svg.ts`: SVG com `createElementNS`; barra
+  por passagem, listrada se em curso, pontilhada e tracejada se aguardando recebimento, trecho listrado depois da marca da remessa se
+  “mantido aberto”, losango por documento (clique/Enter/Espaço), linha “Agora”, cabeçalho e rótulos fixos na rolagem. `dica.ts`: balão
+  próprio (`role=tooltip`, por mouse e foco), nunca `title`. `visualizacao.ts`: o losango abre o documento num diálogo com o `src` que
+  a árvore já tem (nunca montado); documento fora da tela avisa (pasta fechada ou excluído).
+- `visao.ts` + `modal.ts`: `dialog.spro-dialogo` sem Cancelar; estados coletando (progresso + “Cancelar coleta”, que para só a coleta),
+  erro (“Tentar de novo”), cancelado, vazio, sigiloso, pronto e desatualizado; abas Gantt e Tempo por unidade; Atualizar, Exportar CSV,
+  Imprimir. Fechar o modal para a coleta.
+- `comparativo.ts`: `tempoPorUnidade` (maior para o menor; dias e % com uma casa). Regra: em curso conta até agora; passagens
+  simultâneas contam cada uma na sua unidade e o % é sobre a SOMA do tempo de todas (fecha em 100%); o tempo corrido vai à parte.
+- `exportar.ts`: CSV (BOM, `;`, aspas, fórmula neutralizada; 13 colunas) e visão de impressão (`.spro-g-impressao`, só visível em
+  `@media print` com `data-spro-imprimindo`; tabela de passagens, tempo por unidade e o gráfico numa largura só).
+- `coleta.ts`: cache de 30 min do histórico completo numa chave PRÓPRIA (`processo-historico/<host|login>/<id>`, até 900 KB por
+  entrada, 12 processos, 24 h; acima disso fica só em memória), porque cabe pouco na entrada de 64 KB dos painéis. Dentro de 30 min:
+  sem rede. Vencido: o dado antigo aparece como “desatualizado” e a coleta INCREMENTAL do núcleo o atualiza. Sigiloso nunca coleta
+  nem grava. Toda coleta publica a fatia `blocoInterno`; ao abrir o processo, histórico ainda válido no cache preenche o Bloco Interno
+  sem rede (`restaurarBlocoInterno`). A coleta só começa por clique.
+
+### Resultado do teste ao vivo (Task 9, 24/10/2026, SEI SP de treinamento 4.1.5, unidade TESTE)
+
+Processo grande 99906.713-630.000047/2023-89 (150 andamentos, 2 páginas, 20 passagens, 12 raias) e pequeno 99906.713-630.000111/2023-21
+(9 andamentos, 5 passagens). Capturas em `scratchpad/live/shots/gantt-*.png`.
+
+| Cenário | Resultado |
+| --- | --- |
+| 1ª abertura (grande) | modal em 80 ms, coleta de 1,5 s, 20 barras, 17 losangos, raias “TESTE 2x, SSP-CG 5x...”; 37 KB no cache |
+| 2ª abertura | 60 ms, 0 requisições de histórico |
+| Cancelar no meio (POST atrasado 1,8 s) | “página 1 de 2”, cancela, aviso “Coleta cancelada”, nada gravado no cache |
+| Atualizar (incremental) | GET, GET, POST P/0, POST R/0 (só a 1ª página) |
+| Cache vencido (40 min) | abre na hora com as 20 barras e o aviso “coletado há 40 min enquanto é atualizado”; atualiza e some o aviso |
+| “Consultar Andamento” nativo | antes `R`/0, 50 registros; depois da coleta, do cancelamento e da atualização: idêntico (e 9 registros no pequeno) |
+| CSV (download real) | BOM `efbbbf`, `;`, cabeçalho + 20 linhas, datas e unidades iguais às da validação da Task 7 |
+| Imprimir | `window.print()` abre a prévia do Chrome (2 páginas: gráfico, passagens, tempo por unidade); aberta e fechada, sem imprimir |
+| Dica | por mouse e por foco: quem recebeu/enviou, datas, duração, documentos; pendente e em curso distintos |
+| Visualização rápida | losango com a pasta aberta na árvore abre o documento (0000130) no diálogo; Esc fecha só ele; pasta fechada avisa |
+| Escalas | Dia, Semana e Mês com rolagem e “Ir para o mais recente” |
+| Tema escuro | `data-spro-tema=escuro` no quadro da árvore escurece o modal |
+
+Divergências e pendências: o histórico tem 4 unidades “em curso” ao mesmo tempo, então o Tempo por unidade dá ~24,6% a cada uma (regra
+acima). Abrir pelo link da capa legada só funciona com a opção que mostra a capa; a capa nova virá na Etapa 4. A visualização rápida só
+acha documentos da árvore e das pastas já abertas. O SEI 5 não foi exercitado (sem acesso nesta rodada).
 
 ## Comandos
 
