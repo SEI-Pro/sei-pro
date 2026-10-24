@@ -1,3 +1,4 @@
+import { verificarLocksFirefox } from "./verificar-locks-firefox";
 import { verificarAcoesLote } from "./verificar-acoes-lote";
 import { verificarBase } from "./verificar-base";
 import { verificarBlocoProcessos } from "./verificar-bloco-processos";
@@ -28,4 +29,5 @@ await verificarTextoPadraoConferencia();
 await verificarBlocoProcessos();
 await verificarDocumentoDados();
 await verificarAcoesLote();
+await verificarLocksFirefox();
 resumo();

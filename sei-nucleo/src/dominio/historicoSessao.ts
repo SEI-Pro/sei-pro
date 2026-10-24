@@ -18,6 +18,7 @@
  * `outraColetaHistoricoEmCursoPro` e `restaurarPaginacaoHistoricoPro`.
  */
 
+import { pedirTrava } from "../sessao/locksFirefox";
 import { comoErroSei } from "../sessao/erros";
 
 const NOME_EXCLUSAO = "seipro-historico-sessao";
@@ -96,7 +97,8 @@ let cadeiaLocal: Promise<unknown> = Promise.resolve();
 export function emExclusaoDoHistorico<T>(fn: () => Promise<T>, sinal?: AbortSignal): Promise<T> {
   const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
   if (locks?.request) {
-    const pedido = locks.request(NOME_EXCLUSAO, sinal ? { signal: sinal } : {}, fn) as Promise<T>;
+    // pedirTrava: no content script do Firefox o gerente de travas e o da pagina (ver sessao/locksFirefox.ts).
+    const pedido = pedirTrava(locks as Parameters<typeof pedirTrava>[0], NOME_EXCLUSAO, sinal ? { signal: sinal } : null, () => fn());
     return pedido.catch((e: unknown) => {
       throw comoErroSei(e);
     });
