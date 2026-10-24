@@ -10,7 +10,7 @@ import { copiavel, type DefPainel, fatia, linha } from "./comum";
 export const painelAtribuicao: DefPainel = {
   tipo: "responsaveis",
   titulo: "Atribuição",
-  icone: "pessoa",
+  icone: "usuarioGravata",
   desenhar(ctx) {
     const f = fatia<DadoAtribuicao>(ctx, "atribuicao");
     const minha = ctx.unidade.sigla.toLowerCase();

@@ -58,7 +58,7 @@ function itemMarcador(ctx: ContextoProcesso, m: MarcadorDoPainel, editavel: bool
 export const painelMarcador: DefPainel = {
   tipo: "marcador",
   titulo: "Marcador",
-  icone: "etiqueta",
+  icone: "etiquetas",
   desenhar(ctx) {
     const f = fatia<DadoMarcador>(ctx, "marcador");
     const nativo = prazoNativoDaPagina(ctx.arv.pagina.html);

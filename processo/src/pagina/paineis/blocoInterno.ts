@@ -11,7 +11,7 @@ import { copiavel, type DefPainel, fatia, linha } from "./comum";
 export const painelBlocoInterno: DefPainel = {
   tipo: "bloco_interno",
   titulo: "Bloco Interno",
-  icone: "camadas",
+  icone: "livro",
   desenhar(ctx) {
     const f = fatia<DadoBlocoInterno>(ctx, "blocoInterno");
     const d = f.dado;
