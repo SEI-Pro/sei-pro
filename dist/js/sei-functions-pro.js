@@ -942,6 +942,13 @@ function reescreverDocumentoPro(alvo, html, modo) {
     return $alvo;
 }
 
+// Texto qualquer (data, nome vindo do SEI) pronto para um atributo entre aspas duplas: sem isto um
+// apostrofo, aspas ou "<" no dado fechava o atributo ou a tag.
+function atributoPro(v) {
+    var s = (v === null || v === undefined) ? '' : String(v);
+    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+}
+
 // Monta o valor de data-spro-args a partir dos argumentos, ja escapado para caber num
 // atributo HTML entre aspas duplas.
 //
@@ -2547,10 +2554,10 @@ function extractDataFormulario(output = 'obj', allFields = false) {
     var stringOut = '';
     var dataForm = arrayData.map(function(v, i){
         if (v.indexOf(':') !== -1 && v.indexOf('<b>') !== -1 ) {
-            var name = removeAcentos($('<div>'+v+'</div>').text().trim()).toLowerCase();
+            var name = removeAcentos(lerHtmlPro('<div>'+v+'</div>').text().trim()).toLowerCase();
                 name = (name.indexOf(' (') !== -1) ? name.split('(')[0].trim() : name;
                 name = extractOnlyAlphaNum(name).replace(/ /g, '_');
-            var value = (typeof arrayData[i+1] !== 'undefined') ? $('<div>'+arrayData[i+1]+'</div>').text().trim() : null;
+            var value = (typeof arrayData[i+1] !== 'undefined') ? lerHtmlPro('<div>'+arrayData[i+1]+'</div>').text().trim() : null;
             objOut[name] = value;
             arrayOut.push({name: name, value: value});
             fieldsOut.push(name);
@@ -2903,7 +2910,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
     if (data.mode == 'descricao') {
         var textTitle = 'Editar especifica\u00E7\u00E3o do processo';
         var textBox =   '<div class="dialogBoxDiv seiProForm">'+
-                        '   <input maxlength="100" value="'+prop.txtDescricao+'" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 100%;">'+
+                        '   <input maxlength="100" value="'+prop.txtDescricao+'" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 100%;">'+
                         '</div>';
     } else if (data.mode == 'tipo_procedimento') {
         var textTitle = 'Editar tipo de procedimento';
@@ -2968,7 +2975,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '               <i class="iconPopup fas fa-clock azulColor"></i> <span>Data de Reabertura</span>'+
                         '          </td>'+
                         '          <td class="input" style="position:relative">'+
-                        '               <input type="datetime-local" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
+                        '               <input type="datetime-local" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
                         '           </td>'+
                         '      </tr>'+
                         '': '')+
@@ -3025,7 +3032,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
             
                 htmlDatePrazo = (datePrazo) ? getDatesPreview({date: datePrazo}) : false;
                 htmlDatePrazo = (datePrazoDue) ? getDatesPreview({date: datePrazoDue}) : htmlDatePrazo;
-                htmlDatePrazo = (htmlDatePrazo) ? $('<div>'+htmlDatePrazo+'</div>').find('.dateboxDisplay').html(): htmlDatePrazo;
+                htmlDatePrazo = (htmlDatePrazo) ? lerHtmlPro('<div>'+htmlDatePrazo+'</div>').find('.dateboxDisplay').html(): htmlDatePrazo;
                 dateRef = (checkPrazo) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD') : dateRef;
                 timeRef = (checkPrazo) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('HH:mm') : timeRef;
                 textTag = (checkPrazo) ? textTag.replace(checkDate[0]+time, '').replace('Ate ', '').replace(/\\r\\n/g, '').trim() : textTag;
@@ -3064,8 +3071,8 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '          </td>'+
                         '          <td class="input" style="position:relative">'+
                         '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(datePrazoDue ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
-                        '               <input type="date" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
-                        '               <input type="time" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+ 
+                        '               <input type="date" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
+                        '               <input type="time" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+ 
                         '           </td>'+
                         '      </tr>'+
                         '      <tr style="height: 40px;">'+
@@ -5715,7 +5722,7 @@ function getDadosHistoricoPro(listProc, fullHistory = false, callback = false) {
     if (!checkProcessoSigiloso()) {
         var href = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(listProc.id_procedimento);
         $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var urlArvore = $html.find("#ifrArvore").attr('src');
             //loopIDProcedimentos();
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
@@ -5735,7 +5742,7 @@ function getLinksArvoreAjax(htmlArvore) {
         $.each(htmlArvore.split('\n'), function(ind, val){
             if (val.indexOf('Nos[0].acoes = ') !== -1) {
                 var barraControle = val.trim().replace("Nos[0].acoes = '",'').slice(0,-2);
-                $('<div>'+barraControle+'</div>').find(parent.isNewSEI ? 'a[href*="controlador.php?acao="]' : 'a.botaoSEI').each(function(){ 
+                lerHtmlPro('<div>'+barraControle+'</div>').find(parent.isNewSEI ? 'a[href*="controlador.php?acao="]' : 'a.botaoSEI').each(function(){ 
                     if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href') != '#') { 
                         links.push({name: $(this).find('img').attr('title'), url: $(this).attr('href')}); 
                     }
@@ -5781,28 +5788,28 @@ function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, ca
     $.ajax({ url: urlHistorico }).fail(function () {
         if (fullHistory) registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true);
     }).done(function (htmlHistorico) {
-        if (fullHistory && $(htmlHistorico).find('#frmProcedimentoHistorico').length == 0) {
+        if (fullHistory && lerHtmlPro(htmlHistorico).find('#frmProcedimentoHistorico').length == 0) {
             // Resposta que nao e o historico (sessao expirada, erro): nada foi alterado na sessao do SEI.
             registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true);
             return;
         }
-        if(($(htmlHistorico).find('.infraAreaPaginacao').html() || '').trim() != '') {
-            var pg = ($(htmlHistorico).find('#selInfraPaginacaoSuperior').length > 0) ? $(htmlHistorico).find('#selInfraPaginacaoSuperior option').length-1 : 1;
+        if((lerHtmlPro(htmlHistorico).find('.infraAreaPaginacao').html() || '').trim() != '') {
+            var pg = (lerHtmlPro(htmlHistorico).find('#selInfraPaginacaoSuperior').length > 0) ? lerHtmlPro(htmlHistorico).find('#selInfraPaginacaoSuperior option').length-1 : 1;
             if (fullHistory) {
                 // Como no ramo resumido abaixo, o acumulador comeca vazio: sem isso cada consulta
                 // completa somava as anteriores e o historico saia duplicado (26 -> 52 andamentos).
                 andamentoPaginacaoTemp = [];
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, pg, fullHistory, callback, acompanhamentoEsp);
+                getDadosHistoricoPaginacao(lerHtmlPro(htmlHistorico), listProc, 0, pg, fullHistory, callback, acompanhamentoEsp);
             } else {
-                andamentoPaginacaoTemp = getArrayHistorico($(htmlHistorico));
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 1, pg, fullHistory, callback, acompanhamentoEsp);
+                andamentoPaginacaoTemp = getArrayHistorico(lerHtmlPro(htmlHistorico));
+                getDadosHistoricoPaginacao(lerHtmlPro(htmlHistorico), listProc, 1, pg, fullHistory, callback, acompanhamentoEsp);
             }
         } else {
             if (fullHistory) {
                 andamentoPaginacaoTemp = [];
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, 1, fullHistory, callback, acompanhamentoEsp);
+                getDadosHistoricoPaginacao(lerHtmlPro(htmlHistorico), listProc, 0, 1, fullHistory, callback, acompanhamentoEsp);
             } else {
-                var andamento = getArrayHistorico($(htmlHistorico));
+                var andamento = getArrayHistorico(lerHtmlPro(htmlHistorico));
                 var listAndamento = {historico_completo: false, processo: listProc.processo, id_procedimento: listProc.id_procedimento, andamento: andamento};
                 if (!callback) {
                     loopIDProcedimentos();
@@ -5881,7 +5888,7 @@ function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = fa
                 restaurarPaginacaoHistoricoPro(formOriginal, function () { registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true); });
             }
         }).done(function (htmlHistorico) {
-            var $htmlHistorico = $(htmlHistorico);
+            var $htmlHistorico = lerHtmlPro(htmlHistorico);
             var andamento = getArrayHistorico($htmlHistorico);
             // O total de paginas veio da primeira consulta, a do historico RESUMIDO (o GET do "Consultar
             // Andamento"), mas aqui o tipo pedido e o completo, que tem muito mais paginas (SEI 5.0.4 da
@@ -6137,6 +6144,10 @@ function initTablePaginacaoHistorico() {
         getTablePaginacao(ifrView, '#frmProcedimentoHistorico', '#tblHistorico', 1);
     }
 }
+// "Cancelar" da remocao de paginacao: pela janela do processo, como o parent.getJanelaProcessoPro() de antes.
+function cancelarPaginacaoPro(el) {
+    getJanelaProcessoPro().cancelTablePaginacao(el);
+}
 function getTablePaginacao(ifrView, formID, tableID, index) {
     if (ifrView.find('.infraAreaPaginacao a').length > 0 && typeof window.tablepaginacao_cancel == 'undefined') {
         var form = ifrView.find(formID);
@@ -6165,15 +6176,16 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
             data: param,
             url: href
         }).done(function (html) {
-            let $html = $(html);
+            let $html = lerHtmlPro(html);
             var tr = $html.find(tableID+' tbody').find('tr').not('.infraTrOrdenacao');
                 if(tr.length > 0) {
                     tr.each(function(index){
                         if ($(this).find('th').length == 0 && !$(this).find('td').hasClass('infraTdSetaOrdenacao')) {
                             if ($(this).find('input.infraCheckbox').length > 0) {
-                                $(this).find('input.infraCheckbox').attr('disabled', true).closest('td').attr('onmouseout','return infraTooltipOcultar()').attr('onmouseover','return infraTooltipMostrar(\'Desative a op\u00E7\u00E3o "Remover pagina\u00E7\u00E3o de processos" nas configura\u00E7\u00F0es do '+NAMESPACE_SPRO+' para utilizar esta sele\u00E7\u00E3o\')');
+                                $(this).find('input.infraCheckbox').attr('disabled', true).closest('td').attr('data-spro-tip', 'Desative a op\u00E7\u00E3o "Remover pagina\u00E7\u00E3o de processos" nas configura\u00E7\u00F0es do '+NAMESPACE_SPRO+' para utilizar esta sele\u00E7\u00E3o');
                             }
-                            ifrView.find(tableID+' tbody').append($(this)[0].outerHTML);
+                            // A linha vem do documento inerte da resposta: e movida, nao reparseada (P4).
+                            ifrView.find(tableID+' tbody').append(this);
                         }
                     });
                     getTablePaginacao(ifrView, formID, tableID, index+1);
@@ -6190,7 +6202,7 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
                 }
         });
         if (ifrView.find('.loadRemovePag').length == 0) {
-            htmlPro(ifrView.find('.infraAreaPaginacao'), '<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.getJanelaProcessoPro().cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>', 'prepend');
+            htmlPro(ifrView.find('.infraAreaPaginacao'), '<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" data-spro-click="cancelarPaginacaoPro"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>', 'prepend');
         }
     }
 }
@@ -6911,15 +6923,22 @@ function getDatesPreview(config, dateduepreview=false) {
     var resultDateDate = (resultDate.date != '') ? moment(resultDate.date, formatDate).format(displayFormat) : resultDate.date;
     var displayDueText = (typeof config.displaydue_txt === 'undefined') ? 'Vencimento:' : config.displaydue_txt;
     var displayTipText = (config.displaytip) ? '<br>'+config.displaytip : '';
-    var displayModeTip = (config.displaydue) 
-                            ? 'infraTooltipMostrar(\'Criado '+resultDate.dateref+' ('+resultDateDate+') '+displayTipText+'\', \''+displayDueText+' '+resultDate.duedate+'\')' 
-                            : 'infraTooltipMostrar(\''+displayDueText+' '+resultDate.duedate+' '+displayTipText+'\', \''+resultDate.duecalcref+'\')';
-        displayModeTip = (config.deliverydoc) 
-                            ? 
-                            (config.dateDue !== null) 
-                                ? 'infraTooltipMostrar(\'Avalia\u00E7\u00E3o at\u00E9 '+resultDate.duedate+' ('+resultDate.duecalcref+') '+displayTipText+'\', \''+displayDueText+' '+moment(resultDate.date, formatDate).format(displayFormat)+'\')' 
-                                : 'infraTooltipMostrar(\''+config.displaytip+'\',\''+displayDueText+' '+moment(resultDate.date, formatDate).format(displayFormat)+'\')' 
-                            : displayModeTip;
+    // Texto e titulo do tooltip (antes, os dois argumentos de um infraTooltipMostrar inline).
+    var tipTexto, tipTitulo;
+    if (config.deliverydoc && config.dateDue !== null) {
+        tipTexto = 'Avalia\u00E7\u00E3o at\u00E9 '+resultDate.duedate+' ('+resultDate.duecalcref+') '+displayTipText;
+        tipTitulo = displayDueText+' '+moment(resultDate.date, formatDate).format(displayFormat);
+    } else if (config.deliverydoc) {
+        tipTexto = config.displaytip;
+        tipTitulo = displayDueText+' '+moment(resultDate.date, formatDate).format(displayFormat);
+    } else if (config.displaydue) {
+        tipTexto = 'Criado '+resultDate.dateref+' ('+resultDateDate+') '+displayTipText;
+        tipTitulo = displayDueText+' '+resultDate.duedate;
+    } else {
+        tipTexto = displayDueText+' '+resultDate.duedate+' '+displayTipText;
+        tipTitulo = resultDate.duecalcref;
+    }
+    var atributosTip = 'data-spro-tip="'+atributoPro(tipTexto)+'" data-spro-tip-titulo="'+atributoPro(tipTitulo)+'"';
     var displayMode = (config.displaydue) ? resultDate.duecalcref : resultDate.dateref;
     var htmlDateDueBox = ((config.duedate || config.duesetdate) && resultDate.duecalcref != '' && dateduepreview) ? '<div class="infraTooltipPro" style="margin-top: 20px;"><strong>'+resultDate.duecalcref+'</strong>Vencimento em: '+resultDate.duedate+'</div>' : '';
     var htmlProgress = getProgressPreview(config);
@@ -6938,14 +6957,17 @@ function getDatesPreview(config, dateduepreview=false) {
         tagName = (typeof config.paused !== 'undefined' && config.paused) ? { name: 'Pausada', value: 'date_pausado', color: '#f1ecdd' } : tagName;
         tagName = (typeof config.senddoc !== 'undefined' && config.senddoc) ? { name: 'Arquivada', value: 'date_enviado', color: '#ececec' } : tagName;
         tagName = (typeof config.nametag !== 'undefined' && config.nametag) ? config.nametag : tagName;
+    // A acao chega como "fn(this)" (parent.filterTagView(this), addControlePrazo(this)): vira o nome, e o
+    // despachante passa o elemento, como o this do onclick.
     var tagAction = (typeof config.action !== 'undefined' && config.action != '') ? config.action : 'parent.filterTagView(this)';
+        tagAction = String(tagAction).replace(/\(\s*this\s*\)\s*;?\s*$/, '');
     var htmlDateDue = (config.duedate || config.duesetdate) 
                         ? (resultDate.alertdate) 
-                            ? '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';"><i class="'+(config.displayicon ? config.displayicon : 'fas fa-exclamation-triangle vermelhoColor')+'" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
-                            : '<span class="dateBoxIcon" onmouseover="return '+displayModeTip+';">'+htmlProgress+'<i class="'+iconDateClass+'" style="color: '+iconDateColor+'; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
+                            ? '<span class="dateBoxIcon" '+atributosTip+'><i class="'+(config.displayicon ? config.displayicon : 'fas fa-exclamation-triangle vermelhoColor')+'" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
+                            : '<span class="dateBoxIcon" '+atributosTip+'>'+htmlProgress+'<i class="'+iconDateClass+'" style="color: '+iconDateColor+'; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' 
                         : '<i class="'+iconDate+'" style="color: #777; padding-right: 3px; font-size: 12pt;"></i>';
     // console.log('getDatesPreview',resultDate);
-   return '<span class="dateboxDisplay tagTableText_'+tagName.value+' '+backgroundDiv+'" data-duesetdate="'+config.duesetdate+'" data-colortag="'+tagName.color+'" data-tagname="'+tagName.value+'" data-nametag="'+tagName.name+'" data-time-sorter="'+resultDate.date+'" data-type="date" onclick="'+tagAction+'">'+htmlDateDue+' '+displayMode+'</span>'+htmlDateDueBox;
+   return '<span class="dateboxDisplay tagTableText_'+tagName.value+' '+backgroundDiv+'" data-duesetdate="'+config.duesetdate+'" data-colortag="'+tagName.color+'" data-tagname="'+tagName.value+'" data-nametag="'+tagName.name+'" data-time-sorter="'+resultDate.date+'" data-type="date" data-spro-click="'+atributoPro(tagAction)+'">'+htmlDateDue+' '+displayMode+'</span>'+htmlDateDueBox;
 }
 function calculeDatesDurationTemplate() {
     var duration = this.duration;
@@ -7078,7 +7100,7 @@ function updateTablePrazoProcesso() {
             
             var htmlDatePrazo = (datePrazo) ? getDatesPreview({date: datePrazo}) : false;
                 htmlDatePrazo = (datePrazoDue) ? getDatesPreview({date: datePrazoDue}) : htmlDatePrazo;
-                htmlDatePrazo = (htmlDatePrazo) ? $('<div>'+htmlDatePrazo+'</div>').find('.dateboxDisplay').html(): htmlDatePrazo;
+                htmlDatePrazo = (htmlDatePrazo) ? lerHtmlPro('<div>'+htmlDatePrazo+'</div>').find('.dateboxDisplay').html(): htmlDatePrazo;
 
             var dateSorter = (htmlDatePrazo) ? (datePrazo || datePrazoDue): '';
 
@@ -7101,7 +7123,7 @@ function openBoxIconsFA(action, nametag, mode) {
     var htmlBox = '<div id="listIconsFontAwesome">'+
                   '    <input type="text" id="searchIconFA" data-spro-keyup="filterIconsFA" data-spro-args="'+argsPro()+'" placeholder="Filtrar pelo nome...">';
         $.each(listIconsFontAwesome, function(i,value){
-            htmlBox += '<span class="iconList" onclick="'+action+'(this, \''+nametag+'\', \''+mode+'\')"><i class="fas fa-'+value+' azulColor"></i> <span class="iconListTxt">'+value+'</span></span>';
+            htmlBox += '<span class="iconList" data-spro-click="'+atributoPro(action)+'" data-spro-args="'+argsPro('$el', nametag, mode)+'"><i class="fas fa-'+value+' azulColor"></i> <span class="iconListTxt">'+value+'</span></span>';
         });
         htmlBox += '</div>';
     
@@ -7437,7 +7459,7 @@ function addTrancadoProcessoPro() {
 function dialogCopyNewDoc(doc) {
     var textBox =   '<div>Digite o n\u00FAmero do processo que deseja copiar o documento <span style="display: inline-block; padding: 3px 5px; margin: 3px 5px;background: #eaeaea; border-radius: 5px; color: #666;">'+doc.text().trim()+'</span></div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
-                    '   <input data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 80%;">'+
+                    '   <input data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 80%;">'+
                     '</div>';
     removeOptionsPro('currentCloneDoc');
 
@@ -7456,7 +7478,7 @@ function dialogCopyNewDoc(doc) {
                     loadingButtonConfirm(true);
                     getIDProtocoloSEI($('#dialogBoxProcesso').val().trim(),  
                         function(html){
-                            let $html = $(html);
+                            let $html = lerHtmlPro(html);
                             var params = getParamsUrlPro($html.find('#ifrArvore').attr('src'));
                             $('#ifrArvore')[0].contentWindow.getDadosDoc(doc, params.id_procedimento);    
                         }, 
@@ -7970,10 +7992,6 @@ function checkFormRequiredPro(elementForm) {
     });
     return required;
 }
-// Enter num campo de dialogo aciona o botao de confirmar (o .confirm do jQuery UI).
-function enterConfirmaDialogoPro(el, ev) {
-    if (ev.which == 13) { $(el).closest('.ui-dialog').find('.confirm.ui-button').trigger('click'); }
-}
 // A frase de confirmacao: o botao so acende com a frase certa.
 function conferirFrasePro(el, ev, frase) {
     updateButtonConfirm(el, frase == $(el).val().trim().toUpperCase());
@@ -7986,7 +8004,7 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
     }
     var phraseDiv = '<div class="dialogBoxDiv">Para confirmar, digite <b style="font-weight: bold;">'+phrase.toUpperCase()+'</b>:</div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
-                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" data-spro-keypress="enterConfirmaDialogoPro" data-spro-input="conferirFrasePro" data-spro-args="'+argsPro('$el', '$ev', phrase.toUpperCase())+'" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
+                    '   <input id="dialogBoxConfirmFrase" autocomplete="off" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-input="conferirFrasePro" data-spro-args="'+argsPro('$el', '$ev', phrase.toUpperCase())+'" type="text" style="font-size: 10pt; width: 80%; text-transform: uppercase;">'+
                     '</div>';
     alertBoxPro = htmlPro($('#alertaBoxPro'), '<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
         .dialog({
@@ -9555,7 +9573,7 @@ function batchActionsPro(this_) {
                                             '   </div>'+
                                             '   <div class="configBoxPro_pwdSenha" style="margin-top:20px">'+
                                             '       <label style="margin-bottom: 10px;display: block;">Senha</label>'+
-                                            '       <input id="configBoxPro_pwdSenha" data-spro-keypress="enterConfirmaDialogoPro" data-spro-args="'+argsPro('$el', '$ev')+'" autocomplete="off" type="password" style="font-size: 10pt; width: 96%;">'+
+                                            '       <input id="configBoxPro_pwdSenha" data-spro-keypress="confirmarDialogoNoEnterPro" data-spro-args="'+argsPro('$el', '$ev')+'" autocomplete="off" type="password" style="font-size: 10pt; width: 96%;">'+
                                             '   </div>'+
                                             '</div>';
                                 resetDialogBoxPro('configBoxPro');

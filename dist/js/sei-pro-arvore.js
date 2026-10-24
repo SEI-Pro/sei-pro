@@ -237,7 +237,7 @@ function getLinksPage() {
             $.each($(this).text().split('\n'), function(ind, val){
                 if (val.indexOf('Nos[0].acoes = ') !== -1) {
                     var barraControle = val.trim().replace("Nos[0].acoes = '",'').slice(0,-2);
-                    $('<div>'+barraControle+'</div>').find(parent.isNewSEI ? 'a[href*="controlador.php?acao="]' : 'a.botaoSEI').each(function(){ 
+                    lerHtmlArvorePro('<div>'+barraControle+'</div>').find(parent.isNewSEI ? 'a[href*="controlador.php?acao="]' : 'a.botaoSEI').each(function(){ 
                         if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href') != '#') { 
                             links.push({name: $(this).find('img').attr('title'), url: $(this).attr('href')}); 
                         }
