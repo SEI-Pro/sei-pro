@@ -13,8 +13,7 @@ function dialogDBTransition() {
                         '   <img style="vertical-align: middle;" src="'+old_extension.URL_SPRO+new_extension.ICON_SPRO['48']+'">'+
                         '</div>';
         // resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv"><strong class="alertaAttencionPro"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+htmlBox+'</strong></div>')
+        dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"><strong class="alertaAttencionPro"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+htmlBox+'</strong></div>')
             .dialog({
                 title: 'Migrar Configura\u00E7\u00F5es',
                 width: 480,
