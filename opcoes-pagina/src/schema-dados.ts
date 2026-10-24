@@ -486,6 +486,19 @@ export const SECOES_GERAL: Secao[] = [
         padrao: 15,
         min: 0,
         max: 3650,
+        // A capa nova so existe no pacote do Lab.
+        visivelEm: "lab",
+      },
+      {
+        nome: "filtroarvore",
+        rotulo: "Filtro acima da árvore do processo (busca e chips Não assinados, Externos e Cancelados)",
+        ajuda:
+          "Põe uma busca e três botões acima da lista de documentos da árvore para mostrar só o que interessa. Só esconde linhas na tela: não altera o processo nem faz consultas ao SEI. Para incluir os documentos de uma pasta, abra a pasta antes.",
+        tipo: "chave",
+        icone: "fa fa-filter",
+        padrao: true,
+        // O filtro so existe no pacote do Lab.
+        visivelEm: "lab",
       },
       {
         nome: "resizearvore",

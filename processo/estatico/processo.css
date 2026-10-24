@@ -7,6 +7,7 @@
    (claro por padrao, escuro quando o SEI esta escuro), nunca o do sistema operacional. */
 .spro-p-raiz,
 .spro-pm,
+.spro-f-barra,
 .spro-g-impressao,
 dialog.spro-dialogo {
   --spro-fundo: #ffffff;
@@ -31,6 +32,7 @@ dialog.spro-dialogo {
 }
 .spro-p-raiz[data-tema="escuro"],
 .spro-pm[data-tema="escuro"],
+.spro-f-barra[data-tema="escuro"],
 dialog.spro-dialogo[data-tema="escuro"] {
   --spro-fundo: #1a1d21;
   --spro-fundo-2: #22262b;
@@ -1081,4 +1083,124 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   .spro-g-prog-barra.indeterminado > span {
     animation: none;
   }
+}
+
+/* ---------- Filtro da árvore ---------- */
+/* O filtro só esconde: o atributo vai em cada irmão da linha do nó (a árvore do SEI é plana) e sai ao limpar. */
+[data-spro-f-oculto] {
+  display: none !important;
+}
+.spro-f-barra {
+  box-sizing: border-box;
+  margin: 0 0 6px;
+  padding: 6px 4px 4px;
+  font-family: var(--spro-fonte);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--spro-texto);
+  border-bottom: 1px solid var(--spro-borda);
+}
+.spro-f-barra[hidden],
+.spro-f-barra [hidden] {
+  display: none !important;
+}
+.spro-f-barra *,
+.spro-f-barra *::before,
+.spro-f-barra *::after {
+  box-sizing: border-box;
+}
+.spro-f-linha {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.spro-f-lupa {
+  position: absolute;
+  left: 8px;
+  display: inline-flex;
+  color: var(--spro-fraco);
+  pointer-events: none;
+}
+.spro-f-busca {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  padding: 0 28px 0 27px;
+  font: inherit;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: 6px;
+}
+.spro-f-busca::placeholder {
+  color: var(--spro-fraco);
+}
+.spro-f-busca:focus-visible,
+.spro-f-chip:focus-visible,
+.spro-f-limpar:focus-visible {
+  outline: 2px solid var(--spro-destaque);
+  outline-offset: 1px;
+}
+.spro-f-limpar {
+  position: absolute;
+  right: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--spro-suave);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.spro-f-limpar:hover {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-f-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.spro-f-chip {
+  height: 22px;
+  margin: 0;
+  padding: 0 9px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: 11px;
+  cursor: pointer;
+}
+.spro-f-chip:hover {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-f-chip[aria-pressed="true"] {
+  color: var(--spro-destaque-texto);
+  background: var(--spro-destaque);
+  border-color: var(--spro-destaque);
+}
+.spro-f-status {
+  margin-top: 5px;
+  color: var(--spro-suave);
+  font-size: 11.5px;
+}
+.spro-f-status-texto {
+  font-weight: 600;
+  color: var(--spro-texto);
+}
+.spro-f-dica {
+  display: block;
+  margin-top: 1px;
+}
+.spro-f-dica:empty {
+  display: none;
 }

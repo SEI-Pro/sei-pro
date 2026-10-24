@@ -20,6 +20,8 @@ export const ATRIBUTO_COLETA = "data-spro-capa-coleta";
 /** Opção do legado (`dataValues`, numérica): dias sem sair da unidade para a capa avisar. 0 desliga. */
 export const OPCAO_PROCESSO_PARADO = "processoparado";
 export const LIMITE_PARADO_PADRAO = 15;
+/** Opção do legado (`dataValues`, liga/desliga, ligada por padrão): a barra de filtro acima da árvore. */
+export const OPCAO_FILTRO_ARVORE = "filtroarvore";
 
 /** Teto do cache: cota do chrome.storage.local é dividida com Favoritos, Histórico e Agente. */
 export const MAX_PROCESSOS_CACHE = 200;

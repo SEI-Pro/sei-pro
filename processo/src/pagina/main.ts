@@ -12,12 +12,14 @@ import proprio from "../../estatico/processo.css";
 import { restaurarBlocoInterno } from "../gantt/coleta";
 import { ligarGantt } from "../gantt/ligar";
 import { LojaProcesso } from "../modelo/loja";
+import { OPCAO_FILTRO_ARVORE } from "../modelo/constantes";
 import { paineisHabilitados } from "../modelo/paineis";
 import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
 import { type ContextoProcesso, criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
 import { criarLeituras } from "./leituras";
 import { dentroDoVerificadorOculto, ehQuadroDaArvore, ehTopoDoProcesso, marcarAtivo, marcarCapa, marcarGantt, marcarMenu } from "./marca";
+import { ligarFiltro } from "./filtro/barra";
 import { ligarMenuDaArvore } from "./menuDoc/ligar";
 import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
@@ -95,7 +97,9 @@ async function principal(): Promise<void> {
   const { dataValues } = (await chrome.storage.sync.get("dataValues")) as { dataValues?: unknown };
   const comPaineis = opcaoLegadaLigada(dataValues, "infoarvore") && painelLigado(localStorage);
   const comMenu = opcaoLegadaLigada(dataValues, "menurapido");
-  if (!comPaineis && !comMenu) return;
+  // O filtro vale por si (não depende dos painéis nem do menu) e vem ligado: só esconde nós quando o usuário pede.
+  const comFiltro = opcaoLegadaLigada(dataValues, OPCAO_FILTRO_ARVORE);
+  if (!comPaineis && !comMenu && !comFiltro) return;
   const ctx = await obterContexto();
   if (!ctx) return;
   if (comPaineis) {
@@ -106,4 +110,5 @@ async function principal(): Promise<void> {
     void restaurarBlocoInterno(ctx).catch(() => undefined);
   }
   if (comMenu) ligarMenuDaArvore({ ctx, dataValues, http: criarHttp(location.href) });
+  if (comFiltro) ligarFiltro(ctx);
 }
