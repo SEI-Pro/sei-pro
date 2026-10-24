@@ -4203,6 +4203,10 @@ function automaticActions(type, mode, value = false, callback = false) {
         getRemoverMarcador(false, callback);
     }
 }
+// Reabertura programada na tela de Enviar Processo: no SEI 4+ so ao marcar; no 3 a cada clique, como antes.
+function reabrirAoEnviarPro(el, soMarcado) {
+    if (!soMarcado || $(el).is(':checked')) getJanelaProcessoPro().editDadosArvorePro_AcompEsp();
+}
 function getActionsOnSendProcess() {
     // O submit dispara remocao de marcador/atribuicao e a verificacao de nao assinados consulta o
     // historico: com as duas copias ligadas, a isolada anulava o #frmCheckerProcessoPro da outra.
@@ -4242,15 +4246,15 @@ function getActionsOnSendProcess() {
                         (verifyConfigValue('reaberturaprogramada') ? 
                         '   <span style="margin: 0 10px;display: inline-block;">'+
                         (isNewSEI ? 
-                        '      <div class="infraCheckboxDiv "><input onchange="if ($(this).is(\':checked\')) { parent.getJanelaProcessoPro().editDadosArvorePro_AcompEsp() }" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
-                        '      <input type="checkbox" onclick="parent.getJanelaProcessoPro().editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
+                        '      <div class="infraCheckboxDiv "><input data-spro-change="reabrirAoEnviarPro" data-spro-args="'+argsPro('$el', true)+'" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
+                        '      <input type="checkbox" data-spro-click="reabrirAoEnviarPro" data-spro-args="'+argsPro('$el', false)+'" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
                         )+
                         '     <label id="lblSinReabrirProcesso" for="chkSinReabrirProcesso" accesskey="" class="infraLabelCheckbox">Reabrir processo em data certa</label>'+
                         '   </span>'+
                         '': '')+
                         '</span>';
     ifrVisualizacao.find('#divSinRemoveAttributes').remove();
-    ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
+    htmlPro(ifrVisualizacao.find('#divSinRemoverAnotacoes'), htmlBoxActions, 'append');
 
     // O aviso de nao assinados do Enviar Processo agora e do modulo processo/ (a partir da arvore, sem coletar o historico).
     if (checkConfigValue('naoassinados') && !document.documentElement.hasAttribute('data-seipro-processo-aviso') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
@@ -4366,7 +4370,7 @@ function getListAcompanhamentoEspecial(force = false, callback = false) {
 }
 function ajaxListAcompanhamentoEspecial(href, force, callback = false) {
     $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
+        let $html = lerHtmlPro(html);
         // O SEI guarda na sessao a ultima pagina vista da lista (InfraPagina::prepararPaginacao): se o GET ja volta
         // numa pagina adiantada (ultima ou do meio), recomeca da primeira antes de seguir para as proximas.
         if ($html.find('#lnkInfraPaginaAnteriorSuperior').length) {
@@ -4392,7 +4396,7 @@ function postListAcompanhamentoEspecial($html, href, force, reset = false, callb
         data: param,
         url: href
     }).done(function (html) {
-        let $htmlPost = $(html);
+        let $htmlPost = lerHtmlPro(html);
         // A primeira pagina relida depois do recomeco (reset) SUBSTITUI a lista guardada; antes ela se juntava a
         // lista antiga e, como a juncao mantem a primeira ocorrencia de cada processo, grupo trocado ou
         // acompanhamento removido nunca saiam da lista.
@@ -4626,7 +4630,7 @@ function reopenProcessAjax(id_procedimento, callback = false) {
     var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
     if (href !== null) {
         $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
+            var $html = lerHtmlPro(html);
             var urlArvore = $html.find("#ifrArvore").attr('src');
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
                 var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
@@ -4679,11 +4683,11 @@ function getHtmlFormAcompEspPro(href, callback) {
 // (false quando a primeira resposta ja era o formulario), para quem precisa gravar pelo mesmo formulario.
 function getHtmlFormAdicionarPro(href, seletor, callback) {
     $.ajax({ url: href }).done(function (html) {
-        var $html = $(html);
+        var $html = lerHtmlPro(html);
         if ($html.find(seletor).length) { callback($html, false); return; }
         var url = getUrlBotaoAdicionarPro($html);
         if (!url) { callback($html, false); return; }
-        $.ajax({ url: url }).done(function (html2) { callback($(html2), url); });
+        $.ajax({ url: url }).done(function (html2) { callback(lerHtmlPro(html2), url); });
     });
 }
 // URL do botao "Adicionar" de uma listagem do SEI (onclick location.href='...'), ou false.
@@ -4997,7 +5001,7 @@ function loadDocZipPro(linkFile, ifrVisualizacao) {
                     '   </div>'+
                     '</div>';
     ifrVisualizacao.find('#divZip').remove();
-    ifrVisualizacao.find(divInformacao).after(divVideo);
+    htmlPro(ifrVisualizacao.find(divInformacao), divVideo, 'after');
 
     if (typeof JSZipUtils !== 'undefined') {
         openDocZipPro(ifrVisualizacao);
@@ -5008,6 +5012,10 @@ function loadDocZipPro(linkFile, ifrVisualizacao) {
             });
         }); 
     }
+}
+// Arquivo da lista do zip, no visualizador: abre pela janela do processo, como o parent.getJanelaProcessoPro() de antes.
+function abrirArquivoZipPro(i) {
+    getJanelaProcessoPro().openFileZip(i);
 }
 function openDocZipPro(ifrVisualizacao) {
     var urlZip = ifrVisualizacao.find(ancoraArvoreDownload).attr('href');
@@ -5026,7 +5034,7 @@ function openDocZipPro(ifrVisualizacao) {
                     var date = moment(zipEntry.date).format('DD/MM/YYYY HH:mm:ss');
                     var size = infraFormatarTamanhoBytes(zipEntry._data.uncompressedSize);
                         size = !zipEntry.dir ? size : '';
-                    var click = zipEntry.dir ? '' : `onclick="parent.getJanelaProcessoPro().openFileZip(${i})"`;
+                    var click = zipEntry.dir ? '' : `data-spro-click="abrirArquivoZipPro" data-spro-args="${argsPro(i)}"`;
                     htmlPro(ifrVisualizacao.find('#divZip .files #listing'), `<li ${click}><a>${name}</a><span class="date">${date}</span><span class="size">${size}</span></li>`, 'append');
                     // console.log(relativePath, name, zipEntry);
                     window.zip[i] = zipEntry;
@@ -5106,7 +5114,7 @@ function insertIconNewTab() {
                         '</a>';
 
                 ifrVisualizacao.find('.openNewTab').remove()
-                ifrVisualizacao.find('#divArvoreAcoes').after(html);
+                htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), html, 'after');
         }
     }
 }
@@ -5308,14 +5316,17 @@ function setHtmlProtocoloAlterar() {
                         '       <input type="text" id="txtDtaGeracaoExibir" name="txtDtaGeracaoExibir" class="infraText infraReadOnly" readonly="readonly" value="'+ifrVisualizacao.find('#hdnDtaGeracao').val()+'">'+
                         '    </div>'+
                         '</div>';
-            ifrVisualizacao.find('#divInfraBarraComandosSuperior').after(html);
+            htmlPro(ifrVisualizacao.find('#divInfraBarraComandosSuperior'), html, 'after');
     }
 
     if (form.length > 0 && ifrVisualizacao.find('#txtDescricao').length ) {
         ifrVisualizacao.find('div.urgentePro').remove();
         if (NAMESPACE_SPRO == 'SEI Pro Lab') {
             ifrVisualizacao.find('div.trancadoPro').remove();
-            htmlPro(ifrVisualizacao.find('#txtDescricao').css('width','80%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="trancadoPro" style="right: 11%;top: 10px;" data-spro-click="parent.addTrancadPro" data-spro-tip="Adicionar/remover marca de Trancamento"></div>'), '<div class="urgentePro" style="right: 15%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
+            // A ordem importa: trancado entra logo depois do campo e o urgente entre os dois, como o .after() encadeado fazia.
+            var txtDescricaoPro = ifrVisualizacao.find('#txtDescricao').css('width','80%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val());
+            htmlPro(txtDescricaoPro, '<div class="trancadoPro" style="right: 11%;top: 10px;" data-spro-click="parent.addTrancadPro" data-spro-tip="Adicionar/remover marca de Trancamento"></div>', 'after');
+            htmlPro(txtDescricaoPro, '<div class="urgentePro" style="right: 15%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         } else {
             htmlPro(ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()), '<div class="urgentePro" style="right: 11%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         }
@@ -5382,7 +5393,7 @@ function loadDocVideoPro(linkFile, ifrVisualizacao) {
                     '    </video>'+
                     '</div>';
     ifrVisualizacao.find('#divVideo').remove();
-    ifrVisualizacao.find(divInformacao).after(divVideo);
+    htmlPro(ifrVisualizacao.find(divInformacao), divVideo, 'after');
     ifrVisualizacao.find('#divVideo video').on('loadedmetadata', function(event) {
           this.currentTime = 0;
     });
@@ -5417,8 +5428,8 @@ function loadingButtonConfirm(check) {
     if (btnConfirm.is(':visible')) {
         var oldText = (typeof btnConfirm.data('text') == 'undefined') ? btnConfirm.data('text', btnConfirm.text()) : btnConfirm.data('text');
             oldText = btnConfirm.data('text');
-        var html = (check) ? '<i class="fas fa-sync fa-spin cinzaColor"></i>' : oldText;
-        btnConfirm.removeClass('ui-state-active').html(html);
+        btnConfirm.removeClass('ui-state-active');
+        if (check) { htmlPro(btnConfirm, '<i class="fas fa-sync fa-spin cinzaColor"></i>'); } else { btnConfirm.text(oldText); }
         if (check) { btnConfirm.addClass('loading') } else { btnConfirm.removeClass('loading') }
     } 
 }
@@ -5427,7 +5438,7 @@ function checkLimitText(this_) {
     var maxlength = _this.attr('maxlength');
     var currentLength = (_this.is('textarea')) ? _this.val().length : _this.text().trim().length;
     var textCount = (currentLength >= maxlength) ? 'Voc\u00EA atingiu o n\u00FAmero m\u00E1ximo de caracteres.' : (maxlength - currentLength)+' caracteres restantes';
-    _this.closest('div').find('.countLimit').html(textCount);
+    _this.closest('div').find('.countLimit').text(textCount);
     // console.log(this_, maxlength, textCount, _this.closest('div').find('.countLimit'));
 }
 function followSelecionarItens(this_) {
@@ -5499,7 +5510,7 @@ function updateCountnewFiltro(newArray) {
         max = (typeof max !== 'undefined') ? max : 0;
     var index = (typeof newArray !== 'undefined' && newArray.length > 0 && max > 0) ? max-newArray.length : 0;
     var i = (index >  0 && max > 0) ? index+'/'+max : '';
-    $('#newFiltroCounter').html(i);
+    $('#newFiltroCounter').text(i);
 }
 function getDadosProcedimentosControlar() {
     var newArrayIDProcedimentos = []
