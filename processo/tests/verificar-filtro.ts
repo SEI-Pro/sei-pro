@@ -651,6 +651,301 @@ export async function verificarFiltro(): Promise<void> {
     !barra.isConnected && d.querySelectorAll(`[${ATR_OCULTO}]`).length === 0 && obs.alvo === null,
   );
 
+  // ------------------------------------------------------------------------------------------------ lupa
+  secao("Filtro: a lupa na fileira de icones do topo (abrir, fechar, limpar ao fechar, idempotencia)");
+  {
+    type ObsL = { cb: (m: unknown[]) => void; alvo: Node | null };
+    const obsL: ObsL[] = [];
+    const Falso = class {
+      private readonly o: ObsL;
+      constructor(cb: (m: unknown[]) => void) {
+        this.o = { cb, alvo: null };
+        obsL.push(this.o);
+      }
+      observe(alvo: Node) {
+        this.o.alvo = alvo;
+      }
+      disconnect() {
+        this.o.alvo = null;
+      }
+    };
+    const DepsL = { Observador: Falso as unknown as typeof MutationObserver };
+    const comTopo = (monitorados: boolean): Document => {
+      const dl = montarDom(real, new Set(["PASTA1", "PASTA2"]), { decorar: true });
+      const topo = dl.createElement("div");
+      topo.id = "topmenu";
+      const num = dl.createElement("a");
+      num.id = "anchorTopo";
+      num.className = "infraArvoreNo";
+      num.setAttribute("target", "ifrVisualizacao");
+      topo.append(num);
+      if (monitorados) {
+        const est = dl.createElement("button");
+        est.className = "spro-fav-estrela";
+        topo.append(est);
+      }
+      const prj = dl.createElement("button");
+      prj.className = "spro-prj-ic";
+      topo.append(prj);
+      const ld = dl.createElement("a");
+      ld.id = "anchorLD1";
+      ld.className = "infraArvoreNoAcao";
+      topo.append(ld);
+      const header = dl.createElement("div");
+      header.id = "header";
+      header.append(topo);
+      dl.body.insertBefore(header, dl.body.firstChild);
+      return dl;
+    };
+    const ctxDe = (dl: Document) => ({
+      doc: dl,
+      idProcedimento: real.idProcedimento,
+      unidade: { sigla: "TESTE" },
+      documentos: { todos: () => real.documentos.filter((x) => x.pasta !== "PASTA3") },
+    });
+    const tec = (dl: Document, alvo: Element, key: string) => {
+      const Ev = (dl.defaultView as unknown as { Event: typeof Event }).Event;
+      const ev = new Ev("keydown", { bubbles: true, cancelable: true });
+      Object.assign(ev, { key });
+      alvo.dispatchEvent(ev);
+    };
+
+    const dl = comTopo(true);
+    const cl = ligarFiltro(ctxDe(dl), DepsL)!;
+    const lupa = cl.lupa();
+    const topo = dl.getElementById("topmenu")!;
+    const barraL = cl.barra();
+    const focos: string[] = [];
+    const buscaL0 = barraL.querySelector("input") as HTMLInputElement;
+    buscaL0.focus = () => void focos.push("busca");
+    lupa.focus = () => void focos.push("lupa");
+    const buscaL = barraL.querySelector("input") as HTMLInputElement;
+    const chipsL = [...barraL.querySelectorAll("button.spro-f-chip")] as HTMLButtonElement[];
+    checar(
+      "por padrao: a barra esta escondida, a lupa existe e nada foi filtrado",
+      barraL.hidden && lupa.isConnected && !cl.aberta() && idsOcultos(dl).length === 0,
+    );
+    checar(
+      "a lupa fica logo depois do alvo dos monitorados (a estrela dos Favoritos)",
+      lupa.previousElementSibling?.className === "spro-fav-estrela" && lupa.parentElement === topo,
+    );
+    checar(
+      "a lupa e botao com aria-label 'Filtrar documentos', aria-pressed=false, sem title",
+      lupa.tagName === "BUTTON" &&
+        lupa.getAttribute("type") === "button" &&
+        lupa.getAttribute("aria-label") === "Filtrar documentos" &&
+        lupa.getAttribute("aria-pressed") === "false" &&
+        !lupa.hasAttribute("title"),
+    );
+    checar(
+      "o glifo e preenchido (fill currentColor), escondido do leitor de tela, e nao ha on* nem innerHTML",
+      lupa.querySelector("svg")?.getAttribute("fill") === "currentColor" &&
+        lupa.querySelector("svg")?.getAttribute("aria-hidden") === "true" &&
+        ![...lupa.querySelectorAll("*")].some((e) => [...e.getAttributeNames()].some((a) => a.startsWith("on"))),
+    );
+    checar("uma unica lupa na pagina", dl.querySelectorAll(".spro-f-lupa-btn").length === 1);
+
+    disparar(lupa, "click");
+    checar(
+      "clicar na lupa abre: barra a vista, aria-pressed=true e o foco vai para a busca",
+      cl.aberta() && !barraL.hidden && lupa.getAttribute("aria-pressed") === "true" && focos.at(-1) === "busca",
+      focos,
+    );
+    disparar(chipsL[1] as Element, "click");
+    buscaL.value = "despacho";
+    disparar(buscaL, "input");
+    await tique(160);
+    checar("com a barra aberta o filtro funciona", idsOcultos(dl).length > 0 && cl.estado().externos);
+    tec(dl, buscaL, "Escape");
+    checar(
+      "Esc na busca com filtro limpa tudo e MANTEM a barra aberta",
+      cl.aberta() && !barraL.hidden && idsOcultos(dl).length === 0 && buscaL.value === "" && !cl.estado().externos,
+    );
+    tec(dl, buscaL, "Escape");
+    checar(
+      "Esc na busca sem filtro fecha a barra e devolve o foco a lupa",
+      !cl.aberta() && barraL.hidden && lupa.getAttribute("aria-pressed") === "false" && focos.at(-1) === "lupa",
+      focos,
+    );
+
+    disparar(lupa, "click");
+    disparar(chipsL[0] as Element, "click");
+    buscaL.value = "despacho";
+    disparar(buscaL, "input");
+    await tique(160);
+    const ocultosAntes = idsOcultos(dl).length;
+    disparar(lupa, "click");
+    checar(
+      "clicar na lupa de novo FECHA e LIMPA: todos os documentos voltam, busca e chips zerados, nenhum no escondido",
+      ocultosAntes > 0 &&
+        !cl.aberta() &&
+        barraL.hidden &&
+        idsOcultos(dl).length === 0 &&
+        pastasOcultas(dl).length === 0 &&
+        dl.querySelectorAll(`[${ATR_OCULTO}]`).length === 0 &&
+        buscaL.value === "" &&
+        cl.estado().texto === "" &&
+        chipsL.every((c) => c.getAttribute("aria-pressed") === "false"),
+    );
+    checar(
+      "fechado e limpo: a lupa nao indica filtro",
+      !lupa.hasAttribute("data-ativo") && lupa.getAttribute("aria-label") === "Filtrar documentos",
+    );
+
+    // reabrir comeca do zero; Esc num chip tambem fecha
+    focos.length = 0;
+    cl.abrir();
+    checar("reabrir: filtro limpo e foco na busca", cl.aberta() && cl.estado().texto === "" && focos.join() === "busca");
+    tec(dl, chipsL[2] as Element, "Escape");
+    checar("Esc em outro controle da barra fecha", !cl.aberta() && barraL.hidden);
+
+    // protecao: filtro ativo por API com a barra fechada => a lupa avisa
+    cl.definir({ cancelados: true });
+    checar(
+      "filtro ativo com a barra fechada (so por API): a lupa indica (data-ativo e aria-label)",
+      lupa.hasAttribute("data-ativo") &&
+        /filtro ativo/.test(lupa.getAttribute("aria-label") ?? "") &&
+        lupa.getAttribute("aria-pressed") === "false",
+    );
+    cl.limpar();
+    checar("limpar apaga a indicacao", !lupa.hasAttribute("data-ativo"));
+
+    // idempotencia e recolocacao: o laco do legado/iframe apaga e refaz icones da fileira
+    const obsTopo = obsL.find((o) => o.alvo === topo)!;
+    checar("a fileira e observada so por filhos (sem subtree)", !!obsTopo);
+    lupa.remove();
+    obsTopo.cb([{ target: topo, addedNodes: [], removedNodes: [lupa] }]);
+    checar(
+      "lupa tirada da fileira volta ao lugar, sem duplicar",
+      lupa.isConnected &&
+        dl.querySelectorAll(".spro-f-lupa-btn").length === 1 &&
+        lupa.previousElementSibling?.className === "spro-fav-estrela",
+    );
+    obsTopo.cb([{ target: topo, addedNodes: [], removedNodes: [] }]);
+    obsTopo.cb([{ target: topo, addedNodes: [], removedNodes: [] }]);
+    checar(
+      "chamadas repetidas nao duplicam nem mexem",
+      dl.querySelectorAll(".spro-f-lupa-btn").length === 1 && lupa.parentElement === topo,
+    );
+    // os Favoritos entram depois com o botao de abrir o painel logo apos a estrela: a lupa continua colada a estrela
+    // (o quadro da arvore e estreito e a fileira nao quebra linha) e o botao do painel fica depois dela
+    const abrirPainel = dl.createElement("button");
+    abrirPainel.className = "spro-fav-abrir";
+    topo.querySelector(".spro-fav-estrela")!.after(abrirPainel);
+    obsTopo.cb([{ target: topo, addedNodes: [abrirPainel], removedNodes: [] }]);
+    checar(
+      "botao 'abrir painel' dos Favoritos entra entre a estrela e a lupa: a lupa volta a ficar colada a estrela",
+      lupa.previousElementSibling?.className === "spro-fav-estrela" &&
+        abrirPainel.previousElementSibling === lupa &&
+        dl.querySelectorAll(".spro-f-lupa-btn").length === 1,
+    );
+    obsTopo.cb([{ target: topo, addedNodes: [], removedNodes: [] }]);
+    checar(
+      "e nao disputa o lugar (sem novas trocas)",
+      lupa.previousElementSibling?.className === "spro-fav-estrela" && abrirPainel.previousElementSibling === lupa,
+    );
+    // o legado refaz a estrela (apaga e recria): a lupa acompanha a nova
+    const velha = topo.querySelector(".spro-fav-estrela")!;
+    velha.remove();
+    const nova = dl.createElement("button");
+    nova.className = "spro-fav-estrela";
+    topo.querySelector("a.infraArvoreNo")!.after(nova);
+    obsTopo.cb([{ target: topo, addedNodes: [nova], removedNodes: [velha] }]);
+    checar(
+      "estrela refeita: a lupa segue o novo alvo",
+      lupa.previousElementSibling === nova && dl.querySelectorAll(".spro-f-lupa-btn").length === 1,
+    );
+
+    // convivencia: menu do documento e destaque do legado nao sao tocados
+    const nomeL = dl.getElementById("anchor160173")!;
+    nomeL.classList.add("naoAssinadoPro");
+    cl.abrir();
+    disparar(chipsL[1] as Element, "click");
+    cl.fechar();
+    checar(
+      "fechar nao toca no destaque de nao assinados do legado nem deixa atributos",
+      nomeL.className.includes("naoAssinadoPro") && dl.querySelectorAll(`[${ATR_OCULTO}]`).length === 0,
+    );
+
+    // tema
+    dl.documentElement.setAttribute("data-spro-tema", "escuro");
+    cl.reaplicar();
+    // (o tema e pintado pelo observador do tema; aqui basta nao quebrar)
+    cl.destruir();
+    checar(
+      "destruir tira a lupa, a barra e os observadores",
+      !lupa.isConnected && !barraL.isConnected && obsL.every((o) => o.alvo === null),
+    );
+
+    // reinjecao: uma lupa velha no documento e removida ao ligar de novo
+    const d2 = comTopo(true);
+    const velhaLupa = d2.createElement("button");
+    velhaLupa.className = "spro-f-lupa-btn";
+    d2.getElementById("topmenu")!.append(velhaLupa);
+    const c2 = ligarFiltro(ctxDe(d2), DepsL)!;
+    checar(
+      "ligar de novo no mesmo quadro nao deixa lupa duplicada",
+      d2.querySelectorAll(".spro-f-lupa-btn").length === 1 && !velhaLupa.isConnected,
+    );
+    c2.destruir();
+
+    // opcao dos monitorados desligada: depois do ultimo icone do SEI Pro da fileira
+    const d3 = comTopo(false);
+    const c3 = ligarFiltro(ctxDe(d3), DepsL)!;
+    checar(
+      "sem o alvo dos monitorados: a lupa vai depois do ultimo icone do SEI Pro da fileira",
+      c3.lupa().previousElementSibling?.className === "spro-prj-ic" && c3.lupa().nextElementSibling?.id === "anchorLD1",
+    );
+    c3.destruir();
+    // sem nenhum icone do SEI Pro: ao lado do numero do processo
+    const d4 = comTopo(false);
+    d4.querySelector(".spro-prj-ic")!.remove();
+    const c4 = ligarFiltro(ctxDe(d4), DepsL)!;
+    checar("sem nenhum icone do SEI Pro: ao lado do numero do processo", c4.lupa().previousElementSibling?.id === "anchorTopo");
+    // o alvo aparece depois (Favoritos esperam ate 10 s): a lupa passa para ao lado dele
+    const est4 = d4.createElement("button");
+    est4.className = "spro-fav-estrela";
+    d4.getElementById("anchorTopo")!.after(est4);
+    obsL
+      .filter((o) => o.alvo === d4.getElementById("topmenu"))
+      .at(-1)!
+      .cb([{ target: d4.getElementById("topmenu"), addedNodes: [est4], removedNodes: [] }]);
+    checar("estrela que chega depois: a lupa muda para ao lado dela", c4.lupa().previousElementSibling === est4);
+    c4.destruir();
+
+    // legado sem Favoritos novos: o icone do legado (.iconFavoritePro) tambem e o alvo
+    const d5 = comTopo(false);
+    const ic = d5.createElement("i");
+    ic.className = "iconFavoritePro";
+    d5.getElementById("anchorTopo")!.after(ic);
+    const c5 = ligarFiltro(ctxDe(d5), DepsL)!;
+    checar("com o icone de monitorados do legado: a lupa vem logo depois dele", c5.lupa().previousElementSibling === ic);
+    c5.destruir();
+
+    // sem fileira (quadro sem #topmenu): nao ha onde pendurar a lupa e a barra fica sempre a vista (nunca inacessivel)
+    const d6 = montarDom(real, new Set(["PASTA1"]), { decorar: true });
+    const c6 = ligarFiltro(ctxDe(d6), DepsL)!;
+    checar("sem fileira de icones: sem lupa e a barra segue a vista", !c6.lupa().isConnected && !c6.barra().hidden);
+    c6.destruir();
+
+    // sem nada para filtrar: sem lupa a vista
+    const d7 = instalarDom(
+      '<html><body><div id="topmenu"><a class="infraArvoreNo" target="ifrVisualizacao"></a></div><form id="frmArvore"><div id="divArvore"></div></form></body></html>',
+    );
+    const c7 = ligarFiltro({ doc: d7, idProcedimento: "1", unidade: { sigla: "" }, documentos: { todos: () => [] } }, DepsL)!;
+    checar("processo sem documentos nem pastas: a lupa tambem se esconde", c7.lupa().hidden && c7.barra().hidden);
+    c7.destruir();
+
+    const css2 = readFileSync(join(AQUI, "../estatico/processo.css"), "utf8");
+    checar(
+      "o CSS tem a lupa (tamanho do icone vizinho, tema escuro, indicacao e hidden)",
+      /\.spro-f-lupa-btn\s*\{/.test(css2) &&
+        /\.spro-f-lupa-btn\[data-tema="escuro"\]/.test(css2) &&
+        /\.spro-f-lupa-btn\[data-ativo\]/.test(css2) &&
+        /\.spro-f-lupa-btn\[hidden\]/.test(css2),
+    );
+  }
+
   secao("Filtro: casos de borda");
   const vazio = instalarDom('<html><body><form id="frmArvore"><div id="divArvore"></div></form></body></html>');
   const ctl2 = ligarFiltro({ doc: vazio, idProcedimento: "1", unidade: { sigla: "" }, documentos: { todos: () => [] } })!;

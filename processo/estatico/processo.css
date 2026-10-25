@@ -1269,6 +1269,58 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 .spro-f-barra [hidden] {
   display: none !important;
 }
+/* Lupa na fileira de ícones do topo da árvore (#topmenu): glifo cheio azul, no tamanho dos ícones do SEI Pro vizinhos. */
+.spro-f-lupa-btn {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  width: 26px;
+  height: 24px;
+  margin: 0 1px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #1f5fbf;
+  line-height: 0;
+  vertical-align: baseline;
+  cursor: pointer;
+}
+.spro-f-lupa-btn svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 3px auto;
+}
+.spro-f-lupa-btn:hover,
+.spro-f-lupa-btn[aria-pressed="true"] {
+  background: rgb(31 95 191 / 14%);
+}
+.spro-f-lupa-btn:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 1px;
+}
+.spro-f-lupa-btn[data-ativo]::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d1352b;
+  border: 1.5px solid #fff;
+}
+.spro-f-lupa-btn[data-tema="escuro"] {
+  color: #79acff;
+}
+.spro-f-lupa-btn[data-tema="escuro"]:hover,
+.spro-f-lupa-btn[data-tema="escuro"][aria-pressed="true"] {
+  background: rgb(121 172 255 / 18%);
+}
+.spro-f-lupa-btn[hidden] {
+  display: none !important;
+}
 .spro-f-barra *,
 .spro-f-barra *::before,
 .spro-f-barra *::after {

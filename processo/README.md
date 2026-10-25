@@ -62,7 +62,7 @@ Todas na página de opções (`opcoes-pagina/src/schema-dados.ts`, mantido à m�
 | --- | --- | --- |
 | `infoarvore` | ligada | painéis abaixo da árvore (respeita também a personalização `configViewFlashPanelArvorePro`) |
 | `menurapido` | ligada | menu do documento e do processo e ícones fixos (independente de `infoarvore`) |
-| `filtroarvore` | ligada, só no Lab | barra de filtro acima da árvore. Decisão desta etapa: ligada porque só esconde linhas quando o usuário pede, não faz consulta nenhuma, é invisível ao SEI e vale só no pacote do Lab (testadores); quem não quiser desliga na página de opções |
+| `filtroarvore` | ligada, só no Lab | lupa na fileira de ícones do topo da árvore que abre a barra de filtro (fechada por padrão). Decisão desta etapa: ligada porque só esconde linhas quando o usuário pede, não faz consulta nenhuma, é invisível ao SEI e vale só no pacote do Lab (testadores); quem não quiser desliga na página de opções |
 | `processoparado` | 15 (dias; 0 desliga), só no Lab | destaque do card "Na unidade atual" na capa |
 | `disablequery` | desligada | quando marcada, nenhuma consulta além do que a tela traz (painéis ficam com o que a árvore tem) |
 | `naoassinados` | ligada (padrão do legado) | agora lida pelo módulo: o aviso de documentos não assinados no Enviar Processo (`pagina/aviso/`); desligada, nem o módulo nem o legado mostram o aviso |
@@ -85,7 +85,7 @@ A personalização do menu e dos painéis é a do legado (mesmas chaves do `loca
 | `localStorage` do SEI | `configViewFlashPanelArvorePro`, `optionsPro` (`panelDadosArvorePro_<tipo>`, `optionsFlashMenu_*`), `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro` | personalização do legado, lida e (os painéis recolhidos) gravada |
 | `localStorage` do SEI | `configDataRecebimentoPro` | SÓ LEITURA: data de recebimento que o legado guarda; alimenta o alerta de parado quando não há histórico |
 
-O filtro da árvore NÃO persiste nada (o estado vive na tela; recarregar a árvore volta ao filtro limpo).
+O filtro da árvore NÃO persiste nada (o estado vive na tela; recarregar a árvore volta ao filtro limpo e à barra fechada).
 
 ## Cessão do legado (atributos `data-seipro-processo-*`)
 
@@ -750,7 +750,7 @@ Chrome for Testing com a extensão de `dist/`, opções todas ligadas menos `dis
 
 ## Filtro da árvore (etapa 5, Task 12): `src/pagina/filtro/`
 
-Barra acima da lista da árvore, no quadro `#frmArvore` (logo antes de `#divArvore`): campo de busca, três chips (Não assinados,
+Barra acima da lista da árvore, no quadro `#frmArvore` (logo antes de `#divArvore`), FECHADA por padrão e aberta pela lupa do topo (ver "A lupa" abaixo): campo de busca, três chips (Não assinados,
 Externos, Cancelados), botão de limpar e uma linha de estado ("21 de 60 documentos", e o aviso de pastas fechadas). Liga com a opção
 `filtroarvore`, independente de `infoarvore` e `menurapido`. Sem rede, sem tocar na árvore do SEI.
 
@@ -796,6 +796,39 @@ Externos 21, Cancelados 1, Despacho + Maria 2, número `0103947` 1; pasta sem do
 e as fechadas ficam; abrir as pastas depois reaplica; Tab, Tab, Enter liga o chip; Esc limpa; botão de limpar. Processo sigiloso
 (`034.00000265/2026-31`, senha pelo modal): barra e filtros funcionam, 0 requisições durante o uso, sem erro de console. Escuro:
 legível (capturas em `scratchpad/live/shots/fim-filtro-*.png`). O botão de limpar do navegador (X dobrado em `type=search`) foi escondido.
+
+### A lupa que abre e fecha a barra (25/10/2026)
+
+Por padrão a barra e os chips NÃO aparecem. `filtroarvore` agora controla se a **lupa** existe (`ControleFiltro.lupa()`, botão `.spro-f-lupa-btn` em `barra.ts`).
+
+- **Onde fica** (`destinoDaLupa`, dentro de `#topmenu`, a fileira do número do processo): colada DEPOIS do alvo dos monitorados (`.spro-fav-estrela` dos Favoritos novos
+  ou `.iconFavoritePro` do legado). Sem o alvo (opção desligada): depois do último ícone do SEI Pro da fileira (`.spro-prj-ic`, `.spro-fav-abrir`); sem nenhum: ao lado
+  do número (`a.infraArvoreNo`). Fica colada à estrela (e não depois do botão "abrir painel") de propósito: a fileira não quebra linha e o quadro da árvore tem 300 px,
+  onde só cabem 2 ou 3 ícones a mais depois do número. Se o botão "abrir painel" entra depois, a lupa permanece colada e ele fica atrás dela.
+- **Como sobrevive**: o legado (laço de 1,5 s), os Favoritos (espera até 10 s pelo nó) e a recarga do quadro refazem ícones. Um `MutationObserver` só de `childList`
+  sobre o próprio `#topmenu` (que mora no `#header`, FORA do `#frmArvore` que a barra observa) devolve a lupa ao lugar; `colocarLupa` é idempotente (só move se
+  `previousElementSibling !== alvo`, então não há briga nem duplicata) e remove lupas velhas do documento ao ligar. Recarregar o quadro refaz tudo (módulo novo, barra fechada).
+- **Estilo**: glifo CHEIO (`fill: currentColor`, o resto do módulo é de traço), azul `#1f5fbf` (escuro `#79acff`, a mesma cor do ícone de projetos), caixa de 26x24 como os
+  vizinhos, hover/pressionado com fundo azul translúcido. `aria-label="Filtrar documentos"`, `aria-pressed` = barra aberta, sem `title`.
+- **Comportamento**: clicar abre (foco na busca) ou fecha. Esc na busca com filtro limpa tudo e mantém a barra; Esc na busca sem filtro, ou em qualquer outro controle
+  da barra, fecha e devolve o foco à lupa. **Fechar LIMPA o filtro** (texto, chips e nós escondidos): nunca fica documento escondido sem a barra à vista. Proteção: se
+  um filtro ficar ativo com a barra fechada (só por API, `definir`), a lupa ganha `data-ativo` (ponto vermelho) e `aria-label` "Filtrar documentos (filtro ativo)".
+- **Estado**: aberto/fechado NÃO persiste (nem o filtro). O legado não guarda nada parecido (não havia filtro).
+- **Bordas**: processo sem documentos nem pastas esconde a lupa e a barra; quadro sem `#topmenu` não tem onde pendurar a lupa, então a barra fica sempre à vista
+  (nunca inacessível). Não toca o menu do documento nem o destaque de não assinados (só põe/tira `data-spro-f-oculto`).
+- **SEI 5**: usa os mesmos nós da fileira (`#topmenu`, estrela dos Favoritos, `a.infraArvoreNo` ou `a[target=ifrConteudoVisualizacao]` como número). Não exercitado ao vivo.
+
+Testes: `verificar-filtro.ts` ganhou a seção "a lupa" (criada uma vez, abrir/fechar, limpar ao fechar, foco, Esc, `aria-pressed`, indicação com a barra fechada, reinserção
+idempotente, estrela refeita/que chega depois, opção dos monitorados desligada, legado, sem fileira, sem documentos, reinjeção, destruir); o pacote todo: 1008 conferências.
+
+Ao vivo (SEI SP 4.1.5, processo 99906.713-630.000032/2025-82, 60 documentos): sem barra por padrão; lupa em 269-295 px do quadro de 300 px; abrir mostra a barra e põe o
+foco na busca; Externos + "relat" = "14 de 60 documentos"; Não assinados 35 de 60; Esc limpa, Esc fecha (foco na lupa); fechar com chip ligado: 0 nós escondidos; lupa
+única depois de 6 s do laço do legado; recarregar o quadro: barra fechada, uma lupa; claro e escuro; sem erro de console. Capturas em `scratchpad/live/shots/lupa-*.png`.
+Armadilhas da rodada: (1) o Chrome for Testing antigo sumiu do cache: baixado o 156 (`npx @puppeteer/browsers install chrome@stable --path ~/.cache/cft`); (2) com ele o
+WAF do SEI SP responde "Not Found" ao login: limpar cookies (`Network.clearBrowserCookies`) e `navigator.webdriver = false` por `evaluateOnNewDocument`; a senha é o campo
+`input[name=pwdSenha]` (o `#pwdSenha` é espelho); (3) neste Chrome o mouse e o teclado do CDP (`Input.dispatch*`) NÃO chegaram à página do SEI (a mesma sequência funciona
+numa aba em branco), então o clique, a digitação e o Esc ao vivo foram sintéticos (`element.click()`, `input` e `keydown` disparados no quadro); o alvo do clique foi
+conferido por `elementFromPoint` (a lupa não está coberta). Clique real do ponteiro NÃO foi visto ao vivo.
 
 ## Etapa 7 (24/10/2026): título, aviso de não assinados, assuntos e interessados, processos do interessado, anotação
 
