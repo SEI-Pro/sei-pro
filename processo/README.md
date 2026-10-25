@@ -678,6 +678,17 @@ O Agente procura `#capaProcessoPro` (a cada 2 s) e põe o cartão de sugestão c
 `mostrarCartaoNaCapa` do agente (teste) e ao vivo (a mesma travessia de iframes acha a capa na profundidade 2, e o cartão sobrevive a um
 `onChanged` que redesenha). Nada mudou no agente.
 
+### Cor da capa (25/10/2026)
+
+A capa não usa laranja. O alerta de parado (`.spro-c-card.alerta`, rótulo, valor e detalhe) e o chip `.atencao` usam a cor de destaque do
+usuário: borda na cor (1 px + 0,5 px por dentro, sem mexer no layout), fundo `color-mix` 9% sobre `--spro-fundo`, texto em peso 600; ícone de
+alerta preservado. A caixa do aviso do SEI (`.spro-c-info`) ficou neutra (`--spro-fundo-2`, borda `--spro-borda`, texto normal): o aviso é
+informativo, não alerta. `--spro-aviso` saiu do CSS da capa. O destaque agora SEGUE O TEMA DO SEI: `controle.ts` põe `data-cor-sei` e
+`--spro-cor-sei` na raiz (`corTema` do contexto, de `corDoTemaSei`: quadro e, na falta, janela de topo) e o CSS faz `--spro-destaque:
+var(--spro-cor-sei)` (no escuro, misturado 45% com branco); `destaqueDaCorSei` já escurece cor clara demais. Sem cor do tema fica o azul
+`#1f5fbf`. Os painéis e modais (`processo.css`) ainda usam o azul fixo: divergência registrada, fora desta rodada.
+Ao vivo (SEI SP, tema `#0494c7`, trocado para verde, vermelho e amarelo, claro e escuro): `scratchpad/live/shots/alerta-*.png`.
+
 ### Cessão do legado
 
 - `dist/js/sei-functions-pro.js`: guarda de 3 linhas no início de `setCapaProcesso` (`data-seipro-processo-capa` no `<html>` da janela

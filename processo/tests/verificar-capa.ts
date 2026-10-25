@@ -856,6 +856,20 @@ export async function verificarCapa(): Promise<void> {
     checar("depois de sair, nao avisa mais", vistas.length === 2);
   }
 
+  // ===== Cor do tema =====
+  secao("controle: destaque segue a cor do tema do SEI");
+  {
+    const c = cenario();
+    c.deps.corTema = () => "#12804c";
+    const capa = await montarCapa(c.deps);
+    const raiz = c.capaDoc.getElementById("capaProcessoPro");
+    checar(
+      "com cor do tema: data-cor-sei e --spro-cor-sei na raiz",
+      raiz?.hasAttribute("data-cor-sei") === true && raiz.style.getPropertyValue("--spro-cor-sei") === "#12804c",
+    );
+    capa?.destruir();
+  }
+
   // ===== Controle =====
   secao("controle: desenha uma vez, nao se redesenha em loop");
   {
@@ -867,6 +881,10 @@ export async function verificarCapa(): Promise<void> {
     checar(
       "a raiz mantem o id capaProcessoPro (o Agente de IA a procura) e e o primeiro filho do #divArvoreHtml",
       raiz?.getAttribute("data-spro-capa") === "1" && doc.getElementById("divArvoreHtml")?.firstElementChild === raiz,
+    );
+    checar(
+      "sem cor do tema do SEI: sem data-cor-sei (fica o azul padrao)",
+      !raiz?.hasAttribute("data-cor-sei") && !raiz?.style.getPropertyValue("--spro-cor-sei"),
     );
     checar("tira a classe d-flex do contenedor (espremia a capa)", !doc.getElementById("divArvoreHtml")?.classList.contains("d-flex"));
     const cartoes = [...doc.querySelectorAll(".spro-c-card")];

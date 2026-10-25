@@ -15,7 +15,6 @@ div#capaProcessoPro.spro-c-raiz {
   --spro-borda-forte: #cfd4db;
   --spro-destaque: #1f5fbf;
   --spro-perigo: #d1352b;
-  --spro-aviso: #b45c0a;
   --spro-ok: #12805c;
   color-scheme: light;
   display: block;
@@ -44,9 +43,15 @@ div#capaProcessoPro.spro-c-raiz[data-tema="escuro"] {
   --spro-borda-forte: #3d434a;
   --spro-destaque: #79acff;
   --spro-perigo: #ff7d73;
-  --spro-aviso: #e8b04a;
   --spro-ok: #4fcf96;
   color-scheme: dark;
+}
+/* Cor do tema do SEI (barra do sistema), posta pelo controle; no escuro, clareada para ter contraste. */
+div#capaProcessoPro.spro-c-raiz[data-cor-sei] {
+  --spro-destaque: var(--spro-cor-sei);
+}
+div#capaProcessoPro.spro-c-raiz[data-cor-sei][data-tema="escuro"] {
+  --spro-destaque: color-mix(in srgb, var(--spro-cor-sei) 45%, #ffffff);
 }
 div#capaProcessoPro.spro-c-raiz *,
 div#capaProcessoPro.spro-c-raiz *::before,
@@ -136,19 +141,22 @@ div#capaProcessoPro.spro-c-raiz *::after {
   color: var(--spro-perigo);
   white-space: normal;
 }
+/* Alerta na cor de destaque do usuario (nunca laranja): borda de 1,5 px (1 px + 0,5 px por dentro, sem mexer no layout). */
 .spro-c-card.alerta {
-  border-color: var(--spro-aviso);
-  background: color-mix(in srgb, var(--spro-aviso) 10%, var(--spro-fundo));
+  border-color: var(--spro-destaque);
+  background: color-mix(in srgb, var(--spro-destaque) 9%, var(--spro-fundo));
+  box-shadow: inset 0 0 0 0.5px var(--spro-destaque);
 }
 .spro-c-card.alerta .spro-c-rotulo {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--spro-aviso);
+  color: var(--spro-destaque);
 }
+.spro-c-card.alerta .spro-c-valor,
 .spro-c-card.alerta .spro-c-detalhe {
   font-weight: 600;
-  color: var(--spro-aviso);
+  color: var(--spro-destaque);
 }
 .spro-c-faixa-acoes {
   display: flex;
@@ -317,8 +325,8 @@ div#capaProcessoPro.spro-c-raiz *::after {
   background: color-mix(in srgb, var(--spro-ok) 12%, transparent);
 }
 .spro-c-chip.atencao {
-  color: var(--spro-aviso);
-  background: color-mix(in srgb, var(--spro-aviso) 14%, transparent);
+  color: var(--spro-destaque);
+  background: color-mix(in srgb, var(--spro-destaque) 14%, transparent);
 }
 .spro-c-chip.vencido {
   color: var(--spro-perigo);
@@ -404,12 +412,14 @@ div#capaProcessoPro.spro-c-raiz *::after {
   padding: 6px 10px;
   font-size: 12px;
   color: var(--spro-texto);
-  background: color-mix(in srgb, var(--spro-aviso) 14%, var(--spro-fundo));
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda);
   border-radius: 6px;
 }
 .spro-c-info a,
 .spro-c-info * {
   font: inherit;
+  color: inherit;
 }
 .spro-c-info:empty {
   display: none;

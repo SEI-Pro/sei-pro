@@ -64,6 +64,8 @@ export interface DepsCapa {
   copiar(texto: string): Promise<boolean>;
   avisar(texto: string, ms?: number): void;
   escuro(): boolean;
+  /** Cor do tema do SEI (barra do sistema), para o destaque da capa; sem ela fica o azul padrao. */
+  corTema?(): string | undefined;
   aoMudarTema(cb: () => void): () => void;
   /** Quanto esperar a árvore e a seleção (ms). */
   prazoMs?: number;
@@ -307,7 +309,17 @@ export async function montarCapa(d: DepsCapa): Promise<Capa | null> {
       : null;
   vigia?.observe(doc.body ?? doc.documentElement, { childList: true, subtree: true });
 
-  const aplicarTema = () => partes.raiz.setAttribute("data-tema", d.escuro() ? "escuro" : "claro");
+  const aplicarTema = () => {
+    partes.raiz.setAttribute("data-tema", d.escuro() ? "escuro" : "claro");
+    const cor = d.corTema?.();
+    if (cor) {
+      partes.raiz.style.setProperty("--spro-cor-sei", cor);
+      partes.raiz.setAttribute("data-cor-sei", "");
+    } else {
+      partes.raiz.style.removeProperty("--spro-cor-sei");
+      partes.raiz.removeAttribute("data-cor-sei");
+    }
+  };
   aplicarTema();
   desenhar();
 

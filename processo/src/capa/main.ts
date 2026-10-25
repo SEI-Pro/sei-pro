@@ -6,6 +6,7 @@
  */
 import { areaChrome } from "@comum/armazenamento/area";
 import { valorOpcaoLegada } from "@comum/opcoes/legadas";
+import { corDoTemaSei } from "@comum/pagina/tema";
 import { mostrarAviso } from "@comum/ui/aviso";
 import base from "@comum/ui/base.css";
 import { documentoTopo } from "@nucleo/sessao/pagina";
@@ -49,6 +50,7 @@ async function principal(): Promise<void> {
     copiar: (t) => copiarTexto(document, t),
     avisar: (t, ms = 2000) => void mostrarAviso(document, t, undefined, ms),
     escuro: () => temaEscuro(document),
+    corTema: () => corDoTemaSei(document) ?? corDoTemaSei(topo),
     aoMudarTema: (cb) => aoMudarTema(document, cb),
     depurar: (motivo) => estado(`desistiu: ${motivo}`),
   });
