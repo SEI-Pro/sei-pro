@@ -1,8 +1,9 @@
-import { type Filho, h, type NomeIcone } from "@comum/ui/dom";
+import { type Filho, h } from "@comum/ui/dom";
 import type { Leitura } from "../../modelo/dados";
 import type { TipoPainel } from "../../modelo/paineis";
 import type { EstadoFatia, NomeFatia } from "../../modelo/tipos";
 import { nota } from "../../ui/estados";
+import type { NomeGlifo } from "../../ui/glifos";
 import type { Desenho } from "../../ui/painel";
 import { copiarEAvisar } from "../comum";
 import type { ContextoProcesso } from "../contexto";
@@ -10,7 +11,7 @@ import type { ContextoProcesso } from "../contexto";
 export interface DefPainel {
   tipo: TipoPainel;
   titulo: string;
-  icone: NomeIcone;
+  icone: NomeGlifo;
   /** `null` = o painel não aparece agora (ex.: a barra do processo não oferece a ação). */
   desenhar(ctx: ContextoProcesso): { estado: EstadoFatia | "pronto"; desenho: Desenho } | null;
 }

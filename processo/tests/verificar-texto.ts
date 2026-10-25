@@ -5,11 +5,15 @@ import {
   alternarMarca,
   comporObservacaoAcompanhamento,
   comporTextoMarcador,
+  continuarChecklist,
   dataIsoDaAnotacao,
   definirDataNaAnotacao,
+  linhaDaPosicao,
   linhasDaAnotacao,
+  moverLinhas,
   observacoesVisiveis,
   partesDoInteressado,
+  posicaoDaLinha,
   prazoNativoDaPagina,
   reaberturaBrasileira,
   reaberturaParaCampo,
@@ -94,6 +98,36 @@ export function verificarTexto(): void {
     checar("data nova no fim", definirDataNaAnotacao("Ligar para o setor", "2026-11-02") === "Ligar para o setor 02/11/2026");
     checar("data existente e trocada", definirDataNaAnotacao("Ligar 01/10/2026 cedo", "2026-11-02") === "Ligar 02/11/2026 cedo");
     checar("data iso da anotacao", dataIsoDaAnotacao("ver 3/4/2027") === "2027-04-03" && dataIsoDaAnotacao("sem data") === null);
+  }
+
+  secao("anotacao: editor (linha da posicao, mover linhas, continuar checklist)");
+  {
+    const t = "a\n[ ] b\n[X] c\nd";
+    checar(
+      "linha da posicao: inicio, meio e fim",
+      linhaDaPosicao(t, 0) === 0 && linhaDaPosicao(t, 3) === 1 && linhaDaPosicao(t, t.length) === 3,
+    );
+    checar("posicao da linha", posicaoDaLinha(t, 0) === 0 && posicaoDaLinha(t, 2) === 8 && posicaoDaLinha(t, 3) === 14);
+    const sobe = moverLinhas(t, 2, 2, -1);
+    checar("subir uma linha troca com a de cima", sobe?.texto === "a\n[X] c\n[ ] b\nd" && sobe.de === 1 && sobe.ate === 1, sobe);
+    const desce = moverLinhas(t, 1, 2, 1);
+    checar(
+      "descer uma faixa leva a linha de baixo para cima dela",
+      desce?.texto === "a\nd\n[ ] b\n[X] c" && desce.de === 2 && desce.ate === 3,
+      desce,
+    );
+    checar("subir a primeira e descer a ultima nao fazem nada", moverLinhas(t, 0, 0, -1) === null && moverLinhas(t, 3, 3, 1) === null);
+    checar("mover guarda o texto de uma linha so", moverLinhas("so", 0, 0, 1) === null);
+    const e1 = continuarChecklist("[ ] a\nb", 5);
+    checar("Enter no fim de um item abre outro item aberto", e1?.texto === "[ ] a\n[ ] \nb" && e1.pos === 10, e1);
+    const e2 = continuarChecklist("[X] a", 5);
+    checar("Enter em item marcado abre item ABERTO", e2?.texto === "[X] a\n[ ] " && e2.pos === 10, e2);
+    const e3 = continuarChecklist("[ ] a\n[ ] ", 11);
+    checar("Enter em item vazio tira a marca (sai da lista)", e3?.texto === "[ ] a\n" && e3.pos === 6, e3);
+    checar("Enter em linha comum: nada (o navegador faz a quebra)", continuarChecklist("abc", 3) === null);
+    const e4 = continuarChecklist("[ ] abcd", 6);
+    checar("Enter no meio de um item parte o texto e o resto vira o proximo item", e4?.texto === "[ ] ab\n[ ] cd" && e4.pos === 11, e4);
+    checar("Enter dentro da marca nao e tratado", continuarChecklist("[ ] abc", 2) === null);
   }
 
   secao("especificacao: marcas");

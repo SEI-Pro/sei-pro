@@ -1,7 +1,8 @@
 import { h } from "@comum/ui/dom";
 import type { LinhaAtribuicao } from "@nucleo/dominio/painelProcesso";
 import type { ContextoProcesso } from "../contexto";
-import { abrirDialogo, botaoPrimario, listaComBusca, rodape } from "./comum";
+import { abrirDialogo, botaoPrimario, campo, escolhaComBusca, rodape } from "./comum";
+import { opcoesDeUsuarios, separarUsuario } from "./opcoes";
 
 export interface AtribuicaoGravada {
   /** Login do usuário atribuído; null = atribuição removida. */
@@ -9,37 +10,47 @@ export interface AtribuicaoGravada {
   nome?: string;
 }
 
-/** Atribuir o processo a um usuário da unidade (lista com busca), ou tirar a atribuição. */
+/** Atribuir o processo a um usuário da unidade (seletor com busca por login e nome), ou tirar a atribuição. */
 export function abrirModalAtribuicao(ctx: ContextoProcesso, linha: LinhaAtribuicao, aoGravar: (a: AtribuicaoGravada) => void): void {
-  const lugar = h("div", { class: "spro-p-modal-lugar" }, h("p", { class: "spro-p-nota" }, "Carregando a lista de usuários…"));
-  const d = abrirDialogo(ctx, { titulo: "Atribuição do processo", icone: "pessoa", conteudo: [lugar] });
-  void ctx.op
-    .opcoesAtribuicao()
-    .then(({ opcoes, atual }) => {
-      if (!d.el.isConnected) return;
+  let atualDoSei: string | undefined;
+  const usuarios = escolhaComBusca({
+    rotulo: "Usuário da unidade",
+    vazio: "Escolher um usuário…",
+    dicaBusca: "Buscar por login ou nome…",
+    limite: 150,
+    resumo: (_mostradas, achadas, total) => (achadas === total ? `${total} usuários na unidade` : `${achadas} de ${total} usuários`),
+    carregar: async () => {
+      const { opcoes, atual } = await ctx.op.opcoesAtribuicao();
       const doUsuario = linha.usuario
-        ? opcoes.find((o) => o.texto.split(" - ")[0]?.trim().toLowerCase() === linha.usuario?.toLowerCase())?.valor
+        ? opcoes.find((o) => separarUsuario(o.texto).login.toLowerCase() === linha.usuario?.toLowerCase())?.valor
         : undefined;
-      const lista = listaComBusca(opcoes, atual ?? doUsuario, "usuários da unidade");
-      const salvar = botaoPrimario("Salvar", () => void enviar(lista.valor(), salvar, remover));
-      const remover = h("button", { type: "button", class: "spro-botao perigo spro-esquerda" }, "Remover atribuição");
-      const enviar = async (valor: string | null, ...botoes: HTMLButtonElement[]) => {
-        if (valor === "") {
-          d.erro("Escolha um usuário.");
-          return;
-        }
-        const op = valor === null ? undefined : opcoes.find((o) => o.valor === valor);
-        const ok = await d.gravar(() => ctx.op.atribuir(valor), botoes);
-        if (ok) {
-          const [login = "", ...nome] = (op?.texto ?? "").split(" - ");
-          aoGravar(valor === null ? { usuario: null } : { usuario: login.trim(), nome: nome.join(" - ").trim() });
-        }
-      };
-      remover.addEventListener("click", () => void enviar(null, salvar, remover));
-      lugar.replaceChildren(h("p", { class: "spro-p-nota" }, "Atribuir para:"), lista.el, rodape(linha.usuario ? remover : null, salvar));
-    })
-    .catch((e) => {
-      d.erro(e instanceof Error ? e.message : "Não foi possível carregar a lista de usuários.");
-      lugar.replaceChildren();
-    });
+      atualDoSei = atual ?? doUsuario;
+      return opcoesDeUsuarios(opcoes);
+    },
+    valor: () => atualDoSei,
+  });
+  const salvar = botaoPrimario("Salvar", () => void enviar(usuarios.valor(), salvar, remover));
+  const remover = h("button", { type: "button", class: "spro-botao perigo spro-esquerda" }, "Remover atribuição");
+  const enviar = async (valor: string | null, ...botoes: HTMLButtonElement[]) => {
+    if (valor === "") {
+      d.erro("Escolha um usuário.");
+      return;
+    }
+    const op = valor === null ? undefined : usuarios.opcoes().find((o) => o.valor === valor);
+    const ok = await d.gravar(() => ctx.op.atribuir(valor), botoes);
+    if (ok) aoGravar(valor === null ? { usuario: null } : { usuario: op?.rotulo ?? "", nome: op?.complemento ?? "" });
+  };
+  remover.addEventListener("click", () => void enviar(null, salvar, remover));
+  const d = abrirDialogo(ctx, {
+    titulo: "Atribuição do processo",
+    icone: "pessoa",
+    conteudo: [
+      h(
+        "div",
+        { class: "spro-p-modal-lugar" },
+        campo("Atribuir para", usuarios.el, linha.usuario ? `Hoje: ${linha.usuario}` : undefined),
+        rodape(linha.usuario ? remover : null, salvar),
+      ),
+    ],
+  });
 }

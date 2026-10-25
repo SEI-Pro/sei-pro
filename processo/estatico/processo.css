@@ -14,6 +14,14 @@ html[data-seipro-processo-paineis],
   --spro-p-icone: 16px;
   --spro-p-icone-mini: 13px;
   --spro-p-alvo: 26px;
+  /* Cabecalho de painel = rotulo nativo "Consultar Andamento" (a.newLink do legado: cinza #666, peso 400, lupa azul #4285f4
+     de 16 px com 5 px de cada lado). O icone fica 17,4 px depois da borda do quadro e o texto 21 px depois do icone, os
+     mesmos x do rotulo nativo (8 + 2,4 de padding + 5 de margem + 5 de padding do link + 5 de margem do icone). */
+  --spro-p-recuo: 17.4px;
+  --spro-p-gap-icone: 5px;
+  --spro-p-cor-titulo: #666666;
+  --spro-p-cor-icone: #4285f4;
+  --spro-p-cor-corpo: #444b52;
 }
 /* Os tokens do base.css seguem o esquema de cores do SISTEMA quando ninguem fixou o tema; aqui o tema e o do SEI
    (claro por padrao, escuro quando o SEI esta escuro), nunca o do sistema operacional. */
@@ -42,6 +50,13 @@ dialog.spro-dialogo {
   --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 10%, transparent);
   --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 18%, transparent);
   color-scheme: light;
+}
+html[data-seipro-processo-paineis].dark-mode,
+.spro-p-raiz[data-tema="escuro"],
+.spro-f-barra[data-tema="escuro"] {
+  --spro-p-cor-titulo: #fbfbfe;
+  --spro-p-cor-icone: #0494c7;
+  --spro-p-cor-corpo: #dfe2e6;
 }
 .spro-p-raiz[data-tema="escuro"],
 .spro-pm[data-tema="escuro"],
@@ -75,7 +90,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   font-family: var(--spro-fonte);
   font-size: var(--spro-p-fonte-corpo);
   line-height: 1.4;
-  color: var(--spro-texto);
+  color: var(--spro-p-cor-corpo);
 }
 .spro-p-raiz *,
 .spro-p-raiz *::before,
@@ -92,7 +107,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
 /* ---------- Painel ---------- */
 .spro-p-painel {
   margin: 0;
-  padding: 8px 6px 8px 4px;
+  padding: 8px 6px 8px var(--spro-p-recuo);
   border-top: 1px solid var(--spro-borda);
 }
 .spro-p-painel > header {
@@ -101,15 +116,25 @@ dialog.spro-dialogo[data-tema="escuro"] {
   gap: 6px;
   min-height: var(--spro-p-alvo);
 }
+/* Icone e titulo como no link nativo: o icone (16 px) na linha de cima da caixa do texto, o texto 5 px depois. */
+.spro-p-titulo {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: var(--spro-p-gap-icone);
+  min-width: 0;
+}
 .spro-p-painel > header h3 {
   flex: 1;
   min-width: 0;
   margin: 0;
+  padding: 0;
   font: inherit;
   font-size: var(--spro-p-fonte-titulo);
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  color: var(--spro-texto);
+  font-weight: 400;
+  line-height: 18.9px;
+  letter-spacing: normal;
+  color: var(--spro-p-cor-titulo);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -117,7 +142,15 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-icone {
   display: inline-flex;
   flex: none;
-  color: var(--spro-destaque);
+  width: var(--spro-p-icone);
+  height: var(--spro-p-icone);
+  margin-top: -0.5px;
+  color: var(--spro-p-cor-icone);
+}
+/* O modo escuro antigo do SEI Pro pinta todo descendente (.seiSlim.dark-mode *) com !important: o icone reafirma o azul. */
+.spro-p-raiz .spro-p-icone,
+.spro-p-raiz .spro-p-icone .spro-glifo {
+  color: var(--spro-p-cor-icone) !important;
 }
 .spro-p-raiz .spro-icone {
   width: var(--spro-p-icone);
@@ -174,7 +207,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
 .spro-p-corpo {
   display: grid;
   gap: 3px;
-  padding: 4px 0 0 calc(var(--spro-p-icone) + 6px);
+  padding: 4px 0 0 calc(var(--spro-p-icone) + var(--spro-p-gap-icone));
 }
 .spro-p-painel[data-estado="desatualizado"] > header h3::after {
   content: "";
@@ -214,7 +247,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   margin: 0;
   padding: 1px 3px;
   font: inherit;
-  color: var(--spro-texto);
+  color: inherit;
   text-align: left;
   overflow-wrap: anywhere;
   background: transparent;
@@ -240,6 +273,7 @@ dialog.spro-dialogo[data-tema="escuro"] {
   font-weight: 650;
 }
 .spro-p-copiavel img,
+.spro-p-copiavel .spro-tag,
 .spro-p-marcador-icone {
   width: var(--spro-p-icone);
   height: var(--spro-p-icone);
@@ -512,16 +546,54 @@ dialog.spro-p-dialogo .spro-dialogo-corpo {
 .spro-p-grade .spro-campo {
   width: 100%;
 }
-.spro-p-lista {
-  padding: 4px;
+/* Seletor com busca dos modais (criarCombo): ocupa a largura do campo, com o botao do tamanho dos outros campos. */
+.spro-p-campo .spro-p-combo {
+  width: 100%;
+  min-height: 32px;
 }
-.spro-p-lista option {
-  padding: 4px 8px;
-  border-radius: var(--spro-raio-p);
+.spro-p-campo .spro-p-combo .spro-combo-texto {
+  flex: 1 1 auto;
 }
-.spro-p-busca {
-  display: grid;
-  gap: 6px;
+dialog.spro-p-dialogo .spro-combo-pop {
+  max-width: calc(100vw - 32px);
+}
+/* O CSS do SEI pinta todo input da pagina de topo (fundo cinza, borda); a busca do seletor volta a ser transparente. */
+dialog.spro-p-dialogo .spro-combo-pop input.spro-combo-busca {
+  height: 38px;
+  padding: 0;
+  color: var(--spro-texto);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+/* Etiqueta do marcador: preenchida na cor dele (tema claro) ou na versao mais clara (tema escuro), com um contorno fino
+   que segura o amarelo no branco e o azul marinho no escuro. */
+.spro-tag {
+  flex: none;
+  color: var(--spro-tag, #9aa3ac);
+  stroke: color-mix(in srgb, var(--spro-texto) 32%, transparent);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+[data-tema="escuro"] .spro-tag {
+  color: var(--spro-tag-escuro, #9aa3ac);
+}
+.spro-combo > .spro-tag,
+.spro-combo-texto > .spro-tag,
+.spro-combo-op > .spro-tag {
+  color: var(--spro-tag, #9aa3ac);
+}
+[data-tema="escuro"] .spro-combo > .spro-tag,
+[data-tema="escuro"] .spro-combo-texto > .spro-tag,
+[data-tema="escuro"] .spro-combo-op > .spro-tag {
+  color: var(--spro-tag-escuro, #9aa3ac);
+}
+.spro-p-nota-marcador {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .spro-p-grade {
   display: grid;
@@ -555,9 +627,6 @@ dialog.spro-p-dialogo .spro-dialogo-corpo {
 .spro-p-contador {
   font-size: 11.5px;
   color: var(--spro-fraco);
-}
-.spro-p-anotacao {
-  width: 100%;
 }
 .spro-p-pergunta {
   margin: 0;
@@ -1309,16 +1378,26 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
 
 /* ---------- Legado no quadro da arvore (Consultar Andamento, Processos Relacionados) na mesma escala ---------- */
 /* O legado estiliza esses dois por classe (.newLink: 1.2em sobre 12px = 14,4px, lupa de 17px); com o modulo ativo eles descem
-   um pouco e os nossos paineis sobem, para o cabecalho de cada painel pesar o mesmo que o rotulo "Consultar Andamento". */
+   um pouco e os nossos paineis sobem, para o cabecalho de cada painel ser IGUAL ao rotulo "Consultar Andamento" (README, "Escala"). */
 html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink,
 html[data-seipro-processo-paineis] #divRelacionados label.newLink {
   font-size: var(--spro-p-fonte-titulo);
   line-height: 1.4;
+  font-weight: 400;
+  color: var(--spro-p-cor-titulo);
 }
 html[data-seipro-processo-paineis] #divConsultarAndamento a.newLink i.iconDadosProcesso,
 html[data-seipro-processo-paineis] #divRelacionados label.newLink i.iconDadosProcesso {
   font-size: var(--spro-p-icone);
   line-height: 1;
+}
+/* "Processos Relacionados" e um label dentro do painel do legado (padding de 1,2em): o icone vai para o mesmo x do da lupa (25,4 px
+   do quadro), numa caixa de 16 px (o glifo retweet tem 20 px de largura e se centra nela), e o texto 5 px depois. */
+html[data-seipro-processo-paineis] #divRelacionados label.newLink i.iconDadosProcesso {
+  display: inline-block;
+  width: var(--spro-p-icone);
+  margin: 0 var(--spro-p-gap-icone) 0 3px;
+  text-align: center;
 }
 html[data-seipro-processo-paineis] #divRelacionados .divRelacionadosParcial a,
 html[data-seipro-processo-paineis] #divRelacionadosParciais a {
@@ -1481,93 +1560,176 @@ dialog.spro-p-dialogo .spro-p-esqueleto {
   list-style: none;
 }
 
-/* ---------- Edicao da anotacao: o papel do post-it dentro do modal ---------- */
-dialog.spro-p-dialogo .spro-p-post-it-edicao {
-  gap: 6px;
-  padding: 12px 14px 10px;
-  margin-top: 0;
+/* ---------- Edicao da anotacao NO LUGAR (o proprio papel do post-it, sem modal) ---------- */
+/* O papel e amarelo nos dois temas; o modo escuro antigo do SEI Pro pinta todo descendente (.seiSlim.dark-mode *) de claro com
+   !important, por isso o que mora no papel reafirma cor e fundo com !important. */
+.spro-p-post-it.editavel {
+  cursor: text;
 }
-dialog.spro-p-dialogo .spro-p-post-it-edicao:focus-within {
+.spro-p-post-it-edicao {
+  gap: 6px;
+  padding: 10px 12px 8px;
+  margin-top: 2px;
+  cursor: auto;
+}
+.spro-p-post-it-edicao:focus-within {
   box-shadow: 0 0 0 2px var(--spro-destaque), 0 4px 6px rgb(0 0 0 / 10%);
 }
-dialog.spro-p-dialogo .spro-p-post-it-texto {
+.spro-p-raiz .spro-p-post-it-edicao textarea.spro-p-post-it-texto {
   box-sizing: border-box;
   display: block;
   width: 100%;
-  min-height: 150px;
+  min-height: 5.8em;
+  max-height: 60vh;
+  margin: 0;
   padding: 0;
-  font: 14px/1.5 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  font: var(--spro-p-fonte-corpo) / 1.5 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
   color: var(--spro-texto) !important;
   background: transparent !important;
-  border: 0;
+  border: 0 !important;
   border-radius: 0;
   outline: none;
-  box-shadow: none;
-  resize: vertical;
+  box-shadow: none !important;
+  resize: none;
+  overflow-y: auto;
 }
-dialog.spro-p-dialogo .spro-p-post-it-texto::placeholder {
+.spro-p-raiz .spro-p-post-it-edicao textarea.spro-p-post-it-texto::placeholder {
   color: var(--spro-fraco);
   opacity: 1;
 }
-/* Rodape do papel: o contador ocupa o que sobra e nunca passa por baixo das ferramentas (quebram de linha antes de sobrepor). */
-dialog.spro-p-dialogo .spro-p-post-it-rodape {
+.spro-p-raiz .spro-p-post-it-edicao textarea.spro-p-post-it-texto:read-only {
+  opacity: 0.75;
+}
+/* Rodape do papel: o contador ocupa o que sobra e nunca passa por baixo da situacao (quebram de linha antes de sobrepor). */
+.spro-p-post-it-rodape {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
+  gap: 2px 10px;
   min-width: 0;
   padding-top: 6px;
   border-top: 1px dashed rgb(150 125 30 / 45%);
 }
-dialog.spro-p-dialogo .spro-p-post-it-rodape .spro-p-contador {
+.spro-p-raiz .spro-p-post-it-rodape .spro-p-contador {
   flex: 1 1 11em;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--spro-p-fonte-pequena);
   color: var(--spro-suave) !important;
 }
-dialog.spro-p-dialogo .spro-p-post-it-ferramentas {
+.spro-p-raiz .spro-p-post-it-situacao {
+  flex: none;
+  font-size: var(--spro-p-fonte-pequena);
+  color: var(--spro-suave) !important;
+}
+.spro-p-post-it-situacao:empty {
+  display: none;
+}
+.spro-p-post-it-aviso {
   display: flex;
-  flex: 0 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px 6px;
-  margin-left: auto;
+  gap: 2px 8px;
+  padding: 5px 8px;
+  font-size: var(--spro-p-fonte-pequena);
+  line-height: 1.4;
+  background: rgb(255 255 255 / 55%);
+  border-radius: 4px;
 }
-dialog.spro-p-dialogo .spro-p-post-it-botao {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-  padding: 3px 9px;
-  font: 600 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+.spro-p-post-it-aviso[hidden] {
+  display: none;
+}
+.spro-p-raiz .spro-p-post-it-aviso,
+.spro-p-raiz .spro-p-post-it-aviso-texto {
+  color: var(--spro-texto) !important;
+}
+.spro-p-post-it-aviso.erro {
+  border-left: 3px solid var(--spro-perigo);
+}
+.spro-p-raiz .spro-p-post-it-aviso.erro .spro-p-post-it-aviso-texto {
+  color: var(--spro-perigo) !important;
+}
+.spro-p-raiz .spro-p-post-it-aviso .spro-p-link {
   color: var(--spro-destaque) !important;
-  background: transparent;
+  background: transparent !important;
+}
+/* Barra de ferramentas: em linha propria; quebra de linha em vez de sobrepor, qualquer que seja a largura da coluna. */
+.spro-p-post-it-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.spro-p-post-it-espaco {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: var(--spro-p-alvo);
+  min-height: var(--spro-p-alvo);
+  margin: 0;
+  padding: 0 9px;
+  font: 600 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  color: var(--spro-suave) !important;
+  background: transparent !important;
   border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
 }
-dialog.spro-p-dialogo .spro-p-post-it-botao:hover {
-  background: rgb(120 95 10 / 14%);
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao.so-icone {
+  padding: 0;
 }
-dialog.spro-p-dialogo .spro-p-post-it-botao:focus-visible {
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao .spro-glifo,
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao-texto {
+  color: inherit !important;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao:hover:not(:disabled) {
+  color: var(--spro-destaque) !important;
+  background: rgb(120 95 10 / 14%) !important;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao.perigo:hover:not(:disabled) {
+  color: var(--spro-perigo) !important;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--spro-destaque);
 }
-dialog.spro-p-dialogo .spro-p-post-it-botao[aria-pressed="true"] {
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao.primario {
   color: #fff !important;
-  background: var(--spro-perigo);
+  background: var(--spro-destaque) !important;
 }
-dialog.spro-p-dialogo .spro-p-post-it-data-rotulo {
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao.primario:hover:not(:disabled) {
+  color: #fff !important;
+  background: color-mix(in srgb, var(--spro-destaque) 85%, #000) !important;
+}
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-botao[aria-pressed="true"] {
+  color: #fff !important;
+  background: var(--spro-perigo) !important;
+}
+.spro-p-post-it-data-rotulo {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 5px;
-  color: var(--spro-destaque) !important;
+  gap: 4px;
+  padding-left: 4px;
 }
-dialog.spro-p-dialogo .spro-p-post-it-data {
-  min-height: 26px;
+.spro-p-raiz .spro-p-post-it-edicao .spro-p-post-it-data-rotulo {
+  color: var(--spro-suave) !important;
+}
+.spro-p-raiz .spro-p-post-it-edicao input.spro-p-post-it-data {
+  box-sizing: border-box;
+  min-height: var(--spro-p-alvo);
   padding: 1px 6px;
-  font: 12.5px/1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
+  font: var(--spro-p-fonte-pequena) / 1.4 var(--spro-fonte, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
   color: var(--spro-texto) !important;
   background: rgb(255 255 255 / 45%) !important;
   border: 1px solid rgb(150 125 30 / 40%);

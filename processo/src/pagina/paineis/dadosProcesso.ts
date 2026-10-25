@@ -4,6 +4,7 @@ import type { NivelAcesso } from "@nucleo/dominio/arvore";
 import type { DadoProcesso } from "../../modelo/dados";
 import { alternarMarca, type MarcaEspecificacao, observacoesVisiveis, partesDoInteressado, temMarca } from "../../modelo/texto";
 import { corpoPorEstado, nota, vazio } from "../../ui/estados";
+import { glifo } from "../../ui/glifos";
 import type { AcaoPainel } from "../../ui/painel";
 import { avisarNoTopo, ICONE_DO_NIVEL, mensagemDeErro, ROTULO_DO_NIVEL } from "../comum";
 import type { ContextoProcesso } from "../contexto";
@@ -67,7 +68,7 @@ function comDados(
 export const painelDescricao: DefPainel = {
   tipo: "descricao",
   titulo: "Especificação",
-  icone: "documento",
+  icone: "balaoPontos",
   desenhar(ctx) {
     const f = fatia<DadoProcesso>(ctx, "dadosProcesso");
     const d = dadoDe(ctx);
@@ -113,7 +114,7 @@ export const painelDescricao: DefPainel = {
 export const painelTipo: DefPainel = {
   tipo: "tipo_procedimento",
   titulo: "Tipo de Processo",
-  icone: "pasta",
+  icone: "caixa",
   desenhar(ctx) {
     // O tipo já vem na árvore: aparece sem esperar o formulário.
     const d = dadoDe(ctx);
@@ -131,7 +132,7 @@ export const painelTipo: DefPainel = {
 export const painelNivel: DefPainel = {
   tipo: "nivel_acesso",
   titulo: "Nível de Acesso",
-  icone: "cadeado",
+  icone: "globo",
   desenhar(ctx) {
     const d = dadoDe(ctx);
     const nivel: NivelAcesso = d?.nivel ?? ctx.arv.nivel;
@@ -141,6 +142,7 @@ export const painelNivel: DefPainel = {
     return {
       estado: "pronto",
       desenho: {
+        icone: nivel === "restrito" ? "cadeado" : nivel === "sigiloso" ? "semUsuario" : "globo",
         acoes:
           d && editavel(ctx) && nivel !== "sigiloso"
             ? [{ icone: "lapis", rotulo: "Editar nível de acesso", aoClicar: () => abrirModalNivel(ctx) }]
@@ -159,7 +161,7 @@ export const painelNivel: DefPainel = {
 export const painelInteressados: DefPainel = {
   tipo: "interessados",
   titulo: "Interessados",
-  icone: "pessoa",
+  icone: "usuarios",
   desenhar(ctx) {
     const f = fatia<DadoProcesso>(ctx, "dadosProcesso");
     return {
@@ -192,7 +194,7 @@ export const painelInteressados: DefPainel = {
                           ...(v.valor.tipo ? { tipoNome: v.valor.tipo } : {}),
                         }),
                     },
-                    icone("busca", 14),
+                    glifo("lupa", 16),
                   ),
                 );
               })
@@ -206,7 +208,7 @@ export const painelInteressados: DefPainel = {
 export const painelAssuntos: DefPainel = {
   tipo: "assuntos",
   titulo: "Assuntos",
-  icone: "etiqueta",
+  icone: "favorito",
   desenhar(ctx) {
     const f = fatia<DadoProcesso>(ctx, "dadosProcesso");
     return {
@@ -224,7 +226,7 @@ export const painelAssuntos: DefPainel = {
 export const painelObservacoes: DefPainel = {
   tipo: "observacoes",
   titulo: "Observações",
-  icone: "nota",
+  icone: "balao",
   desenhar(ctx) {
     const f = fatia<DadoProcesso>(ctx, "dadosProcesso");
     const d = dadoDe(ctx);
