@@ -7239,7 +7239,24 @@ function configFlashMenuTrPro(value, color, state, mode) {
             '           </td>'+
             '        </tr>';
 }
+// Tela nova (js/init_processo_arvore.js, SEI Pro Lab): o modulo processo/ escuta este pedido no documento do quadro da arvore e
+// confirma com um atributo no <html> dele, no mesmo instante. Sem a confirmacao (modulo ausente ou desligado) abre a janela abaixo.
+function abrirPersonalizarMenuNovoPro() {
+    try {
+        var ifrNovoPro = document.getElementById('ifrArvore');
+        var docNovoPro = ifrNovoPro && ifrNovoPro.contentDocument;
+        if (!docNovoPro || !docNovoPro.documentElement) return false;
+        docNovoPro.documentElement.removeAttribute('data-spro-pers-ack');
+        docNovoPro.dispatchEvent(new CustomEvent('spro-processo-personalizar-abrir'));
+        if (docNovoPro.documentElement.hasAttribute('data-spro-pers-ack')) {
+            docNovoPro.documentElement.removeAttribute('data-spro-pers-ack');
+            return true;
+        }
+    } catch (e) {}
+    return false;
+}
 function configFlashMenuPro(arrayLinksArvore) { 
+    if (abrirPersonalizarMenuNovoPro()) return;
     var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? (function(l){ return Array.isArray(l) ? l.map(function(v){ return (v && v[0] == 'A\u00E7\u00F5es em lote') ? ['A\u00E7\u00F5es em Lote'] : v; }) : l; })(localStorageRestorePro('configViewFlashMenuPro')) : [['Incluir Documento'],['Consultar/Alterar Processo'],['Enviar Documento Externo'],['Atribuir Processo'],['Add/Remover Urg\u00EAncia']];
     var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento']];
     var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
