@@ -1,0 +1,10 @@
+{
+  "_descricao": "localStorage gravado de verdade pelo MODAL LEGADO (configFlashMenuPro, jQuery UI) no SEI SP de treinamento 4.1.5 em 26/10/2026, apos: Processo (desliga Incluir Documento, liga Copiar link do processo e Enviar Processo e leva este ao topo), Documentos (liga Ativar menu ao clicar, Baixar documento, Imprimir Web), Arvore (liga Visualizar em nova aba, desliga Duplicar documento, desliga a chave geral), Painel (desliga Observacoes, liga Bloco Interno). Captura feita por scratchpad/live/pz6.mjs. O optionsPro foi reduzido as chaves optionsFlashMenu_* e panelDadosArvorePro_* (o resto era dado do processo de treinamento).",
+  "localStorage": {
+    "configViewFlashMenuPro": "[[\"Enviar Processo\"],[\"Consultar/Alterar Processo\"],[\"Enviar Documento Externo\"],[\"Atribuir Processo\"],[\"Copiar link do processo\"]]",
+    "configViewFlashDocArvorePro": "[[\"Copiar número SEI\"],[\"Copiar link do documento\"],[\"Visualizar em nova aba\"]]",
+    "configViewFlashDocMenuPro": "[[\"Ativar menu ao clicar\"],[\"Copiar número SEI\"],[\"Copiar nome do documento\"],[\"Copiar link do documento\"],[\"Imprimir Web\"],[\"Baixar documento\"]]",
+    "configViewFlashPanelArvorePro": "[[\"Anotações\"],[\"Marcador\"],[\"Acompanhamento Especial\"],[\"Tipo de Procedimento\"],[\"Assuntos\"],[\"Interessados\"],[\"Atribuição\"],[\"Nível de Acesso\"],[\"Bloco Interno\"]]",
+    "optionsPro": "{\"optionsFlashMenu_iconstree\":\"disabled\"}"
+  }
+}

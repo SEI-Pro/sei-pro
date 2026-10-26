@@ -9,12 +9,11 @@ import base from "@comum/ui/base.css";
 import { criarHttp } from "@nucleo/sessao/http";
 import { documentoTopo } from "@nucleo/sessao/pagina";
 import proprio from "../../estatico/processo.css";
-import { restaurarBlocoInterno } from "../gantt/coleta";
 import { ligarGantt } from "../gantt/ligar";
 import { OPCAO_FILTRO_ARVORE } from "../modelo/constantes";
 import { LojaProcesso } from "../modelo/loja";
 import { paineisHabilitados } from "../modelo/paineis";
-import { aguardarArvore, fatiasNecessarias, manterMontagem } from "./arvore";
+import { aguardarArvore } from "./arvore";
 import { ehEnviarProcesso, ligarAviso } from "./aviso/ligar";
 import { type ContextoProcesso, criarContexto, escopoDoUsuario, lerUsuarioEUnidade } from "./contexto";
 import { definirCss } from "./estilo";
@@ -31,12 +30,21 @@ import {
   marcarTituloEAviso,
 } from "./marca";
 import { ligarMenuDaArvore } from "./menuDoc/ligar";
-import { ligarMarcaDoMenu } from "./menuTopo";
 import { lerSelecao, painelLigado } from "./opcoes";
+import { ligarPaineisVivos } from "./paineisVivos";
+import { criarAbertura, ligarPersonalizar } from "./personalizar/ligar";
 import { ligarPonteDaCapa } from "./ponteCapa";
 import { ligarTitulo } from "./titulo";
 
 let contextoDaPagina: Promise<ContextoProcesso | null> | null = null;
+
+/** A tela "Personalizar menu rápido": o item do menu da árvore e o pedido do legado abrem a mesma tela, na janela de topo. */
+const abrirPersonalizarMenu = criarAbertura({
+  doc: document,
+  topo: documentoTopo,
+  armazenamento: localStorage,
+  dataValues: async () => ((await chrome.storage.sync.get("dataValues")) as { dataValues?: unknown }).dataValues,
+});
 
 definirCss(`${base}\n${proprio}`);
 if (ehTopoDoProcesso(window)) {
@@ -55,6 +63,8 @@ if (!global.__seiProProcessoPaineis && ehQuadroDaArvore(window) && !dentroDoVeri
   // O Gantt abre por pedido (o link da capa legada), com ou sem os painéis e o menu ligados: o ouvinte vale sempre que
   // o atributo `data-seipro-processo-gantt` foi posto, senão o link ficaria morto.
   ligarGantt(document, obterContexto);
+  // O legado (`configFlashMenuPro`) pede a tela nova por evento; vale com ou sem o menu e os painéis ligados (a tela só edita a personalização).
+  ligarPersonalizar(document, abrirPersonalizarMenu);
   // A capa (quadro do visualizador) pede as fatias e a coleta do histórico por evento: o dono da escrita é este quadro.
   ligarPonteDaCapa(document, obterContexto);
   const iniciar = () => void principal().catch((e) => console.warn("[SEI Pro] painéis do processo:", e));
@@ -116,29 +126,23 @@ async function montarContexto(): Promise<ContextoProcesso | null> {
 async function principal(): Promise<void> {
   if (!document.querySelector("#topmenu") && !document.querySelector("#divArvore") && !document.getElementById("frmArvore")) return;
   const { dataValues } = (await chrome.storage.sync.get("dataValues")) as { dataValues?: unknown };
-  const comPaineis = opcaoLegadaLigada(dataValues, "infoarvore") && painelLigado(localStorage);
+  const comInfoArvore = opcaoLegadaLigada(dataValues, "infoarvore");
   const comMenu = opcaoLegadaLigada(dataValues, "menurapido");
   // O filtro vale por si (não depende dos painéis nem do menu) e vem ligado: só esconde nós quando o usuário pede.
   const comFiltro = opcaoLegadaLigada(dataValues, OPCAO_FILTRO_ARVORE);
   // O título da aba vem da especificação (um GET do formulário do processo, ou o cache): vale sem painéis e sem menu.
   // Só na janela de topo do processo (não em janela auxiliar) e sem `disablequery`, como o legado.
   const comTitulo = !opcaoLegadaMarcada(dataValues, "disablequery") && ehTopoDoProcesso(window.top as Window);
-  if (!comPaineis && !comMenu && !comFiltro && !comTitulo) return;
+  // Os painéis dependem da opção geral E da chave da aba Painel da personalização, que muda ao vivo: com a opção ligada o
+  // contexto existe mesmo com a chave desligada (ligá-la na tela nova monta os painéis sem recarregar).
+  if (!comInfoArvore && !comMenu && !comFiltro && !comTitulo) return;
   const ctx = await obterContexto();
   if (!ctx) return;
   if (comTitulo && !ctx.sigiloso) {
     ligarTitulo(ctx);
-    if (!comPaineis) ctx.recarregar("dadosProcesso");
+    if (!(comInfoArvore && painelLigado(localStorage))) ctx.recarregar("dadosProcesso");
   }
-  if (comPaineis) {
-    manterMontagem(ctx);
-    ligarMarcaDoMenu(ctx);
-    const fatias = new Set(fatiasNecessarias(ctx));
-    if (comTitulo && !ctx.sigiloso) fatias.add("dadosProcesso");
-    for (const n of fatias) ctx.recarregar(n);
-    // Histórico completo ainda válido no cache (coletado por clique há menos de 30 min): o Bloco Interno aparece sem rede.
-    void restaurarBlocoInterno(ctx).catch(() => undefined);
-  }
-  if (comMenu) ligarMenuDaArvore({ ctx, dataValues, http: criarHttp(location.href) });
+  if (comInfoArvore) ligarPaineisVivos(ctx, { comTitulo, janela: window });
+  if (comMenu) ligarMenuDaArvore({ ctx, dataValues, http: criarHttp(location.href), personalizar: (aba) => abrirPersonalizarMenu(aba) });
   if (comFiltro) ligarFiltro(ctx);
 }

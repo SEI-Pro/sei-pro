@@ -11,6 +11,8 @@ import { paginaDe } from "@nucleo/sessao/pagina";
 import { type ContextoProcesso, SeiDaPagina } from "../contexto";
 import { aoMudarTema, garantirEstilo, temaEscuro } from "../estilo";
 import { blocoDoMenuLigado, lerListaDoMenu } from "../opcoes";
+import type { IdAba } from "../personalizar/catalogo";
+import { observarPersonalizacao } from "../personalizar/mudancas";
 import {
   type AlvoDocumento,
   type ItemMenu,
@@ -43,6 +45,11 @@ export interface DepsLigar {
   esperaAbrir?: number;
   esperaFechar?: number;
   recarregarArvore?: () => void;
+  /**
+   * Abre a tela "Personalizar menu rápido" (do módulo) na aba pedida. Sem ela, o item "Personalizar menu" pede a janela do
+   * legado (quem roda o módulo sem a tela nova, e os testes antigos).
+   */
+  personalizar?: (aba: IdAba) => void;
 }
 
 export interface MenuLigado {
@@ -108,14 +115,15 @@ export function ligarMenuDaArvore(d: DepsLigar): MenuLigado {
     return { id, rotulo, dado };
   };
 
-  const personalizar: ItemMenu = {
+  /** O item no pé do menu: abre a tela nova na aba do menu de onde veio (documento: Documentos; processo: Processo). */
+  const personalizarEm = (aba: IdAba): ItemMenu => ({
     id: "personalizar",
     nome: "Personalizar Menu",
     grupo: "Acoes",
     rotulo: "Personalizar menu",
     icone: "ajustes",
-    executar: () => servicos.legado("personalizar"),
-  };
+    executar: () => (d.personalizar ? d.personalizar(aba) : servicos.legado("personalizar")),
+  });
 
   // ---- gatilhos ---------------------------------------------------------------------------------------------------
   const gatilhoDe = (alvo: EventTarget | null): Gatilho | null => {
@@ -164,7 +172,7 @@ export function ligarMenuDaArvore(d: DepsLigar): MenuLigado {
       rotulo,
       escuro: temaEscuro(doc),
       focar,
-      rodape: [personalizar],
+      rodape: [personalizarEm(g.tipo === "processo" ? "processo" : "documentos")],
       aoFechar: () => {
         if (aberto?.menu === menu) aberto = null;
       },
@@ -271,8 +279,15 @@ export function ligarMenuDaArvore(d: DepsLigar): MenuLigado {
     }
     colocarIcones(doc, ctx.arv.idProcedimento, alvoDe, () => opcoes(selecaoDoc()), selecaoIcones);
   };
-  if (blocoDoMenuLigado(ctx.armazenamento, "iconstree")) {
-    pararIcones = manterIcones(
+  /** Liga ou desliga a manutenção dos ícones conforme a chave geral da aba Árvore (vale ao vivo, sem recarregar) e os refaz. */
+  const sincronizarIcones = () => {
+    if (!blocoDoMenuLigado(ctx.armazenamento, "iconstree")) {
+      pararIcones?.();
+      pararIcones = null;
+      tirarIcones(doc);
+      return;
+    }
+    pararIcones ??= manterIcones(
       doc,
       async (id, modo) => {
         const nome = doc.getElementById(`anchor${id}`);
@@ -283,7 +298,14 @@ export function ligarMenuDaArvore(d: DepsLigar): MenuLigado {
       recolocar,
     );
     recolocar();
-  }
+  };
+  sincronizarIcones();
+  // A personalização mudou (na tela nova ou em outra janela): o menu aberto some (o próximo já nasce com a lista nova) e os ícones se refazem.
+  const pararPersonalizacao = observarPersonalizacao(ctx.armazenamento, doc.defaultView, (aba) => {
+    if (aba === "painel") return;
+    fecharAgora();
+    sincronizarIcones();
+  });
   const pararPastas = docs.acompanharPastas(doc, () => setTimeout(recolocar, 80));
   const pararTema = aoMudarTema(doc, () => {
     if (!aberto) return;
@@ -306,6 +328,7 @@ export function ligarMenuDaArvore(d: DepsLigar): MenuLigado {
       doc.removeEventListener("click", aoClicar, true);
       doc.removeEventListener("keydown", aoTeclar, true);
       pararIcones?.();
+      pararPersonalizacao();
       pararPastas();
       pararTema();
     },

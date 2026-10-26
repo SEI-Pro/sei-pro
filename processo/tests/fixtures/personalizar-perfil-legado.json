@@ -1,0 +1,11 @@
+{
+  "_descricao": "localStorage do SEI de um perfil que personalizou o menu rapido NO LEGADO (modal jQuery UI), nos formatos que changeFlashMenuPro/changeFlashMenuGeneralPro gravam: listas [[nome],...] so com os itens ligados na ordem da tabela, e optionsPro com as chaves gerais. Tem de proposito: nomes antigos (Add/Remover Urgencia, Acoes em lote), um nome que nao existe mais e a entrada 'Ativar menu ao clicar' dentro da lista do menu do documento.",
+  "localStorage": {
+    "configViewFlashMenuPro": "[[\"Copiar link do processo\"],[\"Incluir Documento\"],[\"Add/Remover Urgência\"],[\"Ações em lote\"],[\"Atribuir Processo\"]]",
+    "configViewFlashDocMenuPro": "[[\"Ativar menu ao clicar\"],[\"Baixar documento\"],[\"Copiar número SEI\"],[\"Ciência\"],[\"Item que o SEI Pro nao tem mais\"]]",
+    "configViewFlashDocArvorePro": "[[\"Visualizar em nova aba\"],[\"Copiar número SEI\"]]",
+    "configViewFlashPanelArvorePro": "[[\"Anotações\"],[\"Marcador\"],[\"Bloco Interno\"]]",
+    "optionsPro": "{\"optionsFlashMenu_menudoc\":\"enabled\",\"optionsFlashMenu_iconstree\":\"disabled\",\"panelDadosArvorePro_anotacoes\":\"hide\",\"panelDadosArvoreInteressados_mesmaNatureza\":true,\"alguma_outra_opcao\":\"x\"}",
+    "optionsFlashMenu_menuproc": "\"disabled\""
+  }
+}

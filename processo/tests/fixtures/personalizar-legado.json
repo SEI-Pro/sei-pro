@@ -1,0 +1,397 @@
+{
+  "iconsFlashMenu": [
+    {
+      "name": "Copiar número do processo",
+      "icon": "fas fa-copyright",
+      "alt": ""
+    },
+    {
+      "name": "Copiar somente o número",
+      "icon": "fab fa-cuttlefish",
+      "alt": ""
+    },
+    {
+      "name": "Copiar link do processo",
+      "icon": "fas fa-link",
+      "alt": ""
+    },
+    {
+      "name": "Enviar Documento Externo",
+      "icon": "fa-upload",
+      "alt": ""
+    },
+    {
+      "name": "Ações em Lote",
+      "icon": "fa-cogs",
+      "alt": ""
+    },
+    {
+      "name": "Adicionar ou Remover Urgência",
+      "icon": "fa-exclamation-circle",
+      "alt": "Add/Remover Urgência"
+    },
+    {
+      "name": "Incluir Documento",
+      "icon": "fas fa-file-alt",
+      "alt": "Incluir Novo Documento"
+    },
+    {
+      "name": "Consultar/Alterar Processo",
+      "icon": "fa-file-signature",
+      "alt": ""
+    },
+    {
+      "name": "Iniciar Processo Relacionado",
+      "icon": "fa-sync-alt",
+      "alt": "Iniciar Proc. Relacionado"
+    },
+    {
+      "name": "Acompanhamento Especial",
+      "icon": "fas fa-eye",
+      "alt": ""
+    },
+    {
+      "name": "Enviar Processo",
+      "icon": "fas fa-share-square",
+      "alt": ""
+    },
+    {
+      "name": "Atualizar Andamento",
+      "icon": "fas fa-globe-americas",
+      "alt": ""
+    },
+    {
+      "name": "Atribuir Processo",
+      "icon": "fa-user-friends",
+      "alt": ""
+    },
+    {
+      "name": "Duplicar Processo",
+      "icon": "fa-copy",
+      "alt": ""
+    },
+    {
+      "name": "Relacionamentos do Processo",
+      "icon": "fa-retweet",
+      "alt": ""
+    },
+    {
+      "name": "Gerenciar Disponibilizações de Acesso Externo",
+      "icon": "fa-users-cog",
+      "alt": "Gerenciar Acesso Externo"
+    },
+    {
+      "name": "Anotações",
+      "icon": "fas fa-sticky-note",
+      "alt": ""
+    },
+    {
+      "name": "Sobrestar Processo",
+      "icon": "fa-pause-circle",
+      "alt": ""
+    },
+    {
+      "name": "Anexar Processo",
+      "icon": "fa-paperclip",
+      "alt": ""
+    },
+    {
+      "name": "Gerar Arquivo PDF do Processo",
+      "icon": "fa-file-pdf",
+      "alt": "Gerar Arquivo PDF"
+    },
+    {
+      "name": "Gerar Arquivo ZIP do Processo",
+      "icon": "fa-file-archive",
+      "alt": "Gerar Arquivo ZIP"
+    },
+    {
+      "name": "Gerenciar Ponto de Controle",
+      "icon": "fa-flag",
+      "alt": "Gerenciar Ponto de Controle"
+    },
+    {
+      "name": "Gerenciar Marcador",
+      "icon": "fa-tags",
+      "alt": ""
+    },
+    {
+      "name": "Concluir Processo",
+      "icon": "fa-folder-open",
+      "alt": "Concluir/Reabrir Processo"
+    },
+    {
+      "name": "Ciência",
+      "icon": "fa-thumbs-up",
+      "alt": ""
+    },
+    {
+      "name": "Enviar Correspondência Eletrônica",
+      "icon": "fa-envelope-open-text",
+      "alt": "Enviar Correspondência"
+    },
+    {
+      "name": "Incluir em Bloco",
+      "icon": "fa-layer-group",
+      "alt": ""
+    },
+    {
+      "name": "Reabrir Processo",
+      "icon": "fa-folder-open",
+      "alt": "Concluir/Reabrir Processo"
+    },
+    {
+      "name": "Ordenar Árvore do Processo",
+      "icon": "fa-sort-amount-down-alt",
+      "alt": "Ordenar Árvore"
+    }
+  ],
+  "iconsFlashDocMenu": [
+    {
+      "name": "Copiar número SEI",
+      "icon": "fas fa-copyright",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Copiar nome do documento",
+      "icon": "fas fa-file-alt",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Copiar link do documento",
+      "icon": "fas fa-link",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Duplicar documento",
+      "icon": "fa-copy",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Copiar para...",
+      "icon": "fa-share",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Imprimir Web",
+      "icon": "fa-print",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Visualizar em nova aba",
+      "icon": "fa-window-restore",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Baixar documento",
+      "icon": "fa-download",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Consultar documento",
+      "icon": "fa-users",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Incluir em bloco",
+      "icon": "fa-book",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Cancelar documento",
+      "icon": "fa-ban",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Versões do documento",
+      "icon": "fa-code-branch",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Gerar circular",
+      "icon": "fa-circle-notch",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Assinatura externa",
+      "icon": "fa-file-signature",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Excluir documento",
+      "icon": "fa-trash-alt",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Editar documento",
+      "icon": "fa-edit",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Assinar documento",
+      "icon": "fa-pen-alt",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Adicionar aos favoritos",
+      "icon": "fa-star",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Ciência",
+      "icon": "fa-thumbs-up",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Enviar por e-mail",
+      "icon": "fa-at",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Mover p/ outro processo",
+      "icon": "fa-people-carry",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Intimação eletrônica",
+      "icon": "fa-bullhorn",
+      "alt": "",
+      "show": false
+    },
+    {
+      "name": "Copiar número com link",
+      "icon": "fab fa-creative-commons-sa",
+      "alt": "",
+      "show": true
+    },
+    {
+      "name": "Copiar nome com link",
+      "icon": "fa-external-link-alt",
+      "alt": "",
+      "show": true
+    }
+  ],
+  "iconsFlashDocArvore": [
+    {
+      "name": "Copiar número SEI",
+      "icon": "far fa-copyright",
+      "alt": "",
+      "mode": "copy"
+    },
+    {
+      "name": "Copiar nome do documento",
+      "icon": "far fa-file-alt",
+      "alt": "",
+      "mode": "name"
+    },
+    {
+      "name": "Copiar link do documento",
+      "icon": "fas fa-link",
+      "alt": "",
+      "mode": "link"
+    },
+    {
+      "name": "Duplicar documento",
+      "icon": "far fa-copy",
+      "alt": "",
+      "mode": "clone"
+    },
+    {
+      "name": "Copiar para...",
+      "icon": "fas fa-share",
+      "alt": "Copiar documento para outro processo",
+      "mode": "copyto"
+    },
+    {
+      "name": "Copiar número com link",
+      "icon": "fab fa-creative-commons-sa",
+      "alt": "",
+      "mode": "numberlink"
+    },
+    {
+      "name": "Copiar nome com link",
+      "icon": "fas fa-external-link-alt",
+      "alt": "",
+      "mode": "namelink"
+    },
+    {
+      "name": "Visualizar em nova aba",
+      "icon": "fas fa-window-restore",
+      "alt": "",
+      "mode": "view"
+    }
+  ],
+  "iconsFlashPanelArvore": [
+    {
+      "name": "Anotações",
+      "icon": "fas fa-sticky-note",
+      "alt": "Anotações"
+    },
+    {
+      "name": "Atribuição",
+      "icon": "fas fa-user-tie",
+      "alt": "Atribuição"
+    },
+    {
+      "name": "Tipo de Procedimento",
+      "icon": "fas fa-inbox",
+      "alt": "Tipo de Procedimento"
+    },
+    {
+      "name": "Marcador",
+      "icon": "fas fa-tags",
+      "alt": "Marcador"
+    },
+    {
+      "name": "Nível de Acesso",
+      "icon": "fas fa-lock",
+      "alt": "Nível de Acesso"
+    },
+    {
+      "name": "Interessados",
+      "icon": "fas fa-users",
+      "alt": "Interessados"
+    },
+    {
+      "name": "Assuntos",
+      "icon": "fas fa-bookmark",
+      "alt": "Assuntos"
+    },
+    {
+      "name": "Observações",
+      "icon": "fas fa-comment-alt",
+      "alt": "Observações"
+    },
+    {
+      "name": "Bloco Interno",
+      "icon": "fas fa-book",
+      "alt": "Bloco Interno"
+    },
+    {
+      "name": "Acompanhamento Especial",
+      "icon": "fas fa-eye",
+      "alt": "Acompanhamento Especial"
+    }
+  ]
+}

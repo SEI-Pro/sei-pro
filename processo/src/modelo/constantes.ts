@@ -66,3 +66,12 @@ export const MAX_BYTES_HISTORICO = 900 * 1024;
 export const MAX_PROCESSOS_HISTORICO = 12;
 /** O histórico guardado serve de base da atualização incremental por este tempo, mesmo vencido (ele só “vale” por 30 min). */
 export const GUARDA_HISTORICO_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Tela "Personalizar menu rápido" (do módulo): o legado (`configFlashMenuPro`, na janela de topo) pede a abertura por este evento no
+ * documento do quadro da árvore, e o módulo responde posando o atributo abaixo (no <html> da árvore) ANTES de qualquer outra coisa: se o
+ * atributo existir logo após o disparo, o legado o apaga e não abre a janela dele; se não existir (módulo ausente ou desligado), a janela
+ * do legado abre como sempre.
+ */
+export const EVENTO_ABRIR_PERSONALIZAR = "spro-processo-personalizar-abrir";
+export const ATRIBUTO_PERSONALIZAR_ACK = "data-spro-pers-ack";

@@ -8,7 +8,7 @@
  */
 import type { TipoPainel } from "../modelo/paineis";
 
-type Armazenamento = Pick<Storage, "getItem" | "setItem">;
+type Armazenamento = Pick<Storage, "getItem" | "setItem"> & Partial<Pick<Storage, "removeItem">>;
 
 const CHAVE_SELECAO = "configViewFlashPanelArvorePro";
 const CHAVE_OPCOES = "optionsPro";
@@ -35,9 +35,39 @@ export function opcoes(a: Armazenamento): Record<string, unknown> {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
+/**
+ * Uma opção do legado (`getOptionsPro`): vive em `optionsPro`; as versões mais antigas gravavam a chave solta no
+ * localStorage (`optionsFlashMenu_menudoc` = `"disabled"`), e o legado a movia para dentro do `optionsPro` na primeira
+ * leitura (`updateOptionsPro`). Aqui a chave solta vale quando o `optionsPro` ainda não tem a opção.
+ */
+export function valorDaOpcao(a: Armazenamento, item: string): unknown {
+  const o = opcoes(a)[item];
+  if (o !== undefined && o !== null) return o;
+  const solta = json(a, item);
+  if (solta !== null) return solta;
+  try {
+    const bruto = a.getItem(item);
+    return bruto === "enabled" || bruto === "disabled" ? bruto : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Grava uma opção como o legado (`setOptionsPro`): dentro do `optionsPro`, sem mexer nas outras, e some a chave solta antiga. */
+export function gravarOpcao(a: Armazenamento, item: string, valor: unknown): void {
+  const o = opcoes(a);
+  o[item] = valor;
+  a.setItem(CHAVE_OPCOES, JSON.stringify(o));
+  try {
+    a.removeItem?.(item);
+  } catch {
+    // sem remoção: a chave solta fica, e o optionsPro (que vale primeiro) já tem a opção
+  }
+}
+
 /** O painel de informações da árvore está ligado? (O legado só desliga com "disabled".) */
 export function painelLigado(a: Armazenamento): boolean {
-  return opcoes(a).optionsFlashMenu_panelinfo !== "disabled";
+  return valorDaOpcao(a, "optionsFlashMenu_panelinfo") !== "disabled";
 }
 
 export function painelAberto(a: Armazenamento, tipo: TipoPainel): boolean {
@@ -67,7 +97,7 @@ export function lerListaDoMenu(a: Armazenamento, chave: string): string[] | null
 
 /** O bloco do menu (`menuproc`, `menudoc`, `iconstree`) está ligado? O legado só desliga com "disabled". */
 export function blocoDoMenuLigado(a: Armazenamento, bloco: "menuproc" | "menudoc" | "iconstree"): boolean {
-  return opcoes(a)[`optionsFlashMenu_${bloco}`] !== "disabled";
+  return valorDaOpcao(a, `optionsFlashMenu_${bloco}`) !== "disabled";
 }
 
 /**
