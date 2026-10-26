@@ -44,6 +44,7 @@ processo/
       menuDoc/ menu vertical e ícones fixos do documento
       filtro/            filtro da árvore (modelo, DOM, barra)
       aviso/             aviso de não assinados no quadro do Enviar Processo (modelo, DOM, ligar)
+      pastas/            fila de carregamento das pastas da árvore (fila.ts): usada pelo filtro e pelo "Verificar pastas" do aviso
     gantt/             modal do histórico: modelo, SVG, dica, comparativo, CSV/impressão, cache de 30 min
     capa/              capa e cards: dados, cards, resumo, QR próprio, parado, controle (vigia)
     ui/                casca do painel, glifos preenchidos (SVG próprio), esqueleto, erro com "Tentar de novo"
@@ -142,7 +143,7 @@ processo", "Enviar documento externo", "Ações em lote" e "Personalizar menu".
 
 - SEI 5: não exercitado ao vivo (a árvore sintética no formato do 5 e o fonte do 5.0.0 estão nos testes). Só o SEI SP 4.1.5.
 - Entrega só no Lab MV3: os manifests derivados (oficial, whitelabels, Firefox) não têm o módulo, e as opções novas só aparecem no Lab.
-- Filtro da árvore: pasta fechada não entra (o SEI só traz os documentos da pasta quando o usuário a abre; a barra avisa); a
+- Filtro da árvore: ao filtrar, a fila de pastas abre as pastas fechadas uma por vez (ver "Fila de pastas"); a
   linha de um processo anexado/relacionado nunca é escondida; "Não assinados" mostra os documentos do editor da unidade do usuário
   (a unidade geradora só vem no SEI 4+; sem ela vale o documento); os chips somam (um ou outro) e a busca restringe; o estado não
   sobrevive à recarga da árvore.
@@ -762,7 +763,7 @@ Chrome for Testing com a extensão de `dist/`, opções todas ligadas menos `dis
 ## Filtro da árvore (etapa 5, Task 12): `src/pagina/filtro/`
 
 Barra acima da lista da árvore, no quadro `#frmArvore` (logo antes de `#divArvore`), FECHADA por padrão e aberta pela lupa do topo (ver "A lupa" abaixo): campo de busca, três chips (Não assinados,
-Externos, Cancelados), botão de limpar e uma linha de estado ("21 de 60 documentos", e o aviso de pastas fechadas). Liga com a opção
+Externos, Cancelados), botão de limpar e uma linha de estado ("21 de 60 documentos") com o andamento do carregamento das pastas. Liga com a opção
 `filtroarvore`, independente de `infoarvore` e `menurapido`. Sem rede, sem tocar na árvore do SEI.
 
 - `filtro.ts` (sem DOM): `aplicarFiltro(arv, f, {unidade})` devolve os ids à vista (documentos que casam e as pastas com algum
@@ -788,7 +789,7 @@ Externos, Cancelados), botão de limpar e uma linha de estado ("21 de 60 documen
   e uma vez mais 120 ms depois. Se algo tirar a barra da página, ela volta no mesmo lugar com o mesmo estado. Processo sem documentos
   nem pastas: a barra se esconde. Tema pelo `data-tema` (Estilo Avançado ou `dark-mode`).
 - Pastas abertas sob demanda: o SEI carrega os documentos da pasta no `#ifrPasta`; `ctx.documentos` (o mesmo mapa do menu) os lê a
-  cada `load`, e o observador reaplica. Pasta aberta depois entra no filtro; o aviso "Pastas fechadas não entram" some quando não há mais.
+  cada `load`, e o observador reaplica. Pasta aberta depois entra no filtro. O aviso "Pastas fechadas não entram" deixou de existir: a fila de pastas (abaixo) abre as pastas.
 - Opção `filtroarvore` (e `processoparado`) com `visivelEm: "lab"` em `opcoes-pagina/src/schema-dados.ts` (a mão; `gerar-schema.mjs`
   não foi rodado) e a página rebuildada (`dist/html/options.js`).
 
@@ -807,6 +808,58 @@ Externos 21, Cancelados 1, Despacho + Maria 2, número `0103947` 1; pasta sem do
 e as fechadas ficam; abrir as pastas depois reaplica; Tab, Tab, Enter liga o chip; Esc limpa; botão de limpar. Processo sigiloso
 (`034.00000265/2026-31`, senha pelo modal): barra e filtros funcionam, 0 requisições durante o uso, sem erro de console. Escuro:
 legível (capturas em `scratchpad/live/shots/fim-filtro-*.png`). O botão de limpar do navegador (X dobrado em `type=search`) foi escondido.
+
+### Fila de pastas (25/10/2026): usar o filtro carrega as pastas fechadas, uma por vez
+
+Pedido do autor: "pasta fechada não entrar no filtro é muito ruim; por padrão, ao usar o filtro, abrir todas as pastas, UMA POR VEZ, sem onerar o servidor, com
+feedback". `src/pagina/pastas/fila.ts` (sem rede própria; testes em `tests/verificar-pastas.ts` com a árvore falsa de `tests/arvore-sei-falsa.ts`).
+
+**Mecanismo (o gancho escolhido).** O mesmo clique do usuário no "+" da pasta (`ancjoinPASTAn`, com `preventDefault` em captura para o `href` `javascript:` não
+virar erro de CSP no mundo isolado). Não dá para chamar `abrirFecharPasta()` (função da página, fora do mundo isolado) e o nome da pasta abre por `javascript:`. O
+SEI então posta o formulário da árvore no `#ifrPasta` (`procedimento_paginar`, UM `#ifrPasta` por quadro) e `processarPasta()` troca o nó "Aguarde..." pelos nós
+dos documentos. **Medido ao vivo: um segundo clique antes da resposta CANCELA a primeira pasta** (ela fica "Aguarde..." para sempre); por isso a fila nunca tem duas
+pastas em carga, e espera qualquer pasta que o USUÁRIO esteja abrindo (aberta e ainda "Aguarde...") antes de clicar na próxima.
+
+**Estado vem do DOM, não de uma lista** (`estadoDaPasta`): `carregada` (há nó de documento no `#divPASTAn`, ou o SEI escreveu "Nenhum protocolo encontrado"),
+`falhou` ("Erro carregando protocolos." / "Não foi possível carregar os protocolos."), `pendente` (nó "Aguarde..."), `ausente`. A cada passo a próxima pasta é a
+primeira pendente na ordem da árvore: idempotente com o laço de ícones, recarga do `divArvore` e pasta aberta pelo usuário. **Subpastas** descobertas entram na
+posição em que aparecem (logo depois da mãe: profundidade primeiro) e o total do progresso cresce.
+
+**Fim da pasta, sem tempo fixo:** `MutationObserver` no `#divArvore` (childList, subtree, characterData) até a pasta ficar `carregada` ou `falhou`; um relógio de 300 ms
+só serve de reserva. **Prazo por pasta: 15 s** (vira "falhou", a fila segue). **Intervalo mínimo entre pastas: 500 ms** (desde o fim da anterior). **Teto: 60 pastas
+por rodada**; acima disso a fila para em "Limite de 60 pastas por vez: N ainda fechadas. Continuar". **3 falhas seguidas** interrompem a rodada ("N pastas não
+carregaram. Tentar de novo"); **sessão expirada** (o `#ifrPasta` trouxe o login) interrompe na hora. **Aba oculta** (`document.hidden`) pausa antes da próxima pasta
+("Em pausa: a aba está oculta") e retoma no `visibilitychange`. **Parar** deixa terminar a pasta em carga (o pedido do SEI não se cancela) e não pede mais nenhuma;
+digitar de novo NÃO retoma uma fila parada (só "Continuar"). Uma marca no `<html>` (`data-spro-pastas-fila`, renovada a cada passo, vale 30 s) impede duas
+instâncias no mesmo quadro (filtro e aviso) de carregar ao mesmo tempo. Recarregar o quadro derruba o módulo (filtro volta fechado), então não há o que retomar.
+
+**Quando começa:** só quando o usuário de fato filtra (digitou texto ou ligou um chip); abrir a lupa vazia não pede nada. Filtro só por texto vale igual. Limpar o
+filtro (X, Esc, apagar o texto, desligar o chip) ou fechar a barra PARA a fila e re-fecha as pastas.
+
+**Re-fechar (decisão): sim, só as que o filtro abriu.** A fila guarda as pastas que ELA abriu (estavam fechadas) e, ao limpar/fechar, clica no "+" de novo. Não fecha:
+a que o usuário tocou durante a rodada (clique que não veio da fila, no "+", no nome ou dentro da pasta), a que já vinha aberta (o SEI abre a última sozinho), a que tem o documento
+selecionado (`.infraArvoreNoSelecionado`) nem a que ainda está carregando (se a fila foi encerrada com uma pasta em carga, ela é fechada quando terminar). **Confirmado ao
+vivo: fechar e reabrir uma pasta já carregada não faz requisição nenhuma** (o conteúdo fica no DOM do SEI, `no.carregado`); ligar o filtro de novo reabre as pastas
+sem pedir nada. Pastas já carregadas mas FECHADAS (o usuário as fechou antes) também são abertas pela fila (sem pedido) para o que casa ficar à vista, e voltam
+fechadas. Efeito colateral do SEI, igual ao do clique do usuário: a última pasta aberta fica "selecionada" (realce escuro no nome).
+
+**Feedback (na barra, `role=status aria-live=polite`):** "Carregando pastas 2 de 6: II" + barra de progresso fina (`role=progressbar`, `aria-valuenow`) + botão "Parar"
+(`aria-label`); contagem "9 de 20 documentos" em tempo real (antes de chegar algo: "Nenhum documento até agora (1 na árvore)."); fim "Todas as pastas carregadas" (some em
+4 s); "Parou: 2 pastas ainda fechadas. Continuar"; "1 pasta não carregou. Tentar de novo". Na árvore, a pasta em carga ganha realce azul e um aro girando
+(`data-spro-pasta="carregando"`, sem animação com `prefers-reduced-motion`) e a que falhou, um x vermelho; o atributo sai ao fim. O campo de busca nunca é refeito
+(o foco fica nele) e a fila devolve o foco se o clique o tirar do lugar.
+
+**Medido ao vivo (SEI SP 4.1.5, 99906.713-630.000032/2025-82, chip Externos, 3 pastas fechadas de 20 a 66 nós):** por pasta, 1 POST nativo `procedimento_paginar`
+(documento no `#ifrPasta`, 0,5 a 1,2 s). Nenhum `procedimento_visualizar`, `arvore_montar` ou `arvore_visualizar` do módulo. O LEGADO do SEI Pro (`getLinksArvorePasta`)
+dispara 1 XHR a mais com a mesma URL a partir da 2ª pasta (5 requisições `procedimento_paginar` em 3 pastas; vale para o clique do usuário também). Tempo total das 3 pastas:
+3,96 s (intervalos de 0,5 s incluídos); nunca duas pastas em carga ao mesmo tempo (conferido com resposta atrasada em 1,5 s por interceptação: início de uma pasta
+sempre depois do fim da anterior). Contagem final 21 de 60 (os mesmos 21 externos de antes). Parar no meio, Continuar, limpar (as 3 voltam fechadas), religar (0 requisições),
+fechar a barra, falha forçada de uma pasta (resposta inesperada: "1 pasta não carregou", Tentar de novo pede só ela), sessão expirada forçada, aba oculta (pausa, retoma) e
+recarga do quadro no meio (nenhuma pasta pedida depois): tudo passou, claro e escuro, sem erro de console. O aviso do Enviar Processo usa a mesma fila ("Carregando as pastas da
+árvore (2 de 3: II)..." com Parar; 3 pastas, uma por vez), sem abrir as já carregadas e sem fechar nenhuma.
+
+Limites: o 15 s e o 500 ms são constantes (`OpcoesFila`), não opções do usuário. SEI 5 não exercitado ao vivo (mesmos ids do `InfraArvore.js`; o fonte do 5.0.0 foi lido). Capturas:
+`scratchpad/live/shots/pastas-{1-carregando-claro,2-parou-claro,3-fim-claro,4-limpo-refechado-claro,5-refiltrado-sem-pedidos-claro,6-carregando-escuro,7-fim-escuro,8-falha-claro,9-sessao-claro}.png`.
 
 ### A lupa que abre e fecha a barra (25/10/2026)
 
@@ -876,7 +929,7 @@ em processo longo) só para saber a unidade de cada documento (`listDocumentos[]
 | Só os documentos que a árvore tinha na tela | Idem, mais os que o SEI inseriu no DOM ao abrir uma pasta; **e** o aviso diz quantas pastas fechadas faltam verificar, em vez de afirmar "tudo assinado", e oferece "Verificar pastas" |
 | Diálogo navegava o visualizador de volta ao Enviar Processo | Não navega: só seleciona o documento na árvore |
 
-"Verificar pastas" é um clique do usuário que o módulo repete na árvore: clica no "+" (`ancjoinPASTAn`) de cada pasta fechada, uma de cada
+"Verificar pastas" usa a fila de pastas (`src/pagina/pastas/fila.ts`, ver "Fila de pastas" no filtro): clica no "+" (`ancjoinPASTAn`) de cada pasta fechada, uma de cada
 vez, e o SEI carrega a pasta por conta própria (`procedimento_paginar`, o mesmo que o usuário dispararia); depois verifica de novo.
 O nome da pasta (`anchorPASTAn`) abre por `javascript:` no `href`, que o navegador bloqueia quando o clique vem do mundo isolado
 (erro de CSP no console); o "+" tem ouvinte normal, e o clique ainda leva `preventDefault` para não executar o `href`.

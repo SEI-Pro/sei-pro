@@ -8,20 +8,20 @@
  *
  * Documentos de pastas fechadas não existem na tela (o SEI só os traz quando a pasta é aberta). Em vez de fingir que
  * está tudo assinado, o aviso diz quantas pastas faltam verificar e oferece "Verificar pastas": clica nas pastas
- * fechadas da árvore, uma de cada vez, como o usuário faria (o SEI carrega cada uma por conta própria).
+ * fechadas da árvore pela fila de pastas (`../pastas/fila.ts`): uma de cada vez, como o usuário faria (o SEI carrega cada uma
+ * por conta própria).
  */
 import { h, icone } from "@comum/ui/dom";
 import type { Arvore, DocumentoArvore } from "@nucleo/dominio/arvore";
 import { pastasFechadas } from "../../capa/cards";
-import { aguardar } from "../comum";
 import { garantirEstilo, temaEscuro } from "../estilo";
 import { lerDocumentoDoDom } from "../filtro/dom";
 import { DocumentosDaTela, idDoNo } from "../menuDoc/documentos";
 import { abrirDialogo } from "../modais/comum";
+import { criarFila, type OpcoesFila } from "../pastas/fila";
 import { comDatas, type Pendente, pendentesDaUnidade } from "./modelo";
 
 export const ID_AVISO = "spro-na-nao-assinados";
-const ESPERA_PASTA_MS = 10_000;
 
 export interface DepsAviso {
   /** O quadro do Enviar Processo. */
@@ -36,8 +36,10 @@ export interface DepsAviso {
   unidade: string;
   /** Datas de geração do histórico completo SE ele já está no cache e vale; senão null (nunca coleta). */
   datas(): Promise<ReadonlyMap<string, string> | null>;
-  /** Abre uma pasta fechada da árvore e espera os documentos chegarem. Nos testes, um falso. */
-  abrirPasta?(quadro: Document, idPasta: string): Promise<boolean>;
+  /** Substitui o clique no "+" da pasta (a fila espera os documentos chegarem do mesmo jeito). Nos testes, um falso. */
+  abrirPasta?(quadro: Document, idPasta: string): Promise<unknown>;
+  /** Ajustes da fila de pastas (os testes encurtam os tempos). */
+  opcoesFila?: OpcoesFila;
 }
 
 export interface Aviso {
@@ -79,18 +81,6 @@ export function documentosDaArvore(quadro: Document, arv: Pick<Arvore, "document
   return tela.todos();
 }
 
-/** Abre a pasta pelo clique do usuário e espera ao menos um documento aparecer nela. */
-export async function abrirPastaDaArvore(quadro: Document, idPasta: string): Promise<boolean> {
-  // O "+" da pasta (`ancjoin`) tem um ouvinte do SEI; o nome dela (`anchor`) abre por `javascript:` no href, que o navegador
-  // bloqueia quando o clique vem do mundo isolado da extensão.
-  const ancora = quadro.getElementById(`ancjoin${idPasta}`) ?? quadro.getElementById(`anchor${idPasta}`);
-  if (!ancora) return false;
-  // O href é `javascript:`: sem isto o clique do mundo isolado ainda tentaria executá-lo e o navegador registraria um erro de CSP.
-  ancora.addEventListener("click", (ev) => ev.preventDefault(), { once: true, capture: true });
-  (ancora as HTMLElement).click();
-  return aguardar(() => !!quadro.querySelector(`#div${idPasta} a[id^="anchor"]:not([id*="AGUARDE"])`), ESPERA_PASTA_MS);
-}
-
 export function montarAviso(d: DepsAviso): Aviso | null {
   const lugar = lugarDoAviso(d.doc);
   if (!lugar || d.doc.getElementById(ID_AVISO)) return null;
@@ -98,7 +88,6 @@ export function montarAviso(d: DepsAviso): Aviso | null {
   const raiz = h("div", { id: ID_AVISO, class: "spro-na", role: "status", "aria-live": "polite" });
   if (temaEscuro(d.doc)) raiz.setAttribute("data-tema", "escuro");
   lugar.pai.insertBefore(raiz, lugar.antes);
-  const abrirPasta = d.abrirPasta ?? abrirPastaDaArvore;
   let aberto = false;
   let verificando = false;
   let primeira = true;
@@ -119,16 +108,44 @@ export function montarAviso(d: DepsAviso): Aviso | null {
     return b;
   };
 
-  /** Clica nas pastas fechadas, uma de cada vez, e verifica de novo. */
-  const verificarPastas = async (quadro: Document, ids: string[]): Promise<void> => {
+  /**
+   * Carrega as pastas fechadas pela fila (uma de cada vez, o mesmo clique no "+" do usuário) e verifica de novo. O aviso só
+   * verifica: não abre as pastas que já estavam carregadas e não fecha nenhuma.
+   */
+  const verificarPastas = async (quadro: Document, _ids: string[]): Promise<void> => {
     if (verificando) return;
     verificando = true;
+    const fila = criarFila(quadro, {
+      ...d.opcoesFila,
+      abrirCarregadas: false,
+      ...(d.abrirPasta ? { abrir: (q: Document, id: string) => d.abrirPasta?.(q, id) } : {}),
+    });
+    const parar = link("Parar", () => fila.parar());
+    fila.aoMudar((e) => {
+      if (e.fase !== "carregando" && e.fase !== "pausada") return;
+      const nome = e.nomeAtual ? `: ${e.nomeAtual}` : "";
+      pintar(
+        "falha",
+        "atualizar",
+        [`Carregando as pastas da árvore (${Math.min(e.feitas + 1, Math.max(e.total, 1))} de ${Math.max(e.total, 1)}${nome})...`],
+        parar,
+      );
+    });
     try {
-      for (const [i, id] of ids.entries()) {
-        pintar("falha", "atualizar", [`Abrindo as pastas da árvore (${i + 1} de ${ids.length})...`]);
-        await abrirPasta(quadro, id);
-      }
+      pintar("falha", "atualizar", ["Carregando as pastas da árvore..."], parar);
+      fila.iniciar();
+      await new Promise<void>((resolver) => {
+        const fim = (): void => {
+          const f = fila.estado().fase;
+          if (f === "carregando" || f === "pausada") return;
+          desfazer();
+          resolver();
+        };
+        const desfazer = fila.aoMudar(fim);
+        fim();
+      });
     } finally {
+      fila.destruir();
       verificando = false;
     }
     primeira = true;

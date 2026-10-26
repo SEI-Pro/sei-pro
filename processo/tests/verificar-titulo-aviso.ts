@@ -323,6 +323,21 @@ export async function verificarTituloEAviso(): Promise<void> {
       const doc = instalarDom(fixture("p_procedimento_enviar.html"));
       const restaurar = fingirDialogos(doc);
       const quadro = novoDoc(fixture("arvore.html"));
+      // O SEI desenha o "+"/nome e o "Aguarde..." de cada pasta no DOM; a fila trabalha sobre eles.
+      let raiz = quadro.getElementById("divArvore");
+      if (!raiz) {
+        raiz = quadro.createElement("div");
+        raiz.id = "divArvore";
+        quadro.body.append(raiz);
+      }
+      for (const n of [1, 2]) {
+        const nome = quadro.createElement("a");
+        nome.id = `anchorPASTA${n}`;
+        const div = quadro.createElement("div");
+        div.id = `divPASTA${n}`;
+        div.innerHTML = `<a id="anchorAGUARDE${n}"><span id="spanAGUARDE${n}">Aguarde...</span></a>`;
+        raiz.append(nome, div);
+      }
       const aviso = montarAviso({
         doc,
         topo: doc,
@@ -331,6 +346,7 @@ export async function verificarTituloEAviso(): Promise<void> {
         unidade,
         datas: async () => null,
         abrirPasta,
+        opcoesFila: { intervaloMs: 0, prazoPastaMs: 200 },
       });
       return { doc, quadro, aviso, restaurar, banner: () => doc.getElementById("spro-na-nao-assinados") };
     };
