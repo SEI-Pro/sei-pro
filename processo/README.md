@@ -1291,6 +1291,38 @@ eram do master).
 `tipos` sem erro e `verificar` verde: processo 909 (eram 822), sei-nucleo 562. `node tools/check-dom-injection.mjs`: 0 erros, 0 avisos. Os dois bundles só têm ASCII.
 `sei-comum` e `opcoes-pagina` não foram tocados (o módulo ganhou glifos próprios em vez de acrescentar ícones ao `ui/dom.ts` compartilhado).
 
+## Alinhamento vertical dos ícones fixos do documento (26/10/2026)
+
+**Causa.** Na árvore do SEI (3.1, 4.1 e 5) `div.infraArvore` tem `line-height: 0` e o nome (`a.infraArvoreNo`), a unidade (`a.infraArvoreInformacao`) e os
+ícones nativos ficam em `vertical-align: text-top`. Com `line-height: 0` o CENTRO dessas caixas cai exatamente no topo da área de conteúdo da linha. Os nossos ícones
+(`span.action-doc.spro-pm-icone`, `inline-flex` de 19 px, `vertical-align: middle`) são caixas atômicas de altura cheia: ficavam 8 px abaixo do texto e eram maiores
+que os 16 px dos ícones nativos. O CSS do legado (`span.action-doc { vertical-align: super }`) não chegava a valer (especificidade menor), mas o "super" do Estilo
+Avançado (`.seiSlim_arvore #divArvore a`) mostra que o alinhamento do nome muda conforme o modo.
+
+**Correção (`estatico/processo.css`).** Caixa de altura fixa `--spro-pm-h: 16px` (svg de 12 px, padding 2), `vertical-align: text-top` e `margin-top: calc(var(--spro-pm-h) / -2)`:
+o topo da caixa vai para o text-top e a margem negativa sobe meia altura, então o centro coincide com o do texto, da unidade, do alvo e da caneta, qualquer que seja a
+fonte. Não depende de `line-height` do ícone nem de medir nada em JS. No Estilo Avançado (`.seiSlim.seiSlim_arvore`, nome em `baseline`) a variante é
+`vertical-align: middle` + `top: -1.6px`. Tooltip (`::after`), menu, classes e `data-*` não mudaram; o tooltip continua em `top: calc(100% + 3px)`.
+
+Centro Y medido ao vivo (SEI SP 4.1.5, 59 documentos com ícones, `getBoundingClientRect`), diferença para o centro do texto do nome (px):
+
+| Elemento | Antes | Depois |
+|---|---|---|
+| ícone de ação (caixa e svg) | +8,1 a +8,2 | +0,2 a +0,3 |
+| badge da unidade (`anchorUG`) | 0 | 0 |
+| alvo / anotação (`anchorNA`), caneta (`anchorA`), ciência (`anchorCD`) | -0,7 a -0,8 | -0,7 a -0,8 |
+| ícone do documento (`anchorImg`) | -0,7 a -0,8 | -0,7 a -0,8 |
+| Estilo Avançado emulado (classes `seiSlim seiSlim_arvore`) | +1,6 | 0 a +0,1 |
+
+Também medido: ícones desligados (`optionsFlashMenu_iconstree = "disabled"`) e `menurapido` desligado: 0 ícones, badge a 0,00 px do texto em todas as 61 linhas; ligado de novo: 157
+ícones. Linha selecionada (realce azul), cancelado, externo (e-mail, PDF), com e sem badge/alvo/caneta: o centro é o da âncora, que não muda. Capturas (clique
+real não necessário: a classe de seleção foi posta no span, igual à do SEI) em `scratchpad/live/shots/alinha-{antes,depois}-{claro,escuro}[-sel].png`.
+
+Testes: `verificar-menu.ts` confere o container (`span.action-doc.spro-pm-icone` irmão do nome, svg 12 px) e as regras do CSS (altura fixa, `text-top`, margem negativa,
+variante do Estilo Avançado). Divergências: (1) SEI 5 e SEI 3 com Estilo Avançado não foram vistos ao vivo (a regra do SEI 5 vem do `infra-arvore.css` 5.0.0, igual ao 4.1);
+(2) com "duas linhas" ligado o nº SEI da segunda linha continua ~4 px mais baixo que o grupo de ícones: agora o grupo (ação, badge, alvo, caneta) fica alinhado entre si;
+(3) o modo escuro foi exercitado pelo atributo `data-spro-tema="escuro"` (cores) sem mudar a geometria.
+
 ## Comandos
 
 ```

@@ -738,6 +738,35 @@ export async function verificarMenu(): Promise<void> {
         c.doc.querySelector(".action-doc[title]") === null &&
         primeiro.querySelector("svg") !== null,
     );
+    // Alinhamento vertical (medido ao vivo no SEI SP; o linkedom nao tem layout): o container de cada icone e um <span>
+    // inline-flex irmao do nome (a.infraArvoreNo, em text-top), com a classe que o CSS ancora, e o svg e de 12 px.
+    checar(
+      "icones: span.action-doc.spro-pm-icone irmaos do nome, com svg de 12 px",
+      [...c.doc.querySelectorAll(`.action-doc[data-id="${interno.id}"]`)].every(
+        (e) =>
+          e.tagName === "SPAN" &&
+          e.classList.contains("spro-pm-icone") &&
+          e.parentElement === nome.parentElement &&
+          e.querySelector("svg")?.getAttribute("width") === "12" &&
+          e.querySelector("svg")?.getAttribute("height") === "12",
+      ),
+    );
+    {
+      const css = readFileSync(join(AQUI, "../estatico/processo.css"), "utf8");
+      const regra = /span\.action-doc\.spro-pm-icone\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+      checar(
+        "CSS do icone: altura fixa, text-top e margem negativa de meia altura (centro no do texto)",
+        /--spro-pm-h:\s*16px/.test(regra) &&
+          /height:\s*var\(--spro-pm-h\)/.test(regra) &&
+          /vertical-align:\s*text-top/.test(regra) &&
+          /margin:\s*calc\(var\(--spro-pm-h\)\s*\/\s*-2\)/.test(regra) &&
+          /display:\s*inline-flex/.test(regra),
+      );
+      checar(
+        "CSS do icone: variante do Estilo Avancado (nome em baseline)",
+        /\.seiSlim\.seiSlim_arvore span\.action-doc\.spro-pm-icone\s*\{[^}]*vertical-align:\s*middle/.test(css),
+      );
+    }
     checar("nenhum icone no processo nem nas pastas", c.doc.querySelectorAll(`.action-doc[data-id="148265"]`).length === 0);
     checar("data-id vale para o legado achar o icone do documento", primeiro.getAttribute("data-id") === interno.id);
     void ext;

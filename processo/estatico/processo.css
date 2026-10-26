@@ -715,15 +715,23 @@ dialog.spro-p-dialogo .spro-p-erro {
 }
 
 /* Icones fixos ao lado do documento: ficam na propria arvore, entao as cores vem do SEI (claro por padrao). */
+/* Alinhamento vertical: a arvore do SEI e `div.infraArvore { line-height: 0 }` com o nome (a.infraArvoreNo), a unidade e os
+   icones nativos em `vertical-align: text-top`. Com line-height 0 o centro dessas caixas cai exatamente no topo da area de
+   conteudo da linha. O icone e uma caixa atomica (inline-flex) de altura --spro-pm-h: no mesmo text-top ele ficaria com o TOPO
+   ali (centro 8 px abaixo do texto), entao sobe metade da altura (margin-top negativo) e o centro fica no do texto. Mesmo
+   tamanho do icone nativo (16 px). No Estilo Avancado (`.seiSlim_arvore`) o nome vira `baseline` e a regra e outra (abaixo). */
 span.action-doc.spro-pm-icone {
+  --spro-pm-h: 16px;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 13px;
-  margin: 0 1px;
-  padding: 3px;
-  vertical-align: middle;
+  box-sizing: border-box;
+  height: var(--spro-pm-h);
+  min-width: var(--spro-pm-h);
+  margin: calc(var(--spro-pm-h) / -2) 1px 0;
+  padding: 2px;
+  vertical-align: text-top;
   color: #017fff9c;
   border-radius: 5px;
   cursor: pointer;
@@ -743,7 +751,15 @@ span.action-doc.spro-pm-icone[aria-busy="true"] {
 }
 span.action-doc.spro-pm-icone svg {
   display: block;
+  width: 12px;
+  height: 12px;
   pointer-events: none;
+}
+/* Estilo Avancado: o nome da arvore fica em `baseline` (sei-slim.css), cujo centro e ~1,6 px acima do de uma caixa `middle`. */
+.seiSlim.seiSlim_arvore span.action-doc.spro-pm-icone {
+  margin: 0 1px;
+  vertical-align: middle;
+  top: -1.6px;
 }
 span.action-doc.spro-pm-icone[data-rotulo]:hover::after,
 span.action-doc.spro-pm-icone[data-rotulo]:focus-visible::after {

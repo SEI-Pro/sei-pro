@@ -31,7 +31,7 @@ function criarIcone(it: ItemMenu & { modo: string }, id: string): HTMLElement {
       tabindex: "-1",
       "aria-label": it.rotulo,
     },
-    icone(it.icone, 13),
+    icone(it.icone, 12),
   );
   return el;
 }
