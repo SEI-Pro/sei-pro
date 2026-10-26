@@ -6,12 +6,15 @@
  *    aparecem tracejados com "Calcular" (`estado: "pendente"`); com ele (cache de 30 min) já vêm calculados.
  * Sem DOM: o desenho está em `capa.ts`.
  */
-import type { Arvore } from "@nucleo/dominio/arvore";
+import type { Arvore, DocumentoArvore } from "@nucleo/dominio/arvore";
 import type { Passagem } from "@nucleo/dominio/passagens";
 import { resumoDoTempo } from "../gantt/comparativo";
 import { formatarData, formatarDuracao, pessoa } from "../gantt/modelo";
 import { type Parado, passagemNaUnidade } from "./parado";
+import { type Estimativa, estimarDocumentos, textoDaEstimativa } from "./estimativa";
+import { lerDaTela, type LeituraDaTela } from "./pastas";
 import type { ContagemDocumentos } from "./resumo";
+import { type TamanhoDaPasta, TAMANHO_PADRAO } from "../modelo/tamanhoPasta";
 
 export type IdCard =
   | "documentos"
@@ -37,6 +40,26 @@ export interface Card {
   estado: "pronto" | "pendente";
   /** Destaque de alerta (processo parado). */
   alerta?: boolean;
+  /** Botão discreto dentro do card (o "Contar tudo" do card Documentos). */
+  acao?: { tipo: "contar" | "parar" | "continuar"; rotulo: string };
+  /** Contando as pastas: a barra de progresso fina do card. */
+  progresso?: { feito: number; total: number };
+}
+
+/** Estado do "Contar tudo" (vem do quadro da árvore, `data-spro-capa-contagem`). */
+export type EstadoContagem =
+  | { fase: "parada" }
+  | { fase: "contando"; feito: number; total: number }
+  | { fase: "parou"; restantes: number }
+  | { fase: "erro"; mensagem: string };
+
+/** O que a capa sabe das pastas, além do que os nós do HTML dizem. */
+export interface ExtraDosCards {
+  tela?: LeituraDaTela;
+  tamanho?: TamanhoDaPasta;
+  contagem?: EstadoContagem;
+  /** O quadro da árvore sabe contar tudo? (a ponte real sabe; a capa legada e os testes antigos não) */
+  podeContar?: boolean;
 }
 
 const plural = (n: number, um: string, varios: string): string => `${n} ${n === 1 ? um : varios}`;
@@ -65,8 +88,7 @@ export function pastasSemDocumentos(arv: Pick<Arvore, "pagina" | "documentos">):
   return pastasFechadas(arv).length;
 }
 
-export function contagemDaArvore(arv: Pick<Arvore, "documentos">): ContagemDocumentos {
-  const docs = arv.documentos;
+export function contagemDe(docs: readonly DocumentoArvore[]): ContagemDocumentos {
   return {
     total: docs.length,
     internos: docs.filter((d) => !d.externo).length,
@@ -76,28 +98,63 @@ export function contagemDaArvore(arv: Pick<Arvore, "documentos">): ContagemDocum
   };
 }
 
-/** Cards que só dependem da árvore que o quadro já tem. */
-export function cardsDaArvore(arv: Pick<Arvore, "documentos" | "pagina">): Card[] {
-  const c = contagemDaArvore(arv);
-  const sigilosos = arv.documentos.filter((d) => d.nivel === "sigiloso").length;
-  const restritos = arv.documentos.filter((d) => d.nivel === "restrito").length;
-  const pastas = contarPastas(arv);
-  const fechadas = pastasSemDocumentos(arv);
+export function contagemDaArvore(arv: Pick<Arvore, "documentos">): ContagemDocumentos {
+  return contagemDe(arv.documentos);
+}
+
+const NAS_ABERTAS = "nas pastas abertas";
+
+/** O card Documentos: o total (exato ou estimado), a conta em uma frase e o "Contar tudo". */
+function cardDocumentos(est: Estimativa, extra: ExtraDosCards): Card {
+  const t = textoDaEstimativa(est);
+  const card: Card = { id: "documentos", origem: "arvore", rotulo: "Documentos", valor: t.valor, estado: "pronto" };
+  const c = extra.contagem ?? { fase: "parada" };
+  if (est.exato) {
+    if (t.detalhe) card.detalhe = t.detalhe;
+    return card;
+  }
+  if (c.fase === "contando") {
+    card.detalhe = c.total > 0 ? `contando as pastas: ${c.feito} de ${c.total}` : "contando as pastas...";
+    card.acao = { tipo: "parar", rotulo: "Parar" };
+    if (c.total > 0) card.progresso = { feito: c.feito, total: c.total };
+    return card;
+  }
+  const frase = [t.detalhe];
+  if (c.fase === "parou") frase.push(`parou: ${c.restantes === 1 ? "1 pasta" : `${c.restantes} pastas`} sem contar`);
+  if (c.fase === "erro") frase.push(c.mensagem);
+  card.detalhe = frase.filter(Boolean).join(". ");
+  if (extra.podeContar)
+    card.acao = {
+      tipo: c.fase === "parou" ? "continuar" : "contar",
+      rotulo: c.fase === "parou" ? "Continuar" : c.fase === "erro" ? "Tentar de novo" : "Contar tudo",
+    };
+  return card;
+}
+
+/**
+ * Cards que só dependem da árvore que o quadro já tem. Com pastas por carregar, só o card Documentos tem o total (estimado,
+ * com o "≈"); os demais mostram o que as pastas abertas têm e dizem isso, nunca apresentam o parcial como o total.
+ */
+export function cardsDaArvore(arv: Pick<Arvore, "documentos" | "pagina">, extra: ExtraDosCards = {}): Card[] {
+  const tela = extra.tela ?? lerDaTela(null, arv as Arvore);
+  const tamanho = extra.tamanho ?? { valor: TAMANHO_PADRAO, origem: "padrao" as const };
+  const docs = tela.documentos;
+  const est = estimarDocumentos(tela.pastas, docs.length, tamanho);
+  const parcial = !est.exato;
+  const c = contagemDe(docs);
+  const sigilosos = docs.filter((d) => d.nivel === "sigiloso").length;
+  const restritos = docs.filter((d) => d.nivel === "restrito").length;
+  const detalheSigilosos = [restritos ? plural(restritos, "restrito", "restritos") : "", parcial ? NAS_ABERTAS : ""]
+    .filter(Boolean)
+    .join(", ");
   return [
-    {
-      id: "documentos",
-      origem: "arvore",
-      rotulo: "Documentos",
-      valor: String(c.total),
-      ...(fechadas ? { detalhe: `${plural(fechadas, "pasta fechada", "pastas fechadas")} não contada${fechadas === 1 ? "" : "s"}` } : {}),
-      estado: "pronto",
-    },
+    cardDocumentos(est, extra),
     {
       id: "internosExternos",
       origem: "arvore",
       rotulo: "Internos e externos",
       valor: `${c.internos} / ${c.externos}`,
-      detalhe: "gerados no SEI / anexados",
+      detalhe: parcial ? NAS_ABERTAS : "gerados no SEI / anexados",
       estado: "pronto",
     },
     {
@@ -105,19 +162,33 @@ export function cardsDaArvore(arv: Pick<Arvore, "documentos" | "pagina">): Card[
       origem: "arvore",
       rotulo: "Assinados",
       valor: `${c.assinados} de ${c.total}`,
-      ...(c.total ? { detalhe: `${Math.round((c.assinados / c.total) * 100)}% do processo` } : {}),
+      ...(parcial ? { detalhe: NAS_ABERTAS } : c.total ? { detalhe: `${Math.round((c.assinados / c.total) * 100)}% do processo` } : {}),
       estado: "pronto",
     },
-    { id: "cancelados", origem: "arvore", rotulo: "Cancelados", valor: String(c.cancelados), estado: "pronto" },
+    {
+      id: "cancelados",
+      origem: "arvore",
+      rotulo: "Cancelados",
+      valor: String(c.cancelados),
+      ...(parcial ? { detalhe: NAS_ABERTAS } : {}),
+      estado: "pronto",
+    },
     {
       id: "sigilosos",
       origem: "arvore",
       rotulo: "Sigilosos",
       valor: String(sigilosos),
-      ...(restritos ? { detalhe: plural(restritos, "restrito", "restritos") } : {}),
+      ...(detalheSigilosos ? { detalhe: detalheSigilosos } : {}),
       estado: "pronto",
     },
-    { id: "pastas", origem: "arvore", rotulo: "Pastas", valor: String(pastas), estado: "pronto" },
+    {
+      id: "pastas",
+      origem: "arvore",
+      rotulo: "Pastas",
+      valor: String(tela.pastas.length),
+      ...(est.porCarregar ? { detalhe: `${est.porCarregar} por carregar` } : {}),
+      estado: "pronto",
+    },
   ];
 }
 

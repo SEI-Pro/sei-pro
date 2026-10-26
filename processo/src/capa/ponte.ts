@@ -7,15 +7,19 @@
 import type { Area } from "@comum/armazenamento/area";
 import {
   ATRIBUTO_COLETA,
+  ATRIBUTO_CONTAGEM,
   chaveCache,
   chaveHistorico,
   EVENTO_ABRIR_GANTT,
   EVENTO_CAPA_CALCULAR,
   EVENTO_CAPA_CANCELAR,
+  EVENTO_CAPA_CONTAR,
+  EVENTO_CAPA_PARAR_CONTAGEM,
   EVENTO_CAPA_PEDIR,
 } from "../modelo/constantes";
 import type { DadoAtribuicao, DadoBlocoInterno, DadoMarcador, DadoProcesso } from "../modelo/dados";
 import { RepositorioHistorico, RepositorioProcesso } from "../repositorio";
+import type { EstadoContagem } from "./cards";
 import type { FonteDeCache, PonteDaArvore } from "./controle";
 import type { EstadoColeta, FatiasLidas } from "./vista";
 
@@ -41,6 +45,32 @@ export function textoDaColeta(e: EstadoColeta | "pronto"): string | null {
   return null;
 }
 
+/** "contando:2/5", "parou:3", "erro:mensagem", "pronto" ou ausente. */
+export function lerContagem(valor: string | null): EstadoContagem {
+  if (!valor || valor === "pronto") return { fase: "parada" };
+  if (valor.startsWith("contando:")) {
+    const [feito = 0, total = 0] = valor
+      .slice("contando:".length)
+      .split("/")
+      .map((n) => Number.parseInt(n, 10) || 0);
+    return { fase: "contando", feito, total };
+  }
+  if (valor.startsWith("parou:")) return { fase: "parou", restantes: Number.parseInt(valor.slice("parou:".length), 10) || 0 };
+  if (valor.startsWith("erro:")) return { fase: "erro", mensagem: valor.slice("erro:".length) || "Não foi possível contar." };
+  return { fase: "parada" };
+}
+
+export function textoDaContagem(e: EstadoContagem | "pronto"): string | null {
+  if (e === "pronto") return "pronto";
+  if (e.fase === "contando") return `contando:${e.feito}/${e.total}`;
+  if (e.fase === "parou") return `parou:${e.restantes}`;
+  if (e.fase === "erro") return `erro:${e.mensagem}`;
+  return null;
+}
+
+/** Espera o menor intervalo antes de avisar: a árvore muda muito (ícones, filtro) e a capa só precisa do resultado. */
+const ESPERA_ARVORE_MS = 250;
+
 export function criarPonte(topo: Document): PonteDaArvore {
   const quadro = (): HTMLIFrameElement | null => topo.querySelector<HTMLIFrameElement>("#ifrArvore");
   const documento = (): Document | null => {
@@ -61,6 +91,40 @@ export function criarPonte(topo: Document): PonteDaArvore {
     calcular: () => disparar(EVENTO_CAPA_CALCULAR),
     cancelar: () => disparar(EVENTO_CAPA_CANCELAR),
     abrirHistorico: () => disparar(EVENTO_ABRIR_GANTT),
+    contar: () => disparar(EVENTO_CAPA_CONTAR),
+    pararContagem: () => disparar(EVENTO_CAPA_PARAR_CONTAGEM),
+    contagem: () => lerContagem(documento()?.documentElement?.getAttribute(ATRIBUTO_CONTAGEM) ?? null),
+    aoMudarArvore(cb) {
+      let obs: MutationObserver | null = null;
+      let relogio: ReturnType<typeof setTimeout> | null = null;
+      const avisar = () => {
+        if (relogio) return;
+        relogio = setTimeout(() => {
+          relogio = null;
+          cb();
+        }, ESPERA_ARVORE_MS);
+      };
+      const olhar = () => {
+        obs?.disconnect();
+        obs = null;
+        const d = documento();
+        const Observador = (d?.defaultView as unknown as { MutationObserver?: typeof MutationObserver } | null)?.MutationObserver;
+        if (d?.documentElement && Observador) {
+          obs = new Observador(avisar);
+          // Pastas que carregam mudam os filhos de #divArvore; o andamento do "Contar tudo" muda o atributo do <html>.
+          obs.observe(d.documentElement, { childList: true, subtree: true });
+          obs.observe(d.documentElement, { attributes: true, attributeFilter: [ATRIBUTO_CONTAGEM] });
+        }
+      };
+      olhar();
+      const q = quadro();
+      q?.addEventListener("load", olhar);
+      return () => {
+        obs?.disconnect();
+        if (relogio) clearTimeout(relogio);
+        q?.removeEventListener("load", olhar);
+      };
+    },
     coleta: () => lerColeta(documento()?.documentElement?.getAttribute(ATRIBUTO_COLETA) ?? null),
     aoMudarColeta(cb) {
       let obs: MutationObserver | null = null;

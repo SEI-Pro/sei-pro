@@ -82,7 +82,7 @@ export function montarArvoreFalsa(pastas: Record<number, ConfigPasta>, opcoes: {
     const nos: Node[] = [];
     for (const [did, rotulo, icone] of config.get(id)?.docs ?? []) {
       nos.push(el("img", { id: `icon${did}`, src: icone ?? "svg/documento_interno.svg" }));
-      const a = el("a", { id: `anchor${did}`, href: "about:blank" });
+      const a = el("a", { id: `anchor${did}`, href: "about:blank", class: "infraArvoreNo" });
       a.append(el("span", { id: `span${did}` }, rotulo));
       nos.push(a, el("span"));
     }

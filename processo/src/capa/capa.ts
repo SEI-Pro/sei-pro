@@ -14,6 +14,9 @@ export interface AcoesDaCapa {
   calcular(): void;
   cancelar(): void;
   abrirHistorico(): void;
+  /** "Contar tudo" (carregar as pastas fechadas) e parar. */
+  contar(): void;
+  pararContagem(): void;
   copiarResumo(): void;
   copiarTexto(texto: string): void;
   copiarLink(): void;
@@ -60,7 +63,7 @@ function textoDoCard(c: Card, rotuloExtra?: Filho): Filho[] {
   ];
 }
 
-function cardPronto(c: Card): HTMLElement {
+function cardPronto(c: Card, a: AcoesDaCapa): HTMLElement {
   return h(
     "div",
     {
@@ -69,6 +72,37 @@ function cardPronto(c: Card): HTMLElement {
       "aria-label": c.alerta ? `Atenção. ${c.rotulo}: ${c.valor}. ${c.detalhe ?? ""}` : undefined,
     },
     ...textoDoCard(c, c.alerta ? icone("alerta", 12) : null),
+    c.progresso
+      ? h(
+          "div",
+          {
+            class: "spro-c-progresso",
+            role: "progressbar",
+            "aria-label": "Contando as pastas",
+            "aria-valuemin": "0",
+            "aria-valuemax": String(c.progresso.total),
+            "aria-valuenow": String(c.progresso.feito),
+          },
+          h("span", { style: `width:${Math.round((c.progresso.feito / Math.max(1, c.progresso.total)) * 100)}%` }),
+        )
+      : null,
+    c.acao ? botaoDoCard(c, c.acao, a) : null,
+  );
+}
+
+/** O botão discreto dentro do card (Contar tudo, Parar, Continuar). */
+function botaoDoCard(c: Card, acao: NonNullable<Card["acao"]>, a: AcoesDaCapa): HTMLElement {
+  return h(
+    "button",
+    {
+      type: "button",
+      class: "spro-c-card-acao",
+      "data-acao": acao.tipo,
+      "aria-label":
+        acao.tipo === "parar" ? "Parar a contagem das pastas" : `${acao.rotulo}: carregar as pastas fechadas para contar os documentos`,
+      onclick: () => (acao.tipo === "parar" ? a.pararContagem() : a.contar()),
+    },
+    acao.rotulo,
   );
 }
 
@@ -107,7 +141,7 @@ export function desenharFaixa(p: PartesDaCapa, v: VistaCapa, a: AcoesDaCapa): vo
   // deixaria de ser botão para o leitor de tela).
   p.faixa.replaceChildren(
     ...v.cards.map((c) =>
-      h("div", { class: "spro-c-item", role: "listitem" }, c.estado === "pendente" ? cardPendente(c, v, a) : cardPronto(c)),
+      h("div", { class: "spro-c-item", role: "listitem" }, c.estado === "pendente" ? cardPendente(c, v, a) : cardPronto(c, a)),
     ),
   );
   p.faixaAcoes.replaceChildren(

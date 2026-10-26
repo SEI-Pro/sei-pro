@@ -1,6 +1,7 @@
 import { resumo } from "./util";
 import { verificarAnotacao } from "./verificar-anotacao";
 import { verificarCapa } from "./verificar-capa";
+import { verificarContagem } from "./verificar-contagem";
 import { verificarComboModais } from "./verificar-combo-modais";
 import { verificarFiltro } from "./verificar-filtro";
 import { verificarGantt } from "./verificar-gantt";
@@ -24,6 +25,7 @@ await verificarProcessosDoInteressado();
 await verificarGantt();
 await verificarCapa();
 await verificarPastas();
+await verificarContagem();
 await verificarFiltro();
 await verificarTituloEAviso();
 resumo();

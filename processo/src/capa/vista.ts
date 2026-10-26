@@ -17,7 +17,10 @@ import {
   temMarca,
 } from "../modelo/texto";
 import { marcadoresDaArvore } from "../pagina/leituras";
-import { type Card, cardsDaArvore, cardsDoHistorico, contagemDaArvore } from "./cards";
+import { type Card, cardsDaArvore, cardsDoHistorico, contagemDe, type EstadoContagem } from "./cards";
+import { estimarDocumentos, textoDaEstimativa } from "./estimativa";
+import { type LeituraDaTela, lerDaTela } from "./pastas";
+import type { TamanhoDaPasta } from "../modelo/tamanhoPasta";
 import { diasParado, estaParado, type Parado } from "./parado";
 import type { ContagemDocumentos, DadosDoResumo } from "./resumo";
 
@@ -48,7 +51,15 @@ export interface EntradaVista {
   espera: "aguardando" | "desistiu";
   /** Link permanente do processo (QR e "copiar link"). */
   linkPermanente: string;
+  /** O que a árvore da tela mostra, pasta por pasta (sem ela, só vale o HTML dos nós). */
+  tela?: LeituraDaTela;
+  tamanho?: TamanhoDaPasta;
+  /** "Contar tudo": o estado vindo do quadro da árvore e se ele sabe contar. */
+  contagem?: EstadoContagem;
+  podeContar?: boolean;
 }
+
+export type { EstadoContagem };
 
 export interface VistaMarcador {
   nome: string;
@@ -95,10 +106,20 @@ function nivelDe(nivel: NivelAcesso, hipotese?: string): VistaCapa["nivel"] {
 export function montarVista(e: EntradaVista): VistaCapa {
   const { arv, fatias } = e;
   const sigiloso = arv.nivel === "sigiloso";
-  const contagem: ContagemDocumentos = contagemDaArvore(arv);
+  const tela = e.tela ?? lerDaTela(null, arv);
+  const estimativa = estimarDocumentos(tela.pastas, tela.documentos.length, e.tamanho ?? { valor: 20, origem: "padrao" });
+  const contagem: ContagemDocumentos = {
+    ...contagemDe(tela.documentos),
+    ...(estimativa.exato ? {} : { estimado: textoDaEstimativa(estimativa).valor }),
+  };
   const parado = sigiloso ? null : diasParado({ passagens: e.passagens, sigla: e.unidade, recebidoEm: e.recebidoEm }, e.agora);
   const alerta = estaParado(parado, e.limite);
-  const cardsArvore = cardsDaArvore(arv);
+  const cardsArvore = cardsDaArvore(arv, {
+    tela,
+    ...(e.tamanho ? { tamanho: e.tamanho } : {}),
+    ...(e.contagem ? { contagem: e.contagem } : {}),
+    ...(e.podeContar ? { podeContar: true } : {}),
+  });
   const cardsHistorico = sigiloso ? [] : cardsDoHistorico({ passagens: e.passagens, unidade: e.unidade, parado, alerta, limite: e.limite });
 
   const base: Pick<VistaCapa, "idProcedimento" | "protocolo" | "sigiloso" | "linkPermanente" | "cards" | "coleta" | "parado" | "alerta"> = {

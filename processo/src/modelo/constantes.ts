@@ -22,6 +22,16 @@ export const EVENTO_CAPA_CALCULAR = "spro-processo-capa-calcular";
 export const EVENTO_CAPA_CANCELAR = "spro-processo-capa-cancelar";
 /** No <html> da árvore: "coletando:<feito>/<total>", "erro:<mensagem>" ou ausente (nada em curso). */
 export const ATRIBUTO_COLETA = "data-spro-capa-coleta";
+/**
+ * "Contar tudo" do card Documentos: a capa pede ao quadro da árvore que carregue as pastas fechadas (fila de pastas, uma por
+ * vez) e acompanha pelo atributo do <html> da árvore: "contando:<feito>/<total>", "parou:<restantes>", "erro:<mensagem>",
+ * "pronto" ou ausente (nada em curso).
+ */
+export const EVENTO_CAPA_CONTAR = "spro-processo-capa-contar";
+export const EVENTO_CAPA_PARAR_CONTAGEM = "spro-processo-capa-contar-parar";
+export const ATRIBUTO_CONTAGEM = "data-spro-capa-contagem";
+/** localStorage da origem do SEI: quantos protocolos cabem numa pasta (inteiro), aprendido das pastas carregadas. */
+export const chaveTamanhoPasta = (host: string): string => `processo/pasta-tamanho/${host}`;
 
 /** Opção do legado (`dataValues`, numérica): dias sem sair da unidade para a capa avisar. 0 desliga. */
 export const OPCAO_PROCESSO_PARADO = "processoparado";

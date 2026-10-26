@@ -23,8 +23,11 @@ import {
   ID_DA_CAPA,
   type PartesDaCapa,
 } from "./capa";
+import type { EstadoContagem } from "./cards";
+import { lerDaTela } from "./pastas";
 import { recebimentoDoLegado } from "./parado";
 import { resumoDoProcesso } from "./resumo";
+import { resolverTamanho } from "../modelo/tamanhoPasta";
 import { assinaturaDaVista, type EstadoColeta, type FatiasLidas, montarVista, type VistaCapa } from "./vista";
 
 /** O quadro da árvore, visto da capa. */
@@ -35,6 +38,12 @@ export interface PonteDaArvore {
   calcular(): void;
   cancelar(): void;
   abrirHistorico(): void;
+  /** "Contar tudo": carrega as pastas fechadas (uma por vez) no quadro da árvore. Ausente = a ponte não sabe contar. */
+  contar?(): void;
+  pararContagem?(): void;
+  contagem?(): EstadoContagem;
+  /** Avisa quando a árvore da tela muda (pasta que carrega) ou o andamento da contagem muda. */
+  aoMudarArvore?(cb: () => void): () => void;
   coleta(): EstadoColeta | "pronto";
   /** Avisa mudança do estado da coleta (atributo do <html> da árvore). */
   aoMudarColeta(cb: () => void): () => void;
@@ -58,8 +67,13 @@ export interface DepsCapa {
   unidade: string;
   /** Dias para o alerta de parado; 0 desliga. */
   limite: number;
-  /** localStorage da origem do SEI (só leitura de `configDataRecebimentoPro`). */
-  armazenamento: Pick<Storage, "getItem">;
+  /**
+   * localStorage da origem do SEI: leitura de `configDataRecebimentoPro` e de `optionsPro.sumDocsPasta` (legado); escrita só
+   * do tamanho da pasta que o módulo aprende (`processo/pasta-tamanho/<host>`). Sem `setItem`, o módulo só lê.
+   */
+  armazenamento: Pick<Storage, "getItem"> & Partial<Pick<Storage, "setItem">>;
+  /** Host do SEI (chave do tamanho da pasta). Padrão: o do documento da capa. */
+  host?: string;
   linkPermanente(idProcedimento: string): string;
   copiar(texto: string): Promise<boolean>;
   avisar(texto: string, ms?: number): void;
@@ -159,6 +173,7 @@ export async function montarCapa(d: DepsCapa): Promise<Capa | null> {
   let ultimaCampos = "";
   let ultimaBarra = "";
   let ultimoLado = "";
+  let ultimaArvore = "";
   let vista: VistaCapa | null = null;
   let destruida = false;
   let agendado: ReturnType<typeof setTimeout> | null = null;
@@ -167,6 +182,8 @@ export async function montarCapa(d: DepsCapa): Promise<Capa | null> {
 
   const acoes: AcoesDaCapa = {
     calcular: () => d.ponte.calcular(),
+    contar: () => d.ponte.contar?.(),
+    pararContagem: () => d.ponte.pararContagem?.(),
     cancelar: () => d.ponte.cancelar(),
     abrirHistorico: () => d.ponte.abrirHistorico(),
     copiarResumo: () => {
@@ -207,7 +224,19 @@ export async function montarCapa(d: DepsCapa): Promise<Capa | null> {
       if (nova && nova.idProcedimento === arv.idProcedimento) arv = nova;
     }
     const passagens = sigiloso ? null : passagensValidas();
+    // As pastas que a árvore mostra agora: delas se aprende o tamanho da página (persistente) e se estima o total.
+    const tela = lerDaTela(arvoreDoc, arv);
+    const ultimaTopo = [...tela.pastas].reverse().find((p) => p.topo);
+    const tamanho = resolverTamanho(
+      tela.pastas.filter((p) => p.topo).map((p) => ({ carregada: p.carregada, nos: p.nos, ultima: p === ultimaTopo })),
+      d.armazenamento,
+      d.host ?? doc.location?.host ?? "",
+    );
     vista = montarVista({
+      tela,
+      tamanho,
+      contagem: d.ponte.contagem?.() ?? { fase: "parada" },
+      podeContar: !!d.ponte.contar,
       arv,
       fatias,
       passagens,
@@ -332,6 +361,14 @@ export async function montarCapa(d: DepsCapa): Promise<Capa | null> {
       else agendar();
     }),
     d.ponte.aoRecarregarArvore(agendar),
+    // A árvore muda por motivos que não importam à capa (ícones, filtro): só redesenha quando as pastas ou a contagem mudam.
+    d.ponte.aoMudarArvore?.(() => {
+      const atual = d.ponte.documento() ?? arvoreDoc;
+      const assinatura = `${JSON.stringify(lerDaTela(atual, arv).pastas)}|${JSON.stringify(d.ponte.contagem?.() ?? null)}`;
+      if (assinatura === ultimaArvore) return;
+      ultimaArvore = assinatura;
+      agendar();
+    }) ?? (() => {}),
     d.aoMudarTema(aplicarTema),
   ];
 

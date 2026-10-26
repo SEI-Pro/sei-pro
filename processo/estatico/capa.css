@@ -112,6 +112,42 @@ div#capaProcessoPro.spro-c-raiz *::after {
   color: var(--spro-fraco);
   overflow-wrap: anywhere;
 }
+/* "Contar tudo" do card Documentos: discreto, uma linha sob a conta; a barra fina mostra as pastas contadas. */
+.spro-c-card .spro-c-card-acao {
+  align-self: flex-start;
+  margin: 4px 0 0 -4px;
+  padding: 1px 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--spro-destaque);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.spro-c-card .spro-c-card-acao:hover,
+.spro-c-card .spro-c-card-acao:focus-visible {
+  background: color-mix(in srgb, var(--spro-destaque) 10%, transparent);
+}
+.spro-c-progresso {
+  height: 3px;
+  margin-top: 5px;
+  overflow: hidden;
+  background: var(--spro-borda);
+  border-radius: 2px;
+}
+.spro-c-progresso > span {
+  display: block;
+  height: 100%;
+  background: var(--spro-destaque);
+  transition: width 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-c-progresso > span {
+    transition: none;
+  }
+}
 .spro-c-card.pendente {
   cursor: pointer;
   background: transparent;

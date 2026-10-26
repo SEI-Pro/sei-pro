@@ -84,6 +84,8 @@ A personalização do menu e dos painéis é a do legado (mesmas chaves do `loca
 | `chrome.storage.local` | `processo-historico/<host\|login>/<idProcedimento>` | histórico completo coletado por clique (30 min; até 900 KB por entrada, 12 processos, 24 h) |
 | `localStorage` do SEI | `seiProHistoricoRestauro` | pendência de restauro da paginação do histórico (10 min) |
 | `localStorage` do SEI | `configViewFlashPanelArvorePro`, `optionsPro` (`panelDadosArvorePro_<tipo>`, `optionsFlashMenu_*`), `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro` | personalização do legado, lida e (os painéis recolhidos) gravada |
+| `localStorage` do SEI | `processo/pasta-tamanho/<host>` | quantos protocolos cabem numa pasta da árvore (inteiro, aprendido das pastas carregadas; a capa estima o total de documentos com ele) |
+| `localStorage` do SEI | `optionsPro.sumDocsPasta` | SÓ LEITURA: o tamanho que o contador de documentos do legado guarda (só quando passa de 20); último recurso do tamanho da pasta |
 | `localStorage` do SEI | `configDataRecebimentoPro` | SÓ LEITURA: data de recebimento que o legado guarda; alimenta o alerta de parado quando não há histórico |
 
 O filtro da árvore NÃO persiste nada (o estado vive na tela; recarregar a árvore volta ao filtro limpo e à barra fechada).
@@ -103,7 +105,7 @@ etapa poder ceder sem desligar as outras:
 | `data-seipro-processo-aviso` | janela de topo (idem) | `sei-functions-pro.js`: `getActionsOnSendProcess` não chama mais `initCheckNaoAssinados` (o que também acaba com a coleta automática do histórico completo a cada Enviar Processo) |
 
 O filtro da árvore não cede nada (não havia equivalente no legado) e só põe `data-spro-f-oculto` nas linhas que esconde.
-Outros sinais entre peças (diagnóstico e ponte): `data-spro-capa-estado`, `data-spro-capa-coleta`, `data-spro-pm-pedido` (+ evento
+Outros sinais entre peças (diagnóstico e ponte): `data-spro-capa-estado`, `data-spro-capa-coleta`, `data-spro-capa-contagem` ("Contar tudo"), `data-spro-pm-pedido` (+ evento
 `seipro-processo-menu`), `data-spro-slot="atividades"`, `data-spro-tema`.
 
 ## O que sobra no legado
@@ -755,10 +757,73 @@ Chrome for Testing com a extensão de `dist/`, opções todas ligadas menos `dis
 ### Divergências e pendências da capa
 
 - O SEI 5 não foi exercitado ao vivo (sem acesso nesta rodada); a árvore do 5 dos testes é sintética (mesmo formato `infraArvoreNo`).
-- Os cards da árvore contam o que a árvore tem na tela; documentos de pastas fechadas só entram quando o SEI as carrega (o card avisa).
+- Os cards da árvore contam o que a árvore tem na tela; com pastas por carregar o card Documentos ESTIMA o total e os outros dizem "nas pastas abertas" (ver "Documentos com pastas fechadas" abaixo).
 - "Bloco interno" só aparece com o histórico completo em cache (decisão da etapa 3).
 - O Estilo Avançado desligado + modo noturno ANTIGO (`dark-mode` no corpo, sem `data-spro-tema`) não foi visto ao vivo (nem a etapa 3 o pintou): o `data-tema` segue o mesmo teste dos painéis.
 - A capa legada deixou de ser desenhada; o iframe oculto e a cadeia `dadosProcessoPro` ficaram (lista acima).
+
+### Documentos com pastas fechadas (25/10/2026): estimar, mostrar que é estimado e "Contar tudo"
+
+Pedido do autor (captura com "Documentos 10 / 5 pastas fechadas não contadas", "Assinados 8 de 10 (80% do processo)"): a pasta tem um tamanho conhecido (20 no SEI SP),
+então dá para calcular; o aprendizado fica no localStorage; e o 10 / 80% não pode parecer o total. Código: `src/capa/pastas.ts` (lê a árvore da TELA), `estimativa.ts` (a
+conta e os textos), `src/modelo/tamanhoPasta.ts` (o tamanho e a persistência), `cards.ts`/`vista.ts` (cards), `capa.ts` + `estatico/capa.css` (botão e barra), `ponte.ts` (capa)
+e `src/pagina/ponteCapa.ts` (quadro da árvore) para o "Contar tudo".
+
+**A capa agora lê o DOM da árvore, não só os `Nos[n]` do HTML.** O `lerArvore` do núcleo lê o texto dos scripts da página, que só traz os documentos da pasta aberta de
+fábrica (a última); os das pastas abertas depois (clique do usuário ou da fila) vêm do `#ifrPasta` e só existem no DOM. Medido ao vivo: abrir a pasta I deixa os `Nos` com 1
+documento e o DOM com 20. `lerDaTela` junta os dois por id (o DOM acrescenta os que o núcleo não conhece, com ícone, assinatura `anchorA<id>` e nível `iconNA<id>`).
+Sem as âncoras `anchorPASTAn` no DOM (página estática, testes) vale só o HTML dos nós.
+
+**O que o legado guarda.** O "contador de documentos na árvore" (`getSumDocsPasta`, `sei-pro-arvore.js`) mantém `optionsPro.sumDocsPasta` no localStorage da origem
+(um inteiro, sem chave por host) e SÓ grava quando a maior pasta lida passa de 20; nunca guarda o 20. Por isso o módulo só LÊ essa chave (último recurso) e guarda o seu
+próprio valor em `processo/pasta-tamanho/<host>` (localStorage da origem do SEI, inteiro; os dois quadros da capa e da árvore são da mesma origem). Não grava no formato
+do legado.
+
+**Regra do tamanho da pasta** (`resolverTamanho`, a cada desenho da capa, sem rede): (1) `medido`: toda pasta carregada que NÃO é a última (a parcial) mostra, em número de
+protocolos, o tamanho da página; vale o valor mais frequente (empate: o maior) e SUBSTITUI o guardado (a contagem de agora corrige o aprendido; é o que o "Contar tudo"
+faz); (2) `aprendido`: o guardado; (3) `legado`: `optionsPro.sumDocsPasta`; (4) `padrao`: 20, só como valor provisório e sempre marcado como estimado ("20 é o padrão do SEI").
+Valores fora de 2 a 1000 e lixo no storage são ignorados. Pasta carregada vazia ("Nenhum protocolo") não ensina.
+
+**A conta** (`estimarDocumentos`). As pastas I, II... são páginas do processo; só a ÚLTIMA (a mais recente, a de cima de todas) fica parcial. "Carregada" = o SEI já trouxe os
+documentos (aberta ou fechada na tela: o conteúdo continua no DOM, fechar e abrir não faz pedido). Total = documentos das pastas carregadas + (pastas não carregadas que não
+são a última) x tamanho. Se a última também não está carregada, ela tem de 1 a "tamanho" e o valor vira faixa (`≈ 41 a 60`). Todas carregadas: exato, sem `≈` e sem subtexto.
+Subtexto curto: `estimado: 5 pastas × 20 + 10 abertos` (e ` + a última pasta (de 1 a 20)`; `(20 é o padrão do SEI)` quando nada foi aprendido). Pastas dentro de pastas
+(`topo: false`) e fechadas valem uma página cheia; "a última" é sempre a de cima. Cancelados e movidos continuam sendo nós da página (medido: `documento_movido` e
+`documento_cancelado` contam nos 20); documento EXCLUÍDO sai da paginação (o SEI repagina), então as pastas cheias continuam cheias.
+
+**Limite conhecido (medido).** A página conta PROTOCOLOS; o card conta DOCUMENTOS. Um processo anexado ocupa um lugar na página sem ser documento, então a estimativa pode
+passar do real por esse tanto (SEI SP: 99906.713-630.000032/2025-82 estimou 61 e deu 60; 99906.713-630.000047/2023-89 estimou 22 e deu 21, cada um com 1 processo anexado
+na pasta I). Para o autor, "≈" quer dizer isso.
+
+**Os outros cards.** Com pastas por carregar, Internos e externos, Assinados, Cancelados e Sigilosos mostram o que as pastas carregadas têm e dizem "nas pastas abertas"
+(Assinados sem o "% do processo"; Sigilosos "N restritos, nas pastas abertas"); o card Pastas diz "N por carregar". Tudo carregado: voltam ao texto de antes. "Copiar resumo"
+diz `Documentos: ≈ 110 (nas pastas abertas: 10; ...)`.
+
+**"Contar tudo"** (botão discreto no card Documentos, só quando há pasta por carregar; nunca roda sozinho). A capa vive em OUTRO quadro e só dispara o evento
+`spro-processo-capa-contar` no documento da árvore (e `...-contar-parar`); o quadro da árvore (`ligarPonteDaCapa`) cria uma `criarFila` (a mesma do filtro: uma pasta por vez,
+clique do usuário no "+", intervalo de 500 ms, prazo de 15 s, teto de 60, sessão expirada, aba oculta) com `abrirCarregadas: false` (o que já veio não precisa abrir) e
+devolve o andamento em `data-spro-capa-contagem` no `<html>` da árvore: `contando:<feitas>/<total>`, `parou:<restantes>`, `erro:<mensagem>`, `pronto`. A capa mostra
+"contando as pastas: 2 de 5" + barra fina + "Parar"; ao fim recalcula (exato) e aprende o tamanho medido. As pastas que a contagem abriu são RE-FECHADAS (`encerrar(true)`:
+só as que a fila abriu e o usuário não tocou), e o conteúdo continua contado. Parar: nenhuma outra pasta é pedida, a que estava em carga termina e é re-fechada, e o card
+oferece "Continuar" (retoma só as que faltam). Erros ("1 pasta não carregou.", "A sessão do SEI expirou.", "Outra carga de pastas está em andamento.") aparecem no card com
+"Tentar de novo". A capa redesenha por um observador da árvore (250 ms de espera) que só avisa quando as pastas ou a contagem mudam (ícones e filtro não a acordam).
+
+Testes: `tests/verificar-contagem.ts` (tamanho aprendido/legado/padrão/persistência; conta com 0, 1, várias e a última fechada; leitura da tela com cancelado e movido; cards
+estimado, parcial e exato; subtextos; copiar resumo; Contar tudo na árvore falsa: progresso, re-fechar, parar/continuar, erro, outra fila; capa inteira com o botão, o
+aprendizado ao abrir uma pasta, o exato ao fim e o valor aprendido valendo em outro processo). Pacote todo: 1183 conferências.
+
+Ao vivo (SEI SP 4.1.5, 25/10/2026; 50300.019861/2022-79 não existe no SP e nenhum processo da unidade tem 5 pastas: o maior tem 4):
+
+| Processo | Antes (estimado) | Depois de "Contar tudo" (real) | Pastas |
+| --- | --- | --- | --- |
+| 99906.713-630.000032/2025-82, nada aprendido | `≈ 61` = 3 × 20 + 1 aberto, "(20 é o padrão do SEI)" | 60 documentos (3 pastas de 20 protocolos + 1 na IV; 1 processo anexado), 39 internos / 21 externos, 4 assinados | 4 |
+| o mesmo, depois de aprendido | `≈ 61`, sem a nota do padrão | 60 | 4 |
+| 99906.713-630.000047/2023-89 | `≈ 22` = 1 × 20 + 2 aberto | 21 | 2 |
+
+O tamanho aprendido (20) ficou em `processo/pasta-tamanho/treinamento.sei.sp.gov.br` e vale ao abrir outro processo e depois de recarregar o quadro. Parar no meio (2 pastas sem
+contar, uma pasta já carregada e re-fechada), Continuar (só as que faltavam), 3 pastas pedidas uma por vez e re-fechadas, claro e escuro, sem erro de console. A última pasta
+fechada e NÃO carregada (faixa) não se reproduz ao vivo: o SEI abre a última sozinho; está só nos testes. SEI 5 não exercitado. Capturas:
+`scratchpad/live/shots/capa-estimado-{claro-antes,claro-contando,claro-depois,aprendido-claro-antes,aprendido-claro-contando,aprendido-claro-depois,escuro-antes,escuro-contando,escuro-depois,parou-claro}.png`.
 
 ## Filtro da árvore (etapa 5, Task 12): `src/pagina/filtro/`
 

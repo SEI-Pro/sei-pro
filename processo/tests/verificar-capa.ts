@@ -437,9 +437,15 @@ export async function verificarCapa(): Promise<void> {
       contagemDaArvore(fechada).total === fechada.documentos.length && fechada.documentos.length === 4,
     );
     checar(
-      "pastas fechadas: o card avisa que nao foram contadas",
-      /pastas? fechadas? n/.test(cf.find((x) => x.id === "documentos")?.detalhe ?? ""),
+      "pastas fechadas: o card estima (2 pastas x 20 + 4 abertos) e diz que e estimado",
+      cf.find((x) => x.id === "documentos")?.valor === "\u2248 44" &&
+        /^estimado: 2 pastas \u00D7 20 \+ 4 abertos/.test(cf.find((x) => x.id === "documentos")?.detalhe ?? ""),
       cf.find((x) => x.id === "documentos"),
+    );
+    checar(
+      "pastas fechadas: Assinados e Internos dizem 'nas pastas abertas'",
+      cf.find((x) => x.id === "assinados")?.detalhe === "nas pastas abertas" &&
+        cf.find((x) => x.id === "internosExternos")?.detalhe === "nas pastas abertas",
     );
     checar("pastas fechadas: card de pastas = 3", cf.find((x) => x.id === "pastas")?.valor === "3");
 

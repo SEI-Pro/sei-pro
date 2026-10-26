@@ -9,6 +9,8 @@ export interface ContagemDocumentos {
   externos: number;
   assinados: number;
   cancelados: number;
+  /** Total estimado ("≈ 110") quando há pastas por carregar: os números acima são então só os das pastas abertas. */
+  estimado?: string;
 }
 
 export interface DadosDoResumo {
@@ -55,9 +57,11 @@ export function resumoDoProcesso(d: DadosDoResumo): string {
   }
   const c = d.documentos;
   if (c) {
+    const detalhe =
+      `${plural(c.internos, "interno", "internos")}, ${plural(c.externos, "externo", "externos")}; ` +
+      `${plural(c.assinados, "assinado", "assinados")}; ${plural(c.cancelados, "cancelado", "cancelados")}`;
     linhas.push(
-      `Documentos: ${c.total} (${plural(c.internos, "interno", "internos")}, ${plural(c.externos, "externo", "externos")}; ` +
-        `${plural(c.assinados, "assinado", "assinados")}; ${plural(c.cancelados, "cancelado", "cancelados")})`,
+      c.estimado ? `Documentos: ${c.estimado} (nas pastas abertas: ${c.total}; ${detalhe})` : `Documentos: ${c.total} (${detalhe})`,
     );
   }
   return linhas.join("\n");
