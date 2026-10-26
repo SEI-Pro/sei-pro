@@ -94,7 +94,7 @@ Marque as caixas (a do cabeçalho marca todos os visíveis) e uma barra de açõ
 
 ### Ícones e sinais na linha
 
-Antes do número do processo ficam os ícones que o SEI Pro já tinha: **Monitorado**, **Projetos**, **Demandas** e **Acompanhamento especial** — com o mesmo clique de sempre. Mais um ícone indica se o processo é **recebido** ou **gerado**, e um outro, depois do número, **abre o processo em nova guia**. Processos **não visualizados** ficam em **vermelho**, **urgentes** e **trancados** ganham uma etiqueta e **sigilosos** mostram o aviso (o SEI não entrega a especificação nem os marcadores deles, e o Novo Controle de Processos também não).
+Antes do número do processo ficam os ícones que o SEI Pro já tinha: **Monitorado**, **Projetos**, **Demandas** e **Acompanhamento especial** — com o mesmo clique de sempre. Mais um ícone indica se o processo é **recebido** ou **gerado**, e dois botões, que aparecem ao passar o mouse na linha (ou ao focar pelo teclado), ficam depois do número: um **abre o processo em nova guia** e o outro **copia o número do processo** (o ícone vira um visto por um instante; o clique não abre nem seleciona a linha). Processos **não visualizados** ficam em **vermelho**, **urgentes** e **trancados** ganham uma etiqueta e **sigilosos** mostram o aviso (o SEI não entrega a especificação nem os marcadores deles, e o Novo Controle de Processos também não).
 
 ### Atalhos de teclado
 

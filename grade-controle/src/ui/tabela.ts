@@ -10,6 +10,7 @@ import { type Coluna, type CampoOrdem, type CriterioOrdem, type Densidade, type 
 import { resumoDaNota } from '../modelo/checklist';
 import { corDoMarcador } from './cores';
 import { iconeGrade } from './icones';
+import { botaoCopiarNumero, copiarTexto } from './copiarNumero';
 
 export const ALTURA: Record<Densidade, number> = { compacta: 34, confortavel: 48 };
 const LARGURA: Record<Coluna, string> = {
@@ -84,6 +85,7 @@ function celula(p: Processo, c: Coluna, ctx: Ctx, props: PropsTabela): HTMLEleme
       const a = h('a', { class: `spro-proc${p.naoVisualizado ? ' spro-novo' : ''}`, href: p.link ?? '#', title: 'Abrir o processo' }, p.protocolo);
       td.append(a);
       if (p.link) td.append(h('a', { class: 'spro-nova-guia', href: p.link, target: '_blank', rel: 'noopener', title: 'Abrir em nova guia', 'aria-label': `Abrir ${p.protocolo} em nova guia` }, iconeGrade('novaGuia', 14)));
+      td.append(botaoCopiarNumero(p.protocolo, (t) => copiarTexto(document, t)));
       if (p.sigiloso) td.append(h('span', { class: 'spro-sigilo', title: 'Processo sigiloso' }, 'sigiloso'));
       if (p.urgente) td.append(h('span', { class: 'spro-urgente', title: 'Marcado como urgente' }, 'urgente'));
       if (p.trancado) td.append(h('span', { class: 'spro-sigilo', title: 'Processo trancado' }, 'trancado'));

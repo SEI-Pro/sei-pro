@@ -608,6 +608,45 @@ await teste('app: icone de origem (recebido/gerado) com dica e icone para abrir 
   assert.equal(nova.previousElementSibling, g.querySelector('.spro-proc'), 'logo depois do numero');
   app.fechar();
 });
+await teste('app: botao Copiar numero do processo ao lado do abrir em nova guia (uma vez por linha, copia, nao propaga, feedback, teclado)', async () => {
+  const copiados: string[] = [];
+  const antes = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { writeText: async (t: string) => void copiados.push(t) } } });
+  try {
+    const { app } = await montar();
+    const linhas = qa(app, '.spro-linha');
+    assert.ok(linhas.length > 1);
+    for (const l of linhas) assert.equal(l.querySelectorAll('.spro-copiar-num').length, 1, 'um por linha');
+    const l = linhas[0]!;
+    const b = l.querySelector<HTMLButtonElement>('.spro-copiar-num')!;
+    assert.equal(b.getAttribute('aria-label'), 'Copiar n\u00famero do processo');
+    assert.equal(b.hasAttribute('title'), false);
+    assert.equal(b.getAttribute('type'), 'button');
+    assert.equal(b.previousElementSibling, l.querySelector('.spro-nova-guia'), 'logo depois do abrir em nova guia');
+    let subiu = 0;
+    l.addEventListener('click', () => void subiu++);
+    l.addEventListener('keydown', () => void subiu++);
+    const marcadasAntes = marcadas(app.host.ownerDocument);
+    b.click();
+    await tick();
+    assert.deepEqual(copiados, [l.querySelector('.spro-proc')!.textContent]);
+    assert.match(copiados[0]!, /^[\d.]+\/\d{4}-\d{2}$/);
+    assert.equal(subiu, 0, 'clique nao propaga');
+    assert.equal(marcadas(app.host.ownerDocument), marcadasAntes);
+    assert.ok(b.classList.contains('spro-copiado'), 'feedback');
+    assert.equal(b.querySelector('[role=status]')!.textContent, 'N\u00famero copiado');
+    assert.equal(b.querySelectorAll('svg').length, 1);
+    const EV = (b.ownerDocument.defaultView as unknown as { Event: typeof Event }).Event;
+    b.dispatchEvent(new EV('keydown', { bubbles: true }));
+    assert.equal(subiu, 0, 'Enter no botao nao sobe');
+    await new Promise((r) => setTimeout(r, 1600));
+    assert.ok(!b.classList.contains('spro-copiado'), 'reverte');
+    assert.equal(b.querySelector('[role=status]')!.textContent, '');
+    app.fechar();
+  } finally {
+    if (antes) Object.defineProperty(globalThis, 'navigator', antes); else delete (globalThis as { navigator?: unknown }).navigator;
+  }
+});
 await teste('app: filtros Recebidos e Gerados na faixa dos rapidos, na ordem pedida, e um desliga o outro', async () => {
   const doc = ativarToggle(docFixture('caixa_prazos.html'));
   const l = lerTabelas(doc);

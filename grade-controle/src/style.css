@@ -184,6 +184,11 @@ kbd { padding: 0 5px; font: 12px var(--spro-mono); background: var(--spro-fundo-
 .spro-nova-guia { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 4px; color: var(--spro-suave); border-radius: 6px; opacity: 0; transition: opacity var(--spro-dur); }
 .spro-linha:hover .spro-nova-guia, .spro-nova-guia:focus-visible { opacity: 1; }
 .spro-nova-guia:hover { color: var(--spro-destaque); background: var(--spro-fundo-3); text-decoration: none; }
+.spro-copiar-num { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 2px; padding: 0; cursor: pointer; color: var(--spro-suave); background: none; border: 0; border-radius: 6px; opacity: 0; transition: opacity var(--spro-dur); }
+.spro-linha:hover .spro-copiar-num, .spro-copiar-num:focus-visible, .spro-copiar-num.spro-copiado { opacity: 1; }
+.spro-copiar-num:hover { color: var(--spro-destaque); background: var(--spro-fundo-3); }
+.spro-copiar-num.spro-copiado { color: var(--spro-ok); }
+.spro-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ---- Anotacao em post-it com lista de tarefas ---- */
 .spro-dialogo-largo { width: min(640px, 94vw); }
