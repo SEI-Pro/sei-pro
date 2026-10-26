@@ -8,7 +8,7 @@ Desenho: `docs/superpowers/specs/2026-10-23-processo-design.md`; plano: `docs/su
 ## Estado
 
 Etapas 1 a 5 concluídas, a etapa 6 (fechamento) feita e a etapa 7 (24/10/2026: título da aba, aviso de não assinados, edição de
-assuntos e interessados, processos do interessado e a pele de post-it do modal da anotação) entregue; a rodada seguinte (24/10/2026) igualou os cabeçalhos dos painéis ao rótulo nativo "Consultar Andamento" e trocou o modal da anotação pela edição no próprio painel (ver "Escala de tamanhos" e a etapa 7, item 5). Base e painéis: base e painéis, menu da árvore,
+assuntos e interessados, processos do interessado e a pele de post-it do modal da anotação) entregue; a rodada seguinte (24/10/2026) igualou os cabeçalhos dos painéis ao rótulo nativo "Consultar Andamento" e trocou o modal da anotação pela edição no próprio painel (ver "Escala de tamanhos" e a etapa 7, item 5). Em 26/10/2026 a tela "Personalizar menu rápido" foi portada (seção própria, com a auditoria do menu rápido). Base e painéis: base e painéis, menu da árvore,
 andamentos e Gantt, capa e cards, filtro da árvore. Testadas ao vivo no SEI SP de treinamento (4.1.5, CK4), com todas as opções ligadas e com perfil limpo mais só as
 opções do módulo. **O SEI 5 não foi exercitado ao vivo** (sem credencial utilizável sem login manual); só há teste com árvore
 sintética no formato do 5 e leitura do fonte do 5.0.0. Entrega só no `dist/manifest.json` (Lab, MV3).
@@ -42,6 +42,8 @@ processo/
       paineis/ modais/ painéis e edições (lupa.ts: assuntos e interessados; interessado.ts: processos do interessado;
                          paineis/anotacaoEditor.ts: editor da anotação no próprio painel, sem modal)
       menuDoc/ menu vertical e ícones fixos do documento
+      personalizar/      tela "Personalizar menu rápido" (catálogo, modelo/armazenamento, modal, abertura) e a aplicação ao vivo (mudancas.ts)
+      paineisVivos.ts    monta/tira os painéis conforme a personalização, ao vivo
       filtro/            filtro da árvore (modelo, DOM, barra)
       aviso/             aviso de não assinados no quadro do Enviar Processo (modelo, DOM, ligar)
       pastas/            fila de carregamento das pastas da árvore (fila.ts): usada pelo filtro e pelo "Verificar pastas" do aviso
@@ -83,7 +85,7 @@ A personalização do menu e dos painéis é a do legado (mesmas chaves do `loca
 | `chrome.storage.local` | `processo/<host\|login>/<idProcedimento>` | cache das fatias do processo (teto de 200 processos e 2 MB; entrada acima de 64 KB só em memória; sigiloso nunca grava) |
 | `chrome.storage.local` | `processo-historico/<host\|login>/<idProcedimento>` | histórico completo coletado por clique (30 min; até 900 KB por entrada, 12 processos, 24 h) |
 | `localStorage` do SEI | `seiProHistoricoRestauro` | pendência de restauro da paginação do histórico (10 min) |
-| `localStorage` do SEI | `configViewFlashPanelArvorePro`, `optionsPro` (`panelDadosArvorePro_<tipo>`, `optionsFlashMenu_*`), `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro` | personalização do legado, lida e (os painéis recolhidos) gravada |
+| `localStorage` do SEI | `configViewFlashPanelArvorePro`, `optionsPro` (`panelDadosArvorePro_<tipo>`, `optionsFlashMenu_*`), `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro` | personalização do legado: lida pelo menu e pelos painéis e GRAVADA pela tela "Personalizar menu rápido" (mesmos formatos; ver a seção própria) e pelos painéis recolhidos |
 | `localStorage` do SEI | `processo/pasta-tamanho/<host>` | quantos protocolos cabem numa pasta da árvore (inteiro, aprendido das pastas carregadas; a capa estima o total de documentos com ele) |
 | `localStorage` do SEI | `optionsPro.sumDocsPasta` | SÓ LEITURA: o tamanho que o contador de documentos do legado guarda (só quando passa de 20); último recurso do tamanho da pasta |
 | `localStorage` do SEI | `configDataRecebimentoPro` | SÓ LEITURA: data de recebimento que o legado guarda; alimenta o alerta de parado quando não há histórico |
@@ -139,7 +141,7 @@ o painel legado de Interessados (que a chamava) cede por `data-seipro-processo-p
 
 Também seguem do legado: o destaque de não assinados na árvore (`initDestacarNaoAssinadosPro`), a numeração e as duas linhas da
 árvore, `jquery.toolbar` (as Atividades usam), Processos Relacionados (elemento nativo estilizado) e as janelas "Copiar para outro
-processo", "Enviar documento externo", "Ações em lote" e "Personalizar menu".
+processo", "Enviar documento externo" e "Ações em lote" (a "Personalizar menu" virou tela do módulo em 26/10/2026; o modal antigo só abre sem o módulo).
 
 ## Limites conhecidos
 
@@ -359,7 +361,7 @@ Substitui o "menu rápido" do legado (jquery.toolbar: `initToolbarDocs`, `setToo
 - `servicos.ts`: duplicar pelo núcleo (`duplicarDocumento`, com prova de sucesso; `semMinuta` tira a palavra da descrição e do
   nome da cópia) e recarga da árvore; excluir pede confirmação; o `SeiDaPagina` agora resolve o processo da tela e os
   documentos da tela (inclusive os das pastas) sem a pesquisa rápida. "Copiar para outro processo", "Enviar documento
-  externo", "Ações em lote" e "Personalizar menu" continuam do legado/outros módulos: o módulo grava o pedido em
+  externo" e "Ações em lote" continuam do legado/outros módulos ("Personalizar menu" abre a tela nova do módulo, ver "Personalizar menu rápido"): o módulo grava o pedido em
   `data-spro-pm-pedido` no `<html>` e dispara o evento `seipro-processo-menu`; um ouvinte pequeno em `sei-pro-arvore.js` (mundo da
   página, registrado uma vez) lê, apaga e chama a função. Se ninguém apagar o pedido, o menu avisa que a função ainda carrega.
 - Núcleo: `DocumentoArvore.funcoes` e `Arvore.funcoesProcesso` (nomes das funções dos botões sem endereço, opcionais),
@@ -1322,6 +1324,129 @@ Testes: `verificar-menu.ts` confere o container (`span.action-doc.spro-pm-icone`
 variante do Estilo Avançado). Divergências: (1) SEI 5 e SEI 3 com Estilo Avançado não foram vistos ao vivo (a regra do SEI 5 vem do `infra-arvore.css` 5.0.0, igual ao 4.1);
 (2) com "duas linhas" ligado o nº SEI da segunda linha continua ~4 px mais baixo que o grupo de ícones: agora o grupo (ação, badge, alvo, caneta) fica alinhado entre si;
 (3) o modo escuro foi exercitado pelo atributo `data-spro-tema="escuro"` (cores) sem mudar a geometria.
+
+## Personalizar menu rápido (26/10/2026): `src/pagina/personalizar/`
+
+Pedido: refatorar o modal de "Personalizar menu rápido" (o jQuery UI do legado: `configFlashMenuPro`) e conferir se o menu rápido inteiro já
+estava na stack TypeScript. A resposta da auditoria vem primeiro; depois, o que foi construído.
+
+### Auditoria do menu rápido (antes desta rodada e depois)
+
+| Peça do menu rápido | Antes | Agora | O que sobra no legado e por quê |
+| --- | --- | --- | --- |
+| Menu do processo (número do processo na árvore) | TS (`menuDoc/acoes.ts` `itensDoProcesso`, `menuDoc/ligar.ts`) | TS | "Enviar Documento Externo" (`openModalDropzone`), "Ações em Lote" (`getDocumentosActions`) e "Copiar para..." (`dialogCopyNewDoc`) seguem por EVENTO ao legado (`seipro-processo-menu`, `data-spro-pm-pedido`): são outras ferramentas, não o menu |
+| Menu do documento (ícone do documento) | TS (`acoes.ts` `itensDoDocumento`, `menu.ts`) | TS | idem (Copiar para) |
+| Ícones fixos ao lado do documento | TS (`menuDoc/icones.ts`), mas ligados só no carregamento | TS, **ao vivo** (liga, desliga e refaz ao mudar a personalização) | nada: `addIconActionsArvore`/`getActionsArvore` ficam no arquivo só para o pacote sem o módulo |
+| Painel da árvore (quais painéis aparecem) | TS (`modelo/paineis.ts`, `arvore.ts`), lido uma vez na carga | TS, **ao vivo** (`paineisVivos.ts`) | `loadSelectedItensPanelArvorePro` (estilo dos Processos Relacionados, que o legado ainda desenha) |
+| "Ativar menu ao clicar" | TS (`ligar.ts` `cliqueLigado`), mas só se editava no modal legado | TS, editado na tela nova | nada |
+| Aliases de nomes antigos (`Add/Remover Urgência`, `Ações em lote`) | TS (`menuDoc/catalogo.ts` `nomeCanonico`) | TS, usado também pela tela nova (lê com o alias, grava o nome novo) | o modal legado perdia a urgência pelo alias; some junto com ele |
+| Migração de configuração (chave solta `optionsFlashMenu_*` para dentro do `optionsPro`) | só no legado (`updateOptionsPro`, ao ler a primeira vez) | TS: `opcoes.ts` `valorDaOpcao`/`gravarOpcao` leem a chave solta e gravam como o `setOptionsPro` | nada |
+| **Tela de personalização** (4 abas, interruptores, ordem) | **LEGADO**: `configFlashMenuPro`, `configFlashMenuTrPro`, `changeFlashMenuGeneralPro`, `changeFlashMenuPro` (`sei-functions-pro.js`), jQuery UI `tabs`/`sortable`, CSS `.tableFlashMenu` (`sei-pro.css`) | **TS** (`personalizar/`) | o modal antigo continua no arquivo e abre quando o módulo não está (ver "Cessão do legado") |
+| Catálogos de itens (`iconsFlashMenu`, `iconsFlashDocMenu`, `iconsFlashDocArvore`, `iconsFlashPanelArvore`) | legado (`sei-functions-pro.js:366-444`) | TS, copiados com os mesmos nomes e a mesma ordem (`personalizar/catalogo.ts`; teste compara com uma fixture extraída do legado e com o arquivo) | o legado ainda os usa (`getLinksArvore`, `getLinksArvoreAjax`, "Ações em lote": `parent.iconsFlashMenu`) |
+| Menu e ícones do legado (jquery.toolbar) | cedidos desde a etapa 2 | cedidos | `initToolbarDocs`, `setToolbarDocs`, `getToolbarPro`, `actionToolbarPro`, `actionToolbarDocs`, `updateLinksToolbar`, `callActionsArvore` (`sei-pro-arvore.js`) rodam só sem o módulo; `jquery.toolbar` fica carregado (as Atividades usam) |
+| Link para a personalização | item "Personalizar menu" no pé dos dois menus; o item do processo e o do documento abriam a janela do legado por evento | o item chama a tela nova direto (e abre na aba do menu de onde veio) | `seipro-processo-menu` com `personalizar` ainda chega a `configFlashMenuPro`, que cede à tela nova (guarda) |
+| Botão na página de opções | não existe (só o liga/desliga `menurapido` e o manual `MENURAPIDO`) | idem | `pages/MENURAPIDO.md` (e o GIF) ainda mostra o modal antigo |
+| Sincronização entre computadores | **não existe** para estas chaves: ficam no localStorage do SEI (`configViewFlash*`, `optionsPro`), não em `dataValues`/`storage.sync` | idem (nenhum caminho novo criado) | — |
+
+Resto de legado do menu rápido, função por função (todos só rodam sem o módulo, exceto onde dito): `initToolbarDocs`, `setToolbarDocs`, `getToolbarPro`, `actionToolbarPro`,
+`actionToolbarDocs`, `updateLinksToolbar`, `getTooltipOnSign` (esta roda sempre), `callActionsArvore`, `addIconActionsArvore`, `getActionsArvore`, `getLinksArvore` (`sei-pro-arvore.js`);
+`configFlashMenuPro`, `configFlashMenuTrPro`, `changeFlashMenuGeneralPro`, `changeFlashMenuPro`, `getLinksArvoreAjax` e os catálogos `iconsFlash*` (`sei-functions-pro.js`);
+regras `.tableFlashMenu*` (`dist/css/sei-pro.css`). Funcionalidades vizinhas que **continuam por evento ao legado** e não foram portadas, de propósito: Ações em lote,
+Copiar para outro processo, Enviar documento externo.
+
+### A tela (`modal.ts`, `modelo.ts`, `catalogo.ts`)
+
+- `dialog.spro-dialogo` na janela de topo (o quadro da árvore é estreito), sem Cancelar nem Ok: o X e o Esc fecham. **Não há "Concluir"**: tudo é salvo AO MUDAR e aplicado ao vivo; um botão final
+  só repetiria o que já aconteceu (decisão registrada).
+- Quatro abas (`role=tablist`; setas, Home e End; ativação automática): Processo, Documentos, Árvore, Painel, na ordem e com os rótulos do legado; cada uma com o título grande do legado,
+  uma linha de descrição, o interruptor GERAL (as chaves `optionsFlashMenu_menuproc/_menudoc/_iconstree/_panelinfo`), o contador "n de m ativos" e a lista.
+- Cada item: alça (arrastar), glifo PREENCHIDO próprio (`ui/glifosMenu.ts`, mesma grade e peso de `ui/glifos.ts`; 38 glifos novos, os demais vêm de `glifos.ts`), nome do legado, descrição curta quando
+  o nome não basta, etiqueta do grupo (Copiar, Abrir, Ações) nas abas de menu, botões subir/descer e o interruptor (`<button role="switch" aria-checked>`: Espaço e Enter são os do botão nativo).
+- Interruptor geral desligado: a lista fica a 50% e todos os controles `disabled` (o legado fazia igual com `.disableOptions`), com aviso quando a OPÇÃO do SEI Pro (`menurapido`, `infoarvore`) está desligada
+  nas Opções ("estas escolhas ficam salvas e passam a valer quando você ligar").
+- Busca no topo (sem acento nem caixa; casa nome, descrição e grupo; vale em todas as abas e cada aba mostra quantos itens casam). Esc com texto limpa a busca e não fecha o modal.
+- "Restaurar padrão" por aba, com confirmação: apaga a chave da lista (volta a "nunca personalizou", como se o usuário não tivesse mexido) e liga a função.
+- **Ordem**: só os itens LIGADOS se movem, trocando com o ligado vizinho (a ordem dos desligados nunca é gravada); botões, Alt+seta (no interruptor) e arrastar pela alça. O Painel não reordena
+  (a ordem dos painéis é fixa, `ORDEM_FINAL`). `Alt+seta` chama `stopPropagation` porque o SEI usa Alt+setas na janela de topo para andar pela árvore e puxava o foco para lá (medido ao vivo).
+- Tema: `data-tema="escuro"` quando o SEI está escuro; cor de destaque do SEI (`corDoTemaSei`, `data-cor-sei`/`--spro-cor-sei`, a mesma regra da capa, clareada no escuro). Tokens `--spro-*`; fonte 13 px,
+  descrição 11,5 px, título da aba 15 px (a escala dos modais, não a do quadro da árvore).
+- Erro de gravação (cota cheia, janela privada): aparece no modal e a tela volta ao que está salvo.
+
+### Compatibilidade: as chaves e os formatos do legado, byte a byte
+
+| O quê | Onde | Formato |
+| --- | --- | --- |
+| Lista de cada aba | `localStorage` `configViewFlashMenuPro`, `configViewFlashDocMenuPro`, `configViewFlashDocArvorePro`, `configViewFlashPanelArvorePro` | `[["nome"],["nome"],...]`, só os LIGADOS, na ordem em que o menu os mostra (o legado grava na ordem das linhas da tabela) |
+| "Ativar menu ao clicar" | dentro de `configViewFlashDocMenuPro` | entrada `["Ativar menu ao clicar"]` (a tela nova a põe na frente) |
+| Interruptor geral de cada aba | `localStorage.optionsPro` | `optionsFlashMenu_menuproc|_menudoc|_iconstree|_panelinfo` = `"enabled"`/`"disabled"` (sem apagar as outras opções do `optionsPro`); a chave solta antiga (`optionsFlashMenu_x`) ainda é LIDA e some quando se grava, como o `updateOptionsPro` |
+| Nomes antigos | lidos | `Add/Remover Urgência` e `Ações em lote` valem; a tela grava `Adicionar ou Remover Urgência` e `Ações em Lote` |
+| Lista vazia | — | o legado (e o menu) tratam `[]` como "nunca personalizou": vale o padrão. A tela avisa quando uma aba fica sem nenhum item marcado |
+
+Provas: `tests/fixtures/personalizar-capturado-legado.json` é o `localStorage` gravado DE VERDADE pelo modal antigo no SEI SP (script de captura em `scratchpad/live/pz6.mjs`); o teste lê, confere os itens e a ordem, e
+**regrava o mesmo estado e exige os mesmos bytes**. `personalizar-perfil-legado.json` cobre os casos de canto (aliases, nome que não existe mais, chave solta, clique). Ao vivo: a tela nova grava, o modal
+legado (aberto à força, com a guarda desligada só nessa chamada) mostra exatamente os mesmos marcados e a mesma chave geral; e o inverso (perfil do legado lido pela tela nova).
+**Padrões**: o legado tinha DOIS padrões diferentes para o processo (o modal mostrava "Incluir Documento, Consultar/Alterar, Enviar Documento Externo, Atribuir, Add/Remover Urgência" e o menu usava "Copiar número, Copiar link,
+Enviar Externo, Ações em Lote, Atribuir, Urgência"). A tela nova mostra o que o menu EFETIVAMENTE usa (`menuDoc/catalogo.ts` `PADRAO_*`, `modelo/paineis.ts` `SELECAO_PADRAO`): é a divergência intencional.
+
+### Aplicação ao vivo (`mudancas.ts`, `paineisVivos.ts`, `menuDoc/ligar.ts`)
+
+O modal roda no content script do quadro da árvore (mundo isolado), o MESMO onde moram o menu, os ícones e os painéis: a tela grava no `localStorage` (compartilhado com o legado, na mesma origem) e avisa por um
+barramento em memória (`avisarPersonalizacao`); quem muda a personalização em OUTRA janela (o legado) é pego pelo evento `storage`. `observarPersonalizacao` só chama o consumidor quando a assinatura da aba (lista +
+chave geral) mudou de fato: o `optionsPro` é gravado por muita coisa (painéis recolhidos, filtros) e não pode refazer o menu à toa.
+
+- Menu do processo e do documento: já liam o armazenamento a cada abertura; uma mudança fecha o menu aberto, e o próximo já vem com a lista nova.
+- Ícones fixos: `sincronizarIcones` liga/desliga o observador conforme a chave geral da aba Árvore e refaz os ícones (assinatura por modos, em ordem).
+- Painéis: `ligarPaineisVivos` monta/tira todos pela chave geral da aba Painel e remonta com a lista nova; só pede à rede as fatias que NENHUM painel pediu antes (trocar a personalização não repete consulta).
+  Por isso `principal()` passou a criar o contexto quando a opção `infoarvore` está ligada, mesmo com a chave desligada.
+
+### Cessão do legado e abertura
+
+- Item "Personalizar menu" dos menus novos: chama `abrirPersonalizar` direto (`DepsLigar.personalizar`), na aba do menu de onde veio.
+- Legado (`configFlashMenuPro`, rodando na janela de topo, mundo da página): primeira linha nova, `if (abrirPersonalizarMenuNovoPro()) return;`. A guarda dispara `spro-processo-personalizar-abrir` no documento do quadro
+  da árvore (o mesmo padrão do Gantt) e olha, logo em seguida, o atributo `data-spro-pers-ack` no `<html>` dele: o módulo (mundo isolado) o põe de forma SÍNCRONA no ouvinte. Se o atributo existe, o legado o apaga e
+  não abre a janela dele; se não existe (módulo ausente, desligado, pacote antigo), a janela do legado abre como sempre. Handshake em vez de atributo de cessão no `<html>`: o legado nunca fica sem tela por um
+  content script que não carregou. Pontos cobertos pela mesma guarda: o item de menu legado (`seipro-processo-menu` com `personalizar`) e a ação `configMenu` da toolbar antiga.
+- A tela abre na janela de TOPO (como os demais modais do módulo; a coluna da árvore é estreita) mas é montada pelo content script do quadro da árvore, que é quem escuta o evento (o legado, no mundo da página,
+  só dispara o evento no documento da árvore).
+
+### Testes (`tests/verificar-personalizar.ts`, `tests/fixtures/`)
+
+Catálogo igual ao legado (fixture `personalizar-legado.json`, regerada por `tests/fixtures/extrair-personalizar.mjs`, e conferida também contra o `dist/js/sei-functions-pro.js` de hoje), todos os itens com glifo e
+conhecidos pelo menu, leitura/gravação nos formatos do legado (inclusive a captura real e a regravação byte a byte), aliases, migração da chave solta, restaurar padrão, lista vazia, busca (sem acento, por dica e
+grupo), ordem (`mover`, `moverPara`, `podeMover`), barramento e observador, a tela (abas, switches, chave geral, teclado, busca, Esc, restaurar com confirmação, tema escuro, cor do SEI, erro de gravação), a aplicação
+ao vivo (ícones, menu do processo e do documento, painéis) e a guarda do legado executada num `vm` (módulo presente, ausente, sem quadro). O linkedom não tem foco real, layout nem arrastar: isso é ao vivo.
+
+### Resultado ao vivo (26/10/2026, SEI SP de treinamento 4.1.5, unidade TESTE, processo `99906.713-630.000032/2025-82`, Chrome for Testing 156)
+
+Nada foi enviado, tramitado nem concluído. Sem erro de console (nem `pageerror`) em nenhum roteiro. Roteiros e capturas em `scratchpad/live/pz2.mjs` a `pz9.mjs`; capturas em `/private/tmp/claude-501/-Users-phs-Documents-Git-Lab2Code-SEI-Pro-sei-pro/76700c42-e537-4785-a338-862d657a28af/scratchpad/live/shots/personalizar-*.png`.
+
+- **Caminho real**: passar o mouse no número do processo, abrir o menu e clicar "Personalizar menu" abre a tela na aba Processo; pelo menu do DOCUMENTO abre na aba Documentos (`01`, `03`).
+- **Legado cedendo**: `configFlashMenuPro()` chamada na página abre a tela nova (0 `.ui-dialog`, sem `#flashMenu_tabs`; o atributo de confirmação é consumido). Com a guarda desligada só nessa chamada, o modal ANTIGO abre e funciona (`00-legado-modal-atual`).
+- **Migração**: perfil do legado (aliases, nome inexistente, chave solta `optionsFlashMenu_menuproc`, clique) lido pela tela nova: itens, ordem e chaves gerais corretos nas 4 abas (`02-migracao-*`).
+- **Ida e volta com o modal legado de verdade**: o legado gravou (fixture `personalizar-capturado-legado.json`), e o inverso: a tela nova gravou e o modal legado mostrou os mesmos marcados e as mesmas chaves gerais (`10-legado-lendo-o-novo`).
+- **Árvore (ícones fixos), sem recarregar a página** (marcador `window.__marcaSemRecarga` do quadro sobreviveu a tudo): ligar "Visualizar em nova aba" põe o ícone `view`; desligar "Copiar número SEI" tira o `copy`; subir (botão e Alt+seta) refaz na ordem nova;
+  chave geral desligada tira os 154 ícones e ligada devolve; grava `optionsFlashMenu_iconstree` (`04`, `05`, `20` e `22` antes/depois).
+- **Painel**: ligar "Bloco Interno" monta o painel, desligar "Marcador" tira, a chave geral tira todos e devolve com a lista salva (`06`, `21` e `23` antes/depois).
+- **Menus**: o menu do processo ganha "Copiar somente o número" e "Anotações" e perde "Ações em Lote"; com a chave geral desligada não abre; "Ativar menu ao clicar" faz o passar do mouse não abrir o menu do documento e o clique abrir (`07`, `08`, `09`, `11`).
+- **Persistência**: fechar pelo X e reabrir mostra o mesmo; Esc fecha.
+- **Busca** (teclado real): "urgencia" deixa só "Adicionar ou Remover Urgência"; Esc limpa sem fechar; sem resultado mostra a mensagem (`12`, `13`).
+- **Teclado nas abas** (setas, End, Home, Tab para o conteúdo), **Espaço e Enter** nos interruptores e **Alt+seta** funcionam. O Alt+seta puxava o foco para a árvore do SEI até pôr `stopPropagation`.
+- **Restaurar padrão**: confirmação ("Cancelar" mantém; "Restaurar" apaga a lista e liga a função; a tela mostra "6 de 29 ativos") (`14`, `15`).
+- **Escuro** (atributo `data-spro-tema="escuro"`, o do Estilo Avançado) nas abas Processo, Documentos e Painel (`16`, `17`, `18`).
+
+**Para repetir**: depois de cada `npm run build`, REINSTALAR a extensão (`reiniciar2.sh`: o Chrome mantém a versão antiga dos content scripts e o `chrome.developerPrivate.reload` deixou a extensão bloqueada, `ERR_BLOCKED_BY_CLIENT`).
+Se o DNS do SEI de treinamento não resolver (o resolvedor do sistema falhou por minutos em 26/10/2026, o `8.8.8.8` resolvia), abrir o Chrome com `--host-resolver-rules="MAP treinamento.sei.sp.gov.br 45.223.112.140"`.
+
+### Divergências e pendências (personalizar)
+
+- O SEI 5 não foi exercitado ao vivo (sem credencial utilizável); a tela não depende do DOM da árvore, só do `localStorage` e do modal do topo, e o fluxo de abertura é o mesmo do Gantt.
+- Escuro: coberto pelo atributo `data-spro-tema` (Estilo Avançado), não por uma troca real de tema do SEI; a cor do SEI no escuro vem da regra da capa (clarear 45%), conferida só no claro ao vivo (a barra do SP é azul-petróleo).
+- Arrastar pela alça (HTML5 drag and drop) é provado só por código e pelo teste do modelo (`moverPara`); não foi arrastado com mouse de verdade. Os botões e o Alt+seta, sim.
+- Lista com nenhum item marcado volta ao padrão no menu (é o comportamento do legado, que não dá para mudar sem quebrar quem usa o pacote antigo): a tela avisa e sugere desligar a chave geral para esconder tudo.
+- "Restaurar padrão" não existia no legado; é novo e vale por aba.
+- `pages/MENURAPIDO.md` e o GIF `img/tela-menurapido2.gif` ainda mostram o modal antigo (texto continua correto: "Personalizar Menu" no pé do menu).
+- Legado que continua (só roda sem o módulo): ver a lista da auditoria; a remoção definitiva do `configFlashMenuPro` e dos catálogos `iconsFlash*` depende de portar `getLinksArvore`/`getLinksArvoreAjax`/"Ações em lote".
+- O `menurapido` desligado nas Opções não esconde a tela (ela só edita a personalização); a tela avisa em cada aba.
 
 ## Comandos
 
