@@ -1420,12 +1420,99 @@ dialog.spro-g-dialogo-doc .spro-dialogo-corpo {
   font-weight: 600;
   color: var(--spro-texto);
 }
-.spro-f-dica {
-  display: block;
-  margin-top: 1px;
+/* Carregamento das pastas fechadas (fila de pastas): linha de estado, botao e barra de progresso fina. */
+.spro-f-fila {
+  margin-top: 4px;
+  font-size: var(--spro-p-fonte-pequena);
+  color: var(--spro-suave);
 }
-.spro-f-dica:empty {
-  display: none;
+.spro-f-fila-linha {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.spro-f-fila[data-tom="ok"] .spro-f-fila-texto {
+  color: var(--spro-ok);
+}
+.spro-f-fila[data-tom="aviso"] .spro-f-fila-texto {
+  color: var(--spro-aviso);
+}
+.spro-f-fila-acao {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--spro-destaque);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.spro-f-fila-acao:hover {
+  filter: brightness(1.15);
+}
+.spro-f-fila-acao:focus-visible {
+  outline: 2px solid var(--spro-destaque);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.spro-f-prog {
+  height: 4px;
+  margin-top: 5px;
+  overflow: hidden;
+  background: var(--spro-borda-forte);
+  border-radius: 2px;
+}
+.spro-f-prog-enchimento {
+  width: 0;
+  height: 100%;
+  background: var(--spro-destaque);
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+.spro-f-fila[data-tom="ok"] .spro-f-prog-enchimento {
+  background: var(--spro-ok);
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-f-prog-enchimento {
+    transition: none;
+  }
+}
+/* Na arvore do SEI: a pasta em carga ganha realce e um aro girando; a que falhou, um x. O atributo e posto pela fila e sai ao fim. */
+a[data-spro-pasta="carregando"] {
+  background: rgb(66 133 244 / 18%);
+  border-radius: 3px;
+}
+a[data-spro-pasta="carregando"]::after {
+  content: "";
+  display: inline-block;
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  vertical-align: -2px;
+  border: 2px solid #4285f4;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spro-f-gira 0.8s linear infinite;
+}
+a[data-spro-pasta="falhou"]::after {
+  content: "\00a0\2715";
+  margin-left: 4px;
+  color: #d1352b;
+  font-weight: 700;
+}
+@keyframes spro-f-gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  a[data-spro-pasta="carregando"]::after {
+    animation: none;
+    border-right-color: #4285f4;
+  }
 }
 
 /* ---------- Legado no quadro da arvore (Consultar Andamento, Processos Relacionados) na mesma escala ---------- */

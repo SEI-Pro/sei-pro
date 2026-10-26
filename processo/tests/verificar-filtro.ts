@@ -286,7 +286,7 @@ export async function verificarFiltro(): Promise<void> {
     textoDoStatus({ visiveis: 3, total: 40, pastasFechadas: 0, pastas: 2 }, true).principal === "3 de 40 documentos" &&
       textoDoStatus({ visiveis: 1, total: 1, pastasFechadas: 1, pastas: 1 }, true).principal === "1 de 1 documento" &&
       textoDoStatus({ visiveis: 0, total: 9, pastasFechadas: 0, pastas: 0 }, true).principal.startsWith("Nenhum documento") &&
-      textoDoStatus({ visiveis: 3, total: 9, pastasFechadas: 1, pastas: 1 }, true).dica.includes("Pastas fechadas") &&
+      textoDoStatus({ visiveis: 0, total: 9, pastasFechadas: 1, pastas: 1 }, true, true).principal.startsWith("Nenhum documento at\u00E9 agora") &&
       textoDoStatus({ visiveis: 3, total: 9, pastasFechadas: 1, pastas: 1 }, false).principal === "",
   );
 
@@ -471,7 +471,7 @@ export async function verificarFiltro(): Promise<void> {
       this.o.alvo = null;
     }
   };
-  const ctl = ligarFiltro(ctx, { Observador: FalsoObservador as unknown as typeof MutationObserver })!;
+  const ctl = ligarFiltro(ctx, { Observador: FalsoObservador as unknown as typeof MutationObserver, fila: null })!;
   checar("liga e devolve o controle", !!ctl);
   const barra = ctl.barra();
   const arvoreEl = d.getElementById("divArvore")!;
@@ -525,7 +525,7 @@ export async function verificarFiltro(): Promise<void> {
     (barra.querySelector(".spro-f-status-texto")!.textContent ?? "") === `${ext2.length} de ${noDomCount(d)} documentos`,
     barra.querySelector(".spro-f-status-texto")!.textContent,
   );
-  checar("a dica avisa da pasta fechada", (barra.querySelector(".spro-f-dica")!.textContent ?? "").includes("Pastas fechadas"));
+  checar("a frase 'Pastas fechadas nao entram' nao existe mais", !/n\u00E3o entram/.test(barra.textContent ?? ""));
   checar(
     "so os externos ficam",
     idsVisiveis(d, conhecidos).sort().join() ===
@@ -669,7 +669,7 @@ export async function verificarFiltro(): Promise<void> {
         this.o.alvo = null;
       }
     };
-    const DepsL = { Observador: Falso as unknown as typeof MutationObserver };
+    const DepsL = { Observador: Falso as unknown as typeof MutationObserver, fila: null };
     const comTopo = (monitorados: boolean): Document => {
       const dl = montarDom(real, new Set(["PASTA1", "PASTA2"]), { decorar: true });
       const topo = dl.createElement("div");
@@ -948,7 +948,7 @@ export async function verificarFiltro(): Promise<void> {
 
   secao("Filtro: casos de borda");
   const vazio = instalarDom('<html><body><form id="frmArvore"><div id="divArvore"></div></form></body></html>');
-  const ctl2 = ligarFiltro({ doc: vazio, idProcedimento: "1", unidade: { sigla: "" }, documentos: { todos: () => [] } })!;
+  const ctl2 = ligarFiltro({ doc: vazio, idProcedimento: "1", unidade: { sigla: "" }, documentos: { todos: () => [] } }, { fila: null })!;
   checar("processo sem documentos nem pastas: a barra fica escondida", ctl2.barra().hidden);
   ctl2.destruir();
   const semArvore = instalarDom("<html><body><p>nada</p></body></html>");
@@ -962,12 +962,15 @@ export async function verificarFiltro(): Promise<void> {
     { id: "201", nome: "Sigiloso A", icone: "documento_interno", sinais: ["ug:ANTT"] },
     { id: "202", nome: "Sigiloso B", icone: "documento_pdf" },
   ]);
-  const ctl3 = ligarFiltro({
-    doc: instalarDom(domMinimo(sig)),
-    idProcedimento: sig.idProcedimento,
-    unidade: { sigla: "ANTT" },
-    documentos: { todos: () => sig.documentos },
-  })!;
+  const ctl3 = ligarFiltro(
+    {
+      doc: instalarDom(domMinimo(sig)),
+      idProcedimento: sig.idProcedimento,
+      unidade: { sigla: "ANTT" },
+      documentos: { todos: () => sig.documentos },
+    },
+    { fila: null },
+  )!;
   disparar(ctl3.barra().querySelector('button[data-chip="externos"]')!, "click");
   checar("processo de nivel sigiloso: filtra do mesmo jeito (sem rede: fetch lancaria)", ctl3.estado().externos);
   ctl3.destruir();

@@ -8,6 +8,7 @@
  */
 import type { DocumentoArvore } from "@nucleo/dominio/arvore";
 import { idDoNo } from "../menuDoc/documentos";
+import { estadoDaPasta } from "../pastas/fila";
 import { aplicarFiltro, type FiltroArvore, filtroAtivo, type OpcoesFiltro } from "./filtro";
 
 export const ATR_OCULTO = "data-spro-f-oculto";
@@ -80,7 +81,7 @@ export interface ResumoDoFiltro {
   /** Documentos à vista / documentos conhecidos na tela. */
   visiveis: number;
   total: number;
-  /** Pastas cujos documentos ainda não vieram (o SEI só os traz quando o usuário abre a pasta). */
+  /** Pastas cujos documentos ainda não vieram (o SEI só os traz quando a pasta é aberta; a fila de pastas as abre). */
   pastasFechadas: number;
   pastas: number;
 }
@@ -132,7 +133,8 @@ export function aplicarNoDom(
     if (!/^anchorPASTA\d+$/.test(a.id)) continue;
     const pasta = a.id.slice("anchor".length);
     resumo.pastas += 1;
-    if (!pastasComDados.has(pasta)) {
+    // Carregada e vazia ("Nenhum protocolo encontrado") não tem nada que case: conta como com dados e some com o filtro.
+    if (!pastasComDados.has(pasta) && estadoDaPasta(doc, pasta) !== "carregada") {
       resumo.pastasFechadas += 1; // sem documentos conhecidos: fica à vista (não dá para dizer que não tem nada que case)
       continue;
     }

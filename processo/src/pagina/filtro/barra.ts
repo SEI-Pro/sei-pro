@@ -8,6 +8,7 @@
 import { h, icone } from "@comum/ui/dom";
 import type { DocumentoArvore } from "@nucleo/dominio/arvore";
 import { aoMudarTema, garantirEstilo, temaEscuro } from "../estilo";
+import { criarFila, type EstadoFila, type Fila, type OpcoesFila, TETO_PADRAO } from "../pastas/fila";
 import { aplicarNoDom, limparDoDom, type ResumoDoFiltro } from "./dom";
 import { FILTRO_VAZIO, type FiltroArvore, filtroAtivo } from "./filtro";
 
@@ -39,6 +40,7 @@ export interface ControleFiltro {
 
 const ESPERA_DIGITACAO_MS = 90;
 const ESPERA_ARVORE_MS = 120;
+const ESPERA_CONCLUIDA_MS = 4000;
 
 const CHIPS: ReadonlyArray<{ chave: "naoAssinados" | "externos" | "cancelados"; rotulo: string; ajuda: string }> = [
   {
@@ -50,12 +52,102 @@ const CHIPS: ReadonlyArray<{ chave: "naoAssinados" | "externos" | "cancelados"; 
   { chave: "cancelados", rotulo: "Cancelados", ajuda: "Mostrar só os documentos cancelados" },
 ];
 
-export function textoDoStatus(r: ResumoDoFiltro, ativo: boolean): { principal: string; dica: string } {
-  if (!ativo) return { principal: "", dica: "" };
+/** Quantos documentos há à vista. Com pastas ainda carregando, "nenhum" é provisório e diz isso. */
+export function textoDoStatus(r: ResumoDoFiltro, ativo: boolean, carregando = false): { principal: string } {
+  if (!ativo) return { principal: "" };
   const palavra = r.total === 1 ? "documento" : "documentos";
-  const principal = r.visiveis === 0 ? `Nenhum documento encontrado (${r.total} na árvore).` : `${r.visiveis} de ${r.total} ${palavra}`;
-  const dica = r.pastasFechadas > 0 ? "Pastas fechadas não entram: abra-as para filtrar os documentos delas." : "";
-  return { principal, dica };
+  if (r.visiveis === 0) {
+    return {
+      principal: carregando ? `Nenhum documento até agora (${r.total} na árvore).` : `Nenhum documento encontrado (${r.total} na árvore).`,
+    };
+  }
+  return { principal: `${r.visiveis} de ${r.total} ${palavra}` };
+}
+
+export type AcaoDaFila = "parar" | "continuar" | "tentar";
+
+export interface LinhaDaFila {
+  texto: string;
+  acao: { id: AcaoDaFila; rotulo: string; aria: string } | null;
+  /** 0 a 100, ou null (sem barra). */
+  progresso: number | null;
+  tom: "carregando" | "ok" | "aviso";
+}
+
+const plural = (n: number, um: string, varios: string): string => `${n} ${n === 1 ? um : varios}`;
+
+/**
+ * A linha de estado do carregamento das pastas: o que dizer, que botão oferecer e quanto da barra encher. Pura (testável).
+ * `pastasFechadas` é o que a árvore ainda mostra sem conteúdo; `mostrarConcluida` liga o "Todas as pastas carregadas".
+ */
+export function linhaDaFila(
+  e: EstadoFila,
+  ativo: boolean,
+  o: { pastasFechadas: number; teto: number; mostrarConcluida: boolean },
+): LinhaDaFila | null {
+  if (!ativo) return null;
+  const progresso = e.total > 0 ? Math.min(100, Math.round((e.feitas / e.total) * 100)) : null;
+  const falhou = e.falhas.length;
+  const tentar = { id: "tentar" as const, rotulo: "Tentar de novo", aria: "Tentar de novo carregar as pastas que falharam" };
+  const continuar = { id: "continuar" as const, rotulo: "Continuar", aria: "Continuar a carregar as pastas fechadas" };
+  switch (e.fase) {
+    case "carregando": {
+      if (e.total === 0) return null; // só reabrindo pastas que já estavam carregadas: nada a mostrar
+      const n = Math.min(e.feitas + 1, Math.max(e.total, 1));
+      return {
+        texto: `Carregando pastas ${n} de ${Math.max(e.total, 1)}${e.nomeAtual ? `: ${e.nomeAtual}` : ""}`,
+        acao: { id: "parar", rotulo: "Parar", aria: "Parar de carregar as pastas" },
+        progresso,
+        tom: "carregando",
+      };
+    }
+    case "pausada":
+      return {
+        texto: `Em pausa: a aba está oculta (${e.feitas} de ${e.total} pastas)`,
+        acao: { id: "parar", rotulo: "Parar", aria: "Parar de carregar as pastas" },
+        progresso,
+        tom: "carregando",
+      };
+    case "parada":
+      return {
+        texto: `Parou: ${plural(e.restantes, "pasta ainda fechada", "pastas ainda fechadas")}.`,
+        acao: continuar,
+        progresso: null,
+        tom: "aviso",
+      };
+    case "teto":
+      return {
+        texto: `Limite de ${o.teto} pastas por vez: ${plural(e.restantes, "pasta ainda fechada", "pastas ainda fechadas")}.`,
+        acao: continuar,
+        progresso: null,
+        tom: "aviso",
+      };
+    case "interrompida":
+      if (e.motivo === "sessao")
+        return { texto: "A sessão do SEI expirou: entre de novo e atualize a página.", acao: null, progresso: null, tom: "aviso" };
+      if (e.motivo === "ocupada")
+        return { texto: "Outra carga de pastas está em andamento neste quadro.", acao: tentar, progresso: null, tom: "aviso" };
+      return {
+        texto: `${plural(falhou, "pasta não carregou", "pastas não carregaram")}; ${plural(e.restantes, "ainda fechada", "ainda fechadas")}.`,
+        acao: tentar,
+        progresso: null,
+        tom: "aviso",
+      };
+    case "concluida":
+      if (falhou > 0)
+        return { texto: `${plural(falhou, "pasta não carregou", "pastas não carregaram")}.`, acao: tentar, progresso: null, tom: "aviso" };
+      if (e.feitas > 0 && o.mostrarConcluida) return { texto: "Todas as pastas carregadas", acao: null, progresso: 100, tom: "ok" };
+      return null;
+    default:
+      if (o.pastasFechadas > 0)
+        return {
+          texto: `${plural(o.pastasFechadas, "pasta ainda fechada", "pastas ainda fechadas")}.`,
+          acao: continuar,
+          progresso: null,
+          tom: "aviso",
+        };
+      return null;
+  }
 }
 
 const ROTULO_LUPA = "Filtrar documentos";
@@ -115,7 +207,7 @@ function criarBarra(): {
   limpar: HTMLButtonElement;
   chips: Map<string, HTMLButtonElement>;
   status: HTMLElement;
-  dica: HTMLElement;
+  fila: { raiz: HTMLElement; texto: HTMLElement; acao: HTMLButtonElement; barra: HTMLElement; enchimento: HTMLElement };
 } {
   const busca = h("input", {
     type: "search",
@@ -138,22 +230,46 @@ function criarBarra(): {
     );
   }
   const status = h("span", { class: "spro-f-status-texto" });
-  const dica = h("span", { class: "spro-f-dica" });
+  const filaTexto = h("span", { class: "spro-f-fila-texto" });
+  const filaAcao = h("button", { type: "button", class: "spro-f-fila-acao", hidden: true });
+  const enchimento = h("div", { class: "spro-f-prog-enchimento" });
+  const barraProg = h(
+    "div",
+    {
+      class: "spro-f-prog",
+      role: "progressbar",
+      "aria-label": "Progresso do carregamento das pastas",
+      "aria-valuemin": "0",
+      "aria-valuemax": "100",
+      hidden: true,
+    },
+    enchimento,
+  );
+  const fila = h("div", { class: "spro-f-fila", hidden: true }, h("div", { class: "spro-f-fila-linha" }, filaTexto, filaAcao), barraProg);
   const raiz = h(
     "div",
     { class: "spro-f-barra", role: "search", "aria-label": "Filtro da árvore do processo", "data-spro-processo-filtro": "1" },
     h("div", { class: "spro-f-linha" }, h("span", { class: "spro-f-lupa", "aria-hidden": "true" }, icone("busca", 13)), busca, limpar),
     h("div", { class: "spro-f-chips", role: "group", "aria-label": "Mostrar só" }, ...chips.values()),
-    h("div", { class: "spro-f-status", role: "status", "aria-live": "polite", hidden: true }, status, dica),
+    h("div", { class: "spro-f-status", role: "status", "aria-live": "polite", hidden: true }, status, fila),
   );
-  return { raiz, busca, limpar, chips, status, dica };
+  return { raiz, busca, limpar, chips, status, fila: { raiz: fila, texto: filaTexto, acao: filaAcao, barra: barraProg, enchimento } };
 }
 
 /**
  * Põe a barra acima da árvore e liga o filtro. Devolve null se o quadro não tem a árvore. Se algo tirar a barra da
  * página (a árvore se refaz), ela volta no mesmo lugar e com o mesmo estado.
  */
-export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof MutationObserver } = {}): ControleFiltro | null {
+export interface DepsFiltro {
+  Observador?: typeof MutationObserver;
+  /** A fila de pastas (testes passam a deles). `null` desliga o carregamento automático das pastas. */
+  fila?: Fila | null;
+  opcoesFila?: OpcoesFila;
+  /** Quanto o "Todas as pastas carregadas" fica na tela. */
+  esperaConcluidaMs?: number;
+}
+
+export function ligarFiltro(ctx: ContextoFiltro, deps: DepsFiltro = {}): ControleFiltro | null {
   const doc = ctx.doc;
   const arvore = doc.getElementById("divArvore");
   if (!arvore?.parentElement) return null;
@@ -168,6 +284,10 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
   let esperaDigitacao: ReturnType<typeof setTimeout> | undefined;
   let esperaArvore: ReturnType<typeof setTimeout> | undefined;
   let morto = false;
+  const fila: Fila | null = deps.fila === undefined ? criarFila(doc, deps.opcoesFila) : deps.fila;
+  const teto = deps.opcoesFila?.teto ?? TETO_PADRAO;
+  let concluidaVisivel = false;
+  let esperaConcluida: ReturnType<typeof setTimeout> | undefined;
 
   const colocar = (): void => {
     const alvo = doc.getElementById("divArvore");
@@ -208,16 +328,38 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
     }
   };
 
+  const pintarFila = (linha: LinhaDaFila | null): void => {
+    const f = ui.fila;
+    f.raiz.hidden = !linha;
+    if (!linha) {
+      f.raiz.removeAttribute("data-tom");
+      return;
+    }
+    f.raiz.setAttribute("data-tom", linha.tom);
+    if (f.texto.textContent !== linha.texto) f.texto.textContent = linha.texto;
+    f.acao.hidden = !linha.acao;
+    if (linha.acao) {
+      if (f.acao.textContent !== linha.acao.rotulo) f.acao.textContent = linha.acao.rotulo;
+      f.acao.setAttribute("aria-label", linha.acao.aria);
+      f.acao.setAttribute("data-acao", linha.acao.id);
+    }
+    f.barra.hidden = linha.progresso === null;
+    if (linha.progresso !== null) {
+      f.barra.setAttribute("aria-valuenow", String(linha.progresso));
+      f.enchimento.style.width = `${linha.progresso}%`;
+    }
+  };
+
   const pintarEstado = (): void => {
     const ativo = filtroAtivo(estado);
     for (const c of CHIPS) ui.chips.get(c.chave)?.setAttribute("aria-pressed", estado[c.chave] ? "true" : "false");
     if (ui.busca.value !== estado.texto) ui.busca.value = estado.texto;
     ui.limpar.hidden = !ativo;
-    const { principal, dica } = textoDoStatus(ultimo, ativo);
-    if (ui.status.textContent !== principal || ui.dica.textContent !== dica) {
-      ui.status.textContent = principal;
-      ui.dica.textContent = dica;
-    }
+    const e = fila?.estado();
+    const linha = e ? linhaDaFila(e, ativo, { pastasFechadas: ultimo.pastasFechadas, teto, mostrarConcluida: concluidaVisivel }) : null;
+    const { principal } = textoDoStatus(ultimo, ativo, e?.fase === "carregando" || e?.fase === "pausada");
+    if (ui.status.textContent !== principal) ui.status.textContent = principal;
+    pintarFila(linha);
     (ui.status.parentElement as HTMLElement).hidden = !ativo;
     ui.raiz.toggleAttribute("data-ativo", ativo);
     // Sem nada para filtrar (processo sem documentos nem pastas) a barra só atrapalharia.
@@ -260,9 +402,17 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
     }, ESPERA_ARVORE_MS);
   };
 
+  /** Depois de o usuário mexer no filtro: com filtro, carrega as pastas fechadas (uma por vez); sem filtro, para e re-fecha. */
+  const acompanharFila = (): void => {
+    if (!fila || morto) return;
+    if (filtroAtivo(estado)) fila.iniciar();
+    else fila.encerrar(true);
+  };
+
   const definir = (parcial: Partial<FiltroArvore>): void => {
     estado = { ...estado, ...parcial };
     aplicar();
+    acompanharFila();
   };
 
   // Eventos: tudo por ouvinte (nada de on*= no HTML).
@@ -270,7 +420,9 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
     estado = { ...estado, texto: ui.busca.value };
     clearTimeout(esperaDigitacao);
     esperaDigitacao = setTimeout(() => {
-      if (!morto) aplicar();
+      if (morto) return;
+      aplicar();
+      acompanharFila();
     }, ESPERA_DIGITACAO_MS);
   });
   // Esc: com algo filtrado, limpa e mantém o foco na busca; sem nada filtrado, fecha a barra (e devolve o foco à lupa).
@@ -291,6 +443,7 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
   const limpar = (): void => {
     clearTimeout(esperaDigitacao);
     estado = { ...FILTRO_VAZIO };
+    fila?.encerrar(true);
     aplicar();
     ui.busca.focus();
   };
@@ -312,6 +465,7 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
     // Fechar LIMPA: nenhum documento fica escondido sem a barra à vista.
     estado = { ...FILTRO_VAZIO };
     aberta = false;
+    fila?.encerrar(true);
     aplicar();
     if (focoDentro) lupa.focus();
   };
@@ -339,6 +493,28 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
       : null;
   obs?.observe(alvoObservado, { childList: true, subtree: true });
   const desligarTema = aoMudarTema(doc, pintarTema);
+  fila?.aoMudar((e) => {
+    if (morto) return;
+    if (e.fase === "concluida" && e.falhas.length === 0 && e.feitas > 0 && !concluidaVisivel) {
+      concluidaVisivel = true;
+      clearTimeout(esperaConcluida);
+      esperaConcluida = setTimeout(() => {
+        concluidaVisivel = false;
+        if (!morto) pintarEstado();
+      }, deps.esperaConcluidaMs ?? ESPERA_CONCLUIDA_MS);
+    } else if (e.fase !== "concluida") {
+      concluidaVisivel = false;
+    }
+    pintarEstado();
+    // Documentos que chegaram com a pasta: o observador da árvore já reaplica; a contagem acompanha na hora.
+    if (e.fase === "carregando") aplicar();
+  });
+  ui.fila.acao.addEventListener("click", () => {
+    const id = ui.fila.acao.getAttribute("data-acao");
+    if (id === "parar") fila?.parar();
+    else if (id === "continuar") fila?.continuar();
+    else if (id === "tentar") fila?.tentarDeNovo();
+  });
 
   colocar();
   colocarLupa();
@@ -355,6 +531,7 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
     limpar: () => {
       clearTimeout(esperaDigitacao);
       estado = { ...FILTRO_VAZIO };
+      fila?.encerrar(true);
       aplicar();
     },
     reaplicar: aplicar,
@@ -363,6 +540,9 @@ export function ligarFiltro(ctx: ContextoFiltro, deps: { Observador?: typeof Mut
       morto = true;
       clearTimeout(esperaDigitacao);
       clearTimeout(esperaArvore);
+      clearTimeout(esperaConcluida);
+      fila?.encerrar(true);
+      fila?.destruir();
       obs?.disconnect();
       topoObservado.obs?.disconnect();
       lupa.remove();
