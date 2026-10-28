@@ -1,5 +1,6 @@
 import { resumo } from "./util";
 import { verificarAbertura } from "./verificar-abertura";
+import { verificarAcoesNumero } from "./verificar-acoes-numero";
 import { verificarAdaptar } from "./verificar-adaptar";
 import { verificarAreaChrome } from "./verificar-area-chrome";
 import { verificarArmazenamento } from "./verificar-armazenamento";
@@ -53,6 +54,7 @@ await verificarCombobox();
 await verificarComboboxNoDialogo();
 await verificarComboboxExtensoes();
 await verificarMenu();
+await verificarAcoesNumero();
 await verificarFlutuante();
 await verificarPonteLateralGenerica();
 await verificarSincroniaBase();

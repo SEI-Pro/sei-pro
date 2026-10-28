@@ -1371,8 +1371,14 @@ dialog.spro-dialogo > header h2 {
   color: #e0a100;
   background: color-mix(in srgb, #e0a100 14%, transparent);
 }
-.spro-lista-protocolo {
+.spro-lista-proto-cel {
   grid-area: proto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.spro-lista-protocolo {
+  flex: 0 1 auto;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.005em;
