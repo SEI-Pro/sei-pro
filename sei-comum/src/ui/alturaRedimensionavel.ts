@@ -187,6 +187,8 @@ export function alturaRedimensionavel(o: OpcoesAltura): AlturaRedimensionavel {
   function aoMover(ev: Event): void {
     if (!arrasto) return;
     const p = ev as PointerEvent;
+    // O botao foi solto fora da janela (iframe de outra origem) e o pointerup nao chegou: encerra em vez de ficar preso.
+    if (p.buttons === 0) return aoSoltar(ev);
     mudar({ auto: false, px: limitar(arrasto.base + (p.clientY - arrasto.y)) }, true);
   }
   function aoSoltar(ev: Event): void {
@@ -239,6 +241,7 @@ export function alturaRedimensionavel(o: OpcoesAltura): AlturaRedimensionavel {
   alca.addEventListener("pointermove", aoMover);
   alca.addEventListener("pointerup", aoSoltar);
   alca.addEventListener("pointercancel", aoSoltar);
+  alca.addEventListener("lostpointercapture", aoSoltar);
   alca.addEventListener("dblclick", aoDuploClique);
   alca.addEventListener("keydown", aoTecla);
   alca.addEventListener("click", (ev) => ev.stopPropagation());

@@ -116,6 +116,9 @@ export async function verificarAltura(): Promise<void> {
     ponteiro(a, "pointerdown", 0, { button: 2 });
     checar("botao secundario nao arrasta", !a.classList.contains("spro-altura-arrastando"));
     ponteiro(a, "pointerdown", 100);
+    ponteiro(a, "pointermove", 140, { buttons: 0 });
+    checar("movimento sem botao (pointerup perdido) encerra o arrasto", !a.classList.contains("spro-altura-arrastando"));
+    ponteiro(a, "pointerdown", 100);
     ponteiro(a, "pointercancel", 100);
     checar("pointercancel encerra", !a.classList.contains("spro-altura-arrastando"));
   }
