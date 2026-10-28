@@ -1022,6 +1022,67 @@ dialog.spro-dialogo > header h2 {
   border: 0;
 }
 
+/* Altura limitada com rolagem interna e a alca que a redimensiona (alturaRedimensionavel.ts). Usa os tokens de base.css. */
+.spro-altura-rolagem {
+  max-height: var(--spro-altura-max, 480px);
+  overflow: auto;
+}
+/* Tabela dentro da area: o cabecalho acompanha a rolagem. */
+.spro-altura-rolagem > table > thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--spro-fundo);
+  box-shadow: inset 0 -1px 0 var(--spro-borda);
+}
+.spro-altura-alca {
+  position: relative;
+  box-sizing: border-box;
+  height: 14px;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: var(--spro-fundo-2);
+  border-top: 1px solid var(--spro-borda);
+  outline: none;
+}
+.spro-altura-alca::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 4px;
+  content: "";
+  background: var(--spro-borda-forte);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: background var(--spro-dur), width var(--spro-dur);
+}
+.spro-altura-alca[data-altura="auto"]::before {
+  width: 28px;
+}
+.spro-altura-alca:hover::before,
+.spro-altura-alca.spro-altura-arrastando::before {
+  background: var(--spro-destaque);
+}
+.spro-altura-alca:focus-visible {
+  box-shadow: inset var(--spro-anel);
+}
+.spro-altura-alca:focus-visible::before {
+  background: var(--spro-destaque);
+}
+@media (pointer: coarse) {
+  .spro-altura-alca {
+    height: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-altura-alca::before {
+    transition: none;
+  }
+}
+
 /* Shell do painel lateral (html/painel.html): abas Favoritos | Agente de IA. Base em sei-comum/src/ui/base.css. */
 html,
 body {

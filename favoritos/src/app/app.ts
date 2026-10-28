@@ -10,6 +10,7 @@ import type { DataISO } from "@comum/datas/dias";
 import type { Rpc } from "@comum/ponte/rpc";
 import { avisar } from "@comum/ui/aviso";
 import type { AbrirModal } from "@comum/ui/dialogo";
+import { alturaRedimensionavel } from "@comum/ui/alturaRedimensionavel";
 import { h, icone, type NomeIcone } from "@comum/ui/dom";
 import { fecharOrfaos } from "@comum/ui/flutuante";
 import { criarMenu } from "@comum/ui/menu";
@@ -77,6 +78,11 @@ export interface DepsApp {
    * iframe de outra origem (prova P2): quem embute o app mede a altura aqui.
    */
   aoRedesenhar?: () => void;
+  /**
+   * Painel embutido (iframe que cresce com a lista): a lista tem altura limitada, com rolagem interna, e uma alça no
+   * fim para o usuário mudar a altura (@comum/ui/alturaRedimensionavel). No painel lateral a janela já rola: não se aplica.
+   */
+  limitarAltura?: boolean;
   /** O pacote tem painel lateral (decide as opções de "onde mostrar"). */
   lateralDisponivel?: boolean;
   /** Carrega o Leaflet sob demanda; ausente, o app não oferece mapa. */
@@ -146,6 +152,18 @@ export class AppFavoritos {
       ordenar: (m) => void gravarPreferencias(this.d.sync, { ordem: m }),
       agrupar: (v) => void gravarPreferencias(this.d.sync, { agruparPorPasta: v }),
     });
+    const corpo = h("div", { class: "fav-corpo" });
+    // Iframe que cresce com o conteudo: `vh` nao serve (a janela e o proprio conteudo), por isso o padrao e em px.
+    const altura = d.limitarAltura
+      ? alturaRedimensionavel({
+          rolagem: corpo,
+          chave: "favoritos",
+          padraoPx: 520,
+          area: d.area,
+          rotulo: "Redimensionar a altura da lista de monitorados",
+          aoMudar: () => this.d.aoRedesenhar?.(),
+        })
+      : null;
     this.el = {
       faixas: h("div", { class: "fav-faixas" }),
       abas: h("div", { class: "spro-segmentado fav-abas", role: "tablist", "aria-label": "Listas" }),
@@ -153,7 +171,7 @@ export class AppFavoritos {
       busca,
       resumo: h("div", { class: "fav-resumo", hidden: true }),
       lote: h("div", { class: "fav-lote-lugar", hidden: true }),
-      corpo: h("div", { class: "fav-corpo" }),
+      corpo,
       status: h("p", { class: "fav-status-sync", hidden: true }),
       atualizar: h("button", {
         type: "button",
@@ -181,6 +199,7 @@ export class AppFavoritos {
       this.el.resumo,
       this.el.lote,
       this.el.corpo,
+      ...(altura ? [altura.alca] : []),
       this.el.status,
     );
     // "/" leva à busca, fora de campos de texto (como no GitHub e no Gmail).

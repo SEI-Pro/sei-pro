@@ -213,6 +213,7 @@ function criarApp(b: Base, ctx: ContextoAba, rpc: Pick<Rpc, "chamar">, g: Gancho
     hoje: () => hojeISO(),
     aoRedesenhar: g.aoRedesenhar,
     aoContar: g.aoContar,
+    limitarAltura: !lateral,
     lateralDisponivel: temPainelLateral(chrome.runtime.getManifest()),
     carregarMapa: () => carregarLeaflet(document, (c) => `../${c}`),
     copias: copiasNoIndexedDB(),

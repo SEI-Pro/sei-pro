@@ -7,7 +7,7 @@
  *   dist/js/favoritos/painel.js shell do painel lateral (html/painel.html: abas Favoritos | Agente)
  *   dist/js/favoritos/opcoes.js secao "onde mostrar" na pagina de opcoes (html/options.html)
  *   dist/html/{favoritos,painel}.html  copias de estatico/
- *   dist/css/{favoritos,painel}.css    sei-comum/src/ui/base.css + acoesNumeroProcesso.css + estatico/<nome>.css
+ *   dist/css/{favoritos,painel}.css    sei-comum/src/ui/base.css + acoesNumeroProcesso.css + alturaRedimensionavel.css + estatico/<nome>.css
  *
  * CSS importado no codigo (o balao em Shadow DOM) entra como texto (loader "text").
  */
@@ -44,6 +44,7 @@ await copyFile(resolve(AQUI, "estatico/painel.html"), join(DIST, "html", "painel
 const cssBase = [
   await readFile(resolve(AQUI, "../sei-comum/src/ui/base.css"), "utf8"),
   await readFile(resolve(AQUI, "../sei-comum/src/ui/acoesNumeroProcesso.css"), "utf8"),
+  await readFile(resolve(AQUI, "../sei-comum/src/ui/alturaRedimensionavel.css"), "utf8"),
 ].join("\n");
 for (const nome of ["favoritos", "painel"]) {
   const css = [cssBase, await readFile(resolve(AQUI, `estatico/${nome}.css`), "utf8")].join("\n");

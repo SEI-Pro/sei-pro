@@ -614,3 +614,29 @@ export async function verificarApp(): Promise<void> {
   await tique(60);
   checar("tirar o documento", !(await df.repos.unidade.obter("71"))?.documentos?.length);
 }
+
+export async function verificarAlturaDaLista(): Promise<void> {
+  secao("altura da lista: limitada com alca no painel embutido, solta no lateral");
+  {
+    const a = montar({ limitarAltura: true });
+    await a.repos.unidade.adicionar({ id: "1", protocolo: "50300.000001/2026-01", tipo: "Fiscalização" });
+    await a.app.iniciar();
+    const corpo = a.raiz.querySelector<HTMLElement>(".fav-corpo")!;
+    const alca = a.raiz.querySelector<HTMLElement>(".spro-altura-alca");
+    checar("a lista ganha a area com altura limitada", corpo.classList.contains("spro-altura-rolagem") && corpo.style.getPropertyValue("--spro-altura-max") === "520px");
+    checar("a alca fica logo depois da lista", !!alca && corpo.nextElementSibling === alca);
+    checar("alca acessivel (separator horizontal, focavel)", alca?.getAttribute("role") === "separator" && alca?.getAttribute("aria-orientation") === "horizontal" && alca?.getAttribute("tabindex") === "0");
+    // A alca sobrevive aos redesenhos da lista (o corpo e trocado por dentro).
+    await a.repos.unidade.adicionar({ id: "2", protocolo: "50300.000002/2026-02", tipo: "Contrato" });
+    await tique(30);
+    checar("redesenhar a lista nao troca a alca", a.raiz.querySelector(".spro-altura-alca") === alca && a.raiz.querySelectorAll("li.fav-item").length === 2);
+    disparar(alca!, "dblclick");
+    await tique();
+    checar("duplo clique ajusta ao conteudo e grava a escolha", corpo.getAttribute("data-altura") === "auto" && JSON.stringify((await a.area.obter("spro_altura:favoritos"))["spro_altura:favoritos"]) === JSON.stringify({ auto: true, px: null }));
+  }
+  {
+    const b = montar();
+    await b.app.iniciar();
+    checar("sem o dep (painel lateral): sem alca e sem limite", !b.raiz.querySelector(".spro-altura-alca") && !b.raiz.querySelector(".spro-altura-rolagem"));
+  }
+}
