@@ -719,9 +719,9 @@ dialog.spro-p-dialogo .spro-p-erro {
    icones nativos em `vertical-align: text-top`. Com line-height 0 o centro dessas caixas cai exatamente no topo da area de
    conteudo da linha. O icone e uma caixa atomica (inline-flex) de altura --spro-pm-h: no mesmo text-top ele ficaria com o TOPO
    ali (centro 8 px abaixo do texto), entao sobe metade da altura (margin-top negativo) e o centro fica no do texto. Mesmo
-   tamanho do icone nativo (16 px). No Estilo Avancado (`.seiSlim_arvore`) o nome vira `baseline` e a regra e outra (abaixo). */
+   porte dos icones de monitoramento (caixa de 20 px, glifo de 16 px). No Estilo Avancado (`.seiSlim_arvore`) o nome vira `baseline` e a regra e outra (abaixo). */
 span.action-doc.spro-pm-icone {
-  --spro-pm-h: 16px;
+  --spro-pm-h: 20px;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -751,8 +751,8 @@ span.action-doc.spro-pm-icone[aria-busy="true"] {
 }
 span.action-doc.spro-pm-icone svg {
   display: block;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   pointer-events: none;
 }
 /* Estilo Avancado: o nome da arvore fica em `baseline` (sei-slim.css), cujo centro e ~1,6 px acima do de uma caixa `middle`. */
