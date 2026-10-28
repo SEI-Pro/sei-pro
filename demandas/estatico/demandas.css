@@ -175,6 +175,15 @@ html[data-modo="embutido"] body {
   border: 1px solid var(--spro-borda);
   border-radius: var(--spro-raio-g);
 }
+/* Painel embutido: a tabela rola por dentro e a alca de altura fecha a moldura por baixo. */
+.dem-tabela-lugar > .dem-tabela-caixa {
+  border-bottom: 0;
+  border-radius: var(--spro-raio-g) var(--spro-raio-g) 0 0;
+}
+.dem-tabela-lugar > .spro-altura-alca {
+  border: 1px solid var(--spro-borda);
+  border-radius: 0 0 var(--spro-raio-g) var(--spro-raio-g);
+}
 .dem-tabela {
   width: 100%;
   border-collapse: collapse;

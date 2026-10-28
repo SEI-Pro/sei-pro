@@ -10,7 +10,7 @@
  *   dist/js/demandas/pagina-comum.js  o que os dois acima usam em comum (divisao do esbuild): nada se duplica
  *   dist/js/demandas/app.js    app de html/demandas.html (ESM): painel embutido, lateral e pagina
  *   dist/html/demandas.html    copia de estatico/
- *   dist/css/demandas.css      sei-comum/src/ui/base.css + sei-comum/src/ui/lista.css + estatico/demandas.css + ../projetos/estatico/gantt.css
+ *   dist/css/demandas.css      sei-comum/src/ui/base.css + sei-comum/src/ui/lista.css + sei-comum/src/ui/alturaRedimensionavel.css + estatico/demandas.css + ../projetos/estatico/gantt.css
  *
  * Portoes (o build grava e depois reprova; confira que a saida nao tem linha "ERRO:"):
  *   - JS so ASCII; CSS e HTML gerados tambem;
@@ -116,7 +116,11 @@ await copyFile(resolve(AQUI, "estatico/demandas.html"), join(DIST, "html", "dema
 const semComentarios = (c) => c.replace(/\/\*[\s\S]*?\*\//g, "");
 const css = [
   ...(await Promise.all(
-    ["../sei-comum/src/ui/base.css", "../sei-comum/src/ui/lista.css"].map(async (f) =>
+    [
+      "../sei-comum/src/ui/base.css",
+      "../sei-comum/src/ui/lista.css",
+      "../sei-comum/src/ui/alturaRedimensionavel.css",
+    ].map(async (f) =>
       semComentarios(await readFile(resolve(AQUI, f), "utf8")),
     ),
   )),

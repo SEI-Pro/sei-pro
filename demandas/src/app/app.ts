@@ -316,6 +316,8 @@ export async function montarApp(deps: DepsApp): Promise<AppMontado> {
               pintarLote();
             },
             ...(deps.abrirProcesso ? { abrirProcesso: deps.abrirProcesso } : {}),
+            // Só no painel embutido (iframe que cresce com o conteúdo); no lateral e na página a janela já rola.
+            ...(deps.modo === "embutido" ? { altura: { area: deps.area ?? null } } : {}),
           }),
         );
         break;

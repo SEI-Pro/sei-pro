@@ -3,7 +3,9 @@
  * inline do título e das etiquetas (duplo clique: Enter grava, Esc desfaz) e seleção em lote.
  */
 
+import type { Area } from "@comum/armazenamento/area";
 import type { DataISO } from "@comum/datas/dias";
+import { alturaRedimensionavel } from "@comum/ui/alturaRedimensionavel";
 import { avatar } from "@comum/ui/avatar";
 import { h, icone } from "@comum/ui/dom";
 import { criarMenu, type EntradaMenu } from "@comum/ui/menu";
@@ -26,6 +28,11 @@ export interface OpcoesTabela {
   selecionadas: ReadonlySet<string>;
   aoSelecionar(id: string, marcada: boolean): void;
   abrirProcesso?(protocolo: string, idProcedimento?: string): void;
+  /**
+   * Painel embutido: a tabela tem altura limitada (520 px), com rolagem interna e cabeçalho fixo, e uma alça no fim
+   * para mudar a altura (@comum/ui/alturaRedimensionavel). Ausente (lateral e página, que já rolam), a tabela cresce solta.
+   */
+  altura?: { area?: Area | null };
 }
 
 const COLUNAS: ReadonlyArray<[ColunaTabela, string]> = [
@@ -96,11 +103,20 @@ export function montarTabelaDemandas(o: OpcoesTabela): HTMLElement {
     }),
     h("th", { class: "dem-col-acoes" }, h("span", { class: "dem-oculto" }, "Ações")),
   );
-  return h(
+  const caixa = h(
     "div",
     { class: "dem-tabela-caixa" },
     h("table", { class: "dem-tabela" }, h("thead", {}, cabecalho), h("tbody", {}, ...itens.map((x) => linha(x, o)))),
   );
+  if (!o.altura) return caixa;
+  const controle = alturaRedimensionavel({
+    rolagem: caixa,
+    chave: "demandas-tabela",
+    padraoPx: 520,
+    area: o.altura.area ?? null,
+    rotulo: "Redimensionar a altura da tabela de demandas",
+  });
+  return h("div", { class: "dem-tabela-lugar" }, caixa, controle.alca);
 }
 
 /** Troca o texto por um campo; Enter grava, Esc desfaz. */

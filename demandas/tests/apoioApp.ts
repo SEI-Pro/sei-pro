@@ -208,6 +208,7 @@ export function appDeTeste(sobrepor: Partial<DepsApp> = {}) {
         return prefs;
       },
     },
+    area,
     abrirModal,
     confirmar: async () => true,
     ...sobrepor,

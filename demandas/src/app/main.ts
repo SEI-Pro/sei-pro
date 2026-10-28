@@ -122,6 +122,7 @@ async function ligar(
       concluirEtapa: (ref) => concluirEtapaDaDemanda(reposProjetos, ref, hojeISO()),
       tabelas: () => estadoDasTabelas(area, [esc.unidade, esc.eu]),
       preferencias: { ler: () => lerPreferencias(area), gravar: (p) => gravarPreferencias(area, p) },
+      area,
       abrirModal,
       confirmar,
       abrirProcesso: (protocolo, idProcedimento) =>

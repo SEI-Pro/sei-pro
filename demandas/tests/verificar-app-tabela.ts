@@ -265,3 +265,54 @@ export async function verificarAppTabela(): Promise<void> {
     checar("excluir em lote", !(await t.repos.unidade.obter(b)) && !(await t.repos.eu.obter(c)));
   }
 }
+
+export async function verificarAlturaDaTabela(): Promise<void> {
+  secao("tabela: altura limitada com alca so no painel embutido");
+  {
+    const t = appDeTeste({ modo: "embutido" });
+    await nova(t, "unidade", "Alfa");
+    await nova(t, "eu", "Beta");
+    await t.montar();
+    const caixa = t.raiz.querySelector<HTMLElement>(".dem-tabela-caixa");
+    const alca = t.raiz.querySelector<HTMLElement>(".spro-altura-alca");
+    checar(
+      "a caixa da tabela ganha altura maxima e rolagem",
+      !!caixa?.classList.contains("spro-altura-rolagem") && caixa.style.getPropertyValue("--spro-altura-max") === "520px",
+    );
+    checar(
+      "a alca e o ultimo item, logo depois da caixa",
+      !!alca && caixa?.nextElementSibling === alca && alca.parentElement?.lastElementChild === alca,
+    );
+    checar(
+      "alca acessivel",
+      alca?.getAttribute("role") === "separator" &&
+        alca.getAttribute("aria-orientation") === "horizontal" &&
+        alca.getAttribute("tabindex") === "0",
+    );
+    checar("as linhas continuam la", linhas(t).length === 2);
+    ev(alca!, "dblclick");
+    await tique();
+    checar(
+      "duplo clique ajusta ao conteudo e grava",
+      caixa?.getAttribute("data-altura") === "auto" &&
+        JSON.stringify((await t.area.obter("spro_altura:demandas-tabela"))["spro_altura:demandas-tabela"]) ===
+          JSON.stringify({ auto: true, px: null }),
+    );
+    const botaoOrdem = t.raiz.querySelector<HTMLElement>("th button.dem-ordenar");
+    botaoOrdem?.click();
+    await tique();
+    checar(
+      "redesenhar (ordenar) mantem o modo escolhido",
+      t.raiz.querySelector(".dem-tabela-caixa")?.getAttribute("data-altura") === "auto",
+    );
+  }
+  {
+    const t = appDeTeste({ modo: "pagina" });
+    await nova(t, "unidade", "Alfa");
+    await t.montar();
+    checar(
+      "na pagina (ja rola): sem alca e sem limite",
+      !t.raiz.querySelector(".spro-altura-alca") && !t.raiz.querySelector(".spro-altura-rolagem"),
+    );
+  }
+}

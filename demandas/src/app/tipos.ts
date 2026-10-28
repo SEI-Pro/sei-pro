@@ -1,5 +1,6 @@
 /** Tipos do app do Gestor de Demandas: o contexto do SEI e as dependências injetadas (testes e D13). */
 
+import type { Area } from "@comum/armazenamento/area";
 import type { DataISO } from "@comum/datas/dias";
 import type { AbrirModal } from "@comum/ui/dialogo";
 import type { montarGantt } from "@projetos/gantt/montar";
@@ -48,6 +49,8 @@ export interface DepsApp {
     gravar(p: Partial<PreferenciasDemandas>): Promise<PreferenciasDemandas>;
   };
   abrirModal: AbrirModal;
+  /** Onde guardar a altura escolhida da tabela (storage.local); ausente, vale só enquanto o painel está aberto. */
+  area?: Area;
   confirmar(texto: string, rotuloOk?: string): Promise<boolean>;
   abrirProcesso?(protocolo: string, idProcedimento?: string): void;
   /** A sincronização, as faixas de consentimento e os itens do menu (D12); ausente nos testes da D8 a D11. */
