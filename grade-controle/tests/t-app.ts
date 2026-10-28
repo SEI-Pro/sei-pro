@@ -921,3 +921,44 @@ await teste('andamento: o botao Atualizar pede novo aviso e reconsulta todos os 
   assert.equal(consultados.length, primeira * 2, 'todos reconsultados');
   a.app.fechar();
 });
+
+await teste('altura: a grade tem area limitada (68vh), alca no fim, e a janela de linhas acompanha o redimensionamento', async () => {
+  const { app } = await montar();
+  const raiz = q<HTMLElement>(app, '.spro-tabela');
+  const rolagem = q<HTMLElement>(app, '.spro-rolagem');
+  const alca = q<HTMLElement>(app, '.spro-altura-alca');
+  assert.ok(rolagem.classList.contains('spro-altura-rolagem'), 'a area usa o componente');
+  assert.equal(rolagem.style.getPropertyValue('--spro-altura-max'), '68vh', 'padrao 68vh');
+  assert.equal(raiz.lastElementChild, alca, 'a alca e o ultimo filho do container da grade');
+  assert.equal(alca.getAttribute('role'), 'separator');
+  assert.equal(alca.getAttribute('aria-orientation'), 'horizontal');
+  assert.equal(alca.getAttribute('aria-controls'), rolagem.id);
+
+  // Layout simulado: janela de 340 px (10 linhas de 34); area com a altura pedida (--spro-altura-max em px).
+  const antes = linhas(app).length;
+  Object.defineProperty(rolagem, 'clientHeight', { configurable: true, get: () => Math.min(100000, Number.parseFloat(rolagem.style.getPropertyValue('--spro-altura-max')) || 340) });
+  rolagem.getBoundingClientRect = (() => ({ height: Math.min(100000, Number.parseFloat(rolagem.style.getPropertyValue('--spro-altura-max')) || 340) })) as never;
+  const evento = (tipo: string, y: number) => {
+    const Ev = (alca.ownerDocument.defaultView as unknown as { Event: typeof Event }).Event;
+    const ev = new Ev(tipo, { bubbles: true, cancelable: true });
+    Object.assign(ev, { clientY: y, pointerId: 1, button: 0 });
+    alca.dispatchEvent(ev);
+  };
+  alca.dispatchEvent(new ((alca.ownerDocument.defaultView as unknown as { Event: typeof Event }).Event)('dblclick', { bubbles: true }));
+  await tick();
+  assert.equal(rolagem.getAttribute('data-altura'), 'auto', 'duplo clique ajusta ao conteudo');
+  assert.ok(linhas(app).length >= antes, 'ajustar ao conteudo nao tira linhas');
+  evento('pointerdown', 0);
+  evento('pointermove', -10000);
+  evento('pointerup', -10000);
+  await tick();
+  assert.equal(rolagem.style.getPropertyValue('--spro-altura-max'), '120px', 'o arrasto respeita o minimo');
+  const menor = linhas(app).length;
+  assert.ok(menor <= antes && menor > 0, `janela encolhe com a area (${antes} -> ${menor}), sem zerar`);
+  // Sem linhas em branco: os espacadores somam o total de linhas e a janela cobre a area visivel.
+  const corpo = q<HTMLElement>(app, '.spro-corpo');
+  const topo = Number.parseFloat(corpo.style.paddingTop) || 0;
+  const fundo = Number.parseFloat(corpo.style.paddingBottom) || 0;
+  assert.ok(topo + fundo + menor * 34 > 0 && menor * 34 >= 120, 'as linhas desenhadas cobrem a area visivel');
+  app.fechar();
+});

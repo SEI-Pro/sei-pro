@@ -11,6 +11,8 @@ import { resumoDaNota } from '../modelo/checklist';
 import { corDoMarcador } from './cores';
 import { iconeGrade } from './icones';
 import { acoesDoNumero } from '../../../sei-comum/src/ui/acoesNumeroProcesso';
+import { alturaRedimensionavel } from '../../../sei-comum/src/ui/alturaRedimensionavel';
+import type { Area } from '../../../sei-comum/src/armazenamento/area';
 
 export const ALTURA: Record<Densidade, number> = { compacta: 34, confortavel: 48 };
 const LARGURA: Record<Coluna, string> = {
@@ -173,12 +175,18 @@ function celula(p: Processo, c: Coluna, ctx: Ctx, props: PropsTabela): HTMLEleme
   return td;
 }
 
-export function criarTabela(inicial: PropsTabela) {
+/** Altura da area de linhas: 68vh por padrao, com a alca de redimensionar no fim da grade (sei-comum/ui/alturaRedimensionavel). */
+export const PADRAO_ALTURA_VH = 68;
+
+export function criarTabela(inicial: PropsTabela, opcoes: { area?: Area | null } = {}) {
   let p = inicial;
   const cabecalho = el('div', 'spro-cab');
   const corpo = el('div', 'spro-corpo');
   const rolagem = h('div', { class: 'spro-rolagem', tabindex: '-1' }, corpo);
   const raiz = h('div', { class: 'spro-tabela', role: 'table' }, cabecalho, rolagem);
+  // A janela de linhas depende da altura visivel: ao redimensionar, desenha de novo (sem linhas em branco).
+  const altura = alturaRedimensionavel({ rolagem, chave: 'grade-controle', padraoVh: PADRAO_ALTURA_VH, area: opcoes.area ?? null, rotulo: 'Redimensionar a altura da grade de processos', aoMudar: () => { if (p.linhas.length) desenharJanela(); } });
+  raiz.append(altura.alca);
   let ultimaChave = '';
   let focarEdicao = false;
   let focoNaEdicao = false;
@@ -293,5 +301,5 @@ export function criarTabela(inicial: PropsTabela) {
   }
 
   atualizar(inicial);
-  return { el: raiz, atualizar, mostrar, rolagem };
+  return { el: raiz, atualizar, mostrar, rolagem, altura };
 }

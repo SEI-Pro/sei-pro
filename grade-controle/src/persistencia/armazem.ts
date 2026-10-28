@@ -103,6 +103,8 @@ export function criarArmazem(areas: { local: Area; sync: Area }, unidade: string
   }
 
   return {
+    /** A area local: o que e do navegador e nao da unidade (ex.: a altura da grade, spro_altura:grade-controle). */
+    areaLocal: local,
     lerAndamentos,
     gravarAndamentos,
     lerEstado,

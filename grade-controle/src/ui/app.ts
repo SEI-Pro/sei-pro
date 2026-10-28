@@ -356,7 +356,7 @@ export function criarApp(d: DepsApp) {
     aoAbrirPrazo: (id) => d.abrirPrazo(id),
     aoEditar: (id, que) => { const p = todos.find((x) => x.id === id); if (!p) return; if (que === 'responsavel') editarResponsavel(edicao, p); else if (que === 'anotacao') editarAnotacao(edicao, p); else editarMarcadores(edicao, p); },
   });
-  const tabela = criarTabela(propsDaTabela([]));
+  const tabela = criarTabela(propsDaTabela([]), { area: d.armazem.areaLocal });
 
   async function salvarEspec(id: string) {
     const original = todos.find((p) => p.id === id);

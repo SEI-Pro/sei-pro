@@ -77,7 +77,8 @@ kbd { padding: 0 5px; font: 12px var(--spro-mono); background: var(--spro-fundo-
 .spro-cab { height: 38px; font-weight: 600; background: var(--spro-fundo-2); border-bottom: 1px solid var(--spro-borda); }
 .spro-th-b { display: inline-flex; gap: 4px; align-items: center; padding: 0; font-weight: 600; cursor: pointer; background: none; border: 0; }
 .spro-seta-ordem { color: var(--spro-destaque); font-size: 11px; }
-.spro-rolagem { max-height: 68vh; overflow: auto; }
+/* A altura (68vh por padrao) e a rolagem vem de .spro-altura-rolagem (sei-comum/ui/alturaRedimensionavel.css). */
+.spro-rolagem { overflow: auto; }
 .spro-linha { border-bottom: 1px solid var(--spro-borda); }
 .spro-linha:hover { background: var(--spro-fundo-2); }
 .spro-sel { background: color-mix(in srgb, var(--spro-destaque) 10%, transparent); }
