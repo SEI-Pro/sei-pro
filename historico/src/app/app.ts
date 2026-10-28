@@ -537,6 +537,11 @@ export class AppHistorico {
     },
     alternarFavorito: (v) => void this.alternarFavorito(v),
     copiar: (v) => this.copiarNumeros([v]),
+    copiarTexto: (t) =>
+      this.d.copiar(t).then(
+        () => true,
+        () => false,
+      ),
     remover: (v) => void this.removerVisitas([v]),
   };
 

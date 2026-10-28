@@ -349,6 +349,44 @@ export async function verificarApp(): Promise<void> {
     JSON.stringify(a.chamadas.at(-1)?.[1]) === JSON.stringify({ id: "3", protocolo: "50300.000003/2026-03", novaAba: true }),
   );
   checar("Ctrl+clique nao fecha o modal", a.t.fechou === 1);
+  secao("historico app: botoes de abrir em nova aba e copiar ao lado do numero");
+  const linhasDoNumero = [...a.raiz.querySelectorAll("li.spro-lista-item")];
+  checar(
+    "cada linha tem um 'abrir em nova aba' e um 'copiar', depois do numero",
+    linhasDoNumero.length === 5 &&
+      linhasDoNumero.every(
+        (li) =>
+          li.querySelectorAll(".spro-nova-guia").length === 1 &&
+          li.querySelectorAll(".spro-copiar-num").length === 1 &&
+          li.querySelector(".spro-nova-guia")?.previousElementSibling === li.querySelector(".spro-lista-protocolo") &&
+          li.querySelector(".spro-copiar-num")?.previousElementSibling === li.querySelector(".spro-nova-guia"),
+      ),
+  );
+  const fechouAntes = a.t.fechou;
+  const nChamadas = a.chamadas.length;
+  const li2 = a.raiz.querySelector('li[data-id="2"]')!;
+  (li2.querySelector(".spro-nova-guia") as HTMLElement).click();
+  await tique();
+  checar(
+    "nova aba: pede abrirProcesso com novaAba=true",
+    a.chamadas.length === nChamadas + 1 &&
+      JSON.stringify(a.chamadas.at(-1)) ===
+        JSON.stringify(["abrirProcesso", { id: "2", protocolo: "50300.000002/2026-02", novaAba: true }]),
+    a.chamadas.at(-1),
+  );
+  checar("nova aba: nao fecha o modal", a.t.fechou === fechouAntes);
+  const nCopias = a.copiados.length;
+  (li2.querySelector(".spro-copiar-num") as HTMLElement).click();
+  await tique();
+  checar(
+    "copiar: copia o numero formatado da linha",
+    a.copiados.length === nCopias + 1 && a.copiados.at(-1) === "50300.000002/2026-02",
+    a.copiados,
+  );
+  checar("copiar: nao abre o processo nem fecha o modal", a.chamadas.length === nChamadas + 1 && a.t.fechou === fechouAntes);
+  checar("copiar: feedback no botao", li2.querySelector(".spro-copiar-num")?.classList.contains("spro-copiado") === true);
+  checar("botoes nao marcam a selecao da linha", !li2.classList.contains("spro-lista-item-selecionado"));
+
   a.t.rejeitar.add("abrirProcesso");
   (a.raiz.querySelector('li[data-id="1"] .spro-lista-protocolo') as HTMLElement).click();
   await tique();

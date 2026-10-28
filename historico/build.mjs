@@ -5,7 +5,7 @@
  *   dist/js/init_historico.js  content script (IIFE, mundo isolado, todos os frames)
  *   dist/js/historico/app.js   app de html/historico.html (ESM): modal sobre o SEI ou aba da barra lateral
  *   dist/html/historico.html   copia de estatico/ (modal e aba da barra lateral)
- *   dist/css/historico.css     sei-comum/src/ui/base.css + sei-comum/src/ui/lista.css + estatico/historico.css
+ *   dist/css/historico.css     sei-comum/src/ui/base.css + sei-comum/src/ui/lista.css + sei-comum/src/ui/acoesNumeroProcesso.css + estatico/historico.css
  * JS todo ASCII (portao de bytes abaixo).
  */
 import { build } from "esbuild";
@@ -42,7 +42,7 @@ await mkdir(join(DIST, "html"), { recursive: true });
 await mkdir(join(DIST, "css"), { recursive: true });
 await copyFile(resolve(AQUI, "estatico/historico.html"), join(DIST, "html", "historico.html"));
 const css = await Promise.all(
-  ["../sei-comum/src/ui/base.css", "../sei-comum/src/ui/lista.css", "estatico/historico.css"].map((f) => readFile(resolve(AQUI, f), "utf8")),
+  ["../sei-comum/src/ui/base.css", "../sei-comum/src/ui/lista.css", "../sei-comum/src/ui/acoesNumeroProcesso.css", "estatico/historico.css"].map((f) => readFile(resolve(AQUI, f), "utf8")),
 );
 await writeFile(join(DIST, "css", "historico.css"), `/* GERADO por historico/build.mjs. NAO EDITE ESTE ARQUIVO. */\n${css.join("\n")}`);
 

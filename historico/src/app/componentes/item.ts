@@ -1,3 +1,4 @@
+import { acoesDoNumero } from "@comum/ui/acoesNumeroProcesso";
 import { h, icone } from "@comum/ui/dom";
 import { criarMenu } from "@comum/ui/menu";
 import { dataHora, quando } from "../../modelo/dias";
@@ -15,6 +16,8 @@ export interface AcoesItem {
   alternarSelecao(v: Visita, marcado: boolean): void;
   alternarFavorito?(v: Visita): void;
   copiar(v: Visita): void;
+  /** Copia o texto e diz se deu certo (botao ao lado do numero); sem ele, usa o clipboard do documento. */
+  copiarTexto?(texto: string): Promise<boolean>;
   remover(v: Visita): void;
 }
 
@@ -91,17 +94,28 @@ export function renderItem(v: Visita, a: ApoioItem, acoes: AcoesItem): HTMLLIEle
         )
       : null,
     h(
-      "a",
-      {
-        class: "spro-lista-protocolo",
-        href: "#",
-        title: "Abrir o processo (Ctrl+clique abre em outra aba)",
-        onclick: (ev) => {
-          ev.preventDefault();
-          acoes.abrir(v, novaAba(ev));
+      "span",
+      { class: "spro-lista-proto-cel" },
+      h(
+        "a",
+        {
+          class: "spro-lista-protocolo",
+          href: "#",
+          title: "Abrir o processo (Ctrl+clique abre em outra aba)",
+          onclick: (ev) => {
+            ev.preventDefault();
+            acoes.abrir(v, novaAba(ev));
+          },
         },
-      },
-      v.protocolo,
+        v.protocolo,
+      ),
+      acoesDoNumero({
+        protocolo: v.protocolo,
+        doc: document,
+        compacto: true,
+        aoAbrirNovaAba: () => acoes.abrir(v, true),
+        copiar: acoes.copiarTexto,
+      }),
     ),
     selo
       ? h(
