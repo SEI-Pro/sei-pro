@@ -17,6 +17,9 @@ Projetos):
   arquivo sincronizado, cópias diárias e o banco IndexedDB por módulo (`banco.ts`);
 - `painel/`: o painel embutido no Controle de Processos (`embutido.ts`), a altura
   do iframe, a sobreposição do diálogo e o aviso no rodapé da tela;
-- `ui/dialogo.ts` (modal, confirmar, baixar, escolher arquivo) e `ui/avatar.ts`.
+- `ui/dialogo.ts` (modal, confirmar, baixar, escolher arquivo) e `ui/avatar.ts`;
+- `ui/acoesNumeroProcesso.ts` + `.css`: `acoesDoNumero({protocolo, doc, aoAbrirNovaAba | href, copiar?, compacto?})`, os dois botões
+  (abrir em nova aba e copiar número) ao lado do número do processo, usados na grade do Controle, no Histórico
+  e nos Favoritos; `copiarTexto` (clipboard com fallback). O CSS entra nos builds de quem usa.
 
     npm install && npm run tipos && npm run verificar && npm run checar

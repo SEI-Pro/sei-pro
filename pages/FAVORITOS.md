@@ -69,6 +69,7 @@ Para renomear, trocar a cor ou excluir pastas e etiquetas, use **Pastas e etique
 * **Busca**: procura no número, no título, no tipo, na nota, nas etiquetas e no número dos documentos monitorados. Ela **não diferencia acento nem maiúscula**: *licitacao* acha *Licitação*. Aperte **/** para ir direto à busca.
 * **Filtros**: **Pasta**, **Etiqueta**, **Prazo** e **Situação** (com novidade, lembrete para hoje, com nota, fora da unidade…). Cada um aceita **várias escolhas ao mesmo tempo** e tem busca própria, também sem acento. Os filtros ligados aparecem como fichas; clique na ficha para tirar o filtro.
 * **Ordem**: a sua (arraste os itens), por prazo, novidades primeiro, mais recentes ou por número.
+* **Ao lado do número** de cada monitorado, dois botões aparecem ao passar o mouse (ou ao focar pelo teclado): **abrir o processo em outra aba** e **copiar o número do processo** (o ícone vira um visto por um instante).
 
 > ![Filtro por etiqueta com busca sem acento](../img/favoritos-filtros.png)
 

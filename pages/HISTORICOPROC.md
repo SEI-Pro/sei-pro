@@ -46,6 +46,8 @@ Opções marcadas no mesmo filtro somam: *Tipo* "Ofício" e "Licitação" mostra
 
 Clique no número. O processo abre na mesma aba do SEI, e a janela do histórico se fecha. Para abrir **em outra aba**, use **Ctrl + clique** (**⌘ + clique** no Mac) ou o **⋯** da linha › *Abrir em outra aba*.
 
+Ao passar o mouse na linha (ou focar pelo teclado), dois botões aparecem ao lado do número: um **abre o processo em outra aba** (a janela do histórico continua aberta) e o outro **copia o número do processo** (o ícone vira um visto por um instante). Os cliques neles não abrem o processo na aba atual nem marcam a linha.
+
 O **⋯** de cada linha também tem *Copiar número*, *Monitorar* e *Remover do histórico*.
 
 ### Monitorar sem sair da lista
