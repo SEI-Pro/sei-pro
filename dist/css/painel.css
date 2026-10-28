@@ -946,6 +946,82 @@ dialog.spro-dialogo > header h2 {
   }
 }
 
+/* Botoes "Abrir em nova aba" e "Copiar numero do processo" ao lado do numero (acoesNumeroProcesso.ts). */
+.spro-nova-guia,
+.spro-copiar-num {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--spro-suave);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity var(--spro-dur);
+}
+.spro-nova-guia {
+  margin-left: 4px;
+}
+.spro-copiar-num {
+  margin-left: 2px;
+}
+.spro-acao-num-compacta {
+  width: 20px;
+  height: 20px;
+}
+.spro-linha:hover .spro-nova-guia,
+.spro-linha:hover .spro-copiar-num,
+.spro-lista-item:hover .spro-nova-guia,
+.spro-lista-item:hover .spro-copiar-num,
+.spro-lista-item:focus-within .spro-nova-guia,
+.spro-lista-item:focus-within .spro-copiar-num,
+.fav-item:hover .spro-nova-guia,
+.fav-item:hover .spro-copiar-num,
+.fav-item:focus-within .spro-nova-guia,
+.fav-item:focus-within .spro-copiar-num,
+.spro-nova-guia:focus-visible,
+.spro-copiar-num:focus-visible,
+.spro-copiar-num.spro-copiado {
+  opacity: 1;
+}
+@media (hover: none) {
+  .spro-nova-guia,
+  .spro-copiar-num {
+    opacity: 1;
+  }
+}
+.spro-nova-guia:hover,
+.spro-copiar-num:hover {
+  color: var(--spro-destaque);
+  background: var(--spro-fundo-3);
+  text-decoration: none;
+}
+.spro-nova-guia:focus-visible,
+.spro-copiar-num:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+.spro-copiar-num.spro-copiado {
+  color: var(--spro-ok);
+}
+.spro-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Shell do painel lateral (html/painel.html): abas Favoritos | Agente de IA. Base em sei-comum/src/ui/base.css. */
 html,
 body {

@@ -79,6 +79,41 @@ export async function verificarApp(): Promise<void> {
     a.chamadas.some(([op, x]) => op === "abrirProcesso" && (x as { id: string }).id === "1"),
   );
 
+  const linhasMon = [...a.raiz.querySelectorAll("li.fav-item")];
+  checar(
+    "cada monitorado tem um 'abrir em nova aba' e um 'copiar', depois do numero",
+    linhasMon.length === 3 &&
+      linhasMon.every(
+        (li) =>
+          li.querySelectorAll(".spro-nova-guia").length === 1 &&
+          li.querySelectorAll(".spro-copiar-num").length === 1 &&
+          li.querySelector(".spro-nova-guia")?.previousElementSibling === li.querySelector(".fav-protocolo") &&
+          li.querySelector(".spro-copiar-num")?.previousElementSibling === li.querySelector(".spro-nova-guia"),
+      ),
+  );
+  const antesChamadas = a.chamadas.length;
+  (a.raiz.querySelector('li[data-id="2"] .spro-nova-guia') as HTMLElement).click();
+  checar(
+    "nova aba: abrirProcesso com novaAba=true",
+    a.chamadas.length === antesChamadas + 1 &&
+      JSON.stringify(a.chamadas.at(-1)?.[1]) === JSON.stringify({ id: "2", protocolo: "50300.000002/2026-02", novaAba: true }),
+    a.chamadas.at(-1),
+  );
+  const antesCopias = a.copiados.length;
+  (a.raiz.querySelector('li[data-id="2"] .spro-copiar-num') as HTMLElement).click();
+  await tique();
+  checar(
+    "copiar: numero da linha, sem abrir o processo",
+    a.copiados.at(-1) === "50300.000002/2026-02" && a.copiados.length === antesCopias + 1 && a.chamadas.length === antesChamadas + 1,
+    a.copiados,
+  );
+  a.copiados.length = 0;
+  checar(
+    "copiar: feedback no botao",
+    a.raiz.querySelector('li[data-id="2"] .spro-copiar-num')?.classList.contains("spro-copiado") === true,
+  );
+  checar("botoes nao marcam o monitorado", !a.raiz.querySelector('li[data-id="2"]')?.classList.contains("fav-item-selecionado"));
+
   const busca = a.raiz.querySelector('input[type="search"]') as HTMLInputElement;
   busca.value = "contrato";
   disparar(busca, "input");
@@ -563,7 +598,10 @@ export async function verificarApp(): Promise<void> {
   await df.repos.unidade.editar("71", { documentos: [{ id: "9", numero: "0104019", titulo: "Despacho 12", criadoEm: 1 }] });
   await df.app.iniciar();
   const docs = df.raiz.querySelector('li[data-id="71"] .fav-docs');
-  checar("lista os documentos do monitorado", !!docs && /0104019/.test(docs.textContent ?? "") && /Despacho 12/.test(docs.textContent ?? ""));
+  checar(
+    "lista os documentos do monitorado",
+    !!docs && /0104019/.test(docs.textContent ?? "") && /Despacho 12/.test(docs.textContent ?? ""),
+  );
   botao(docs!, "0104019 — Despacho 12")!.click();
   await tique(20);
   checar(

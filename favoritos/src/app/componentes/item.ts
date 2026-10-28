@@ -1,3 +1,4 @@
+import { acoesDoNumero } from "@comum/ui/acoesNumeroProcesso";
 import { h, icone } from "@comum/ui/dom";
 import { criarMenu } from "@comum/ui/menu";
 import type { DocumentoFavorito, Etiqueta, Favorito, Pasta, ResumoPrazo } from "../../modelo/tipos";
@@ -22,6 +23,8 @@ export interface ApoioItem {
 
 export interface AcoesItem {
   abrir(f: Favorito, novaAba: boolean): void;
+  /** Copia o texto e diz se deu certo (botao ao lado do numero); sem ele, usa o clipboard do documento. */
+  copiarTexto?(texto: string): Promise<boolean>;
   editar(f: Favorito): void;
   alternarSelecao(f: Favorito, marcado: boolean): void;
   remover(f: Favorito): void;
@@ -118,6 +121,13 @@ export function renderItem(f: Favorito, a: ApoioItem, acoes: AcoesItem): HTMLLIE
         },
         f.protocolo,
       ),
+      acoesDoNumero({
+        protocolo: f.protocolo,
+        doc: document,
+        compacto: true,
+        aoAbrirNovaAba: () => acoes.abrir(f, true),
+        copiar: acoes.copiarTexto,
+      }),
       f.sigiloso
         ? h(
             "span",

@@ -736,6 +736,11 @@ export class AppFavoritos {
 
   private acoesItem(ids: string[]): AcoesItem {
     return {
+      copiarTexto: (t) =>
+        this.d.copiar(t).then(
+          () => true,
+          () => false,
+        ),
       abrir: (f, novaAba) =>
         void this.d.rpc.chamar("abrirProcesso", { id: f.id, protocolo: f.protocolo, novaAba }).catch((e: Error) => avisar(e.message)),
       editar: (f) => this.abrirEditor(f),

@@ -512,6 +512,12 @@ html[data-modo="lateral"] .fav-status-sync {
   gap: 6px;
   min-width: 0;
 }
+.fav-cabeca-item .spro-nova-guia {
+  margin-left: -2px;
+}
+.fav-cabeca-item .spro-copiar-num {
+  margin-left: -4px;
+}
 .fav-protocolo {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
