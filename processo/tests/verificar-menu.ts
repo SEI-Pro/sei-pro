@@ -756,7 +756,7 @@ export async function verificarMenu(): Promise<void> {
       const regra = /span\.action-doc\.spro-pm-icone\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
       checar(
         "CSS do icone: altura fixa, text-top e margem negativa de meia altura (centro no do texto)",
-        /--spro-pm-h:\s*16px/.test(regra) &&
+        /--spro-pm-h:\s*20px/.test(regra) &&
           /height:\s*var\(--spro-pm-h\)/.test(regra) &&
           /vertical-align:\s*text-top/.test(regra) &&
           /margin:\s*calc\(var\(--spro-pm-h\)\s*\/\s*-2\)/.test(regra) &&
