@@ -12,7 +12,7 @@
  *   dist/js/projetos/pagina-comum.js  o que os dois acima usam em comum (divisao do esbuild): nada se duplica
  *   dist/js/projetos/app.js    app de html/projetos.html (ESM): painel embutido, lateral e impressao
  *   dist/html/projetos.html    copia de estatico/
- *   dist/css/projetos.css      sei-comum/src/ui/base.css + lista.css + estatico/projetos.css + estatico/gantt.css
+ *   dist/css/projetos.css      sei-comum/src/ui/base.css + lista.css + alturaRedimensionavel.css + estatico/projetos.css + estatico/gantt.css
  *                              (os dois do sei-comum sem os comentarios, que tem acento: a saida fica ASCII)
  *
  * Os tres arquivos do pacote da pagina sao importados por um content script: precisam estar no
@@ -131,7 +131,7 @@ const pacote = await build({
 await build({ ...comum, entryPoints: [resolve(AQUI, "src/app/main.ts")], outfile: join(DIST, APP), format: "esm" });
 
 await copyFile(resolve(AQUI, "estatico/projetos.html"), join(DIST, "html", "projetos.html"));
-const COMUNS = ["../sei-comum/src/ui/base.css", "../sei-comum/src/ui/lista.css"];
+const COMUNS = ["../sei-comum/src/ui/base.css", "../sei-comum/src/ui/lista.css", "../sei-comum/src/ui/alturaRedimensionavel.css"];
 const PROPRIOS = ["estatico/projetos.css", "estatico/gantt.css"];
 const semComentarios = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 const css = [

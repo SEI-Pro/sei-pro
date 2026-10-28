@@ -12,6 +12,7 @@
 
 import type { Area } from "@comum/armazenamento/area";
 import type { Rpc } from "@comum/ponte/rpc";
+import { alturaRedimensionavel } from "@comum/ui/alturaRedimensionavel";
 import { avisar } from "@comum/ui/aviso";
 import type { AbrirModal } from "@comum/ui/dialogo";
 import { h } from "@comum/ui/dom";
@@ -503,6 +504,25 @@ export class AppProjetos {
     return new Set(filtrarEtapas(p.etapas, f, this.d.hoje(), this.eu).map((e) => e.id));
   }
 
+  /**
+   * As tabelas da vista Lista (etapas do projeto e projetos do "Todos") rolam por dentro: altura de até 520 px, cabeçalho
+   * fixo e uma alça no fim para mudar a altura (@comum/ui/alturaRedimensionavel). Uma preferência só para as duas.
+   * O Gantt tem a própria rolagem e o painel lateral já rola: ficam como estavam.
+   */
+  private comAltura(tabela: HTMLElement): HTMLElement {
+    if (this.d.modo === "lateral") return tabela;
+    const rolagem = h("div", { class: "prj-tabela-rolagem" }, tabela);
+    const controle = alturaRedimensionavel({
+      rolagem,
+      chave: "projetos-lista",
+      padraoPx: 520,
+      area: this.d.area,
+      rotulo: "Redimensionar a altura da lista",
+      aoMudar: () => this.d.aoRedesenhar?.(),
+    });
+    return h("div", { class: "prj-tabela-lugar" }, rolagem, controle.alca);
+  }
+
   private pintarCorpo(): void {
     if (this.destruido) return;
     const hoje = this.d.hoje();
@@ -519,10 +539,12 @@ export class AppProjetos {
         // A tabela agrupa por fase sem recolher: o recolhido é da coluna do Gantt.
         this.descartarVista();
         this.corpo.replaceChildren(
-          montarTabelaEtapas(linhasDoProjeto(base, { hoje, ordem: this.prefs.ordemEtapas, recolhidas: new Set(), visiveis }), {
-            hoje,
-            aoClicar: (id, ancora) => this.abrirBalao(p.projeto.id, id, ancora),
-          }),
+          this.comAltura(
+            montarTabelaEtapas(linhasDoProjeto(base, { hoje, ordem: this.prefs.ordemEtapas, recolhidas: new Set(), visiveis }), {
+              hoje,
+              aoClicar: (id, ancora) => this.abrirBalao(p.projeto.id, id, ancora),
+            }),
+          ),
         );
         return;
       }
@@ -568,7 +590,7 @@ export class AppProjetos {
     }
     if (vista === "lista") {
       this.descartarVista();
-      this.corpo.replaceChildren(montarTabelaProjetos(itens, { aoAbrir: (id) => this.escolher(id) }));
+      this.corpo.replaceChildren(this.comAltura(montarTabelaProjetos(itens, { aoAbrir: (id) => this.escolher(id) })));
       return;
     }
     const dados = { itens, mostrarLista: this.prefs.mostrarLista, escala: this.prefs.escalaTodos, hoje };

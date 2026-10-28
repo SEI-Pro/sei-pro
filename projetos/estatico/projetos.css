@@ -347,6 +347,13 @@ html[data-sobreposto="abrindo"] dialog.spro-dialogo::backdrop {
 }
 
 /* ---------- Vista Lista ---------- */
+/* A tabela rola por dentro (altura e rolagem vem de .spro-altura-rolagem); a alca de altura fica logo abaixo. */
+.prj-tabela-lugar {
+  display: block;
+}
+.prj-tabela-rolagem {
+  min-width: 0;
+}
 .prj-tabela {
   width: 100%;
   border-collapse: collapse;

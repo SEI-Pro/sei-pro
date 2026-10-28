@@ -16,7 +16,7 @@ import { ESCOPO_EU, ESCOPO_UN, novoRepo } from "./apoioRepositorio";
 import { HOSTIL } from "./cenarioGantt";
 import { HOJE } from "./fabrica";
 import { ganttFalso } from "./ganttFalso";
-import { botao, checar, secao, tique } from "./util";
+import { botao, checar, disparar, secao, tique } from "./util";
 
 const CTX: ContextoProjetos = {
   host: "sei.x.gov.br",
@@ -818,4 +818,42 @@ export async function verificarApp(): Promise<void> {
   await w.un.criarEtapa({ projeto: w.ids.p, nome: "Depois de fechar", inicio: "2026-10-13", fim: "2026-10-14" });
   await tique(80);
   checar("nada desenha nem fica ouvindo", !w.raiz.firstChild && w.g.a.montagens === 0);
+}
+
+export async function verificarAlturaDaListaDoProjeto(): Promise<void> {
+  secao("app: vista Lista com altura limitada e alca (painel embutido)");
+  const r = await montar();
+  abrirAba(r, r.ids.p);
+  await tique();
+  botao(r.raiz, "Lista")!.click();
+  await tique();
+  const rolagem = r.raiz.querySelector<HTMLElement>(".prj-tabela-rolagem");
+  const alca = r.raiz.querySelector<HTMLElement>(".prj-tabela-lugar > .spro-altura-alca");
+  checar(
+    "a tabela de etapas rola por dentro, com 520 px de altura maxima",
+    !!rolagem?.classList.contains("spro-altura-rolagem") &&
+      rolagem.style.getPropertyValue("--spro-altura-max") === "520px" &&
+      !!rolagem.querySelector(".prj-tabela"),
+  );
+  checar(
+    "a alca esta no fim, acessivel",
+    !!alca && rolagem?.nextElementSibling === alca && alca.getAttribute("role") === "separator" && alca.getAttribute("tabindex") === "0",
+  );
+  disparar(alca!, "dblclick");
+  await tique();
+  checar(
+    "duplo clique ajusta ao conteudo e grava (uma preferencia para as duas listas)",
+    rolagem?.getAttribute("data-altura") === "auto" &&
+      JSON.stringify((await r.area.obter("spro_altura:projetos-lista"))["spro_altura:projetos-lista"]) ===
+        JSON.stringify({ auto: true, px: null }),
+  );
+  // A lista de projetos do "Todos" usa a mesma escolha.
+  abrirAba(r, "todos");
+  await tique();
+  checar(
+    "a lista de projetos do Todos tambem, com o modo escolhido",
+    r.raiz.querySelector(".prj-tabela-rolagem")?.getAttribute("data-altura") === "auto" &&
+      !!r.raiz.querySelector(".prj-tabela-lugar > .spro-altura-alca"),
+  );
+  r.app.destruir();
 }
