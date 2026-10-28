@@ -77,6 +77,10 @@ O **Filtro** mostra só o que interessa: atrasadas, em andamento, que vencem nes
 dias, só as minhas, e por responsável, por fase ou por etiqueta. A vista **Lista** mostra as etapas
 numa tabela.
 
+### Altura da lista
+
+Na vista **Lista** do painel embutido, tanto a das etapas de um projeto quanto a dos projetos da aba Todos (520 px por padrão, com o cabeçalho fixo; a mesma escolha vale para as duas). A área tem altura limitada e rola por dentro. Na linha horizontal logo abaixo dela, **arraste para cima ou para baixo** para deixar a área mais baixa ou mais alta (ou use as setas do teclado com a linha em foco: 24 px por vez, 96 px com Shift; **Home** vai à altura mínima). **Dê um duplo clique** na linha (ou Enter, ou **End**) para ajustar a altura ao conteúdo, sem rolagem interna; outro duplo clique volta à altura limitada. O Gantt não tem essa linha: ele tem a própria rolagem. A escolha fica guardada neste navegador, em cada painel.
+
 ### No painel lateral
 
 A aba **Projetos** do painel lateral é feita para o espaço estreito:

@@ -50,6 +50,10 @@ Se preferir monitorar sem balão, desligue **Perguntar pasta e etiquetas ao moni
 
 Escolha em **Preferências…** (menu ⚙ dos monitorados) ou nas configurações do SEI Pro: **Abaixo da lista de processos**, **No painel lateral** ou **Nos dois lugares**. Com a lista só abaixo, o botão **Monitorados** da barra rola a página até ela; nas outras escolhas, ele abre o painel lateral. O botão mostra, num selo vermelho, quantos monitorados pedem atenção: lembrete vencido ou novidade.
 
+### Altura da lista
+
+Na lista abaixo do Controle de Processos (no painel lateral a janela já rola, e não há essa linha). A área tem altura limitada e rola por dentro. Na linha horizontal logo abaixo dela, **arraste para cima ou para baixo** para deixar a área mais baixa ou mais alta (ou use as setas do teclado com a linha em foco: 24 px por vez, 96 px com Shift; **Home** vai à altura mínima). **Dê um duplo clique** na linha (ou Enter, ou **End**) para ajustar a altura ao conteúdo, sem rolagem interna; outro duplo clique volta à altura limitada. No modo "ajustar ao conteúdo" a área cresce até 5000 px; só passando disso a rolagem interna volta. A escolha fica guardada neste navegador, em cada painel.
+
 ### Organizar
 
 Clique no título do monitorado (ou em ✎) para editar:

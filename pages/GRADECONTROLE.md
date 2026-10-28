@@ -96,6 +96,10 @@ Marque as caixas (a do cabeçalho marca todos os visíveis) e uma barra de açõ
 
 Antes do número do processo ficam os ícones que o SEI Pro já tinha: **Monitorado**, **Projetos**, **Demandas** e **Acompanhamento especial** — com o mesmo clique de sempre. Mais um ícone indica se o processo é **recebido** ou **gerado**, e dois botões, que aparecem ao passar o mouse na linha (ou ao focar pelo teclado), ficam depois do número: um **abre o processo em nova guia** e o outro **copia o número do processo** (o ícone vira um visto por um instante; o clique não abre nem seleciona a linha). Processos **não visualizados** ficam em **vermelho**, **urgentes** e **trancados** ganham uma etiqueta e **sigilosos** mostram o aviso (o SEI não entrega a especificação nem os marcadores deles, e o Novo Controle de Processos também não).
 
+### Altura da lista
+
+A tabela do Novo Controle de Processos ocupa até 68% da altura da janela. A área tem altura limitada e rola por dentro. Na linha horizontal logo abaixo dela, **arraste para cima ou para baixo** para deixar a área mais baixa ou mais alta (ou use as setas do teclado com a linha em foco: 24 px por vez, 96 px com Shift; **Home** vai à altura mínima). **Dê um duplo clique** na linha (ou Enter, ou **End**) para ajustar a altura ao conteúdo, sem rolagem interna; outro duplo clique volta à altura limitada. No modo "ajustar ao conteúdo" a grade cresce até 5000 px (cerca de 150 linhas): com milhares de processos, a rolagem interna volta a partir daí, para a página não criar uma tela imensa. A escolha fica guardada neste navegador, em cada painel.
+
 ### Atalhos de teclado
 
 | Tecla | Faz |

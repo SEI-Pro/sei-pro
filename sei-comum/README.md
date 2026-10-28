@@ -21,5 +21,13 @@ Projetos):
 - `ui/acoesNumeroProcesso.ts` + `.css`: `acoesDoNumero({protocolo, doc, aoAbrirNovaAba | href, copiar?, compacto?})`, os dois botões
   (abrir em nova aba e copiar número) ao lado do número do processo, usados na grade do Controle, no Histórico
   e nos Favoritos; `copiarTexto` (clipboard com fallback). O CSS entra nos builds de quem usa.
+- `ui/alturaRedimensionavel.ts` + `.css`: `alturaRedimensionavel({rolagem, chave, padraoVh | padraoPx, minPx?, maxPx?, area?, rotulo?, aoMudar?})`
+  devolve `{alca, estado(), ajustarAoConteudo(), limitar(px?), destruir()}`. A área ganha `max-height` (variável `--spro-altura-max`)
+  e rolagem; a `alca` (role=separator horizontal, focável) vai logo depois dela e muda a altura por arrasto (pointer events),
+  setas (24 px, Shift 96), Home (mínimo) e End/Enter/Espaço/duplo clique (modo auto: até `TETO_AUTO_PX` = 5000 px; outro
+  duplo clique volta ao limitado). Persiste em `spro_altura:<chave>` na `area` (com memória do módulo, porque os painéis redesenham
+  o corpo); falha de armazenamento é silenciosa. Em iframe que cresce com o conteúdo use `padraoPx` (`vh` seria circular).
+  `comAlturaRedimensionavel` devolve o envoltório com área + alça. Usado na grade do Controle (68vh), nos Monitorados, na tabela
+  das Demandas e nas listas dos Projetos (520 px). O CSS entra nos builds de quem usa.
 
     npm install && npm run tipos && npm run verificar && npm run checar

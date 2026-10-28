@@ -9,6 +9,8 @@ acompanha o usuário em qualquer unidade. Os dados ficam em `chrome.storage.loca
 - `src/app/` página `dist/html/favoritos.html`, aberta como iframe abaixo da lista.
 - Cada monitorado tem, ao lado do número, os botões de abrir em outra aba (ponte `abrirProcesso`) e de copiar o número
   (componente comum `acoesDoNumero`).
+- No painel embutido (`limitarAltura`), a lista (`.fav-corpo`) tem altura limitada (520 px) com rolagem interna e a alça de
+  redimensionar no fim (`@comum/ui/alturaRedimensionavel`, chave `favoritos`); o painel lateral não usa.
 - `src/modelo/`, `src/repositorio.ts`, `src/migracao/` sem DOM, cobertos por `tests/`.
 
     npm install && npm run tipos && npm run checar && npm run build

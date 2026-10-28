@@ -40,6 +40,10 @@ Os filtros do alto (situação, prazo, prioridade, responsável, etiqueta e a bu
 
 > ![Tabela, Quadro, Cronograma e Painel das Demandas](../img/demandas-visoes.gif)
 
+### Altura da lista
+
+Na visão **Tabela** do painel embutido (520 px por padrão, com o cabeçalho fixo). A área tem altura limitada e rola por dentro. Na linha horizontal logo abaixo dela, **arraste para cima ou para baixo** para deixar a área mais baixa ou mais alta (ou use as setas do teclado com a linha em foco: 24 px por vez, 96 px com Shift; **Home** vai à altura mínima). **Dê um duplo clique** na linha (ou Enter, ou **End**) para ajustar a altura ao conteúdo, sem rolagem interna; outro duplo clique volta à altura limitada. O Quadro, o Cronograma e o Painel não têm essa linha: eles têm a própria rolagem ou crescem com o conteúdo. A escolha fica guardada neste navegador, em cada painel.
+
 ### O botão "Demandas" na barra do processo
 
 Com um processo aberto, aparece o botão **Demandas** na barra de ações, com um número quando o processo já tem demandas. Ele mostra as demandas ligadas àquele processo e deixa criar uma nova ali mesmo, em **Nova demanda deste processo**. O formulário já vem preenchido com o que o SEI mostra na tela:
