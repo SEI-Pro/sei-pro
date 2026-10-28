@@ -30,6 +30,7 @@ import { criarFonteSei } from './paginas/carregar';
 import { criarArmazem } from './persistencia/armazem';
 import { criarApp, type App } from './ui/app';
 import cssGrade from './style.css';
+import cssAcoesNumero from '../../sei-comum/src/ui/acoesNumeroProcesso.css';
 import cssPagina from './pagina.css';
 
 const OPCAO = 'gradecontrole';
@@ -108,7 +109,7 @@ function montar() {
       atribuir: async (protocolo, usuario) => void (await atribuirProcesso(sei, protocolo, usuario, { aplicar: true })),
     },
     acoes: () => acoesDaBarra(document),
-    css: `${cssBase}\n${cssGrade}`,
+    css: `${cssBase}\n${cssAcoesNumero}\n${cssGrade}`,
     escuro: escuro(),
     baixar: (n, c, t) => baixar(n, c, t),
     novoId: () => novoId(),

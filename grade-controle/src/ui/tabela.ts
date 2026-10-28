@@ -10,7 +10,7 @@ import { type Coluna, type CampoOrdem, type CriterioOrdem, type Densidade, type 
 import { resumoDaNota } from '../modelo/checklist';
 import { corDoMarcador } from './cores';
 import { iconeGrade } from './icones';
-import { botaoCopiarNumero, copiarTexto } from './copiarNumero';
+import { acoesDoNumero } from '../../../sei-comum/src/ui/acoesNumeroProcesso';
 
 export const ALTURA: Record<Densidade, number> = { compacta: 34, confortavel: 48 };
 const LARGURA: Record<Coluna, string> = {
@@ -84,8 +84,7 @@ function celula(p: Processo, c: Coluna, ctx: Ctx, props: PropsTabela): HTMLEleme
       if (!props.semOrigem) td.append(h('span', { class: `spro-origem spro-origem-${p.grupo}`, title: rec ? 'Processo recebido: veio de outra unidade' : 'Processo gerado: autuado nesta unidade', role: 'img', 'aria-label': rec ? 'Processo recebido' : 'Processo gerado' }, iconeGrade(rec ? 'recebido' : 'gerado', 16)));
       const a = h('a', { class: `spro-proc${p.naoVisualizado ? ' spro-novo' : ''}`, href: p.link ?? '#', title: 'Abrir o processo' }, p.protocolo);
       td.append(a);
-      if (p.link) td.append(h('a', { class: 'spro-nova-guia', href: p.link, target: '_blank', rel: 'noopener', title: 'Abrir em nova guia', 'aria-label': `Abrir ${p.protocolo} em nova guia` }, iconeGrade('novaGuia', 14)));
-      td.append(botaoCopiarNumero(p.protocolo, (t) => copiarTexto(document, t)));
+      td.append(acoesDoNumero({ protocolo: p.protocolo, doc: document, href: p.link }));
       if (p.sigiloso) td.append(h('span', { class: 'spro-sigilo', title: 'Processo sigiloso' }, 'sigiloso'));
       if (p.urgente) td.append(h('span', { class: 'spro-urgente', title: 'Marcado como urgente' }, 'urgente'));
       if (p.trancado) td.append(h('span', { class: 'spro-sigilo', title: 'Processo trancado' }, 'trancado'));
