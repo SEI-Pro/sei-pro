@@ -965,6 +965,7 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim .infraAreaDados a.ancoraPadraoPreta {
     color: #666;
 }
+.seiSlim #divFiltro a.ancoraPadraoPreta[data-spro-click*="acaoConfigurarDetalhe"]:before,
 .seiSlim #divFiltro a.ancoraPadraoPreta[onclick*="acaoConfigurarDetalhe("]:before {
     content: "\f0db";
 }
@@ -1870,9 +1871,12 @@ body.dark-mode,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"],
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"],
 .seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"],
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"],
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("],
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"],
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"],
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("],
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"],
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("],
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"],
 .seiSlim a.botaoSEI[href*="?acao=documento_mover"],
@@ -1923,21 +1927,32 @@ body.dark-mode,
 .seiSlim a[href*="acao=secao_modelo_listar"],
 .seiSlim td:last-child a[href*="controlador.php?acao="][href*="_listar&acao_origem="]:not(.ancoraPadraoPreta),
 .seiSlim a[href*="acao=modelo_alterar"],
+.seiSlim a[data-spro-click*="acaoRemoverSobrestamento"],
 .seiSlim a[onclick*="acaoRemoverSobrestamento("],
+.seiSlim a[data-spro-click*="infraAcaoPaginar"],
 .seiSlim a[onclick*="infraAcaoPaginar("],
+.seiSlim a[data-spro-click*="infraTransportarItem"],
 .seiSlim a[onclick*="infraTransportarItem("],
+.seiSlim a[data-spro-click*="acaoAlterar"],
 .seiSlim a[onclick*="acaoAlterar("],
+.seiSlim a[data-spro-click*="acaoDesativar"],
 .seiSlim a[onclick*="acaoDesativar("],
+.seiSlim a[data-spro-click*="acaoReativar"],
 .seiSlim a[onclick*="acaoReativar("],
+.seiSlim a[data-spro-click*="acaoCancelarDisponibilizacao"],
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("],
+.seiSlim a[data-spro-click*="acaoDisponibilizar"],
 .seiSlim a[onclick*="acaoDisponibilizar("],
+.seiSlim a[data-spro-click*="acaoExcluir"],
 .seiSlim a[onclick*="acaoExcluir("],
+.seiSlim a[data-spro-click*="acaoConcluir"],
 .seiSlim a[onclick*="acaoConcluir("],
 span.tagUserColorPro[data-color],
 a[href*="andamento_marcador_gerenciar"][data-color],
 .dd-container a.dd-option[data-color],
 .dd-container a.dd-selected[data-color],
 #frmMarcadorLista td:nth-child(2) a[href][data-color],
+.seiSlim a[data-spro-click*="acaoAssinar"],
 .seiSlim a[onclick*="acaoAssinar("],
 .seiSlim a#lnkInfraCheck,
 .seiSlim a[onclick*="setSelectAllTr"],
@@ -1967,24 +1982,43 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick="encaminharEmail();"],
 .seiSlim a.botaoSEI[onclick="encaminharEmail();"],
 .seiSlim a.botaoSEI[onclick="concluirProcesso();"],
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"],
 .seiSlim a.botaoSEI[onclick*="editarConteudo("],
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"],
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("],
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"],
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("],
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"],
 .seiSlim a.botaoSEI[onclick*="saveAtividade("],
+.seiSlim a.botaoSEI[data-spro-click*="selectAtividadeBox"],
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("],
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"],
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("],
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"],
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("],
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"],
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("],
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"],
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("],
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"],
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("],
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"],
 .seiSlim a.botaoSEI[onclick*="openListNewTab("],
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"],
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("],
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"],
 .seiSlim a.botaoSEI[onclick*="getDosimetria("],
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"],
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("],
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"],
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("],
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"],
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("],
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"],
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("],
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"],
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("],
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"],
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("],
 .seiSlim a[id*="anchorImg"][data-img],
 .seiSlim span.infraImgPro[data-img],
@@ -2029,43 +2063,81 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick="encaminharEmail();"] img:hover,
 .seiSlim a.botaoSEI[onclick="concluirProcesso();"] img,
 .seiSlim a.botaoSEI[onclick="concluirProcesso();"] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"] img,
 .seiSlim a.botaoSEI[onclick*="editarConteudo("] img,
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"] img:hover,
 .seiSlim a.botaoSEI[onclick*="editarConteudo("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"] img,
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"] img,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("] img,
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"] img:hover,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"] img,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("] img,
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"] img:hover,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="selectAtividadeBox"] img,
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("] img,
+.seiSlim a.botaoSEI[data-spro-click*="selectAtividadeBox"] img:hover,
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"] img,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("] img,
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"] img:hover,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"] img,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"] img,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("] img,
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"] img:hover,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"] img,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img,
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"] img:hover,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"] img,
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img,
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"] img:hover,
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"] img,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img,
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"] img:hover,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"] img,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"] img,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"] img,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("] img,
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"] img:hover,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"] img,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"] img,
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("] img,
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"] img:hover,
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"] img,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("] img,
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"] img:hover,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"] img,
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("] img,
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"] img:hover,
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"] img,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("] img,
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"] img:hover,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"] img,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"] img:hover,
@@ -2107,13 +2179,19 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"] img,
 .seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"] img,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img,
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"] img:hover,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"] img,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("] img,
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"] img:hover,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("] img:hover,
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"] img,
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"] img:hover,
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"] img,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("] img,
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"] img:hover,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"] img,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"] img:hover,
@@ -2211,25 +2289,45 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim td:last-child a[href*="controlador.php?acao="][href*="_listar&acao_origem="]:not(.ancoraPadraoPreta) img:hover,
 .seiSlim a[href*="acao=modelo_alterar"] img,
 .seiSlim a[href*="acao=modelo_alterar"] img:hover,
+.seiSlim a[data-spro-click*="acaoRemoverSobrestamento"] img,
 .seiSlim a[onclick*="acaoRemoverSobrestamento("] img,
+.seiSlim a[data-spro-click*="acaoRemoverSobrestamento"] img:hover,
 .seiSlim a[onclick*="acaoRemoverSobrestamento("] img:hover,
+.seiSlim a[data-spro-click*="infraAcaoPaginar"] img,
 .seiSlim a[onclick*="infraAcaoPaginar("] img,
+.seiSlim a[data-spro-click*="infraAcaoPaginar"] img:hover,
 .seiSlim a[onclick*="infraAcaoPaginar("] img:hover,
+.seiSlim a[data-spro-click*="infraTransportarItem"] img,
 .seiSlim a[onclick*="infraTransportarItem("] img,
+.seiSlim a[data-spro-click*="infraTransportarItem"] img:hover,
 .seiSlim a[onclick*="infraTransportarItem("] img:hover,
+.seiSlim a[data-spro-click*="acaoAlterar"] img,
 .seiSlim a[onclick*="acaoAlterar("] img,
+.seiSlim a[data-spro-click*="acaoAlterar"] img:hover,
 .seiSlim a[onclick*="acaoAlterar("] img:hover,
+.seiSlim a[data-spro-click*="acaoDesativar"] img,
 .seiSlim a[onclick*="acaoDesativar("] img,
+.seiSlim a[data-spro-click*="acaoDesativar"] img:hover,
 .seiSlim a[onclick*="acaoDesativar("] img:hover,
+.seiSlim a[data-spro-click*="acaoReativar"] img,
 .seiSlim a[onclick*="acaoReativar("] img,
+.seiSlim a[data-spro-click*="acaoReativar"] img:hover,
 .seiSlim a[onclick*="acaoReativar("] img:hover,
+.seiSlim a[data-spro-click*="acaoCancelarDisponibilizacao"] img,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("] img,
+.seiSlim a[data-spro-click*="acaoCancelarDisponibilizacao"] img:hover,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("] img:hover,
+.seiSlim a[data-spro-click*="acaoDisponibilizar"] img,
 .seiSlim a[onclick*="acaoDisponibilizar("] img,
+.seiSlim a[data-spro-click*="acaoDisponibilizar"] img:hover,
 .seiSlim a[onclick*="acaoDisponibilizar("] img:hover,
+.seiSlim a[data-spro-click*="acaoExcluir"] img,
 .seiSlim a[onclick*="acaoExcluir("] img,
+.seiSlim a[data-spro-click*="acaoExcluir"] img:hover,
 .seiSlim a[onclick*="acaoExcluir("] img:hover,
+.seiSlim a[data-spro-click*="acaoConcluir"] img,
 .seiSlim a[onclick*="acaoConcluir("] img,
+.seiSlim a[data-spro-click*="acaoConcluir"] img:hover,
 .seiSlim a[onclick*="acaoConcluir("] img:hover,
 .dd-container a.dd-selected[data-color] img,
 .dd-container a.dd-selected[data-color] img:hover,
@@ -2241,7 +2339,9 @@ a[href*="andamento_marcador_gerenciar"][data-color] img,
 a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
 span.tagUserColorPro[data-color] img,
 span.tagUserColorPro[data-color] img:hover,
+.seiSlim a[data-spro-click*="acaoAssinar"] img,
 .seiSlim a[onclick*="acaoAssinar("] img,
+.seiSlim a[data-spro-click*="acaoAssinar"] img:hover,
 .seiSlim a[onclick*="acaoAssinar("] img:hover,
 .seiSlim a#lnkInfraCheck img,
 .seiSlim a#lnkInfraCheck img:hover,
@@ -2316,24 +2416,43 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_concluir"]:before,
 .seiSlim a.botaoSEI[onclick="encaminharEmail();"]:before,
 .seiSlim a.botaoSEI[onclick="concluirProcesso();"]:before,
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"]:before,
 .seiSlim a.botaoSEI[onclick*="editarConteudo("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"]:before,
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"]:before,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"]:before,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="selectAtividadeBox"]:before,
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"]:before,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"]:before,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"]:before,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"]:before,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"]:before,
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"]:before,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"]:before,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"]:before,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"]:before,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"]:before,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"]:before,
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"]:before,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"]:before,
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"]:before,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:before,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"]:before,
@@ -2355,9 +2474,12 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"]:before,
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"]:before,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"]:before,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("]:before,
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"]:before,
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"]:before,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("]:before,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:before,
 .seiSlim a.botaoSEI[href*="?acao=documento_mover"]:before,
@@ -2459,15 +2581,25 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a[href*="acao=secao_modelo_listar"]:before,
 .seiSlim td:last-child a[href*="controlador.php?acao="][href*="_listar&acao_origem="]:not(.ancoraPadraoPreta):before,
 .seiSlim a[href*="acao=modelo_alterar"]:before,
+.seiSlim a[data-spro-click*="acaoRemoverSobrestamento"]:before,
 .seiSlim a[onclick*="acaoRemoverSobrestamento("]:before,
+.seiSlim a[data-spro-click*="infraAcaoPaginar"]:before,
 .seiSlim a[onclick*="infraAcaoPaginar("]:before,
+.seiSlim a[data-spro-click*="infraTransportarItem"]:before,
 .seiSlim a[onclick*="infraTransportarItem("]:before,
+.seiSlim a[data-spro-click*="acaoAlterar"]:before,
 .seiSlim a[onclick*="acaoAlterar("]:before,
+.seiSlim a[data-spro-click*="acaoDesativar"]:before,
 .seiSlim a[onclick*="acaoDesativar("]:before,
+.seiSlim a[data-spro-click*="acaoReativar"]:before,
 .seiSlim a[onclick*="acaoReativar("]:before,
+.seiSlim a[data-spro-click*="acaoCancelarDisponibilizacao"]:before,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("]:before,
+.seiSlim a[data-spro-click*="acaoDisponibilizar"]:before,
 .seiSlim a[onclick*="acaoDisponibilizar("]:before,
+.seiSlim a[data-spro-click*="acaoExcluir"]:before,
 .seiSlim a[onclick*="acaoExcluir("]:before,
+.seiSlim a[data-spro-click*="acaoConcluir"]:before,
 .seiSlim a[onclick*="acaoConcluir("]:before,
 .dd-container a.dd-option[data-color]:before,
 .dd-container a.dd-selected[data-color]:before,
@@ -2475,6 +2607,7 @@ span.tagUserColorPro[data-color] img:hover,
 span.tagUserColorPro[data-color]:before,
 a[href*="andamento_marcador_gerenciar"][data-color]:before,
 #btnLiberarMarcador[data-color]:before,
+.seiSlim a[data-spro-click*="acaoAssinar"]:before,
 .seiSlim a[onclick*="acaoAssinar("]:before,
 .seiSlim a#lnkInfraCheck:before,
 .seiSlim a[href*="?acao=grupo_acompanhamento_alterar"]:before,
@@ -2872,74 +3005,100 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f122";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"]:after,
 .seiSlim a.botaoSEI[onclick*="editarConteudo("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="editarConteudo"]:before,
 .seiSlim a.botaoSEI[onclick*="editarConteudo("]:before {
     content: "\f70f";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"]:after,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getDocumentosActions"]:before,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("]:before {
     content: "\f085";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"]:after,
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="initBoxAIActions"]:before,
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:before {
     content: "\f544";
     color: #7562d8;
 }
 @supports (-webkit-appearance:none) {
+    .seiSlim a#iconAIActions.botaoSEI[data-spro-click*="initBoxAIActions"]::before,
     .seiSlim a#iconAIActions.botaoSEI[onclick*="initBoxAIActions("]::before {
         content: url("chrome-extension://__MSG_@@extension_id__/icons/menu/botpro_icon.svg");
         top: 5px !important;
     }
 }
 @supports (-moz-appearance:none) {
+    .seiSlim a#iconAIActions.botaoSEI[data-spro-click*="initBoxAIActions"]::before,
     .seiSlim a#iconAIActions.botaoSEI[onclick*="initBoxAIActions("]::before {
         content: url("moz-extension://__MSG_@@extension_id__/icons/menu/botpro_icon.svg");
         top: 5px !important;
     }
 }
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"]:after,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="initDocLoteModalSelecaoDoc"]:before,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:before {
     content: "\f87e";
     color: #d8a63a;
 }
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"]:after,
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="initDialogCompareDocs"]:before,
 .seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:before {
     content: "\f87f";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"]:after,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getCtrPrescricao"]:before,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:before {
     content: "\f252";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"]:after,
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getDocCertidao"]:before,
 .seiSlim a.botaoSEI[onclick*="getDocCertidao("]:before {
     content: "\f5bf";
     color: #d8a63a;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"]:after,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getChecksumPro"]:before,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("]:before {
     content: "\f3ed";
     color: #d8a63a;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"]:after,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getDosimetria"]:before,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:before {
     content: "\f662";
     color: #34caef;
 }
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"]:after,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="dialogRelatoriosSFIS"]:before,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:before {
     content: "\f65b";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"]:after,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="reabrirProcesso"]:before,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("]:before {
     content: "\f07c";
     color: #d8a63a;
 }
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"]:after,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="saveAtividade"]:before,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("]:before {
     content: "\f4fc";
     color: #34caef;
@@ -2969,22 +3128,30 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f2ed";
     color: #34caef;
 }
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"]:after,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="addControlePrazo"]:before,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("]:before {
     content: "\f017";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"]:after,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="getProcessoNaoLido"]:before,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("]:before {
     content: "\f070";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"]:after,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="initUploadFilesInProcess"]:before,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before {
     content: "\f574";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"]:after,
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="checkDadosAcompEspecial"]:before,
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before {
     content: "\e053";
     color: #7562d8;
@@ -2997,7 +3164,9 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f110" !important;
     animation: fa-spin 2s linear infinite;
 }
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"]:after,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="dialogChangeTypeProc"]:before,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:before {
     content: "\f05a";
     color: #4285f4;
@@ -3007,12 +3176,16 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
  * icone vem da fonte, por :before/:after -- sem esta regra o botao fica sem
  * icone nesse tema, ainda que apareca normalmente no tema padrao.
  */
+.seiSlim a.botaoSEI[data-spro-click*="abrirFerramentasPdfPro"]:after,
 .seiSlim a.botaoSEI[onclick*="abrirFerramentasPdfPro("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="abrirFerramentasPdfPro"]:before,
 .seiSlim a.botaoSEI[onclick*="abrirFerramentasPdfPro("]:before {
     content: "\f1c1";
     color: #e46e64;
 }
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"]:after,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="openListNewTab"]:before,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before {
     content: "\f35d";
     color: #4285f4;
@@ -3110,25 +3283,32 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f1ea";
     color: #dec20f;
 }
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"]:after,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:after,
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"]:after,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("]:after,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:after {
     content: "\10f02d";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[data-spro-click*="acaoBlocoProcessar"]:before,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:before,
+.seiSlim a.botaoSEI[data-spro-click*="incluirEmBloco"]:before,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("]:before,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:before {
     content: "\f02d";
     color: #4285f4;
 }
+.seiSlim a.verdeColor.botaoSEI[data-spro-click*="incluirEmBloco"]:before,
 .seiSlim a.verdeColor.botaoSEI[onclick*="incluirEmBloco("]:before {
     color: #9cb639 !important;
 }
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"]:after,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("]:after{
     content: "\10f502";
     color: #dec20f;
 }
+.seiSlim a.botaoSEI[data-spro-click*="listarCredenciais"]:before,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("]:before {
     content: "\f502";
     color: #dec20f;
@@ -3315,41 +3495,49 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 a[data-shadow="true"]:before {
     text-shadow: 0 0 2px #000;
 }
+.seiSlim a[data-spro-click*="acaoAssinar"]:before,
 .seiSlim a[onclick*="acaoAssinar("]:before {
     content: "\f305";
     color: #d8a63a;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoConcluir"]:before,
 .seiSlim a[onclick*="acaoConcluir("]:before {
     content: "\f00c";
     color: #e46e64;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoExcluir"]:before,
 .seiSlim a[onclick*="acaoExcluir("]:before {
     content: "\f2ed";
     color: #e46e64;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoDisponibilizar"]:before,
 .seiSlim a[onclick*="acaoDisponibilizar("]:before {
     content: "\f2b5";
     color: #4285f4;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoRemoverSobrestamento"]:before,
 .seiSlim a[onclick*="acaoRemoverSobrestamento("]:before {
     content: "\f144";
     color: #4285f4;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoCancelarDisponibilizacao"]:before,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("]:before {
     content: "\e05f";
     color: #e46e64;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoDesativar"]:before,
 .seiSlim a[onclick*="acaoDesativar("]:before {
     content: "\f057";
     color: #7562d8;
     top: 0;
 }
+.seiSlim a[data-spro-click*="acaoReativar"]:before,
 .seiSlim a[onclick*="acaoReativar("]:before {
     content: "\f058";
     color: #4285f4;
@@ -3357,6 +3545,7 @@ a[data-shadow="true"]:before {
 }
 .seiSlim a[href*="acao=protocolo_modelo_alterar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"]:before,
+.seiSlim a[data-spro-click*="acaoAlterar"]:before,
 .seiSlim a[onclick*="acaoAlterar("]:before,
 .seiSlim a[href*="acao=acompanhamento_alterar"]:before,
 .seiSlim a[href*="acao=grupo_unidade_alterar"]:before,
@@ -3401,6 +3590,7 @@ a[data-shadow="true"]:before {
 .seiSlim a[onclick*="infraAcaoPaginar('-'"]:before {
     transform: scalex(-1);
 }
+.seiSlim a[data-spro-click*="infraTransportarItem"]:not(.ancoraPadraoPreta):before,
 .seiSlim a[onclick*="infraTransportarItem("]:not(.ancoraPadraoPreta):before {
     content: "\f3e5";
     color: #4285f4;
