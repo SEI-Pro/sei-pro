@@ -281,9 +281,11 @@ export const ICONES = {
     ["circle", { cx: "12", cy: "12", r: "8.5" }],
     ["path", { d: "M6 6l12 12" }],
   ],
+  // Folha de documento (canto dobrado) com um "+": cria uma cópia. Diferente de `copiar` (dois quadrados).
   duplicar: [
-    ["rect", { x: "8.5", y: "8.5", width: "11", height: "11", rx: "2" }],
-    ["path", { d: "M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" }],
+    ["path", { d: "M6.5 3.5h7l4 4v13h-11z" }],
+    ["path", { d: "M13.5 3.5v4h4" }],
+    ["path", { d: "M12 11.5v5M9.5 14h5" }],
   ],
   email: [
     ["rect", { x: "3.5", y: "5.5", width: "17", height: "13", rx: "2" }],
