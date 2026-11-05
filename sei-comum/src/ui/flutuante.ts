@@ -22,6 +22,8 @@ export interface OpcoesFlutuante {
   largura?: number;
   /** Altura máxima. */
   alturaMaxima?: number;
+  /** Espaço entre a âncora e a camada, em px (padrão 4). Negativo = a camada entra um pouco na âncora, sem vão para o mouse atravessar. */
+  distancia?: number;
   /** Clique fora ou rolagem da página fecharam. */
   aoFechar: () => void;
 }
@@ -90,6 +92,7 @@ export function abrirFlutuante(ancora: HTMLElement, camada: HTMLElement, o: Opco
     const esquerdaIdeal = o.alinharDireita ? r.right - largura : r.left;
     const esquerda = Math.max(8, Math.min(esquerdaIdeal, largJanela - largura - 8));
     const maxima = o.alturaMaxima ?? 360;
+    const dist = o.distancia ?? 4;
     // Mede o conteúdo sem o teto anterior: com ele, a medida nunca passaria do espaço que já havia.
     camada.style.maxHeight = "none";
     const desejada = Math.min(camada.scrollHeight || maxima, maxima);
@@ -103,12 +106,12 @@ export function abrirFlutuante(ancora: HTMLElement, camada: HTMLElement, o: Opco
     camada.classList.toggle("spro-flutuante-cima", paraCima);
     if (paraCima) {
       camada.style.top = "";
-      camada.style.bottom = `${altJanela - r.top + 4}px`;
+      camada.style.bottom = `${altJanela - r.top + dist}px`;
     } else {
       camada.style.bottom = "";
-      camada.style.top = `${r.bottom + 4}px`;
+      camada.style.top = `${r.bottom + dist}px`;
     }
-    anunciar(janela, paraCima ? 0 : Math.ceil(r.bottom + 4 + desejada + 12));
+    anunciar(janela, paraCima ? 0 : Math.ceil(r.bottom + dist + desejada + 12));
   };
 
   const fora = (ev: Event) => {

@@ -94,6 +94,8 @@ export function abrirMenu(ancora: HTMLElement, itens: ItemMenu[], o: OpcoesAbrir
   const flut = abrirFlutuante(ancora, camada, {
     largura: o.largura ?? 236,
     alturaMaxima: 440,
+    // Aberto pelo mouse: sem vão entre o ícone e o menu, senão o trajeto passa pelo documento de baixo.
+    distancia: -8,
     aoFechar: () => fechar(false),
   });
   ancora.setAttribute("aria-haspopup", "menu");
