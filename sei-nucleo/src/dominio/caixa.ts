@@ -50,9 +50,27 @@ export function lerLinhaCaixa(tr: Element, grupo: "recebidos" | "gerados"): Proc
     idProcedimento: chk.getAttribute("value") ?? parametros(link.getAttribute("href") ?? "").get("id_procedimento") ?? "",
     protocolo: chk.getAttribute("title") ?? textoDe(link),
     grupo,
-    tipo: /Tipo (.*?)(?: \/ Especifica|$)/.exec(rotulo)?.[1]?.trim() ?? "",
-    // Especificação de processo sigiloso não sai daqui (regra do agente).
-    especificacao: sigiloso ? "" : (/Especifica\S* (.*)$/.exec(rotulo)?.[1]?.trim() ?? ""),
+    ...(() => {
+      let tp = /Tipo (.*?)(?: \/ Especifica|$)/.exec(rotulo)?.[1]?.trim() ?? "";
+      let esp = sigiloso ? "" : (/Especifica\S* (.*)$/.exec(rotulo)?.[1]?.trim() ?? "");
+      if (!tp) {
+        const om = link.getAttribute("onmouseover") ?? "";
+        const m = /infraTooltipMostrar\s*\(\s*(['"])(.*?)\1(?:\s*,\s*(['"])(.*?)\3)?\s*\)/.exec(om);
+        if (m) {
+          if (m[4]) { tp = m[4].trim(); if (!esp && !sigiloso && m[2]) esp = m[2].trim(); }
+          else if (m[2]) { tp = m[2].trim(); }
+        }
+        if (!tp) {
+          const la = link.getAttribute("aria-label") ?? "";
+          if (la) {
+            const pt = la.split(/\s*\/\s*/);
+            if (pt.length >= 2) { tp = pt[0].trim(); if (!esp && !sigiloso) esp = pt[1].trim(); }
+            else { tp = la.trim(); }
+          }
+        }
+      }
+      return { tipo: tp, especificacao: esp };
+    })(),
     sigiloso,
     novo: /NaoVisualizado/.test(link.getAttribute("class") ?? ""),
     atribuido: textoDe(tds[tds.length - 1]).replace(/^\(|\)$/g, ""),
