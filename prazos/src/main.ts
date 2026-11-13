@@ -55,8 +55,9 @@ function montar() {
       // O legado desmarcava as linhas depois de gravar; o clique real atualiza a seleção interna do SEI.
       aoConcluir: (feitos) => {
         for (const id of feitos) {
-          const caixa = document.querySelector<HTMLInputElement>(`tr#P${id} input[type=checkbox]`);
-          if (caixa?.checked) caixa.click();
+          for (const caixa of document.querySelectorAll<HTMLInputElement>(`tr#P${id} input[type=checkbox]`)) {
+            if (caixa.checked) caixa.click();
+          }
         }
       },
     });

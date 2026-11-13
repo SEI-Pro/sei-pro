@@ -159,6 +159,10 @@ await teste('nativo: o grupo (hdn*) vem da tabela da linha', () => {
   assert.equal(grupoDaLinha(d, '150098'), 'Recebidos');
   assert.equal(grupoDaLinha(d, '7318'), 'Gerados');
   assert.equal(grupoDaLinha(d, '999'), null);
+  const clone = d.querySelector('tr#P7318')!.cloneNode(true) as Element;
+  clone.classList.add('typeGerados');
+  d.querySelector('#tblProcessosRecebidos tbody')!.append(clone);
+  assert.equal(grupoDaLinha(d, '7318'), 'Gerados');
 });
 await teste('resposta: sucesso é sair do formulário; erro vem de #divInfraMensagens', () => {
   assert.deepEqual(interpretarResposta(pagina(`${SEI}controlador.php?acao=procedimento_controlar&acao_origem=controle_prazo_definir`, fx('caixa_prazos.html'))).ok, true);

@@ -100,15 +100,15 @@ export class ServicoPrazos {
 
   /** Troca o ícone do SEI na linha pelo da resposta (que traz a caixa já atualizada). */
   private sincronizarIcone(id: string, respostaDoc: Document): void {
-    const tr = this.linha(id);
-    if (!tr) return;
     const novo = respostaDoc.querySelector(`tr#P${id} ${LINK_NATIVO}`);
-    const velho = tr.querySelector(LINK_NATIVO);
-    if (novo) {
-      const copia = this.d.doc.importNode(novo, true);
-      if (velho) velho.replaceWith(copia);
-      else (tr.querySelectorAll('td')[1] ?? tr).append(copia);
-    } else velho?.remove();
+    for (const tr of this.d.doc.querySelectorAll(`tr#P${id}`)) {
+      const velho = tr.querySelector(LINK_NATIVO);
+      if (novo) {
+        const copia = this.d.doc.importNode(novo, true);
+        if (velho) velho.replaceWith(copia);
+        else (tr.querySelectorAll('td')[1] ?? tr).append(copia);
+      } else velho?.remove();
+    }
   }
 
   private async acao(id: string): Promise<string> {
