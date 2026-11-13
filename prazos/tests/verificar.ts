@@ -448,6 +448,32 @@ await teste('células: clique na célula abre o modal da linha; o link do legado
   c.desligar();
   assert.equal(doc.querySelector('td.prazoBoxDisplay[data-spro-prazo]'), null);
 });
+await teste('células: no Quadro (#processosKanban), clique no prazo abre o modal e desenharCelula sincroniza o cartão', () => {
+  const doc = caixaComCelulas();
+  const kanban = doc.createElement('div');
+  kanban.id = 'processosKanban';
+  const item = doc.createElement('div');
+  item.className = 'kanban-item';
+  item.setAttribute('data-eid', '150098');
+  const prazoSpan = doc.createElement('span');
+  prazoSpan.setAttribute('data-type', 'prazo');
+  item.append(prazoSpan);
+  kanban.append(item);
+  doc.body.append(kanban);
+
+  const s = servicoDe();
+  const servico = new ServicoPrazos({ doc, url: SEI, http: s.servico['d'].http, hoje: () => H, escreverMarcador: async () => {} });
+  const aberturas: string[][] = [];
+  const c = iniciarCelulas(doc, servico, () => H, ids => aberturas.push(ids));
+  c.ligar();
+  const alvo = doc.querySelector('#processosKanban .kanban-item[data-eid="150098"] [data-type="prazo"] .dateboxDisplay');
+  assert.ok(alvo, 'cartão do Kanban sincronizado com o prazo da linha');
+  const Ev = (doc.defaultView as unknown as { Event: typeof Event }).Event;
+  alvo!.dispatchEvent(new Ev('click', { bubbles: true, cancelable: true }));
+  assert.deepEqual(aberturas, [['150098']]);
+  c.desligar();
+  assert.equal(doc.querySelector('#processosKanban [data-type="prazo"][data-spro-prazo]'), null);
+});
 
 // ---------------- Fase 3: modal ----------------
 await teste('modal: preenche com o prazo atual, mostra o destino e só salva com a regra satisfeita', async () => {

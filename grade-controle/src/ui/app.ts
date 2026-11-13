@@ -382,7 +382,7 @@ export function criarApp(d: DepsApp) {
   function renderConteudo() {
     const lista = ordenados();
     if (visao.modo === 'quadro') {
-      conteudo.replaceChildren(desenharQuadro({ processos: lista, cfg: visao.quadro, ctx: ctx(), extras, selecionados, aoMover: (i, a, b) => void mover(i, a, b), aoSelecionar: (i, m) => selecionar([i], m) }));
+      conteudo.replaceChildren(desenharQuadro({ processos: lista, cfg: visao.quadro, ctx: ctx(), extras, selecionados, aoMover: (i, a, b) => void mover(i, a, b), aoSelecionar: (i, m) => selecionar([i], m), aoAbrirPrazo: (i) => d.abrirPrazo(i) }));
       return;
     }
     const grupos = agrupar(lista, visao.agrupar, ctx());

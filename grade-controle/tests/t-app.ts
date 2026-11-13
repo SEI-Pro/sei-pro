@@ -367,6 +367,16 @@ await teste('app: sem prazo ainda ha botao "definir prazo" (a celula vazia tambe
   assert.ok(l.querySelector('.spro-prazo-b .spro-prazo-vazio') || l.querySelector('.spro-prazo-b'));
   app.fechar();
 });
+await teste('app: no Quadro, clicar no prazo ou em "definir" abre o menu do modulo de prazos', async () => {
+  prazosAbertos.length = 0;
+  const { app } = await montar();
+  qa(app, '.spro-seg-b').find((b) => b.getAttribute('data-modo') === 'quadro')!.click();
+  const card = qa(app, '.spro-cartao').find((c) => c.getAttribute('data-id') === '150098');
+  assert.ok(card, 'cartao presente no quadro');
+  card!.querySelector<HTMLElement>('.spro-prazo-b')!.click();
+  assert.deepEqual(prazosAbertos, ['150098']);
+  app.fechar();
+});
 await teste('app: sincroniza com a linha nativa — a estrela clicada em outro modulo aparece na grade', async () => {
   const doc = ativarToggle(docFixture('caixa_prazos.html'));
   (globalThis as unknown as { document: Document }).document = doc;

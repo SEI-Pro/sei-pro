@@ -1,5 +1,6 @@
 /* A coluna "Prazos": a célula é do legado; aqui só o conteúdo desenhado pelo módulo. */
-.tabelaControle .dateboxDisplay.spro-prazo {
+.tabelaControle .dateboxDisplay.spro-prazo,
+#processosKanban .dateboxDisplay.spro-prazo {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -7,8 +8,10 @@
 }
 .dateboxDisplay.spro-prazo .spro-prazo-icone { flex: none; }
 /* "Adicionar prazo" aparece ao passar o mouse: o legado (sei-pro.css) controla o display. */
-td.prazoBoxDisplay .spro-prazo-vazio { cursor: pointer; }
-td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone { vertical-align: -3px; margin-right: 2px; }
+td.prazoBoxDisplay .spro-prazo-vazio,
+#processosKanban .spro-prazo-vazio { cursor: pointer; }
+td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone,
+#processosKanban .spro-prazo-vazio .spro-prazo-icone { vertical-align: -3px; margin-right: 2px; }
 .dateboxDisplay.spro-prazo-noPrazo .spro-prazo-icone { color: #4285f4; }
 .dateboxDisplay.spro-prazo-hoje .spro-prazo-icone { color: #b26a00; }
 .dateboxDisplay.spro-prazo-atrasado .spro-prazo-icone { color: #c0392b; }
@@ -16,11 +19,18 @@ td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone { vertical-align: -3px; m
 .dateboxDisplay.spro-prazo-concluido .spro-prazo-icone { color: #2e7d32; }
 .dateboxDisplay.spro-prazo-concluido { color: #6a6a6a; }
 .dateboxDisplay.spro-prazo-desde .spro-prazo-icone { color: #777; }
-td.prazoBoxDisplay .spro-prazo-vazio { color: #666; font-style: italic; font-size: 9pt; }
-td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone { color: #4285f4; }
+td.prazoBoxDisplay .spro-prazo-vazio,
+#processosKanban .spro-prazo-vazio { color: #666; font-style: italic; font-size: 9pt; }
+td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone,
+#processosKanban .spro-prazo-vazio .spro-prazo-icone { color: #4285f4; }
 /* O modo noturno do legado pinta todo elemento (.seiSlim.dark-mode *): devolve as cores com peso maior. */
-.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-noPrazo .spro-prazo-icone { color: #7fb0ff; }
-.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-hoje .spro-prazo-icone { color: #f0b040; }
-.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-atrasado .spro-prazo-icone { color: #ff7a6b; }
-.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-concluido .spro-prazo-icone { color: #7bc67e; }
-.seiSlim.dark-mode td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone { color: #7fb0ff; }
+.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-noPrazo .spro-prazo-icone,
+.seiSlim.dark-mode #processosKanban .dateboxDisplay.spro-prazo-noPrazo .spro-prazo-icone { color: #7fb0ff; }
+.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-hoje .spro-prazo-icone,
+.seiSlim.dark-mode #processosKanban .dateboxDisplay.spro-prazo-hoje .spro-prazo-icone { color: #f0b040; }
+.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-atrasado .spro-prazo-icone,
+.seiSlim.dark-mode #processosKanban .dateboxDisplay.spro-prazo-atrasado .spro-prazo-icone { color: #ff7a6b; }
+.seiSlim.dark-mode td.prazoBoxDisplay .dateboxDisplay.spro-prazo-concluido .spro-prazo-icone,
+.seiSlim.dark-mode #processosKanban .dateboxDisplay.spro-prazo-concluido .spro-prazo-icone { color: #7bc67e; }
+.seiSlim.dark-mode td.prazoBoxDisplay .spro-prazo-vazio .spro-prazo-icone,
+.seiSlim.dark-mode #processosKanban .spro-prazo-vazio .spro-prazo-icone { color: #7fb0ff; }

@@ -15,6 +15,7 @@ export interface PropsQuadro {
   selecionados: ReadonlySet<string>;
   aoMover(id: string, de: string, para: string): void;
   aoSelecionar(id: string, marcado: boolean): void;
+  aoAbrirPrazo?(id: string): void;
 }
 
 const TIPO_DND = 'application/x-spro-cartao';
@@ -24,12 +25,22 @@ function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
   const cb = h('input', { type: 'checkbox', class: 'spro-cb', 'aria-label': `Marcar ${p.protocolo}` });
   cb.checked = props.selecionados.has(p.id);
   cb.addEventListener('change', () => props.aoSelecionar(p.id, cb.checked));
+  const rotuloPrazo = r ? 'Editar o prazo' : 'Definir um prazo';
+  const btnPrazo = props.aoAbrirPrazo
+    ? h('button', {
+        type: 'button',
+        class: 'spro-prazo-b',
+        title: r ? `${r.dica}\n\n${rotuloPrazo}` : rotuloPrazo,
+        'aria-label': rotuloPrazo,
+        onclick: (ev: Event) => { ev.preventDefault(); ev.stopPropagation(); props.aoAbrirPrazo?.(p.id); },
+      }, r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}` }, r.texto) : h('span', { class: 'spro-prazo-vazio' }, 'definir'))
+    : (r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}`, title: r.dica }, r.texto) : null);
   const c = h('div', { class: `spro-cartao${cb.checked ? ' spro-sel' : ''}`, draggable: 'true', 'data-id': p.id, 'data-de': de },
     h('div', { class: 'spro-cartao-topo' }, cb, h('a', { class: `spro-proc${p.naoVisualizado ? ' spro-novo' : ''}`, href: p.link ?? '#', draggable: 'false' }, p.protocolo)),
     p.tipo ? h('div', { class: 'spro-cartao-tipo' }, p.tipo) : null,
     p.especificacao ? h('div', { class: 'spro-cartao-espec' }, p.especificacao) : null,
     h('div', { class: 'spro-cartao-rodape' },
-      r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}`, title: r.dica }, r.texto) : null,
+      btnPrazo,
       p.atribuicao ? h('span', { class: 'spro-avatar', title: p.atribuicao.nome }, p.atribuicao.sigla.slice(0, 2).toUpperCase()) : null));
   c.addEventListener('dragstart', (ev) => {
     ev.dataTransfer?.setData(TIPO_DND, JSON.stringify({ id: p.id, de }));
