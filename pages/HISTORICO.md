@@ -2,6 +2,35 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.9
+17/11/2026
+
+**Novo — árvore do processo refeita** (*SEI Pro Lab*, Chrome e Edge). A árvore, a [capa do processo](../pages/CAPAPROCESSO.md) e o menu do documento ganharam uma versão nova, mais rápida e que não depende mais da janela oculta que o SEI Pro mantinha aberta por trás da tela.
+
+- **[Capa do processo](../pages/CAPAPROCESSO.md)** com faixa de cards (árvore e histórico), **alerta de processo parado** (por padrão, 15 dias sem andamento; a opção *Dias para o alerta de processo parado* aceita 0 para desligar), **copiar resumo** e QR Code próprio. Nos processos com pastas fechadas, a capa **estima** o total de documentos e diz "nas pastas abertas" quando o número é parcial; o botão **Contar tudo** abre as pastas, uma por vez, para a contagem exata.
+- **Filtro da árvore:** uma lupa ao lado dos monitorados abre a busca, com os atalhos **Não assinados**, **Externos** e **Cancelados**. O filtro só esconde linhas (nada é alterado no processo), carrega as pastas fechadas com **progresso, parar e tentar de novo**, e fechar a lupa limpa o filtro. Vem **ligado** e pode ser desligado nas Configurações.
+- **Menu da árvore agrupado** em *Copiar*, *Abrir* e *Ações*, no lugar do menu rápido antigo, e **[Personalizar menu rápido](../pages/MENURAPIDO.md)** em tela nova: quatro abas, interruptores, busca, ordem e **restaurar padrão**, aplicada na hora no menu, nos ícones fixos e nos painéis. As suas escolhas anteriores continuam valendo.
+- **Gantt do processo** desenhado pelo próprio SEI Pro: janela com progresso e cancelamento da coleta, tempo por unidade, **exportar CSV** e **imprimir**. O histórico lido fica guardado por 30 minutos, então abrir de novo é imediato.
+- **Painéis** na mesma escala de tamanhos do SEI, com os títulos iguais ao *Consultar Andamento* nativo. A **anotação** agora é editada **no próprio painel**, num post-it (sem abrir janela): o texto cresce com o conteúdo, tem contador, lista de tarefas com **Enter** e **Alt+setas**, e grava ao sair do campo; se der erro, o texto não se perde.
+- **Edição pelos painéis:** *assuntos* e *interessados* podem ser editados direto no painel (os de outra unidade ficam protegidos), e os seletores de atribuição, marcador, grupo, tipo e hipótese legal ganharam **busca** (o marcador aparece com a etiqueta na cor).
+- **Aviso de documentos não assinados** ao Enviar Processo a partir da árvore e **título da aba** do processo, sem a janela oculta.
+- Os ícones de ação rápida ao lado do documento ficaram **maiores e alinhados** com o texto, e o menu rápido do documento não deixa mais um vão que fazia o mouse cruzar o documento de baixo.
+
+**Novo — abrir em outra aba e copiar o número.** Ao lado do número de cada processo da **grade do Controle**, do **[Histórico](../pages/HISTORICOPROC.md)** (janela e aba lateral) e dos **[Monitorados](../pages/FAVORITOS.md)** há agora dois botões: abrir em **nova aba** e **copiar o número** (com confirmação por 1,5 segundo).
+
+**Novo — listas com altura limitada e alça para redimensionar.** A grade do Controle (68% da altura da tela), os Monitorados, as Demandas e as listas dos Projetos passaram a ter **cabeçalho fixo e rolagem interna**, com uma alça no fim para ajustar a altura (arrastando, pelo teclado, ou duplo clique para ajustar ao conteúdo). A altura escolhida é lembrada.
+
+**Também nesta versão**
+- **Corrigido — [Documentos em Lote](../pages/DOCUMENTOSEMLOTE.md):** o número do processo não quebra mais em duas linhas, a tabela da Verificação não muda de altura nem de largura ao verificar de novo, o botão de arquivo ficou no padrão visual, o Resultado cabe sem rolagem lateral, *processo de destino* mostra o processo já criado também nas linhas pendentes (e fica vazio só nas que ficaram de fora), e a prévia não traz mais o rodapé "Criado por…" do modelo.
+- **Corrigido — filtro "Processos sem atribuição"** (Controle de Processos): a escolha não se perdia mais quando a tabela ainda estava sendo montada, e escolher o filtro de novo agora funciona.
+- **Corrigido — editor do SEI 5:** os botões de fonte não ficam mais dentro do menu *Transformar o texto* (tampavam os vizinhos), dois botões soltos do menu de tabela voltaram à barra, e **Ativar estilo avançado** não faz mais os ícones sumirem.
+- **Corrigido — [Demandas](../pages/DEMANDAS.md):** editar uma demanda que já tem processo vinculado voltava a travar ao abrir a janela; agora abre, e qualquer erro ao abrir aparece na tela em vez de passar em silêncio.
+- **Corrigido — prescrições:** o selo de prazo voltou a responder ao clique.
+- **Ajuste — árvore sem o Atividades:** os nomes (`__`) não dependem mais do módulo de Atividades para aparecer.
+- **Ícones novos:** *Hashcode* (folha com cadeado) e *duplicar* (folha com "+"), agora distintos do copiar.
+- **Segurança — DOM seguro:** o SEI Pro passou a montar as telas sem inserir HTML cru na página, o que também deixa o pacote do **Firefox** sem código fora do escopo da loja. Nada muda no uso.
+- **[Política de privacidade](../PRIVACY_POLICY.md) 3.6:** a consulta de legislação usa agora um servidor do projeto, no Brasil (Hostinger), com registro mínimo e **sem guardar o IP**.
+
 ### Versão 3.8
 18/10/2026
 
