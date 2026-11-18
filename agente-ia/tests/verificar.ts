@@ -20,6 +20,7 @@ import { verificarCamposLivres, verificarEnvelope, verificarHtmlOculto, verifica
 import { verificarDesfazer } from "./verificar-desfazer";
 import { verificarRegras } from "./verificar-regras";
 import { verificarCusto } from "./verificar-custo";
+import { verificarUsoDaConversa } from "./verificar-uso";
 import { verificarRotinas } from "./verificar-rotinas";
 import { verificarCambio, verificarSugestoes } from "./verificar-sugestoes";
 import { verificarFluxosModelo, verificarFluxosRevisao } from "./verificar-fluxos";
@@ -68,6 +69,7 @@ await verificarRespostaUi();
 verificarDesfazer();
 verificarRegras();
 verificarCusto();
+verificarUsoDaConversa();
 verificarRotinas();
 await verificarRotinasUi();
 await verificarArquivoUi();

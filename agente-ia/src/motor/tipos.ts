@@ -174,6 +174,7 @@ export interface InterfaceMotor {
   integridade?(documento: string, achados: Array<{ classe: string; trecho: string; motivo?: string }>): void;
   perguntar(pergunta: string, opcoes: string[]): Promise<string>;
   tarefas(lista: Tarefa[]): void;
+  /** O ACUMULADO deste motor desde que foi criado (não o gasto da última chamada). */
   uso(total: Uso): void;
   aviso(texto: string): void;
 }

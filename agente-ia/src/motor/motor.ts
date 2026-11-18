@@ -124,9 +124,24 @@ export class Motor {
     this.historico.push({ role: "user", content: `[sistema] ${texto}` });
   }
 
-  restaurar(historico: Mensagem[], uso?: Uso): void {
+  /**
+   * Retoma um histórico. O gasto NÃO vem junto: o motor informa só o que ele
+   * mesmo gastou, desde que foi criado, e quem soma a conversa inteira é o
+   * painel (`ContadorDeUso`). Recomeçar daqui do gasto antigo o contaria duas vezes.
+   */
+  restaurar(historico: Mensagem[]): void {
     this.historico = historico;
-    if (uso) this.usoTotal = uso;
+  }
+
+  /** Acumula o gasto de uma chamada e informa o total deste motor. */
+  private somarUso(u: Uso): void {
+    this.usoTotal = {
+      entrada: this.usoTotal.entrada + u.entrada,
+      saida: this.usoTotal.saida + u.saida,
+      custo: this.usoTotal.custo + u.custo,
+      cache: (this.usoTotal.cache ?? 0) + (u.cache ?? 0),
+    };
+    this.o.ui.uso(this.usoTotal);
   }
 
   parar(): void {
@@ -155,15 +170,7 @@ export class Motor {
           sinal,
           (d) => this.o.ui.texto(d),
         );
-        if (resposta.uso) {
-          this.usoTotal = {
-            entrada: this.usoTotal.entrada + resposta.uso.entrada,
-            saida: this.usoTotal.saida + resposta.uso.saida,
-            custo: this.usoTotal.custo + resposta.uso.custo,
-            cache: (this.usoTotal.cache ?? 0) + (resposta.uso.cache ?? 0),
-          };
-          this.o.ui.uso(this.usoTotal);
-        }
+        if (resposta.uso) this.somarUso(resposta.uso);
         this.historico.push({ role: "assistant", content: resposta.texto || null, ...(resposta.chamadas.length ? { tool_calls: resposta.chamadas } : {}) });
         if (!resposta.chamadas.length) {
           if (resposta.fim === "length") this.o.ui.aviso("A resposta foi cortada pelo limite do modelo.");
@@ -456,6 +463,8 @@ export class Motor {
         sinal,
         () => undefined,
       );
+      // A chamada do resumo também é paga: entra no gasto da conversa.
+      if (r.uso) this.somarUso(r.uso);
       if (!r.texto.trim()) return;
       this.historico = [{ role: "user", content: `${MARCA_RESUMO}\n${r.texto.trim()}` }, ...this.historico.slice(corte)];
       this.o.ui.aviso("A conversa ficou longa: resumi o come\u00E7o para caber no contexto. O que foi feito e decidido continua valendo.");

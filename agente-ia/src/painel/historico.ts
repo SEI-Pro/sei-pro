@@ -24,6 +24,10 @@ export interface ResumoConversa {
   /** Host do SEI em que a conversa aconteceu. */
   host?: string;
   uso: { entrada: number; saida: number; custo: number; cache?: number };
+  /** Modelos que trabalharam na conversa, inclusive o do agente auxiliar. */
+  modelos?: string[];
+  /** Reais por dólar no dia da conversa (só quando o painel mostra em reais). */
+  cotacao?: number;
   mensagens: number;
 }
 

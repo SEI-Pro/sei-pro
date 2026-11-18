@@ -23,6 +23,7 @@ import { TOOLS_SEI } from "../tools/sei";
 import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
+import { ContadorDeUso, modelosCurtos } from "./uso";
 import { sugestoesPara } from "./sugestoes";
 import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita } from "./desfazer";
 import { avaliarRegras, guardarRegras, listarRegras, recadoDoBloqueio, REGRAS_SUGERIDAS, type Regra } from "./regras";
@@ -202,7 +203,11 @@ class App {
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
-  private uso: Uso = { entrada: 0, saida: 0, custo: 0 };
+  /** Gasto da conversa, somado de todos os motores que trabalharam nela (ver `uso.ts`). */
+  private contador = new ContadorDeUso();
+  private get uso(): Uso {
+    return this.contador.total;
+  }
   private tarefas: Tarefa[] = [];
   private anexo: Anexo | null = null;
   /** Geração da leitura de anexo em curso: trocar ou remover o anexo invalida a anterior. */
@@ -904,7 +909,7 @@ class App {
     this.conferirTetoDaRotina();
     if (!this.elCusto) return;
     const uso = this.arquivada?.uso ?? this.uso;
-    this.elCusto.textContent = formatarUso(uso, this.cambio);
+    this.elCusto.textContent = formatarUso(uso, this.arquivada ? this.cotacaoDaConversa(this.arquivada) : this.cambio);
     const doCache = uso.cache ? ` \u00B7 ${uso.cache.toLocaleString("pt-BR")} tokens vieram do cache` : "";
     this.elCusto.title = uso.custo
       ? this.cambio
@@ -997,9 +1002,9 @@ class App {
             { class: "linha" },
             h(
               "button",
-              { class: "abrir", onclick: () => void this.verArquivada(c.id, dlg) },
+              { class: "abrir", onclick: () => void this.verArquivada(c.id, dlg), ...(c.modelos?.length ? { title: `Modelo(s): ${c.modelos.join(", ")}` } : {}) },
               h("b", {}, c.titulo),
-              h("small", {}, `${new Date(c.quando).toLocaleString("pt-BR")} \u00B7 ${c.mensagens} mensagem(ns)${c.uso.custo || c.uso.entrada ? ` \u00B7 ${formatarUso(c.uso)}` : ""}${c.host ? ` \u00B7 ${c.host}` : ""}`),
+              h("small", {}, this.linhaDaConversaSalva(c)),
             ),
             h("button", { class: "icone pequeno", title: "Exportar em Markdown", "aria-label": "Exportar", onclick: () => void this.exportar(c.id) }, icone("baixar", 15)),
             h(
@@ -1048,11 +1053,27 @@ class App {
     this.redesenhar();
   }
 
+  /** Data, mensagens, gasto, modelos e SEI de uma conversa guardada. */
+  private linhaDaConversaSalva(c: historico.ResumoConversa, o: { modelosInteiros?: boolean } = {}): string {
+    const gasto = c.uso.custo || c.uso.entrada ? formatarUso(c.uso, this.cotacaoDaConversa(c)) : "";
+    const modelos = o.modelosInteiros ? (c.modelos ?? []).join(", ") : modelosCurtos(c.modelos);
+    return [new Date(c.quando).toLocaleString("pt-BR"), `${c.mensagens} mensagem(ns)`, gasto, modelos, c.host ?? ""].filter(Boolean).join(" \u00B7 ");
+  }
+
+  /**
+   * Em reais quando o painel mostra em reais: pela cotação do dia da conversa;
+   * conversa guardada antes de existir a cotação, pela de hoje.
+   */
+  private cotacaoDaConversa(c: historico.ResumoConversa): { valor: number } | null {
+    if (!this.config.reais) return null;
+    return c.cotacao ? { valor: c.cotacao } : this.cambio;
+  }
+
   /** Baixa a conversa em Markdown — o que dá para juntar num processo ou guardar fora. */
   private async exportar(id: string): Promise<void> {
     const c = await historico.obter(id).catch(() => null);
     if (!c) return;
-    const linhas = [`# ${c.titulo}`, "", `_${new Date(c.quando).toLocaleString("pt-BR")}${c.host ? ` \u00B7 ${c.host}` : ""} \u00B7 ${formatarUso(c.uso)}_`, ""];
+    const linhas = [`# ${c.titulo}`, "", `_${this.linhaDaConversaSalva(c, { modelosInteiros: true })}_`, ""];
     for (const i of c.itens as Item[]) {
       if (i.tipo === "tool") linhas.push(`- \u2699\uFE0F ${i.rotulo}${i.detalhe ? ` (${i.detalhe})` : ""}`, "");
       else if (i.tipo === "usuario") linhas.push(`**Voc\u00EA:** ${i.texto}`, "");
@@ -2086,6 +2107,7 @@ class App {
         this.adicionar({ tipo: "agente", texto: resultado });
       } else {
         this.motor ??= this.criarMotor();
+        this.contador.anotarModelo(this.config.modelo);
         await this.motor.enviar(pedido, parar.signal);
         resultado = this.ultimoTextoDoAgente();
       }
@@ -2222,6 +2244,8 @@ class App {
   private async delegar(tarefa: string, sinal: AbortSignal): Promise<string> {
     const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => t.efeito === "leitura" || t.nome === "skill_ler");
     let resposta = "";
+    const fonte = this.contador.fonte();
+    this.contador.anotarModelo(this.config.modeloAuxiliar || this.config.modelo);
     const auxiliar = new Motor({
       // O auxiliar faz trabalho mecânico (abrir, extrair, resumir): quando o
       // usuário aponta um modelo mais barato, é aqui que ele entra.
@@ -2258,8 +2282,8 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
         perguntar: async () => "Sem resposta: responda com o que conseguiu apurar.",
         tarefas: () => undefined,
         uso: (u) => {
-          // O gasto do auxiliar é gasto da conversa: soma no mesmo contador.
-          this.uso = { entrada: this.uso.entrada + u.entrada, saida: this.uso.saida + u.saida, custo: this.uso.custo + u.custo, cache: (this.uso.cache ?? 0) + (u.cache ?? 0) };
+          // O gasto do auxiliar é gasto da conversa: entra no mesmo contador.
+          fonte(u);
           this.mostrarUso();
         },
         aviso: () => undefined,
@@ -2713,7 +2737,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     this.motor?.parar();
     const historico = this.motor?.mensagens() ?? [];
     this.motor = this.criarMotor(Pseudonimos.importar(this.privacidade.exportar(), { nomes: this.config.nomes, cnpj: this.config.cnpj }));
-    if (historico.length) this.motor.restaurar([...historico], this.uso);
+    if (historico.length) this.motor.restaurar([...historico]);
   }
 
   // ------------------------------------------------------------- conversa
@@ -2811,6 +2835,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     // recebido de terceiro pode trazer instrução escondida igual a uma
     // petição. Vai varrido e dentro do envelope da conversa.
     this.motor ??= this.criarMotor();
+    this.contador.anotarModelo(this.config.modelo);
     let comAnexo = t;
     if (this.anexo) {
       const varrido = varrer(aplicarModo(this.anexo).texto);
@@ -2864,7 +2889,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
     this.idConversa = crypto.randomUUID();
     this.arquivada = null;
     this.transcricao = [];
-    this.uso = { entrada: 0, saida: 0, custo: 0 };
+    this.contador.recomecar();
     this.tarefas = [];
     await chrome.storage.session?.remove(CHAVE_SESSAO).catch(() => undefined);
     this.redesenhar();
@@ -3015,6 +3040,8 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
   // ------------------------------------------------------------- interface do motor
 
   private interfaceMotor(): InterfaceMotor {
+    // Cada motor principal é uma fonte nova: recriá-lo não apaga o que o anterior gastou.
+    const fonte = this.contador.fonte();
     return {
       aprovarExterno: (p) => cartaoExterno(p, (op) => this.abrirModal(op)),
       aprovarTransferencia: (p) => cartaoTransferencia(p, (op) => this.abrirModal(op)),
@@ -3101,7 +3128,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
         this.desenharTarefas();
       },
       uso: (u) => {
-        this.uso = u;
+        fonte(u);
         this.mostrarUso();
       },
       aviso: (t) => (this.fecharBolha(), void this.adicionar({ tipo: "aviso", texto: t })),
@@ -3335,6 +3362,9 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
         quando: Date.now(),
         host: this.ponte.atual()?.host,
         uso: this.uso,
+        modelos: this.contador.modelos,
+        // A cotação do dia da conversa: a lista mostra em reais o que se pagou então.
+        ...(this.config.reais && this.cambio ? { cotacao: this.cambio.valor } : {}),
         mensagens: this.transcricao.filter((i) => i.tipo === "usuario" || i.tipo === "agente").length,
         itens: this.transcricao,
       })
@@ -3345,7 +3375,7 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
   private async salvarSessao(): Promise<void> {
     await this.guardarConversa();
     if (!this.motor) return;
-    const dados = { historico: this.motor.mensagens(), transcricao: this.transcricao, uso: this.uso, pseudonimos: this.privacidade.exportar(), tarefas: this.tarefas };
+    const dados = { historico: this.motor.mensagens(), transcricao: this.transcricao, uso: this.uso, modelos: this.contador.modelos, pseudonimos: this.privacidade.exportar(), tarefas: this.tarefas };
     // storage.session não existe em navegadores antigos (Firefox < 115): a conversa só não sobrevive à recarga.
     await chrome.storage.session?.set({ [CHAVE_SESSAO]: dados }).catch(() => undefined);
   }
@@ -3353,13 +3383,13 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
   private async restaurarSessao(): Promise<void> {
     const bruto: Record<string, unknown> = (await chrome.storage.session?.get(CHAVE_SESSAO).catch(() => ({}))) ?? {};
     const d = bruto[CHAVE_SESSAO] as
-      | { historico: Mensagem[]; transcricao: Item[]; uso: Uso; pseudonimos: ReturnType<Pseudonimos["exportar"]>; tarefas: Tarefa[] }
+      | { historico: Mensagem[]; transcricao: Item[]; uso: Uso; modelos?: string[]; pseudonimos: ReturnType<Pseudonimos["exportar"]>; tarefas: Tarefa[] }
       | undefined;
     if (!d || !this.motor || this.transcricao.length) return;
     this.motor = this.criarMotor(Pseudonimos.importar(d.pseudonimos, { nomes: this.config.nomes, cnpj: this.config.cnpj }));
-    this.motor.restaurar(d.historico, d.uso);
+    this.motor.restaurar(d.historico);
     this.transcricao = d.transcricao.map((i) => (i.tipo === "tool" && i.estado === "rodando" ? { ...i, estado: "falha", detalhe: "interrompido" } : i));
-    this.uso = d.uso;
+    this.contador.recomecar(d.uso, d.modelos);
     this.tarefas = d.tarefas ?? [];
   }
 

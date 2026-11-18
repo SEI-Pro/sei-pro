@@ -15,6 +15,7 @@
 
 import { normalizarConector } from "../mcp/conectores";
 import { normalizarRotina } from "../painel/rotinas";
+import { modelosDaConversa } from "../painel/uso";
 import type { TipoLista } from "./envelope";
 
 type Objeto = Record<string, unknown>;
@@ -60,10 +61,13 @@ function conversa(x: unknown): unknown {
   if (!comId(x) || !texto(x, "titulo") || typeof x.quando !== "number" || !Array.isArray(x.itens)) return null;
   const uso = ehObjeto(x.uso) ? x.uso : {};
   const n = (v: unknown) => (typeof v === "number" ? v : 0);
+  const { modelos, cotacao, ...resto } = x;
   return {
-    ...x,
+    ...resto,
     mensagens: n(x.mensagens),
     uso: { ...uso, entrada: n(uso.entrada), saida: n(uso.saida), custo: n(uso.custo) },
+    ...(Array.isArray(modelos) ? { modelos: modelosDaConversa(modelos) } : {}),
+    ...(typeof cotacao === "number" && cotacao > 0 ? { cotacao } : {}),
   };
 }
 

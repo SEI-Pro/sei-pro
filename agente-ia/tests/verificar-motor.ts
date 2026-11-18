@@ -259,11 +259,13 @@ export async function verificarMotor(): Promise<void> {
     const gigante = "y".repeat(300_000);
     // 1ª rodada: resposta enorme. 2ª: o começo deve chegar resumido.
     const rodadas: Rodada[] = [
-      () => ({ texto: gigante, chamadas: [], fim: "stop" }),
-      () => ({ texto: "resumo: o usuario pediu X e foi feito Y", chamadas: [], fim: "stop" }),
-      () => ({ texto: "pronto", chamadas: [], fim: "stop" }),
+      () => ({ texto: gigante, chamadas: [], fim: "stop", uso: { entrada: 100, saida: 10, custo: 0.01 } }),
+      () => ({ texto: "resumo: o usuario pediu X e foi feito Y", chamadas: [], fim: "stop", uso: { entrada: 200, saida: 20, custo: 0.02 } }),
+      () => ({ texto: "pronto", chamadas: [], fim: "stop", uso: { entrada: 300, saida: 30, custo: 0.03 } }),
     ];
     const interface_ = ui();
+    let ultimoUso = { entrada: 0, saida: 0, custo: 0 };
+    interface_.uso = (total) => void (ultimoUso = total);
     const m = new Motor({
       provedor: provedor(rodadas, vistos),
       tools: new RegistroTools([]),
@@ -280,6 +282,8 @@ export async function verificarMotor(): Promise<void> {
     checar("o comeco virou resumo", textoDoHistorico.includes("Resumo da conversa"), textoDoHistorico.slice(0, 200));
     checar("o usuario e avisado do resumo", interface_.avisos.some((a) => /resumi o come\u00E7o/i.test(a)), interface_.avisos);
     checar("o pedido novo continua ali", textoDoHistorico.includes("segundo pedido"));
+    // A chamada que resume também é paga: antes ficava fora do gasto da conversa.
+    checar("o resumo entra no gasto da conversa", Math.abs(ultimoUso.custo - 0.06) < 1e-9 && ultimoUso.entrada === 600, ultimoUso);
   }
 
   secao("delegar: agente auxiliar");
