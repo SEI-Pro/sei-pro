@@ -373,6 +373,29 @@ export async function verificarMotor(): Promise<void> {
     checar("cada conector pergunta de novo (nao memoiza)", tipos.filter((x) => x === "conector").length === 2, tipos);
     checar("restrito continua perguntando uma vez por conversa", tipos.filter((x) => x === "restrito").length === 1, tipos);
   }
+  {
+    // Teste de campo (18/11): documento_ler e ver_imagem do mesmo restrito na mesma rodada abriam dois cartões.
+    const tipos: string[] = [];
+    const leRestrito = definirTool({
+      nome: "le_restrito",
+      descricao: "le um documento restrito",
+      parametros: s.objeto({}),
+      efeito: "leitura",
+      rotulo: () => "Ler",
+      executar: async (_a, ctx) => String(await ctx.consentirRestrito("documento restrito")),
+    });
+    const painel = { ...ui(), consentir: async (tipo: "restrito" | "conector") => (tipos.push(tipo), await new Promise((r) => setTimeout(r, 5)), true) };
+    const m = new Motor({
+      provedor: provedor([() => ({ texto: "", chamadas: [chamada("le_restrito", {}), chamada("le_restrito", {})], fim: "tool_calls" })], []),
+      tools: new RegistroTools([leRestrito]),
+      ui: painel,
+      privacidade: new Pseudonimos(),
+      sei: seiFalso([]),
+      sistema: () => "sistema",
+    });
+    await m.enviar("leia os dois");
+    checar("duas leituras de restrito na mesma rodada: um cartao so", tipos.filter((x) => x === "restrito").length === 1, tipos);
+  }
 
   secao("motor: prompt com conectores");
   {

@@ -94,6 +94,8 @@ export class Motor {
   private controlador: AbortController | null = null;
   private usoTotal: Uso = { entrada: 0, saida: 0, custo: 0 };
   readonly estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
+  /** A pergunta do restrito em curso: duas leituras paralelas (ler e ver a figura) esperam o mesmo cartão. */
+  private restritoPendente: Promise<boolean> | null = null;
 
   constructor(private readonly o: OpcoesMotor) {}
 
@@ -115,6 +117,7 @@ export class Motor {
     this.historico = [];
     this.usoTotal = { entrada: 0, saida: 0, custo: 0 };
     this.estado.consentimentoRestrito = null;
+    this.restritoPendente = null;
     this.estado.anexos = [];
     this.estado.consentimentoImagens = false;
   }
@@ -219,8 +222,13 @@ export class Motor {
       sei: <T>(op: string, args: Record<string, unknown> = {}) => this.o.sei(op, args, sinal) as Promise<T>,
       estado: this.estado,
       consentirRestrito: async (detalhe) => {
-        if (this.estado.consentimentoRestrito === null) this.estado.consentimentoRestrito = await this.o.ui.consentir("restrito", detalhe);
-        return this.estado.consentimentoRestrito;
+        if (this.estado.consentimentoRestrito !== null) return this.estado.consentimentoRestrito;
+        const pendente = (this.restritoPendente ??= this.o.ui.consentir("restrito", detalhe).finally(() => {
+          if (this.restritoPendente === pendente) this.restritoPendente = null;
+        }));
+        const r = await pendente;
+        this.estado.consentimentoRestrito = r;
+        return r;
       },
       consentirConector: (detalhe) => this.o.ui.consentir("conector", detalhe),
       consentirImagem: (img, o) => consentirImagemNaConversa(this.estado, this.o.ui, img, { ...o, sinal }),
