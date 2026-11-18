@@ -152,7 +152,8 @@ function normalizar(s: string): string {
  *   1. O tipo pedido explicitamente, quando houver;
  *   2. o tipo cujo nome começa o nome do arquivo;
  *   3. o tipo configurado em `newdocname` no SEI Pro;
- *   4. "anexo";
+ *   4. o tipo chamado exatamente "anexo" (um tipo que só CONTÉM "anexo", como
+ *      "DFI - Controle de Anexo", não vale: era escolhido sem ninguém pedir);
  *   5. o único tipo da lista, quando só há um.
  *
  * Fora disso devolve NULO, e quem chama pergunta ao usuário. A versão anterior
@@ -188,7 +189,6 @@ export function escolherSerie(
 
   return (
     series.find((s) => normalizar(s.nome) === "anexo") ??
-    series.find((s) => normalizar(s.nome).includes("anexo")) ??
     (series.length === 1 ? series[0] : null)
   );
 }

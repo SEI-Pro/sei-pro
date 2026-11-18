@@ -1430,9 +1430,9 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
         var selSerieDefault = (getConfigValue('newdocname')) 
                 ? $.map(tipoDoc, function(value){ if (value.name == getConfigValue('newdocname').trim().toLowerCase().replace(/_|:/g, ' ')) { return value } })[0]
                 : $.map(tipoDoc, function(value){ if (value.name == 'anexo') { return value } })[0];
-            selSerieDefault = (typeof selSerieDefault !== 'undefined') 
-                ? selSerieDefault 
-                : $.map(tipoDoc, function(value){ if (value.name.indexOf('anexo') !== -1) { return value } })[0];
+        // So vale o tipo chamado exatamente "Anexo". Antes, na falta dele, valia o primeiro tipo cujo nome
+        // apenas CONTINHA "anexo" (num orgao, "DFI - Controle de Anexo"): o arquivo entrava com esse tipo
+        // sem ninguem ter escolhido, e a caixa abaixo nunca abria.
         // Sem tipo no nome do arquivo, sem tipo padrao e sem "Anexo" no orgao: o arquivo entrava com o
         // primeiro tipo da lista (no SEI SP, "Abaixo-Assinado"), sem aviso. Pergunta ao usuario.
         if (!valueSerie && typeof selSerieDefault === 'undefined') {

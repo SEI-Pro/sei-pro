@@ -216,6 +216,22 @@ checar(
   escolherSerie(SEM_ANEXO, "Vistoria F2.pdf") === null,
   JSON.stringify(escolherSerie(SEM_ANEXO, "Vistoria F2.pdf")),
 );
+// Sugestao 1415: um orgao sem "Anexo" mas com "DFI - Controle de Anexo" tinha todo arquivo de nome livre
+// enviado com esse tipo, porque o nome apenas CONTINHA "anexo".
+const SO_CONTROLE_DE_ANEXO = [
+  { nome: "Abaixo-Assinado", valor: "1" },
+  { nome: "DFI - Controle de Anexo", valor: "9" },
+  { nome: "Relatório", valor: "63" },
+];
+checar(
+  "tipo que so contem 'anexo' NAO e escolhido: devolve nulo para perguntar",
+  escolherSerie(SO_CONTROLE_DE_ANEXO, "Vistoria F2.pdf") === null,
+  JSON.stringify(escolherSerie(SO_CONTROLE_DE_ANEXO, "Vistoria F2.pdf")),
+);
+checar(
+  "o tipo padrao configurado resolve o orgao com 'Controle de Anexo'",
+  escolherSerie(SO_CONTROLE_DE_ANEXO, "Vistoria.pdf", undefined, "DFI - Controle de Anexo")?.valor === "9",
+);
 checar(
   "sem Anexo, o nome do arquivo continua escolhendo",
   escolherSerie(SEM_ANEXO, "Relatorio vistoria.pdf")?.valor === "63",
