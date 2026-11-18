@@ -14,7 +14,7 @@ import { checar, secao } from "./util";
 
 type Resposta = "esta" | "todas" | "nao";
 
-function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; respostas?: Resposta[]; descricao?: string; restritoOk?: boolean; semImagens?: boolean; semUsuario?: boolean; abortarEm?: "preparar" | "descrever" } = {}) {
+function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; respostas?: Resposta[]; descricao?: string; restritoOk?: boolean; semImagens?: boolean; semUsuario?: boolean; abortarEm?: "preparar" | "cartao" | "descrever" } = {}) {
   const pedidos: Array<{ op: string; args: Record<string, unknown> }> = [];
   const cartoes: Array<{ img: ImagemPronta; restrito: boolean }> = [];
   const descricoes: Array<{ img: ImagemPronta; pedido: string }> = [];
@@ -22,7 +22,7 @@ function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; r
   const respostas = [...(o.respostas ?? ["esta"])];
   const parar = new AbortController();
   const estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
-  const ui = { consentirImagem: async (img: ImagemPronta, x: { restrito: boolean }) => (cartoes.push({ img, restrito: x.restrito }), respostas.shift() ?? "nao") };
+  const ui = { consentirImagem: async (img: ImagemPronta, x: { restrito: boolean }) => (cartoes.push({ img, restrito: x.restrito }), o.abortarEm === "cartao" ? (parar.abort(), "nao" as const) : (respostas.shift() ?? "nao")) };
   const imagens: ServicoDeImagens = {
     semUsuario: () => Boolean(o.semUsuario),
     enxerga: async () => (o.enxerga === undefined ? true : o.enxerga),
@@ -125,6 +125,12 @@ export async function verificarImagemTool(): Promise<void> {
     checar("Parar antes do cartao: nada sai", r.erro?.codigo === "CANCELADO" && c.cartoes.length === 0 && c.descricoes.length === 0, r);
   }
   {
+    // Teste de campo (18/11): o Parar com o cartão aberto aparecia ao modelo como "o usuário não autorizou".
+    const c = cenario({ abortarEm: "cartao" });
+    const r = await c.rodar({ documento: "2991250", figura: "p3-1" });
+    checar("Parar com o cartao aberto: cancelado, nao 'nao autorizou'", r.erro?.codigo === "CANCELADO" && c.descricoes.length === 0, r.erro?.codigo);
+  }
+  {
     const c = cenario({ abortarEm: "descrever" });
     const r = await c.rodar({ documento: "2991250", figura: "p3-1" });
     checar("Parar durante a chamada de visao: nada volta", r.erro?.codigo === "CANCELADO" && !r.ok, r);
@@ -167,6 +173,42 @@ export async function verificarImagemTool(): Promise<void> {
     await consentirImagemNaConversa(estado, { consentirImagem: async () => "todas" as const }, c.cartoes[0].img, { restrito: true });
     checar("(estado continua sem a permissao geral)", estado.consentimentoImagens === false);
     checar("painel sem cartao: nao envia", (await consentirImagemNaConversa(estado, {}, c.cartoes[0].img, { restrito: false })) === false);
+  }
+  {
+    // Teste de campo (18/11): o modelo pediu duas figuras na mesma rodada e os dois cartões abriram juntos;
+    // o "todas" do primeiro não valia para o segundo, que já estava na tela.
+    const estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
+    let abertos = 0;
+    let maxAbertos = 0;
+    let cartoes = 0;
+    const ui = {
+      consentirImagem: async () => {
+        cartoes += 1;
+        abertos += 1;
+        maxAbertos = Math.max(maxAbertos, abertos);
+        await new Promise((r) => setTimeout(r, 5));
+        abertos -= 1;
+        return "todas" as const;
+      },
+    };
+    const img = { dataUrl: "data:image/jpeg;base64,AA", largura: 1, altura: 1, descricao: "x" };
+    const r = await Promise.all([consentirImagemNaConversa(estado, ui, img, { restrito: false }), consentirImagemNaConversa(estado, ui, img, { restrito: false })]);
+    checar("duas figuras na mesma rodada: um cartao por vez", maxAbertos === 1, { maxAbertos });
+    checar("e o 'todas' do primeiro libera o segundo sem cartao", cartoes === 1 && r.every(Boolean), { cartoes, r });
+  }
+  {
+    // Teste de campo (18/11): "Parar" com o cartão aberto não parava nada (o cartão esperava para sempre).
+    const estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
+    const img = { dataUrl: "data:image/jpeg;base64,AA", largura: 1, altura: 1, descricao: "x" };
+    const parar = new AbortController();
+    let sinalNoCartao: AbortSignal | undefined;
+    const nunca = { consentirImagem: (_: ImagemPronta, x: { restrito: boolean; sinal?: AbortSignal }) => ((sinalNoCartao = x.sinal), new Promise<"esta">(() => {})) };
+    setTimeout(() => parar.abort(), 5);
+    const r = await Promise.race([consentirImagemNaConversa(estado, nunca, img, { restrito: false, sinal: parar.signal }), new Promise((ok) => setTimeout(() => ok("travou"), 200))]);
+    checar("parar com o cartao aberto: nao envia e nao trava", r === false, r);
+    checar("o cartao recebe o sinal para se fechar", sinalNoCartao === parar.signal);
+    const depois = await Promise.race([consentirImagemNaConversa(estado, { consentirImagem: async () => "esta" as const }, img, { restrito: false }), new Promise((ok) => setTimeout(() => ok("travou"), 200))]);
+    checar("e a fila segue: a proxima figura ganha o seu cartao", depois === true, depois);
   }
 
   secao("ver_imagem: a descricao volta como dado");

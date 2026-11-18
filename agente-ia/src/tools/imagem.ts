@@ -74,8 +74,9 @@ export const TOOL_VER_IMAGEM = definirTool({
     if (ctx.sinal.aborted) throw cancelado();
     const img = await ctx.imagens.preparar(conteudo, figura, `figura ${figura} do documento ${doc}`);
     if (ctx.sinal.aborted) throw cancelado();
-    if (!(await ctx.consentirImagem(img, { restrito }))) throw falha("O usu\u00E1rio n\u00E3o autorizou o envio desta imagem ao servi\u00E7o de IA. Responda sem ela e diga isso.", "IMAGEM_NAO_AUTORIZADA");
+    const permitida = await ctx.consentirImagem(img, { restrito });
     if (ctx.sinal.aborted) throw cancelado();
+    if (!permitida) throw falha("O usu\u00E1rio n\u00E3o autorizou o envio desta imagem ao servi\u00E7o de IA. Responda sem ela e diga isso.", "IMAGEM_NAO_AUTORIZADA");
     // O motor reidrata os argumentos (o nome real volta no lugar de [PESSOA_1]):
     // o que sai para o serviço de IA precisa ser mascarado de novo.
     const pergunta = typeof a.pergunta === "string" && a.pergunta.trim() ? ` O que procurar: ${ctx.anonimizar(a.pergunta.trim())}` : "";

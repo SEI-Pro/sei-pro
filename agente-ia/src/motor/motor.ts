@@ -223,7 +223,7 @@ export class Motor {
         return this.estado.consentimentoRestrito;
       },
       consentirConector: (detalhe) => this.o.ui.consentir("conector", detalhe),
-      consentirImagem: (img, o) => consentirImagemNaConversa(this.estado, this.o.ui, img, o),
+      consentirImagem: (img, o) => consentirImagemNaConversa(this.estado, this.o.ui, img, { ...o, sinal }),
       nonce: this.nonce,
       registrarAchados: (documento, achados) => this.o.ui.integridade?.(documento, achados),
       anonimizar: (texto) => this.o.privacidade.anonimizar(texto),
@@ -527,9 +527,32 @@ export type { PreviaItem };
  * conversa, menos as de documento restrito, que perguntam sempre. Sem cartão
  * no painel, a resposta é não.
  */
-export async function consentirImagemNaConversa(estado: EstadoConversa, ui: Pick<InterfaceMotor, "consentirImagem">, img: ImagemPronta, o: { restrito: boolean }): Promise<boolean> {
-  if (estado.consentimentoImagens && !o.restrito) return true;
-  const r = (await ui.consentirImagem?.(img, o)) ?? "nao";
-  if (r === "todas" && !o.restrito) estado.consentimentoImagens = true;
-  return r !== "nao";
+/**
+ * Um cartão de imagem por vez em cada conversa: o modelo pode pedir duas
+ * figuras na mesma rodada, e o "todas" do primeiro cartão tem de valer para
+ * o segundo, que senão já estaria na tela esperando outra resposta.
+ */
+const filaDeImagens = new WeakMap<EstadoConversa, Promise<unknown>>();
+
+/** "nao" quando o usuário clica em Parar: o cartão aberto não segura a rodada nem a fila. */
+function aoParar(sinal: AbortSignal): Promise<"nao"> {
+  return new Promise((resolver) => (sinal.aborted ? resolver("nao") : sinal.addEventListener("abort", () => resolver("nao"), { once: true })));
+}
+
+export function consentirImagemNaConversa(
+  estado: EstadoConversa,
+  ui: Pick<InterfaceMotor, "consentirImagem">,
+  img: ImagemPronta,
+  o: { restrito: boolean; sinal?: AbortSignal },
+): Promise<boolean> {
+  const vez = (filaDeImagens.get(estado) ?? Promise.resolve()).then(async () => {
+    if (o.sinal?.aborted) return false;
+    if (estado.consentimentoImagens && !o.restrito) return true;
+    const pedido = ui.consentirImagem?.(img, o) ?? Promise.resolve("nao" as const);
+    const r = await (o.sinal ? Promise.race([pedido, aoParar(o.sinal)]) : pedido);
+    if (r === "todas" && !o.restrito) estado.consentimentoImagens = true;
+    return r !== "nao";
+  });
+  filaDeImagens.set(estado, vez.catch(() => undefined));
+  return vez;
 }

@@ -3314,7 +3314,7 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
   }
 
   /** Miniatura da figura antes de ela ir ao serviço de IA (`ver_imagem`). */
-  private cartaoImagem(img: ImagemPronta, o: { restrito: boolean }): Promise<"esta" | "todas" | "nao"> {
+  private cartaoImagem(img: ImagemPronta, o: { restrito: boolean; sinal?: AbortSignal }): Promise<"esta" | "todas" | "nao"> {
     this.fecharBolha();
     this.pensar(false);
     return new Promise((resolver) => {
@@ -3326,7 +3326,10 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
         h("img", { class: "miniatura", src: img.dataUrl, alt: `Miniatura: ${img.descricao}` }),
         h("div", {}, "A imagem vai ao servi\u00E7o de IA como est\u00E1: dados pessoais nela n\u00E3o s\u00E3o mascarados."),
       );
+      let decidido = false;
       const decidir = (r: "esta" | "todas" | "nao") => {
+        if (decidido) return;
+        decidido = true;
         const texto = r === "nao" ? "Imagem n\u00E3o enviada." : r === "todas" ? "Imagens desta conversa liberadas." : "Imagem enviada.";
         this.encerrarCartao(cartao, ".acoes", texto, r !== "nao");
         resolver(r);
@@ -3340,6 +3343,16 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
           ...(o.restrito ? [] : [h("button", { onclick: () => decidir("todas") }, "Enviar as imagens desta conversa")]),
           h("button", { onclick: () => decidir("nao") }, "N\u00E3o enviar"),
         ),
+      );
+      o.sinal?.addEventListener(
+        "abort",
+        () => {
+          if (decidido) return;
+          decidido = true;
+          this.encerrarCartao(cartao, ".acoes", "Cancelado.", false);
+          resolver("nao");
+        },
+        { once: true },
       );
       this.elConversa.append(cartao);
       this.rolar();

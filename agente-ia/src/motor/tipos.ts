@@ -178,9 +178,9 @@ export interface InterfaceMotor {
    * Cartão com a miniatura da figura antes de ela ir ao serviço de IA
    * (`ver_imagem`). "todas" vale para as próximas da conversa — menos as de
    * documento restrito, que perguntam sempre (e o cartão nem oferece "todas").
-   * Sem cartão no painel, nada é enviado.
+   * Sem cartão no painel, nada é enviado. `sinal`: o Parar fecha o cartão.
    */
-  consentirImagem?(img: ImagemPronta, o: { restrito: boolean }): Promise<"esta" | "todas" | "nao">;
+  consentirImagem?(img: ImagemPronta, o: { restrito: boolean; sinal?: AbortSignal }): Promise<"esta" | "todas" | "nao">;
   /** Autoriza uma chamada a conector MCP (só quando a permissão é "aprovar"). */
   aprovarExterno?(p: PedidoExterno): Promise<DecisaoExterna>;
   /**
