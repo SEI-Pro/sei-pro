@@ -14,6 +14,7 @@
 import { Formulario } from "../formulario/formulario";
 import { parametros } from "../links/links";
 import { textoDe } from "../sessao/dom";
+import { chamadas, texto } from "../sessao/literais";
 import type { Pagina } from "../sessao/http";
 import type { Sei } from "../sei";
 
@@ -34,6 +35,23 @@ export interface ProcessoNaCaixa {
 }
 
 /**
+ * Tipo e especificação do processo. O SEI 4.1 e o 5 trazem os dois no `aria-label`
+ * do checkbox; o SEI 4.0 não tem esse rótulo e só os mostra no tooltip da âncora
+ * do processo, `infraTooltipMostrar('Especificação', 'Tipo')`, lido como literal
+ * (com aspas escapadas), sem executar nada. Tooltip de um argumento só é
+ * ambíguo (pode ser só a especificação), então não vira tipo. Correção do SEI 4.0
+ * proposta por @laestacheski (PR #189).
+ */
+function lerTipoEEspecificacao(rotulo: string, link: Element): { tipo: string; especificacao: string } {
+  const tipo = /Tipo (.*?)(?: \/ Especifica|$)/.exec(rotulo)?.[1]?.trim() ?? "";
+  const especificacao = /Especifica\S* (.*)$/.exec(rotulo)?.[1]?.trim() ?? "";
+  if (tipo) return { tipo, especificacao };
+  const args = chamadas(link.getAttribute("onmouseover") ?? "", "infraTooltipMostrar")[0];
+  if (args && args.length >= 2) return { tipo: texto(args[1]).trim(), especificacao: texto(args[0]).trim() };
+  return { tipo, especificacao };
+}
+
+/**
  * Uma linha da caixa (`tr#P<id>`). É exportada porque o content script do
  * favoritos lê a MESMA tela que o usuário vê, sem requisição nenhuma, e põe
  * a estrela na linha.
@@ -44,15 +62,16 @@ export function lerLinhaCaixa(tr: Element, grupo: "recebidos" | "gerados"): Proc
   if (!chk || !link) return null;
   const rotulo = chk.getAttribute("aria-label") ?? "";
   const sigiloso = /^Sigiloso\b/.test(rotulo) || /Sigiloso/.test(link.getAttribute("class") ?? "");
+  const tipoEEspecificacao = lerTipoEEspecificacao(rotulo, link);
   const tds = [...tr.querySelectorAll("td")];
   const sinais = sigiloso ? [] : [...(tds[1]?.querySelectorAll("a[aria-label]") ?? [])].map((a) => a.getAttribute("aria-label") ?? "");
   return {
     idProcedimento: chk.getAttribute("value") ?? parametros(link.getAttribute("href") ?? "").get("id_procedimento") ?? "",
     protocolo: chk.getAttribute("title") ?? textoDe(link),
     grupo,
-    tipo: /Tipo (.*?)(?: \/ Especifica|$)/.exec(rotulo)?.[1]?.trim() ?? "",
+    tipo: tipoEEspecificacao.tipo,
     // Especificação de processo sigiloso não sai daqui (regra do agente).
-    especificacao: sigiloso ? "" : (/Especifica\S* (.*)$/.exec(rotulo)?.[1]?.trim() ?? ""),
+    especificacao: sigiloso ? "" : tipoEEspecificacao.especificacao,
     sigiloso,
     novo: /NaoVisualizado/.test(link.getAttribute("class") ?? ""),
     atribuido: textoDe(tds[tds.length - 1]).replace(/^\(|\)$/g, ""),

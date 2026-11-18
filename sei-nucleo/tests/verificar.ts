@@ -1,6 +1,7 @@
 import { verificarLocksFirefox } from "./verificar-locks-firefox";
 import { verificarAcoesLote } from "./verificar-acoes-lote";
 import { verificarBase } from "./verificar-base";
+import { verificarCaixaSei40 } from "./verificar-caixa-sei40";
 import { verificarBlocoProcessos } from "./verificar-bloco-processos";
 import { verificarDocumentoDados } from "./verificar-documento-dados";
 import { verificarDominio } from "./verificar-dominio";
@@ -30,4 +31,5 @@ await verificarBlocoProcessos();
 await verificarDocumentoDados();
 await verificarAcoesLote();
 await verificarLocksFirefox();
+await verificarCaixaSei40();
 resumo();
