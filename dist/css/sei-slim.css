@@ -140,6 +140,13 @@ i.fa-laranjaColor {
 .seiSlim.seiSlim_view form #divOpcoesAssuntos {
     display: flex;
 }
+/* Tira o position de toda .infraAreaDados (regra acima), e o div de opcoes que o SEI deixa em
+   position: absolute (lupa e X de "Documentos do processo" no e-mail) perde a area de referencia:
+   ia parar no alto da pagina, ao lado do "Para", e a lupa parecia ter sumido. A area que tem um
+   desses divs como filho volta a ser a referencia. */
+.seiSlim.seiSlim_view form .infraAreaDados:has(> [id^="divOpcoes"]) {
+    position: relative !important;
+}
 .seiSlim.seiSlim_view form #txaMensagem {
     margin-bottom: 40px !important;
 }
