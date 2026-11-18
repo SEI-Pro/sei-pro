@@ -6,7 +6,7 @@
 import { lerPagina, ORCAMENTO_FIGURAS, orcamentoDeFiguras } from "../src/painel/pdf";
 import { caixasDasImagens, figurasDoDocumento, LEGENDA, rodapeDeFiguras, textoDaPaginaComMarcas, textoDoDocumentoComFiguras, lerIdFigura, marcaDeFigura, marcaDeIntervalo, marcaDeLegenda, type Caixa, type PaginaVista } from "../src/painel/figuras";
 import { imagemDoHtml, textoDoHtmlComOcultos } from "@nucleo/dominio/editor";
-import { figuraNoDocumento, reduzir, retanguloEmPixels } from "../src/painel/imagem";
+import { figuraNoDocumento, opcoesDeRender, reduzir, retanguloEmPixels } from "../src/painel/imagem";
 import { checar, secao } from "./util";
 
 /** Os códigos do pdf.js 6.3.289 (`pdfjs.OPS`). */
@@ -246,6 +246,9 @@ export async function verificarFiguras(): Promise<void> {
     const naBorda = retanguloEmPixels({ x: 0, y: 0, largura: 595, altura: 100 }, { ...A4, rotacao: 0 }, 1);
     checar("a margem nao sai da pagina", naBorda.x === 0 && naBorda.y + naBorda.altura <= 842 + 0.01 && naBorda.largura <= 595 + 0.01, naBorda);
     checar("reduz o lado maior a 1536", JSON.stringify(reduzir(3000, 1500)) === JSON.stringify({ largura: 1536, altura: 768 }));
+    // Com intenção de tela, o pdf.js espera o requestAnimationFrame, que o
+    // navegador pausa em aba escondida: o recorte travava (visto no Chrome real).
+    checar("render sem requestAnimationFrame (intencao de impressao)", opcoesDeRender({} as never, {}, {} as never).intent === "print");
     checar("imagem pequena fica como esta", JSON.stringify(reduzir(800, 600)) === JSON.stringify({ largura: 800, altura: 600 }));
   }
 

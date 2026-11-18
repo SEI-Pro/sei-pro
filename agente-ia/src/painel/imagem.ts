@@ -76,7 +76,17 @@ interface PaginaRenderizavel {
   rotate: number;
   view: number[];
   getViewport(o: { scale: number }): { width: number; height: number };
-  render(o: { canvasContext: CanvasRenderingContext2D; viewport: unknown; canvas?: HTMLCanvasElement }): { promise: Promise<void> };
+  render(o: ReturnType<typeof opcoesDeRender>): { promise: Promise<void> };
+}
+
+/**
+ * Opções do `page.render`. Intenção de IMPRESSÃO de propósito: com a de tela,
+ * o pdf.js agenda cada etapa por `requestAnimationFrame`, que o navegador
+ * pausa em aba escondida — e o recorte travava sem erro (visto no Chrome com
+ * o painel atrás de outra aba). Para uma figura, o desenho de impressão serve.
+ */
+export function opcoesDeRender(canvasContext: CanvasRenderingContext2D, viewport: unknown, canvas: HTMLCanvasElement) {
+  return { canvasContext, viewport, canvas, intent: "print" as const };
 }
 
 /** Recorta e reduz a figura pedida. `conteudo` é o arquivo do documento (PDF ou imagem). */
@@ -111,7 +121,7 @@ export async function prepararImagem(conteudo: { tipo: string; base64: string },
     tela.height = Math.ceil(viewport.height);
     const ctx = tela.getContext("2d");
     if (!ctx) throw new Error("O navegador não deixou desenhar a página.");
-    await pagina.render({ canvasContext: ctx, viewport, canvas: tela }).promise;
+    await pagina.render(opcoesDeRender(ctx, viewport, tela)).promise;
     return paraJpeg(tela, retanguloEmPixels(alvo, dims, escala, caixa ? MARGEM : 0), descricao);
   });
 }

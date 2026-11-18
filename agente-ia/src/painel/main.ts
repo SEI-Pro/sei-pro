@@ -3490,5 +3490,5 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
 const app = new App();
 // Diagnóstico: acessível só no console desta página da extensão (o SEI não a enxerga).
 Object.defineProperty(window, "agenteIA", { value: app });
-Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico, inversaDe, markdown } });
+Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico, inversaDe, markdown, prepararImagem } });
 void app.iniciar();
