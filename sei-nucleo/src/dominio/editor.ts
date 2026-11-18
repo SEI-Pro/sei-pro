@@ -308,6 +308,8 @@ export interface TextoComOcultos {
   texto: string;
   /** Trechos que existiam no documento mas não apareciam na tela. */
   ocultos: Array<{ texto: string; motivo: string }>;
+  /** Com `marcarImagens`: quantas imagens do próprio documento ganharam marca. */
+  imagens?: number;
 }
 
 /**
@@ -318,7 +320,7 @@ export interface TextoComOcultos {
  * chama recebe a lista e decide o que fazer (no Agente de IA, vira marca no
  * conteúdo e linha no relatório de integridade).
  */
-export function textoDoHtmlComOcultos(html: string): TextoComOcultos {
+export function textoDoHtmlComOcultos(html: string, o: { marcarImagens?: boolean } = {}): TextoComOcultos {
   const doc = analisarHtml(`<!doctype html><html><head></head><body>${html}</body></html>`);
   const ocultos: Array<{ texto: string; motivo: string }> = [];
   for (const el of doc.querySelectorAll("[style], [hidden]")) {
@@ -332,11 +334,57 @@ export function textoDoHtmlComOcultos(html: string): TextoComOcultos {
     if (ocultos.some((o) => o.texto.includes(texto))) continue;
     ocultos.push({ texto: texto.slice(0, 500), motivo });
   }
-  return { texto: textoDoHtml(html), ocultos };
+  if (!o.marcarImagens) return { texto: textoDoHtml(html), ocultos };
+  const marcadas = { n: 0 };
+  return { texto: textoDoHtml(html, marcadas), ocultos, imagens: marcadas.n };
 }
 
-export function textoDoHtml(html: string): string {
+/** O editor do SEI grava a imagem enviada dentro do HTML (`EditorRN::buscarImagemUpload`). */
+const IMAGEM_EMBUTIDA = /^data:(image\/[\w.+-]+);base64,(.*)$/is;
+/** Abaixo disto (nos dois lados declarados), é ícone ou marcador, não figura. */
+const LADO_MINIMO_PX = 48;
+
+function ladoDeclarado(img: Element, lado: "width" | "height"): number | null {
+  const atributo = Number(img.getAttribute(lado));
+  if (atributo > 0) return atributo;
+  const estilo = new RegExp(`(?:^|;)\\s*${lado}\\s*:\\s*(\\d+(?:\\.\\d+)?)px`, "i").exec(img.getAttribute("style") ?? "");
+  return estilo ? Number(estilo[1]) : null;
+}
+
+/**
+ * Troca cada `<img>` por uma marca de texto. A numeração (`img-N`) conta TODAS
+ * as imagens embutidas, inclusive as descartadas por pequenas: é a mesma conta
+ * de `imagemDoHtml`, que o `ver_imagem` usa para buscar a figura.
+ */
+function marcarImagens(doc: Document, marcadas: { n: number }): void {
+  let indice = 0;
+  for (const img of [...doc.querySelectorAll("img")]) {
+    const src = img.getAttribute("src") ?? "";
+    let marca = "";
+    if (IMAGEM_EMBUTIDA.test(src)) {
+      indice += 1;
+      const l = ladoDeclarado(img, "width");
+      const a = ladoDeclarado(img, "height");
+      if (!(l !== null && a !== null && l < LADO_MINIMO_PX && a < LADO_MINIMO_PX)) {
+        marcadas.n += 1;
+        marca = `[figura img-${indice}: imagem no corpo do documento${l && a ? `, ${Math.round(l)}\u00D7${Math.round(a)} px` : ""}; para ver: ver_imagem]`;
+      }
+    } else if (src.trim()) marca = "[imagem externa ao documento, n\u00E3o lida]";
+    img.replaceWith(doc.createTextNode(marca ? `\n${marca}\n` : ""));
+  }
+}
+
+/** A n-ésima imagem embutida do documento (a partir de 1), como `ver_imagem` a pede. */
+export function imagemDoHtml(html: string, indice: number): { tipo: string; base64: string } | null {
   const doc = analisarHtml(`<!doctype html><html><head></head><body>${html}</body></html>`);
+  const embutidas = [...doc.querySelectorAll("img")].map((i) => IMAGEM_EMBUTIDA.exec(i.getAttribute("src") ?? "")).filter((m): m is RegExpExecArray => Boolean(m));
+  const m = embutidas[indice - 1];
+  return m ? { tipo: m[1].toLowerCase(), base64: m[2].replace(/\s+/g, "") } : null;
+}
+
+export function textoDoHtml(html: string, imagens?: { n: number }): string {
+  const doc = analisarHtml(`<!doctype html><html><head></head><body>${html}</body></html>`);
+  if (imagens) marcarImagens(doc, imagens);
   for (const b of doc.querySelectorAll("p, br, li, tr, h1, h2, h3, h4, div")) b.append("\n");
   // Célula sem <p> dentro grudava na vizinha ("19.00028.500"), e o número fundido virava telefone.
   for (const c of doc.querySelectorAll("td, th")) c.append(" ");

@@ -20,7 +20,7 @@ import {
   type AlteracaoDocumento,
   type NovoDocumento,
 } from "@nucleo/dominio/documento";
-import { abrirEditor, editarConteudo, textoDoHtmlComOcultos, type EditorDocumento } from "@nucleo/dominio/editor";
+import { abrirEditor, editarConteudo, imagemDoHtml, textoDoHtmlComOcultos, type EditorDocumento } from "@nucleo/dominio/editor";
 import { andamentos, type TipoHistorico } from "@nucleo/dominio/historico";
 import { listarOpcoes, type ListaOpcoes } from "@nucleo/dominio/opcoes";
 import { alterarProcesso, concluirProcesso, consultarProcesso, reabrirProcesso, type AlteracaoProcesso } from "@nucleo/dominio/processo";
@@ -387,10 +387,17 @@ export const OPERACOES: Record<string, Op> = {
     const c = await lerConteudo(sei, d, { sinal });
     if (c.forma === "html") {
       const corpo = /<body[^>]*>([\s\S]*)<\/body>/i.exec(c.html)?.[1] ?? c.html;
+      // `imagemHtml`: a n-ésima imagem embutida, para o `ver_imagem` (mesma
+      // numeração das marcas `img-N` de `textoDoHtmlComOcultos`).
+      if (typeof a.imagemHtml === "number") {
+        const imagem = imagemDoHtml(corpo, a.imagemHtml);
+        if (!imagem) throw new ErroSei("SEI_NAO_ENCONTRADO", `O documento ${d.documento.numero} n\u00E3o tem a imagem img-${a.imagemHtml}.`);
+        return { ...meta, imagem };
+      }
       // `ocultos`: o que existe no documento e NÃO aparece na tela (fonte
       // branca, display:none). É por aí que entra instrução dirigida a IA —
       // quem marca é o painel, que tem a varredura (ver seguranca/injecao.ts).
-      const { texto, ocultos } = textoDoHtmlComOcultos(corpo.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ""));
+      const { texto, ocultos } = textoDoHtmlComOcultos(corpo.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ""), { marcarImagens: a.marcarImagens === true });
       return { ...meta, conteudo: { forma: "texto", texto, ...(ocultos.length ? { ocultos } : {}) } };
     }
     const { bytes, tipo, nome } = c.arquivo;

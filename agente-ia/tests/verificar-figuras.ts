@@ -5,6 +5,7 @@
 
 import { lerPagina, ORCAMENTO_FIGURAS, orcamentoDeFiguras } from "../src/painel/pdf";
 import { caixasDasImagens, figurasDoDocumento, LEGENDA, rodapeDeFiguras, textoDaPaginaComMarcas, textoDoDocumentoComFiguras, lerIdFigura, marcaDeFigura, marcaDeIntervalo, marcaDeLegenda, type Caixa, type PaginaVista } from "../src/painel/figuras";
+import { imagemDoHtml, textoDoHtmlComOcultos } from "@nucleo/dominio/editor";
 import { checar, secao } from "./util";
 
 /** Os códigos do pdf.js 6.3.289 (`pdfjs.OPS`). */
@@ -210,5 +211,23 @@ export async function verificarFiguras(): Promise<void> {
     porTempo(1);
     agora = 1500;
     checar("para ao passar do tempo", !porTempo(2));
+  }
+
+  secao("figuras: documento do editor do SEI");
+  {
+    const png = "data:image/png;base64,iVBORw0KGgo=";
+    const html = `<p>Antes</p><p><img src="${png}" width="640" height="480"></p><p><img src="${png}"></p><p><img src="${png}" width="20" height="20"><img src="data:image/jpeg;base64,/9j/4AAQ" style="width: 300px; height: 200px"></p><p><img src="https://exemplo.gov.br/a.png"></p><p>Depois</p>`;
+    const r = textoDoHtmlComOcultos(html, { marcarImagens: true });
+    checar("imagem com tamanho declarado", r.texto.includes("[figura img-1: imagem no corpo do documento, 640\u00D7480 px; para ver: ver_imagem]"), r.texto);
+    checar("imagem sem tamanho", r.texto.includes("[figura img-2: imagem no corpo do documento; para ver: ver_imagem]"), r.texto);
+    checar("imagem minuscula fica de fora, e a numeracao segue", !r.texto.includes("img-3") && r.texto.includes("[figura img-4: imagem no corpo do documento, 300\u00D7200 px; para ver: ver_imagem]"), r.texto);
+    checar("imagem de fora do documento sinalizada", r.texto.includes("[imagem externa ao documento, n\u00E3o lida]"), r.texto);
+    checar("o texto em volta continua", r.texto.startsWith("Antes") && r.texto.endsWith("Depois"), r.texto);
+    checar("conta as marcadas", r.imagens === 3, r.imagens);
+    const sem = textoDoHtmlComOcultos(html);
+    checar("sem a opcao, o texto e o de sempre", sem.texto === "Antes\nDepois" && sem.imagens === undefined, sem);
+    checar("a segunda imagem do documento", JSON.stringify(imagemDoHtml(html, 2)) === JSON.stringify({ tipo: "image/png", base64: "iVBORw0KGgo=" }), imagemDoHtml(html, 2));
+    checar("a quarta (jpeg)", imagemDoHtml(html, 4)?.tipo === "image/jpeg");
+    checar("a que nao existe", imagemDoHtml(html, 9) === null);
   }
 }
