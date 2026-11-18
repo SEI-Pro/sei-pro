@@ -1,5 +1,5 @@
 import { verificarMotor } from "./verificar-motor";
-import { verificarCampoModeloSelect, verificarErro403Local, verificarErro429, verificarProvedor, verificarSelectEndereco, verificarRaciocinioComFerramentas } from "./verificar-provedor";
+import { verificarCampoModeloSelect, verificarErro403Local, verificarErro429, verificarProvedor, verificarImagemNoProvedor, verificarSelectEndereco, verificarRaciocinioComFerramentas } from "./verificar-provedor";
 import { verificarSkills } from "./verificar-skills";
 import { verificarMcp } from "./verificar-mcp";
 import { verificarBaixar } from "./verificar-baixar";
@@ -51,6 +51,7 @@ await verificarFavoritosTool();
 await verificarHistoricoTool();
 await verificarProjetosTool();
 await verificarProvedor();
+await verificarImagemNoProvedor();
 await verificarErro429();
 await verificarErro403Local();
 await verificarCampoModeloSelect();

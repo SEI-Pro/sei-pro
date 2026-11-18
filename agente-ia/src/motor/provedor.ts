@@ -463,6 +463,7 @@ export function mensagemDeErro(status: number, corpo: string, servico: Servico =
       `(passo a passo no Windows, Mac e Linux: ${DOC_CHAVES}#outro-servico-compativel). Se n\u00E3o for o Ollama, confira a chave e as regras de acesso do servidor.`
     );
   }
+  if (ehErroDeImagem(status, corpo)) return "O modelo escolhido n\u00E3o enxerga imagem. Escolha um modelo com vis\u00E3o em Configura\u00E7\u00E3o (o modelo auxiliar basta).";
   if (status === 401 || status === 403) return `A chave do ${onde} foi recusada. Confira a chave nas configura\u00E7\u00F5es do agente.`;
   if (status === 402) return `Sem cr\u00E9dito no ${onde} para este modelo. Adicione cr\u00E9ditos ou escolha um modelo mais barato.`;
   // O agente depende de ferramentas: é com elas que ele lê o processo e
@@ -663,6 +664,8 @@ export interface ModeloDisponivel {
   /** Dólares por milhão de tokens; 0 quando o serviço não informa preço. */
   precoEntrada: number;
   precoSaida: number;
+  /** Aceita imagem na entrada; `null` quando o serviço não informa. */
+  imagem: boolean | null;
 }
 
 /**
@@ -682,12 +685,12 @@ export async function listarModelos(o: { servico?: Servico; url?: string; chave?
     const j = (await r.json()) as { data?: Array<{ id: string; display_name?: string }> };
     return (j.data ?? [])
       // O Gemini devolve "models/gemini-2.5-flash"; o pedido quer o id sem o prefixo.
-      .map((m) => ({ id: m.id.replace(/^models\//, ""), nome: m.display_name ?? m.id.replace(/^models\//, ""), contexto: 0, precoEntrada: 0, precoSaida: 0 }))
+      .map((m) => ({ id: m.id.replace(/^models\//, ""), nome: m.display_name ?? m.id.replace(/^models\//, ""), contexto: 0, precoEntrada: 0, precoSaida: 0, imagem: null }))
       .filter((m) => serveParaConversar(servico, m.id))
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }
   const r = await f(endereco);
-  const j = (await r.json()) as { data: Array<{ id: string; name: string; context_length: number; supported_parameters?: string[]; pricing: { prompt: string; completion: string } }> };
+  const j = (await r.json()) as { data: ModeloDoOpenRouter[] };
   return j.data
     .filter((m) => m.supported_parameters?.includes("tools") && !m.id.endsWith(":batch"))
     .map((m) => ({
@@ -696,8 +699,45 @@ export async function listarModelos(o: { servico?: Servico; url?: string; chave?
       contexto: m.context_length,
       precoEntrada: Number(m.pricing.prompt) * 1e6,
       precoSaida: Number(m.pricing.completion) * 1e6,
+      imagem: enxergaPeloCatalogo(m),
     }))
     .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+interface ModeloDoOpenRouter {
+  id: string;
+  name: string;
+  context_length: number;
+  supported_parameters?: string[];
+  pricing: { prompt: string; completion: string };
+  architecture?: { input_modalities?: string[] };
+}
+
+const enxergaPeloCatalogo = (m: ModeloDoOpenRouter): boolean | null => (Array.isArray(m.architecture?.input_modalities) ? m.architecture.input_modalities.includes("image") : null);
+
+/** O catálogo público do OpenRouter, uma vez por sessão (por `fetch`, para os testes não se misturarem). */
+const catalogosDeVisao = new WeakMap<typeof fetch, Promise<Map<string, boolean | null>>>();
+
+/**
+ * O modelo aceita imagem? Só o OpenRouter diz de antemão (`architecture.input_modalities`);
+ * nos demais serviços a resposta é `null` e quem decide é a tentativa (ver `ehErroDeImagem`).
+ */
+export async function aceitaImagem(o: { servico: Servico; modelo: string; fetch?: typeof fetch }): Promise<boolean | null> {
+  if (o.servico !== "openrouter") return null;
+  const f = o.fetch ?? fetch;
+  let catalogo = catalogosDeVisao.get(f);
+  if (!catalogo) {
+    catalogo = f(`${URL_OPENROUTER}/models`)
+      .then(async (r) => new Map(((await r.json()) as { data?: ModeloDoOpenRouter[] }).data?.map((m) => [m.id, enxergaPeloCatalogo(m)] as const) ?? []))
+      .catch(() => new Map<string, boolean | null>());
+    catalogosDeVisao.set(f, catalogo);
+  }
+  return (await catalogo).get(o.modelo) ?? null;
+}
+
+/** Recusa do serviço porque o modelo não aceita imagem (texto livre, cada serviço escreve de um jeito). */
+export function ehErroDeImagem(status: number, corpo: string): boolean {
+  return status >= 400 && status < 500 && /image|vision|modalit|multimodal/i.test(corpo);
 }
 
 /** Confere a chave: `GET /key` no OpenRouter, `GET /models` autenticado nos demais. */

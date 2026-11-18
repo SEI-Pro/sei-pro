@@ -4,7 +4,7 @@
  * `fetch` é substituído por um que grava o que recebeu.
  */
 
-import { Acumulador, atalhoDeEndereco, criarProvedor, enderecoDoServico, ENDERECO_OUTRO, lerSSE, limparAssinaturasDeOutro, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO, campoModeloEhSelect, enderecoLocal, esperaDaTentativa, mensagemDeErro, valeRepetir, valorSelectEndereco } from "../src/motor/provedor";
+import { Acumulador, aceitaImagem, ehErroDeImagem, comCache, atalhoDeEndereco, criarProvedor, enderecoDoServico, ENDERECO_OUTRO, lerSSE, limparAssinaturasDeOutro, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO, campoModeloEhSelect, enderecoLocal, esperaDaTentativa, mensagemDeErro, valeRepetir, valorSelectEndereco } from "../src/motor/provedor";
 import { promptSistema } from "../src/motor/prompt";
 import type { ChamadaTool, PedidoLLM } from "../src/motor/tipos";
 import { checar, secao, lanca } from "./util";
@@ -466,4 +466,51 @@ export async function verificarSelectEndereco(): Promise<void> {
   checar("URL customizada e Outro", valorSelectEndereco("https://llm.orgao.gov.br/v1") === ENDERECO_OUTRO);
   checar("vazio e Outro", valorSelectEndereco("") === ENDERECO_OUTRO);
   checar("atalho desconhecido nao existe", atalhoDeEndereco("https://exemplo.invalid/v1") === undefined);
+}
+
+/** Leitura de figuras (ver_imagem): o pedido com imagem, o catálogo e o recado de modelo sem visão. */
+function catalogoFalso(corpo: string) {
+  const chamadas: string[] = [];
+  const f = (async (url: string) => (chamadas.push(String(url)), { ok: true, status: 200, json: async () => JSON.parse(corpo) as unknown, text: async () => corpo })) as unknown as typeof fetch;
+  return { chamadas, f };
+}
+
+export async function verificarImagemNoProvedor(): Promise<void> {
+  secao("provedor: imagens");
+  const catalogo = JSON.stringify({
+    data: [
+      { id: "anthropic/claude-sonnet-5", name: "Claude", context_length: 1, supported_parameters: ["tools"], pricing: { prompt: "0", completion: "0" }, architecture: { input_modalities: ["text", "image"] } },
+      { id: "deepseek/deepseek-chat", name: "DeepSeek", context_length: 1, supported_parameters: ["tools"], pricing: { prompt: "0", completion: "0" }, architecture: { input_modalities: ["text"] } },
+    ],
+  });
+  const lista = await listarModelos({ servico: "openrouter", fetch: catalogoFalso(catalogo).f });
+  checar("catalogo do openrouter: modelo com visao", lista.find((m) => m.id === "anthropic/claude-sonnet-5")?.imagem === true, lista);
+  checar("catalogo do openrouter: modelo so de texto", lista.find((m) => m.id === "deepseek/deepseek-chat")?.imagem === false, lista);
+  const openai = await listarModelos({ servico: "openai", chave: "k", fetch: espiao([{ status: 200, corpo: '{"data":[{"id":"gpt-5"}]}' }]).f });
+  checar("servico sem catalogo de visao: nao sabe", openai[0]?.imagem === null, openai);
+
+  const cat = catalogoFalso(catalogo);
+  const sim = await aceitaImagem({ servico: "openrouter", modelo: "anthropic/claude-sonnet-5", fetch: cat.f });
+  const nao = await aceitaImagem({ servico: "openrouter", modelo: "deepseek/deepseek-chat", fetch: cat.f });
+  checar("aceitaImagem pelo catalogo", sim === true && nao === false, { sim, nao });
+  checar("o catalogo e buscado uma vez so", cat.chamadas.length === 1, cat.chamadas.length);
+  checar("modelo fora do catalogo: nao sabe", (await aceitaImagem({ servico: "openrouter", modelo: "x/y", fetch: cat.f })) === null);
+  checar("fora do openrouter: nao sabe", (await aceitaImagem({ servico: "compativel", modelo: "llava" })) === null);
+
+  checar("erro de imagem: 'does not support image input'", ehErroDeImagem(400, '{"error":{"message":"This model does not support image input"}}'));
+  checar("erro de imagem: vision", ehErroDeImagem(400, "model has no vision capability"));
+  checar("erro de imagem: modalidade", ehErroDeImagem(422, "unsupported input modality"));
+  checar("erro de imagem: image_url", ehErroDeImagem(400, "Unknown content type image_url"));
+  checar("erro de imagem: outro 400 nao", !ehErroDeImagem(400, "context length exceeded"));
+  checar("erro de imagem: 500 nao", !ehErroDeImagem(500, "image"));
+  checar("recado de modelo sem visao", /n\u00E3o enxerga imagem/.test(mensagemDeErro(400, "This model does not support image input", "compativel")));
+
+  const partes = [{ type: "text" as const, text: "descreva" }, { type: "image_url" as const, image_url: { url: "data:image/jpeg;base64,AAAA" } }];
+  const pedido: PedidoLLM = { mensagens: [{ role: "system", content: "s" }, { role: "user", content: partes }], tools: [] };
+  const env = espiao([]);
+  await criarProvedor({ servico: "anthropic", chave: "k", modelo: "claude-sonnet-5", fetch: env.f }).conversar(pedido, new AbortController().signal, () => {});
+  const enviadas = env.chamadas[0].corpo.messages as Array<{ content: unknown }>;
+  checar("as partes vao intactas no corpo", JSON.stringify(enviadas[1].content) === JSON.stringify(partes), enviadas);
+  checar("comCache aceita partes", Array.isArray(comCache(pedido.mensagens, "claude-sonnet-5", "anthropic")));
+  checar("limparAssinaturas aceita partes", limparAssinaturasDeOutro(pedido.mensagens, "gpt-5", "openai").length === 2);
 }

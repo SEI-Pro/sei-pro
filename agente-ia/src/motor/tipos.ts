@@ -22,9 +22,15 @@ export interface ChamadaTool {
   extra_content?: unknown;
 }
 
+/**
+ * Parte de uma mensagem com imagem. Só a chamada de visão isolada (`ver_imagem`)
+ * usa partes: o histórico do motor continua em texto puro.
+ */
+export type ParteConteudo = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+
 export type Mensagem =
   | { role: "system"; content: string }
-  | { role: "user"; content: string }
+  | { role: "user"; content: string | ParteConteudo[] }
   | { role: "assistant"; content: string | null; tool_calls?: ChamadaTool[] }
   | { role: "tool"; tool_call_id: string; content: string };
 
