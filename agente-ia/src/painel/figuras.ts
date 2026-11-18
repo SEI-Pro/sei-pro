@@ -222,9 +222,13 @@ export function rodapeDeFiguras(total: number): string {
 }
 
 /** O texto do PDF inteiro, no formato de sempre (`[página N]`), com as marcas de figura. */
+/** As figuras de páginas lidas — a ÚNICA conta, usada pela marca e pelo recorte. */
+export function figurasDasPaginas(paginas: PaginaComFiguras[]): ReturnType<typeof figurasDoDocumento> {
+  return figurasDoDocumento(paginas.map((p) => ({ n: p.n, largura: p.largura, altura: p.altura, caixas: p.caixas ?? [], camada: p.camada, ocrLeu: Boolean(p.ocrLeu) })));
+}
+
 export function textoDoDocumentoComFiguras(paginas: PaginaComFiguras[], o: { total: number; naoProcuradasDe?: number }): string {
-  const vistas: PaginaVista[] = paginas.map((p) => ({ n: p.n, largura: p.largura, altura: p.altura, caixas: p.caixas ?? [], camada: p.camada, ocrLeu: Boolean(p.ocrLeu) }));
-  const { figuras, paginasSemTexto } = figurasDoDocumento(vistas);
+  const { figuras, paginasSemTexto } = figurasDasPaginas(paginas);
   // Página não procurada (além do orçamento), sem camada e sem OCR: em PDF
   // escaneado, é página que ninguém leu. Página PROCURADA sem imagem nenhuma
   // é página em branco, e fica de fora.

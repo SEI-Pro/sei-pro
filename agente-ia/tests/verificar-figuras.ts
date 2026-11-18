@@ -6,6 +6,7 @@
 import { lerPagina, ORCAMENTO_FIGURAS, orcamentoDeFiguras } from "../src/painel/pdf";
 import { caixasDasImagens, figurasDoDocumento, LEGENDA, rodapeDeFiguras, textoDaPaginaComMarcas, textoDoDocumentoComFiguras, lerIdFigura, marcaDeFigura, marcaDeIntervalo, marcaDeLegenda, type Caixa, type PaginaVista } from "../src/painel/figuras";
 import { imagemDoHtml, textoDoHtmlComOcultos } from "@nucleo/dominio/editor";
+import { figuraNoDocumento, reduzir, retanguloEmPixels } from "../src/painel/imagem";
 import { checar, secao } from "./util";
 
 /** Os códigos do pdf.js 6.3.289 (`pdfjs.OPS`). */
@@ -229,5 +230,43 @@ export async function verificarFiguras(): Promise<void> {
     checar("a segunda imagem do documento", JSON.stringify(imagemDoHtml(html, 2)) === JSON.stringify({ tipo: "image/png", base64: "iVBORw0KGgo=" }), imagemDoHtml(html, 2));
     checar("a quarta (jpeg)", imagemDoHtml(html, 4)?.tipo === "image/jpeg");
     checar("a que nao existe", imagemDoHtml(html, 9) === null);
+  }
+
+  secao("figuras: recorte em pixels");
+  {
+    const c = { x: 100, y: 300, largura: 300, altura: 200 };
+    const igual = (r: { x: number; y: number; largura: number; altura: number }, x: number, y: number, l: number, a: number) => [r.x - x, r.y - y, r.largura - l, r.altura - a].every((d) => Math.abs(d) < 0.5);
+    // Valores medidos com o pdf.js 6.3.289 (convertToViewportPoint, escala 2, A4).
+    checar("sem rotacao", igual(retanguloEmPixels(c, { ...A4, rotacao: 0 }, 2, 0), 200, 684, 600, 400), retanguloEmPixels(c, { ...A4, rotacao: 0 }, 2, 0));
+    checar("pagina girada 90", igual(retanguloEmPixels(c, { ...A4, rotacao: 90 }, 2, 0), 600, 200, 400, 600), retanguloEmPixels(c, { ...A4, rotacao: 90 }, 2, 0));
+    checar("pagina girada 180", igual(retanguloEmPixels(c, { ...A4, rotacao: 180 }, 2, 0), 390, 600, 600, 400), retanguloEmPixels(c, { ...A4, rotacao: 180 }, 2, 0));
+    checar("pagina girada 270", igual(retanguloEmPixels(c, { ...A4, rotacao: 270 }, 2, 0), 684, 390, 400, 600), retanguloEmPixels(c, { ...A4, rotacao: 270 }, 2, 0));
+    const comMargem = retanguloEmPixels(c, { ...A4, rotacao: 0 }, 1);
+    checar("margem de 2% da pagina em volta", igual(comMargem, 100 - 11.9, 842 - 500 - 16.84, 300 + 23.8, 200 + 33.68), comMargem);
+    const naBorda = retanguloEmPixels({ x: 0, y: 0, largura: 595, altura: 100 }, { ...A4, rotacao: 0 }, 1);
+    checar("a margem nao sai da pagina", naBorda.x === 0 && naBorda.y + naBorda.altura <= 842 + 0.01 && naBorda.largura <= 595 + 0.01, naBorda);
+    checar("reduz o lado maior a 1536", JSON.stringify(reduzir(3000, 1500)) === JSON.stringify({ largura: 1536, altura: 768 }));
+    checar("imagem pequena fica como esta", JSON.stringify(reduzir(800, 600)) === JSON.stringify({ largura: 800, altura: 600 }));
+  }
+
+  secao("figuras: o recorte acha a figura que a leitura marcou");
+  {
+    const base = { linhas: [], texto: "x", camada: true, largura: 595, altura: 842 };
+    const paginas = [
+      { ...base, n: 1, caixas: [{ x: 40, y: 760, largura: 515, altura: 60 }] },
+      { ...base, n: 2, caixas: [{ x: 40, y: 760, largura: 515, altura: 60 }, { x: 100, y: 100, largura: 300, altura: 200 }, { x: 100, y: 450, largura: 300, altura: 200 }] },
+      { ...base, n: 3, caixas: [{ x: 40, y: 760, largura: 515, altura: 60 }] },
+    ];
+    const marcado = textoDoDocumentoComFiguras(paginas, { total: 3 });
+    const alvo = figuraNoDocumento(paginas, { tipo: "figura", pagina: 2, indice: 2 });
+    checar("a leitura marcou p2-1 e p2-2, sem o cabecalho", marcado.includes("[figura p2-1:") && marcado.includes("[figura p2-2:") && !marcado.includes("p1-1"), marcado);
+    checar("p2-2 e a de baixo, como na marca", alvo.y === 100, alvo);
+    let erro = "";
+    try {
+      figuraNoDocumento(paginas, { tipo: "figura", pagina: 1, indice: 1 });
+    } catch (e) {
+      erro = `${(e as { codigo?: string }).codigo} ${(e as Error).message}`;
+    }
+    checar("figura que nao existe: erro com as que existem", erro.startsWith("FIGURA_INEXISTENTE") && erro.includes("p2-1, p2-2"), erro);
   }
 }

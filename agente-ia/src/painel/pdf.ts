@@ -51,7 +51,7 @@ interface DocPdf {
 }
 
 /** Abre o PDF no pdf.js e entrega o documento (e os códigos de operação) a `corpo`, destruindo a tarefa no fim. */
-async function comPdf<T>(bytes: Uint8Array, corpo: (doc: DocPdf, OPS: Record<string, number>) => Promise<T>): Promise<T> {
+export async function comPdf<T>(bytes: Uint8Array, corpo: (doc: DocPdf, OPS: Record<string, number>) => Promise<T>): Promise<T> {
   const { carregarPdfJs, opcoesDocumento } = await import("@/lib/ferramentas/pdfjs");
   const pdfjs = await carregarPdfJs();
   // Cópia: o pdf.js TRANSFERE o buffer para o worker, e o original ficaria
