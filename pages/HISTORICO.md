@@ -5,17 +5,14 @@
 ### Versão 3.9.3
 18/11/2026
 
-**Novo — o [Agente de IA](../pages/AGENTEIA.md) enxerga as figuras dos documentos** (*SEI Pro Lab*). Até aqui, o agente só sabia que havia um gráfico porque lia a legenda. Agora gráficos, mapas, tabelas em imagem e fotos, tanto de PDFs quanto de documentos do editor do SEI, aparecem marcados no texto que ele lê. Logotipos, brasões e cabeçalhos repetidos ficam de fora. Quando a resposta depende de uma figura, o agente pede para vê-la, e **nada é enviado sem a sua permissão**: o painel mostra a miniatura e oferece **Enviar esta imagem**, **Enviar as imagens desta conversa** ou **Não enviar**.
-- A imagem segue para o serviço de IA como está, porque a anonimização trata só texto. Por isso a pergunta vem com a miniatura.
-- A imagem vai numa chamada à parte, sem acesso a nenhuma ferramenta do agente. A descrição que volta passa pela mesma verificação de integridade do texto dos documentos.
-- Documento **sigiloso** nunca envia imagem. Em documento **restrito**, a pergunta é feita a cada imagem. **Rotinas** e o **agente auxiliar** não enviam imagens.
-- É preciso um modelo que aceite imagem; o modelo auxiliar basta. Sem ele, o agente avisa e responde só com o texto.
-
-**Novo — conversas salvas mostram o modelo e o gasto na moeda do painel.** A lista de conversas salvas do agente passou a mostrar qual modelo de IA foi usado em cada conversa. O custo aparece em reais ou em dólares, como no topo do painel.
-
-**Corrigido — o gasto da conversa não somava o agente auxiliar.** Quando o agente delegava uma leitura ao auxiliar, o custo dele sumia do total ou era contado duas vezes. O resumo automático das conversas longas também não entrava. Agora o total soma tudo.
-
-**Corrigido — o agente ainda mascarava coordenadas como telefone.** Num quadro de coordenadas, como "7470277.6260" ou "692182.0730", os números decimais com ponto eram confundidos com telefone ou título de eleitor, e o agente recebia "[TELEFONE_29]" no lugar dos valores. Números decimais assim não são mais lidos como dado pessoal. Telefones continuam mascarados, inclusive os escritos com ponto, como "(61) 3411.4000". O Tarjar, nas Ferramentas de PDF, ganhou a mesma correção.
+- **Novo — o [Agente de IA](../pages/AGENTEIA.md) enxerga as figuras dos documentos** (*SEI Pro Lab*). Até aqui, o agente só sabia que havia um gráfico porque lia a legenda. Agora gráficos, mapas, tabelas em imagem e fotos, tanto de PDFs quanto de documentos do editor do SEI, aparecem marcados no texto que ele lê. Logotipos, brasões e cabeçalhos repetidos ficam de fora. Quando a resposta depende de uma figura, o agente pede para vê-la, e **nada é enviado sem a sua permissão**: o painel mostra a miniatura e oferece **Enviar esta imagem**, **Enviar as imagens desta conversa** ou **Não enviar**.
+  - A imagem segue para o serviço de IA como está, porque a anonimização trata só texto. Por isso a pergunta vem com a miniatura.
+  - A imagem vai numa chamada à parte, sem acesso a nenhuma ferramenta do agente. A descrição que volta passa pela mesma verificação de integridade do texto dos documentos.
+  - Documento **sigiloso** nunca envia imagem. Em documento **restrito**, a pergunta é feita a cada imagem. **Rotinas** e o **agente auxiliar** não enviam imagens.
+  - É preciso um modelo que aceite imagem; o modelo auxiliar basta. Sem ele, o agente avisa e responde só com o texto.
+- **Novo — conversas salvas mostram o modelo e o gasto na moeda do painel.** A lista de conversas salvas do agente passou a mostrar qual modelo de IA foi usado em cada conversa. O custo aparece em reais ou em dólares, como no topo do painel.
+- **Corrigido — o gasto da conversa não somava o agente auxiliar.** Quando o agente delegava uma leitura ao auxiliar, o custo dele sumia do total ou era contado duas vezes. O resumo automático das conversas longas também não entrava. Agora o total soma tudo.
+- **Corrigido — o agente ainda mascarava coordenadas como telefone.** Num quadro de coordenadas, como "7470277.6260" ou "692182.0730", os números decimais com ponto eram confundidos com telefone ou título de eleitor, e o agente recebia "[TELEFONE_29]" no lugar dos valores. Números decimais assim não são mais lidos como dado pessoal. Telefones continuam mascarados, inclusive os escritos com ponto, como "(61) 3411.4000". O Tarjar, nas Ferramentas de PDF, ganhou a mesma correção.
 
 ### Versão 3.9.2
 18/11/2026
