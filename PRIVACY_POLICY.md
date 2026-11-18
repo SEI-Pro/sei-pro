@@ -1,8 +1,8 @@
 # Política de Privacidade — SEI Pro ![SEI Pro](/img/icon-32.png)
 
-**Versão:** 3.6  
-**Data de Vigência:** 25 de outubro de 2026  
-**Última Atualização:** 25 de outubro de 2026
+**Versão:** 3.7  
+**Data de Vigência:** 18 de novembro de 2026  
+**Última Atualização:** 18 de novembro de 2026
 
 ---
 
@@ -185,26 +185,28 @@ O Agente de IA pode guardar uma cópia completa de si mesmo num arquivo `.json` 
   - Anthropic;
   - outro endereço compatível informado pelo usuário, que pode ser um servidor do próprio órgão.
 - **O que é enviado:**
-  - o pedido digitado e os arquivos que o usuário anexar à conversa. Um **PDF anexado é lido no próprio computador** — com reconhecimento de texto (OCR) local nas páginas digitalizadas — e **só o texto extraído** é enviado; o arquivo em si não sai do navegador;
+  - o pedido digitado e os arquivos que o usuário anexar à conversa. Um **PDF anexado é lido no próprio computador** — com reconhecimento de texto (OCR) local nas páginas digitalizadas — e **só o texto extraído** é enviado; o arquivo em si não sai do navegador. Uma figura de documento só sai como imagem nas condições do item "imagens de documentos" abaixo;
   - o contexto da tela: sigla da unidade; número, tipo e nível de acesso do processo aberto; número e título do documento em visualização;
   - o resultado das consultas que o agente faz no SEI para cumprir o pedido: texto dos documentos lidos, árvore do processo, andamentos, resultados de pesquisa e dados da caixa de processos;
+  - **imagens de documentos, só com a permissão do usuário:** quando a resposta depende de uma figura (gráfico, mapa, tabela em imagem, foto), o agente pode pedir para vê-la. A figura é recortada no próprio computador e mostrada ao usuário em miniatura. Ela só é enviada se o usuário clicar em "Enviar esta imagem" ou em "Enviar as imagens desta conversa". Em documento restrito, a pergunta é feita a cada imagem. Sem permissão, nada é enviado, e o agente responde sem a figura. A imagem vai numa chamada separada, sem acesso a nenhuma ferramenta do agente, e não fica guardada na conversa: fica só a descrição que o serviço de IA devolveu;
   - as instruções e skills cadastradas pelo usuário e as anotações da memória da unidade.
 - **Anonimização:**
   - Antes de sair do navegador, o texto passa por uma substituição automática de dados pessoais por rótulos, como [PESSOA_1] e [CPF_2]. Ela cobre CPF, e-mail, telefone, CEP, RG, título de eleitor, CNH, cartão, chave PIX, dados bancários, endereço, CID e nomes de pessoas.
   - O mascaramento de CNPJ é opcional.
   - A tabela que liga rótulos a valores reais fica só no navegador.
-  - **Limitação:** a substituição funciona por padrões e não garante a remoção de todo dado pessoal. Nomes são reconhecidos pelo contexto ou quando constam como interessados do processo. O contexto da tela e as instruções do usuário são enviados sem substituição.
+  - **Limitação:** a substituição funciona por padrões e não garante a remoção de todo dado pessoal. Nomes são reconhecidos pelo contexto ou quando constam como interessados do processo. O contexto da tela e as instruções do usuário são enviados sem substituição. **Imagens enviadas com a permissão do usuário também não passam pela substituição:** o que estiver escrito ou fotografado nelas (nome, assinatura, documento de identidade) segue como está. Por isso o painel pede a permissão mostrando a miniatura.
 - **Sigilo:**
   - Processos e documentos **sigilosos nunca são lidos**.
   - Documentos **restritos** só são lidos com autorização do usuário, pedida a cada conversa. Dados de identificação, como número e título, podem ser enviados sem esse pedido.
-- **Conteúdo dos documentos tratado como dado:** antes de ser enviado ao serviço de IA, o conteúdo lido dos processos passa por uma verificação local, no próprio navegador, que identifica (a) trechos que o documento esconde da tela por recursos de formatação, (b) caracteres invisíveis e (c) textos redigidos como ordem dirigida a sistemas de inteligência artificial. Esses trechos são **marcados, não removidos** — o documento é preservado na íntegra — e o resultado é mostrado ao usuário como verificação de integridade. Nenhuma instrução encontrada em documento é executada pelo agente.
+  - Imagens de documentos sigilosos nunca são enviadas, e as rotinas e o agente auxiliar nunca enviam imagem.
+- **Conteúdo dos documentos tratado como dado:** antes de ser enviado ao serviço de IA, o conteúdo lido dos processos passa por uma verificação local, no próprio navegador, que identifica (a) trechos que o documento esconde da tela por recursos de formatação, (b) caracteres invisíveis e (c) textos redigidos como ordem dirigida a sistemas de inteligência artificial. Esses trechos são **marcados, não removidos** — o documento é preservado na íntegra — e o resultado é mostrado ao usuário como verificação de integridade. Nenhuma instrução encontrada em documento é executada pelo agente. A descrição que o serviço de IA devolve de uma imagem passa pela mesma verificação.
 - **Ações no SEI:** nenhuma ação é executada sem aprovação do usuário, caso a caso. Isso vale para criar, editar, assinar, enviar e as demais ações. A senha de assinatura é digitada pelo usuário e enviada somente ao SEI.
 - **Retenção pelo serviço de IA:**
   - No OpenRouter, o pedido exige que ele só seja encaminhado a provedores que não guardam os dados nem os usam para treinar modelos.
   - Nos demais serviços, valem os termos do contrato do usuário ou do órgão com o fabricante.
 - **Outras consultas do painel** (nenhuma leva dados do usuário ou do SEI):
   - **cotação do dólar:** para mostrar o custo em reais, consultada no Banco Central (`olinda.bcb.gov.br`), com a AwesomeAPI (`economia.awesomeapi.com.br`) como reserva. A conversão pode ser desligada;
-  - **catálogo de modelos:** a lista pública de modelos do serviço escolhido;
+  - **catálogo de modelos:** a lista pública de modelos do serviço escolhido, também usada para saber se o modelo aceita imagem;
   - **arquivos de skills e coleções:** baixados dos endereços que o usuário cadastrar, como pastas do GitHub (`api.github.com`, `raw.githubusercontent.com`).
 - **Políticas aplicáveis:** [OpenRouter](https://openrouter.ai/privacy), [OpenAI](https://openai.com/policies/privacy-policy), [Google](https://policies.google.com/privacy), [Anthropic](https://www.anthropic.com/legal/privacy).
 
@@ -396,6 +398,7 @@ As alterações relevantes são comunicadas:
 
 | Versão | Data | Principais alterações |
 |---|---|---|
+| 3.7 | 18/11/2026 | Agente de IA: imagens de figuras dos documentos podem ser enviadas ao serviço de IA, só depois de o usuário ver a miniatura e permitir; nunca de documento sigiloso, por rotina ou pelo agente auxiliar; a imagem não passa pela anonimização e não fica guardada na conversa (seção 4.2) |
 | 3.6 | 25/10/2026 | A API de legislação passa a rodar em servidor do projeto no Brasil (Hostinger), no lugar do Railway (Estados Unidos); a seção 2.3 descreve o registro técnico mínimo que restou, sem endereço IP, sem identificação do navegador e sem os termos pesquisados |
 | 3.5 | 17/10/2026 | Nova seção 3.6: backup em arquivo do Agente de IA (o que vai, segredos só por opção do usuário, nada enviado a servidor do SEI Pro, proteção contra arquivo alterado); anexo de PDF no Agente lido no computador, com só o texto enviado (seção 4.2); inventário em 3.1 e 3.2 atualizado, inclusive o lote em andamento das Ações em Lote, guardado só no navegador |
 | 3.4 | 10/10/2026 | Nova seção 3.5: dados que o usuário escolhe compartilhar com a unidade (Textos Padrão do SEI dos Processos Monitorados, Projetos e Demandas, arquivo no computador e prazos gravados no SEI); inventário em 3.1 e 3.2 atualizado (cópias diárias, ordem dos painéis, Projetos, Demandas, Prazos); Favoritos passa a se chamar Monitorados; a seção 4.3 esclarece que trata só do servidor do órgão |
