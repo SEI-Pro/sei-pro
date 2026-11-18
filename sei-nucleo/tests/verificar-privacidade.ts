@@ -22,6 +22,18 @@ export async function verificarPrivacidade(): Promise<void> {
   checar("cnpj preservado por padrao", new Pseudonimos().anonimizar("CNPJ 11.222.333/0001-81").includes("11.222.333/0001-81"));
   checar("cnpj mascarado quando pedido", new Pseudonimos({ cnpj: true }).anonimizar("CNPJ 11.222.333/0001-81").includes("[CNPJ_1]"));
 
+  secao("privacidade: numeros de tabela nao viram telefone");
+  {
+    // Relato de usuária (2.9): "Março 9,5% 19.000 28.500" virava "9,[TELEFONE_11]" — os dígitos de
+    // três células juntos davam DDD 51 + celular começando com 9.
+    const n = new Pseudonimos();
+    const tabela = "Março\n9,5%\n19.000\n28.500\nDezembro\n4,5%\n9.000\n13.500\nTotal 11.350\n32.000";
+    const tt = n.anonimizar(tabela);
+    checar("percentual e volumes de tabela intactos", tt === tabela, tt);
+    const fones = n.anonimizar("Fones (51) 99000-2850, 61 3411 4000 e +55 61 9 9876-5432.");
+    checar("telefones de verdade continuam mascarados", !/99000|3411|9876/.test(fones) && (fones.match(/\[TELEFONE_\d+\]/g) ?? []).length === 3, fones);
+  }
+
   secao("privacidade: rotulos de contexto");
   const q = new Pseudonimos();
   const e = q.anonimizar("Maria Souza, residente e domiciliada na Rua das Flores, 123, apto 45, CEP 70000-000, filha de José Souza e Ana Lima.");

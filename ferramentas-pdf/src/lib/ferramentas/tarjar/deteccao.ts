@@ -280,6 +280,22 @@ const RG = /\b\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]\b/g;
 const CEP_COM_HIFEN = /\b\d{5}-\d{3}\b/;
 
 /**
+ * Pontuação que NENHUM número de documento usa por dentro (CPF, CNPJ,
+ * processo, cartão, telefone): onde ela aparece entre dois dígitos, são dois
+ * números. Sem esta fronteira, "9,5% 19.000 28.500" de uma linha de tabela
+ * virava o celular (51) 90002-8500, e "(51) 99000-2850, 61 3411 4000" virava
+ * uma corrida de 20 dígitos em que nenhum dos dois telefones era achado.
+ */
+const SEPARADOR_FORTE = /[%,;:|]/;
+
+/**
+ * Dois números com separador de milhar lado a lado ("11.350 32.000"): são
+ * quantidades de uma tabela, não as partes de um telefone. Telefone não se
+ * escreve em grupos de três com ponto seguidos de espaço.
+ */
+const QUANTIDADES_VIZINHAS = /\d\.\d{3}\s+\d|\d\s+\d{1,3}\.\d{3}(?![\d-])/;
+
+/**
  * O mínimo de que os detectores precisam: o texto, a projeção só com letras e
  * dígitos e o caminho de volta. `TextoPagina` (PDF) satisfaz isto, e
  * `baseDeTexto` monta o mesmo para texto puro (o agente de IA do SEI Pro usa
@@ -350,6 +366,7 @@ const DETECTORES_NUMERICOS: DetectorNumerico[] = [
     tamanhos: [13, 12, 11, 10],
     deslizante: true,
     valida: validarTelefoneBr,
+    exigeContexto: (texto, inicio, fim) => !QUANTIDADES_VIZINHAS.test(texto.slice(inicio, fim)),
   },
   {
     tipo: "cep",
@@ -387,13 +404,12 @@ function corridasDeDigitos(
       inicio = j;
       continue;
     }
-    if (quebrarNoEspaco) {
-      // Houve espaço em branco entre este caractere compacto e o anterior?
-      const entre = tp.texto.slice(tp.indiceCompacto[j - 1] + 1, tp.indiceCompacto[j]);
-      if (/\s/.test(entre)) {
-        fechar(j);
-        inicio = j;
-      }
+    // O que havia entre este caractere compacto e o anterior? Pontuação forte
+    // separa números nas duas projeções; espaço em branco, só na segunda.
+    const entre = tp.texto.slice(tp.indiceCompacto[j - 1] + 1, tp.indiceCompacto[j]);
+    if (SEPARADOR_FORTE.test(entre) || (quebrarNoEspaco && /\s/.test(entre))) {
+      fechar(j);
+      inicio = j;
     }
   }
   fechar(tp.compacto.length);

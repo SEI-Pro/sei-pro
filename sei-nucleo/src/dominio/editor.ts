@@ -236,15 +236,72 @@ async function salvar(sei: Sei, ed: EditorDocumento, novas: Record<string, strin
  * branca de 1px no cabeçalho da peça não aparece para quem lê, mas aparece
  * para quem extrai o texto — foi o caso que o STF julgou em outubro de 2026.
  */
-const ESCONDIDOS: Array<{ re: RegExp; motivo: string }> = [
-  { re: /display\s*:\s*none/i, motivo: "display:none (não é exibido)" },
-  { re: /visibility\s*:\s*hidden/i, motivo: "visibility:hidden (invisível)" },
-  { re: /font-size\s*:\s*0(?:\.0+)?\s*(?:px|pt|em|rem)?\b/i, motivo: "fonte de tamanho zero" },
-  { re: /font-size\s*:\s*[0-2](?:\.\d+)?\s*(?:px|pt)\b/i, motivo: "fonte minúscula, ilegível na tela" },
-  { re: /opacity\s*:\s*0(?:\.0+)?\b/i, motivo: "opacity:0 (transparente)" },
-  { re: /color\s*:\s*(?:#f{3}(?:f{3})?\b|white\b|rgba?\(\s*255\s*,\s*255\s*,\s*255)/i, motivo: "letra branca sobre fundo branco" },
-  { re: /(?:text-indent|left|top|margin-left)\s*:\s*-\s*\d{3,}/i, motivo: "posicionado fora da tela" },
-  { re: /(?:height|width)\s*:\s*0(?:px)?\s*(?:;|$)/i, motivo: "caixa de tamanho zero" },
+/*
+ * As regras leem o `style` DECLARAÇÃO POR DECLARAÇÃO, com o nome exato da
+ * propriedade. Procurar "color:#fff" no atributo inteiro casava
+ * `background-color:#ffffff` (fundo branco, o normal de texto colado da web)
+ * e "width:0" casava `-webkit-text-stroke-width:0px` — documentos comuns
+ * apareciam com "texto escondido" em cada célula (relato da 2.9).
+ */
+type Declaracoes = Map<string, string>;
+
+function declaracoes(style: string): Declaracoes {
+  const m: Declaracoes = new Map();
+  for (const d of style.split(";")) {
+    const i = d.indexOf(":");
+    if (i < 0) continue;
+    m.set(d.slice(0, i).trim().toLowerCase(), d.slice(i + 1).replace(/!\s*important/i, "").trim().toLowerCase());
+  }
+  return m;
+}
+
+/** Medida CSS simples (`0`, `1px`, `-9999px`, `0.8em`); `null` para o resto. */
+function medida(v: string | undefined): { n: number; unidade: string } | null {
+  const m = v ? /^(-?\d*\.?\d+)\s*([a-z%]*)$/.exec(v) : null;
+  return m ? { n: Number(m[1]), unidade: m[2] } : null;
+}
+
+const BRANCO = /^(?:#f{3}|#f{6}|white|rgba?\(\s*255\s*,\s*255\s*,\s*255\s*(?:,[^)]*)?\))$/;
+const SEM_FUNDO = /^(?:transparent|none|initial|inherit|unset|revert)$/;
+
+/**
+ * Algum fundo de cor (não branco) atrás do elemento? Letra branca sobre
+ * cabeçalho azul de tabela é legível, e não é esconderijo.
+ */
+function temFundoDeCor(el: Element): boolean {
+  for (let e: Element | null = el; e && e.tagName !== "BODY"; e = e.parentElement) {
+    const d = declaracoes(e.getAttribute("style") ?? "");
+    const fundo = (d.get("background-color") ?? d.get("background") ?? e.getAttribute("bgcolor") ?? "").toLowerCase().trim();
+    if (!fundo || SEM_FUNDO.test(fundo)) continue;
+    return !BRANCO.test(fundo.split(/\s+(?![^(]*\))/)[0]);
+  }
+  return false;
+}
+
+const ESCONDIDOS: Array<{ motivo: string; esconde: (d: Declaracoes, el: Element) => boolean }> = [
+  { motivo: "display:none (não é exibido)", esconde: (d) => d.get("display") === "none" },
+  { motivo: "visibility:hidden (invisível)", esconde: (d) => d.get("visibility") === "hidden" },
+  { motivo: "fonte de tamanho zero", esconde: (d) => medida(d.get("font-size"))?.n === 0 },
+  {
+    motivo: "fonte minúscula, ilegível na tela",
+    esconde: (d) => {
+      const f = medida(d.get("font-size"));
+      return !!f && (f.unidade === "px" || f.unidade === "pt") && f.n < 3;
+    },
+  },
+  { motivo: "opacity:0 (transparente)", esconde: (d) => (medida(d.get("opacity"))?.n ?? 1) <= 0.05 },
+  { motivo: "letra branca sobre fundo branco", esconde: (d, el) => BRANCO.test(d.get("color") ?? "") && !temFundoDeCor(el) },
+  {
+    motivo: "posicionado fora da tela",
+    esconde: (d) => ["text-indent", "left", "top", "margin-left", "margin-top"].some((p) => (medida(d.get(p))?.n ?? 0) <= -100),
+  },
+  {
+    // Caixa de tamanho zero só esconde quando corta o que transborda.
+    motivo: "caixa de tamanho zero",
+    esconde: (d) =>
+      ["height", "width", "max-height", "max-width"].some((p) => medida(d.get(p))?.n === 0) &&
+      ["overflow", "overflow-x", "overflow-y"].some((p) => /^(?:hidden|clip)$/.test(d.get(p) ?? "")),
+  },
 ];
 
 export interface TextoComOcultos {
@@ -267,8 +324,8 @@ export function textoDoHtmlComOcultos(html: string): TextoComOcultos {
   for (const el of doc.querySelectorAll("[style], [hidden]")) {
     const texto = (el.textContent ?? "").trim();
     if (!texto) continue;
-    const style = el.getAttribute("style") ?? "";
-    const achado = ESCONDIDOS.find((x) => x.re.test(style));
+    const d = declaracoes(el.getAttribute("style") ?? "");
+    const achado = ESCONDIDOS.find((x) => x.esconde(d, el));
     const motivo = achado?.motivo ?? (el.hasAttribute("hidden") ? "atributo hidden" : "");
     if (!motivo) continue;
     // Elemento dentro de outro já apontado não vira segunda ocorrência.
@@ -281,6 +338,8 @@ export function textoDoHtmlComOcultos(html: string): TextoComOcultos {
 export function textoDoHtml(html: string): string {
   const doc = analisarHtml(`<!doctype html><html><head></head><body>${html}</body></html>`);
   for (const b of doc.querySelectorAll("p, br, li, tr, h1, h2, h3, h4, div")) b.append("\n");
+  // Célula sem <p> dentro grudava na vizinha ("19.00028.500"), e o número fundido virava telefone.
+  for (const c of doc.querySelectorAll("td, th")) c.append(" ");
   return (doc.body?.textContent ?? "").replace(/[ \t\u00A0]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
 

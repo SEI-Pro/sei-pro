@@ -377,6 +377,13 @@ async function main() {
     checar("CNPJ", achar("empresa CNPJ 11.222.333/0001-81 sediada").join() === "cnpj:11.222.333/0001-81");
     checar("e-mail institucional NÃO é ignorado", achar("protocolo@antaq.gov.br").join() === "email:protocolo@antaq.gov.br");
     checar("telefone com DDD entre parênteses", achar("fone (61) 99887-6655 recado").join() === "telefone:(61) 99887-6655");
+    checar("linha de tabela com percentual e milhares não vira telefone", achar("Março 9,5% 19.000 28.500").length === 0, achar("Março 9,5% 19.000 28.500"));
+    checar("quantidades vizinhas não viram telefone", achar("Total 11.350 32.000").length === 0, achar("Total 11.350 32.000"));
+    checar(
+      "telefones em lista separados por vírgula são todos achados",
+      achar("fones (51) 99000-2850, 61 3411 4000 recado").filter((x) => x.startsWith("telefone:")).length === 2,
+      achar("fones (51) 99000-2850, 61 3411 4000 recado"),
+    );
     checar("linha digitável de boleto não vira nada", achar("23793381286000782177370000063305895670000215000").length === 0);
     checar("CEP sem hífen nem rótulo é ignorado", achar("valor 70070600 reais").length === 0);
     checar("CEP com rótulo é detectado", achar("CEP 70070600 Brasilia").join() === "cep:70070600");
