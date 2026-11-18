@@ -6,7 +6,9 @@
 import { consentirImagemNaConversa } from "../src/motor/motor";
 import type { EstadoConversa, ServicoDeImagens } from "../src/motor/tools";
 import type { ImagemPronta } from "../src/motor/tipos";
-import { TOOL_VER_IMAGEM, TOOLS_FORA_DO_AUXILIAR } from "../src/tools/imagem";
+import { INSTRUCAO_FIGURAS_AUXILIAR, TOOL_VER_IMAGEM, TOOLS_FORA_DO_AUXILIAR } from "../src/tools/imagem";
+import { promptSistema } from "../src/motor/prompt";
+import { modeloDeVisao } from "../src/painel/uso";
 import { TOOLS_SEI } from "../src/tools/sei";
 import { checar, secao } from "./util";
 
@@ -174,5 +176,19 @@ export async function verificarImagemTool(): Promise<void> {
     const saida = (await ler.executar({ documentos: ["123"] }, ctx)) as Array<{ texto: string }>;
     checar("documento externo que e imagem ganha a marca de arquivo", saida[0]?.texto.includes('[arquivo de imagem; para ver: ver_imagem figura "arquivo"]'), saida);
     checar("a leitura pede as marcas de imagem do editor", pedidos.some((p) => p.marcarImagens === true && !p.somenteMetadados), pedidos);
+  }
+
+  secao("ver_imagem: prompt e escolha do modelo");
+  {
+    const p = promptSistema(null, new Date(), "", [], "", "", "n0nce");
+    checar("o prompt explica as marcas e o ver_imagem", p.includes("ver_imagem") && p.includes("n\u00E3o considerou a imagem"), p.slice(-600));
+    checar("o auxiliar lista as figuras que nao pode ver", /liste/i.test(INSTRUCAO_FIGURAS_AUXILIAR) && INSTRUCAO_FIGURAS_AUXILIAR.includes("[figura"), INSTRUCAO_FIGURAS_AUXILIAR);
+    const cfg = { modelo: "anthropic/claude-sonnet-5", modeloAuxiliar: "google/gemini-3-flash" };
+    checar("sem auxiliar: o principal", JSON.stringify(modeloDeVisao({ modelo: "m" }, null, true)) === JSON.stringify({ primeiro: "m", enxerga: true }));
+    checar("auxiliar que enxerga: ele", JSON.stringify(modeloDeVisao(cfg, true, true)) === JSON.stringify({ primeiro: cfg.modeloAuxiliar, enxerga: true }));
+    checar("auxiliar sem visao: o principal", JSON.stringify(modeloDeVisao({ ...cfg, modeloAuxiliar: "deepseek/deepseek-chat" }, false, true)) === JSON.stringify({ primeiro: cfg.modelo, enxerga: true }));
+    checar("nenhum enxerga: diz que nao", modeloDeVisao(cfg, false, false).enxerga === false);
+    checar("servico sem catalogo: auxiliar, com o principal de reserva", JSON.stringify(modeloDeVisao(cfg, null, null)) === JSON.stringify({ primeiro: cfg.modeloAuxiliar, reserva: cfg.modelo, enxerga: null }));
+    checar("auxiliar igual ao principal: sem reserva", modeloDeVisao({ modelo: "m", modeloAuxiliar: "m" }, null, null).reserva === undefined);
   }
 }

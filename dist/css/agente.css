@@ -336,6 +336,7 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
 .cartao.plano { border-color: color-mix(in srgb, var(--acento) 45%, var(--linha)); }
 .cartao.consentimento { border-color: color-mix(in srgb, var(--atencao) 55%, var(--linha)); }
 .cartao.consentimento .badge { background: var(--atencao-bg); color: var(--atencao); }
+.cartao.imagem .miniatura { display: block; max-width: 100%; max-height: 220px; margin: 0 0 var(--e2); border: 1px solid var(--linha); border-radius: var(--r1); background: #fff; object-fit: contain; }
 .passo { border-top: 1px solid var(--linha); padding: var(--e2) 0 var(--e1); }
 .passo:first-of-type { border-top: none; padding-top: 0; }
 .passo .titulo { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

@@ -71,3 +71,20 @@ export function modelosCurtos(modelos: string[] | undefined): string {
     .map((m) => m.slice(m.lastIndexOf("/") + 1))
     .join(", ");
 }
+
+/**
+ * Qual modelo olha a figura do `ver_imagem`. O auxiliar (mais barato) quando
+ * ele enxerga; senão o principal. Sem catálogo (serviço que não informa), vai
+ * o auxiliar com o principal de reserva — a reserva só entra se o serviço
+ * recusar a imagem. `enxerga`: `false` só quando os dois, sabidamente, não.
+ */
+export function modeloDeVisao(config: { modelo: string; modeloAuxiliar?: string }, enxergaAux: boolean | null, enxergaPrincipal: boolean | null): { primeiro: string; reserva?: string; enxerga: boolean | null } {
+  const aux = config.modeloAuxiliar?.trim();
+  if (!aux) return { primeiro: config.modelo, enxerga: enxergaPrincipal };
+  if (enxergaAux === true) return { primeiro: aux, enxerga: true };
+  if (enxergaPrincipal === true) return { primeiro: config.modelo, enxerga: true };
+  if (enxergaAux === false && enxergaPrincipal === false) return { primeiro: config.modelo, enxerga: false };
+  if (enxergaAux === false) return { primeiro: config.modelo, enxerga: null };
+  return { primeiro: aux, ...(config.modelo && config.modelo !== aux && enxergaPrincipal !== false ? { reserva: config.modelo } : {}), enxerga: null };
+}
+

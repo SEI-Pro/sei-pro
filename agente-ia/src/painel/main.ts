@@ -13,18 +13,19 @@
 import { Pseudonimos } from "@nucleo/privacidade/anonimizar";
 import { Motor, type TelaAtual } from "../motor/motor";
 import { promptSistema } from "../motor/prompt";
-import { COMPATIVEIS, ENDERECO_OUTRO, atalhoDeEndereco, campoModeloEhSelect, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServico, listarModelos, MODELO_OUTRO, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
-import { RegistroTools } from "../motor/tools";
-import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
+import { aceitaImagem, COMPATIVEIS, ehErroDeImagem, ENDERECO_OUTRO, ErroProvedor, atalhoDeEndereco, campoModeloEhSelect, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServico, listarModelos, MODELO_OUTRO, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
+import { RegistroTools, type ServicoDeImagens } from "../motor/tools";
+import type { DecisaoPlano, ImagemPronta, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
 import { PontePainel } from "../ponte/cliente";
 import { toolsMotor } from "../tools/motor";
 import { atualizarOpcaoProjetos } from "../tools/projetos";
-import { TOOLS_FORA_DO_AUXILIAR } from "../tools/imagem";
+import { INSTRUCAO_FIGURAS_AUXILIAR, PROMPT_VISAO, TOOLS_FORA_DO_AUXILIAR } from "../tools/imagem";
+import { prepararImagem } from "./imagem";
 import { TOOLS_SEI } from "../tools/sei";
 import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
 import { cotacaoDolar, type Cotacao } from "./cambio";
-import { ContadorDeUso, modelosCurtos } from "./uso";
+import { ContadorDeUso, modeloDeVisao, modelosCurtos } from "./uso";
 import { sugestoesPara } from "./sugestoes";
 import { inversaDe, motivoSemDesfazer, type AcaoFeita, type ResultadoDeEscrita } from "./desfazer";
 import { avaliarRegras, guardarRegras, listarRegras, recadoDoBloqueio, REGRAS_SUGERIDAS, type Regra } from "./regras";
@@ -2269,7 +2270,8 @@ class App {
 Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\u00E3o fala com o usu\u00E1rio.
 - S\u00F3 tem ferramentas de leitura. N\u00E3o prometa nem planeje escrita.
 - N\u00E3o pergunte nada: se faltar informa\u00E7\u00E3o, diga o que faltou na resposta.
-- Responda em UMA mensagem final, completa e objetiva, com os n\u00FAmeros (n\u00BA SEI, protocolo) que embasam cada afirma\u00E7\u00E3o. Quem vai ler \u00E9 outro agente, n\u00E3o uma pessoa.`,
+- Responda em UMA mensagem final, completa e objetiva, com os n\u00FAmeros (n\u00BA SEI, protocolo) que embasam cada afirma\u00E7\u00E3o. Quem vai ler \u00E9 outro agente, n\u00E3o uma pessoa.
+${INSTRUCAO_FIGURAS_AUXILIAR}`,
       tela: async (s2) => ({ ...((await this.ponte.executar("tela", {}, s2)) as TelaAtual), editores: this.ponte.editores() }),
       ui: {
         texto: (d) => (resposta += d),
@@ -2799,6 +2801,8 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
       sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
       sistema: (tela, nonce) => promptSistema(tela, new Date(), this.config.instrucoes, this.skills, blocoDeMemoria(this.memoria), linhasDeConectores(this.conectores), nonce),
       delegar: (tarefa, sinal) => this.delegar(tarefa, sinal),
+      // Só a conversa principal vê figuras: é ela que mostra o cartão ao usuário.
+      imagens: this.servicoDeImagens(),
       lembrar: (fato) => this.lembrar(fato),
       regras: (passos) => {
         const v = avaliarRegras(this.regras, passos);
@@ -3124,6 +3128,8 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
       },
       progressoPlano: () => undefined,
       consentir: (tipo, detalhe) => this.cartaoConsentimento(tipo, detalhe),
+      // Rotina roda sem ninguém olhando: imagem nenhuma sai sem o clique do usuário.
+      consentirImagem: (img, o) => (this.rotinaEmCurso ? Promise.resolve("nao" as const) : this.cartaoImagem(img, o)),
       perguntar: (pergunta, opcoes) => this.cartaoPergunta(pergunta, opcoes),
       tarefas: (lista) => {
         this.tarefas = lista;
@@ -3305,6 +3311,90 @@ Voc\u00EA \u00E9 um AUXILIAR: recebeu uma tarefa de leitura de outro agente e n\
       this.elConversa.append(cartao);
       this.rolar();
     });
+  }
+
+  /** Miniatura da figura antes de ela ir ao serviço de IA (`ver_imagem`). */
+  private cartaoImagem(img: ImagemPronta, o: { restrito: boolean }): Promise<"esta" | "todas" | "nao"> {
+    this.fecharBolha();
+    this.pensar(false);
+    return new Promise((resolver) => {
+      const cartao = h(
+        "div",
+        { class: "cartao consentimento imagem" },
+        h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("alerta", 15)), h("h4", {}, "Enviar imagem ao servi\u00E7o de IA")),
+        h("div", { class: "sub" }, img.descricao),
+        h("img", { class: "miniatura", src: img.dataUrl, alt: `Miniatura: ${img.descricao}` }),
+        h("div", {}, "A imagem vai ao servi\u00E7o de IA como est\u00E1: dados pessoais nela n\u00E3o s\u00E3o mascarados."),
+      );
+      const decidir = (r: "esta" | "todas" | "nao") => {
+        const texto = r === "nao" ? "Imagem n\u00E3o enviada." : r === "todas" ? "Imagens desta conversa liberadas." : "Imagem enviada.";
+        this.encerrarCartao(cartao, ".acoes", texto, r !== "nao");
+        resolver(r);
+      };
+      cartao.append(
+        h(
+          "div",
+          { class: "acoes" },
+          h("button", { class: "primario", onclick: () => decidir("esta") }, "Enviar esta imagem"),
+          // Documento restrito pergunta a cada imagem: o cartão nem oferece "todas".
+          ...(o.restrito ? [] : [h("button", { onclick: () => decidir("todas") }, "Enviar as imagens desta conversa")]),
+          h("button", { onclick: () => decidir("nao") }, "N\u00E3o enviar"),
+        ),
+      );
+      this.elConversa.append(cartao);
+      this.rolar();
+    });
+  }
+
+  /**
+   * Recorte e visão para o `ver_imagem`. O modelo que olha sai de
+   * `modeloDeVisao`; o gasto entra no contador da conversa como fonte própria.
+   */
+  private servicoDeImagens(): ServicoDeImagens {
+    const escolher = async () => {
+      const aux = this.config.modeloAuxiliar?.trim() || undefined;
+      const principal = this.config.modelo || MODELO_PADRAO;
+      const [ea, ep] = await Promise.all([
+        aux ? aceitaImagem({ servico: this.config.servico, modelo: aux }) : Promise.resolve(null),
+        aceitaImagem({ servico: this.config.servico, modelo: principal }),
+      ]);
+      return modeloDeVisao({ modelo: this.config.modelo, ...(aux ? { modeloAuxiliar: aux } : {}) }, ea, ep);
+    };
+    const olhar = async (modelo: string, img: ImagemPronta, pedido: string, sinal: AbortSignal): Promise<string> => {
+      const fonte = this.contador.fonte();
+      const provedor = criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo, ajustes: this.config.ajustes, cache: false });
+      const r = await provedor.conversar(
+        {
+          mensagens: [
+            { role: "system", content: PROMPT_VISAO },
+            { role: "user", content: [{ type: "text", text: pedido }, { type: "image_url", image_url: { url: img.dataUrl } }] },
+          ],
+          tools: [],
+        },
+        sinal,
+        () => undefined,
+      );
+      this.contador.anotarModelo(provedor.modelo);
+      if (r.uso) {
+        fonte(r.uso);
+        this.mostrarUso();
+      }
+      return r.texto.trim() || "O modelo n\u00E3o descreveu a imagem.";
+    };
+    return {
+      enxerga: async () => (await escolher()).enxerga,
+      preparar: (conteudo, figura, rotulo) => prepararImagem(conteudo, figura, rotulo),
+      descrever: async (img, pedido, sinal) => {
+        const e = await escolher();
+        try {
+          return await olhar(e.primeiro, img, pedido, sinal);
+        } catch (erro) {
+          // Serviço sem catálogo: o auxiliar recusou a imagem; o principal tenta uma vez.
+          if (e.reserva && erro instanceof ErroProvedor && ehErroDeImagem(erro.status, erro.corpo)) return olhar(e.reserva, img, pedido, sinal);
+          throw erro;
+        }
+      },
+    };
   }
 
   private cartaoPergunta(pergunta: string, opcoes: string[]): Promise<string> {
