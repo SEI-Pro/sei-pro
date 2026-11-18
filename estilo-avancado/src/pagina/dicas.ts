@@ -29,8 +29,9 @@ const ATRASO_MS = 250;
 /** O tooltip do SEI costuma morar no <a> e o title na <img> de dentro: vale o elemento ou qualquer ancestral. */
 export const temTooltipDoSei = (el: Element): boolean => el.closest('[onmouseover*="infraTooltipMostrar"]') !== null;
 
-/** Botões cujo `title` o próprio SEI lê no clique para alternar estado (ex.: Exibir/Ocultar Menu do Sistema). */
-const SELETOR_PRESERVADO = "#lnkInfraMenuSistema, #lnkInfraMenuSistemaMovel";
+/** Botões cujo `title` o próprio SEI lê no clique para alternar estado (ex.: Exibir/Ocultar Menu do Sistema no SEI 4.1 e 5). */
+const SELETOR_PRESERVADO =
+  '#divInfraMenuSistema, #lnkInfraMenuSistema, #lnkInfraMenuSistemaMovel, [onclick*="MenuSistema"], [onclick*="MenuBootstrap"]';
 
 /** O botão da casca sob o ponteiro (com `title`, ou já suspenso), ou null se estiver fora dos escopos. */
 export function alvoDaDica(el: Element | null): Element | null {

@@ -77,6 +77,22 @@ export async function verificarAreaChrome(): Promise<void> {
     checar("anuncio retirado (o painel fechou): nao reconecta", conectou === 1, conectou);
     lado.parar();
 
+    const areaInvalida = {
+      ...c.local,
+      obter: c.local.obter,
+    };
+    const bruto = (globalThis as unknown as { chrome: typeof chrome }).chrome.storage.local;
+    const getOriginal = bruto.get;
+    bruto.get = (() => {
+      throw new Error("Extension context invalidated.");
+    }) as unknown as typeof bruto.get;
+    let rejeitou = false;
+    await areaInvalida.obter("x/lateral").catch(() => {
+      rejeitou = true;
+    });
+    checar("contexto da extensao invalidado (erro sincrono em storage.get) vira Promise rejeitada", rejeitou);
+    bruto.get = getOriginal;
+
     secao("areaChrome: o selo e a aba do painel seguem o storage");
     const doc = instalarDom('<html><body><div id="painel"></div></body></html>');
     const raiz = doc.getElementById("painel")!;

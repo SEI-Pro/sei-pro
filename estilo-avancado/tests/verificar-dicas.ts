@@ -62,11 +62,24 @@ export function verificarDicas(): void {
   menu.id = "lnkInfraMenuSistema";
   menu.setAttribute("title", "Exibir Menu do Sistema");
   g("divInfraBarraSistemaPadrao").appendChild(menu);
+  const divMenu5 = doc.createElement("div");
+  divMenu5.id = "divInfraMenuSistema";
+  divMenu5.setAttribute("title", "Exibir Menu do Sistema");
+  const linkMenu5 = doc.createElement("a");
+  linkMenu5.setAttribute("title", "Exibir Menu do Sistema");
+  divMenu5.appendChild(linkMenu5);
+  g("divInfraBarraSistemaPadrao").appendChild(divMenu5);
   const parar2 = iniciarDicas(doc);
   disparar(menu, "mouseover");
+  disparar(linkMenu5, "mouseover");
   checar(
-    "botao do menu do sistema preserva o title no hover (o SEI le o title ao clicar)",
-    alvoDaDica(menu) === null && menu.getAttribute("title") === "Exibir Menu do Sistema",
+    "botao do menu do sistema (SEI 4.1 e SEI 5) preserva o title no hover (o SEI le o title ao clicar)",
+    alvoDaDica(menu) === null &&
+      menu.getAttribute("title") === "Exibir Menu do Sistema" &&
+      alvoDaDica(divMenu5) === null &&
+      alvoDaDica(linkMenu5) === null &&
+      divMenu5.getAttribute("title") === "Exibir Menu do Sistema" &&
+      linkMenu5.getAttribute("title") === "Exibir Menu do Sistema",
   );
   disparar(g("a1"), "mouseover");
   disparar(g("a1"), "mousedown");
