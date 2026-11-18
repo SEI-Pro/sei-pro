@@ -44,6 +44,11 @@ export function verificarBaseCss(): void {
 
 export function verificarCascaCss(): void {
   for (const arquivo of ["casca", "controles"]) verificarFolhaSemExcecoes(arquivo);
+  const casca = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "estatico", "casca.css"), "utf8");
+  checar(
+    "casca: menu recolhido (.infraAreaTelaEEscondeGrande) zera border-right para offsetWidth ser 0 no infraClicarMenuBootstrap",
+    /#divInfraAreaTelaE\.infraAreaTelaEEscondeGrande\s*\{\s*border-right:\s*0/.test(casca),
+  );
 }
 
 function verificarFolhaSemExcecoes(arquivo: string): void {
