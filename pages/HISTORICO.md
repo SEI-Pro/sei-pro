@@ -2,6 +2,13 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.9.2
+18/11/2026
+
+**Corrigido — o [Agente de IA](../pages/AGENTEIA.md) mascarava números de tabela como telefone** (*SEI Pro Lab*). Numa tabela com percentuais e volumes (por exemplo, "9,5% · 19.000 · 28.500"), os números de células vizinhas eram lidos juntos e confundidos com um celular, e o agente recebia "[TELEFONE_11]" no lugar dos valores. Percentuais, vírgulas e números com separador de milhar não se juntam mais. A mesma correção fechou uma falha no sentido oposto: **telefones listados em sequência, separados por vírgula, não eram mascarados** e chegavam ao modelo de IA como estavam. Agora cada um vira um rótulo. A detecção automática do Tarjar, nas Ferramentas de PDF, usa o mesmo detector e ganhou as duas correções.
+
+**Corrigido — aviso falso de "texto escondido" na verificação de integridade.** Fichas e formulários copiados de páginas da web apareciam como "letra branca sobre fundo branco" (o que estava declarado era o *fundo* branco), e textos colados do navegador apareciam como "caixa de tamanho zero". A verificação agora lê cada propriedade de estilo pelo nome exato e só aponta o que realmente some da tela. Letra branca sobre fundo colorido, como num cabeçalho de tabela, também deixou de ser apontada. Os esconderijos de verdade continuam sendo detectados: letra branca sobre fundo branco, fonte minúscula, texto transparente ou fora da tela.
+
 ### Versão 3.9.1
 18/11/2026
 
