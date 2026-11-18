@@ -13,7 +13,7 @@
 import { Pseudonimos } from "@nucleo/privacidade/anonimizar";
 import { Motor, type TelaAtual } from "../motor/motor";
 import { promptSistema } from "../motor/prompt";
-import { aceitaImagem, COMPATIVEIS, ehErroDeImagem, ENDERECO_OUTRO, ErroProvedor, atalhoDeEndereco, campoModeloEhSelect, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServico, listarModelos, MODELO_OUTRO, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
+import { aceitaImagem, COMPATIVEIS, ehErroDeImagem, ENDERECO_OUTRO, ErroProvedor, traduzirErroDeVisao, atalhoDeEndereco, campoModeloEhSelect, conferirChave, criarProvedor, DOC_CHAVES, enderecoDoServico, listarModelos, MODELO_OUTRO, MODELO_PADRAO, normalizarUrl, SERVICOS, TEMPERATURA_PADRAO, type Ajustes, type Servico } from "../motor/provedor";
 import { RegistroTools, type ServicoDeImagens } from "../motor/tools";
 import type { DecisaoPlano, ImagemPronta, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
 import { PontePainel } from "../ponte/cliente";
@@ -3382,6 +3382,8 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
       return r.texto.trim() || "O modelo n\u00E3o descreveu a imagem.";
     };
     return {
+      // Rotina roda sem ninguém olhando: nem a permissão "desta conversa" vale.
+      semUsuario: () => Boolean(this.rotinaEmCurso),
       enxerga: async () => (await escolher()).enxerga,
       preparar: (conteudo, figura, rotulo) => prepararImagem(conteudo, figura, rotulo),
       descrever: async (img, pedido, sinal) => {
@@ -3390,8 +3392,14 @@ ${INSTRUCAO_FIGURAS_AUXILIAR}`,
           return await olhar(e.primeiro, img, pedido, sinal);
         } catch (erro) {
           // Serviço sem catálogo: o auxiliar recusou a imagem; o principal tenta uma vez.
-          if (e.reserva && erro instanceof ErroProvedor && ehErroDeImagem(erro.status, erro.corpo)) return olhar(e.reserva, img, pedido, sinal);
-          throw erro;
+          if (e.reserva && erro instanceof ErroProvedor && ehErroDeImagem(erro.status, erro.corpo, e.primeiro)) {
+            try {
+              return await olhar(e.reserva, img, pedido, sinal);
+            } catch (deNovo) {
+              throw traduzirErroDeVisao(deNovo, e.reserva);
+            }
+          }
+          throw traduzirErroDeVisao(erro, e.primeiro);
         }
       },
     };

@@ -13,6 +13,8 @@ import type { Efeito, ImagemPronta, InterfaceMotor, PreviaItem } from "./tipos";
  * usuário, e figura nenhuma sai sem ela.
  */
 export interface ServicoDeImagens {
+  /** Execução sem ninguém olhando (rotina): imagem nenhuma sai, nem com "desta conversa". */
+  semUsuario?(): boolean;
   /** O modelo que vai olhar aceita imagem? `null` quando o serviço não informa. */
   enxerga(): Promise<boolean | null>;
   preparar(conteudo: { tipo: string; base64: string }, figura: string, rotulo: string): Promise<ImagemPronta>;

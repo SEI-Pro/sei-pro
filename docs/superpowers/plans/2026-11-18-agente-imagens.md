@@ -22,7 +22,7 @@
   - caixas que se tocam ou se sobrepõem → uma figura;
   - imagem ≥ 80% da página → página digitalizada (com ou sem camada de texto), nunca figura;
   - `<img>` com os dois lados declarados < 48 px → descarta.
-- Detecção no `documento_ler`: primeiras 60 páginas, até 5 s por documento.
+- Detecção no `documento_ler`: primeiras 60 páginas (o teto de 5 s caiu na revisão final; ver o spec).
 - "Enviar as imagens desta conversa" não vale para documento restrito, nem atravessa sessão restaurada ou sincronização.
 - Recorte: margem de 2%, lado maior ≤ 1536 px, JPEG com qualidade 0,85.
 - Ids de figura: `p{pagina}-{indice}` (de cima para baixo, a partir de 1), `p{pagina}`, `img-{n}` (n-ésima `<img src="data:image/...">` do documento, contando também as descartadas), `arquivo`.

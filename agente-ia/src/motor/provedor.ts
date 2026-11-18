@@ -463,7 +463,6 @@ export function mensagemDeErro(status: number, corpo: string, servico: Servico =
       `(passo a passo no Windows, Mac e Linux: ${DOC_CHAVES}#outro-servico-compativel). Se n\u00E3o for o Ollama, confira a chave e as regras de acesso do servidor.`
     );
   }
-  if (ehErroDeImagem(status, corpo)) return "O modelo escolhido n\u00E3o enxerga imagem. Escolha um modelo com vis\u00E3o em Configura\u00E7\u00E3o (o modelo auxiliar basta).";
   if (status === 401 || status === 403) return `A chave do ${onde} foi recusada. Confira a chave nas configura\u00E7\u00F5es do agente.`;
   if (status === 402) return `Sem cr\u00E9dito no ${onde} para este modelo. Adicione cr\u00E9ditos ou escolha um modelo mais barato.`;
   // O agente depende de ferramentas: é com elas que ele lê o processo e
@@ -735,9 +734,24 @@ export async function aceitaImagem(o: { servico: Servico; modelo: string; fetch?
   return (await catalogo).get(o.modelo) ?? null;
 }
 
-/** Recusa do serviço porque o modelo não aceita imagem (texto livre, cada serviço escreve de um jeito). */
-export function ehErroDeImagem(status: number, corpo: string): boolean {
-  return status >= 400 && status < 500 && /image|vision|modalit|multimodal/i.test(corpo);
+/**
+ * Recusa do serviço porque o modelo não aceita imagem (texto livre, cada
+ * serviço escreve de um jeito). Só status de conteúdo recusado: 401, 402 e 429
+ * têm outra causa mesmo quando o corpo cita um modelo "-vision". O nome do
+ * modelo sai do corpo antes de procurar.
+ */
+export function ehErroDeImagem(status: number, corpo: string, modelo = ""): boolean {
+  if (![400, 404, 415, 422].includes(status)) return false;
+  const semModelo = modelo ? corpo.split(modelo).join("") : corpo;
+  return /image|vision|modalit|multimodal/i.test(semModelo);
+}
+
+export const RECADO_SEM_VISAO = "O modelo escolhido n\u00E3o enxerga imagem. Escolha um modelo com vis\u00E3o em Configura\u00E7\u00E3o (o modelo auxiliar basta).";
+
+/** Só na chamada de visão: a recusa de imagem vira o recado; o resto passa como veio. */
+export function traduzirErroDeVisao(erro: unknown, modelo: string): unknown {
+  if (erro instanceof ErroProvedor && ehErroDeImagem(erro.status, erro.corpo, modelo)) return Object.assign(new Error(RECADO_SEM_VISAO), { codigo: "MODELO_SEM_VISAO" });
+  return erro;
 }
 
 /** Confere a chave: `GET /key` no OpenRouter, `GET /models` autenticado nos demais. */

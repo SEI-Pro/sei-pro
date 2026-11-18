@@ -4,7 +4,7 @@
  * `fetch` é substituído por um que grava o que recebeu.
  */
 
-import { Acumulador, aceitaImagem, ehErroDeImagem, comCache, atalhoDeEndereco, criarProvedor, enderecoDoServico, ENDERECO_OUTRO, lerSSE, limparAssinaturasDeOutro, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO, campoModeloEhSelect, enderecoLocal, esperaDaTentativa, mensagemDeErro, valeRepetir, valorSelectEndereco } from "../src/motor/provedor";
+import { Acumulador, aceitaImagem, ehErroDeImagem, ErroProvedor, traduzirErroDeVisao, comCache, atalhoDeEndereco, criarProvedor, enderecoDoServico, ENDERECO_OUTRO, lerSSE, limparAssinaturasDeOutro, listarModelos, parametroRecusado, serveParaConversar, SERVICOS, TEMPERATURA_PADRAO, campoModeloEhSelect, enderecoLocal, esperaDaTentativa, mensagemDeErro, valeRepetir, valorSelectEndereco } from "../src/motor/provedor";
 import { promptSistema } from "../src/motor/prompt";
 import type { ChamadaTool, PedidoLLM } from "../src/motor/tipos";
 import { checar, secao, lanca } from "./util";
@@ -503,7 +503,15 @@ export async function verificarImagemNoProvedor(): Promise<void> {
   checar("erro de imagem: image_url", ehErroDeImagem(400, "Unknown content type image_url"));
   checar("erro de imagem: outro 400 nao", !ehErroDeImagem(400, "context length exceeded"));
   checar("erro de imagem: 500 nao", !ehErroDeImagem(500, "image"));
-  checar("recado de modelo sem visao", /n\u00E3o enxerga imagem/.test(mensagemDeErro(400, "This model does not support image input", "compativel")));
+  // Revisao final, item 3: o recado so vale na chamada de visao, e so para recusa de conteudo.
+  checar("429 de modelo '-vision' nao vira recado de imagem", !ehErroDeImagem(429, "meta-llama/llama-3.2-90b-vision-instruct:free is temporarily rate-limited"));
+  checar("401 com 'vision' no corpo nao vira recado de imagem", !ehErroDeImagem(401, "invalid key for model=llava-vision"));
+  checar("o nome do modelo no corpo nao conta", !ehErroDeImagem(400, "model llama-3.2-90b-vision-instruct: context length exceeded", "llama-3.2-90b-vision-instruct"));
+  checar("fora da visao, a mensagem e a de sempre", !/enxerga imagem/.test(mensagemDeErro(400, "This model does not support image input", "compativel")));
+  const traduzido = traduzirErroDeVisao(new ErroProvedor("cru", 400, "This model does not support image input"), "deepseek-chat") as Error & { codigo?: string };
+  checar("na chamada de visao, vira o recado", /n\u00E3o enxerga imagem/.test(traduzido.message) && traduzido.codigo === "MODELO_SEM_VISAO", traduzido);
+  const outro = new ErroProvedor("A chave foi recusada", 401, "vision");
+  checar("e o resto passa como veio", traduzirErroDeVisao(outro, "m") === outro);
 
   const partes = [{ type: "text" as const, text: "descreva" }, { type: "image_url" as const, image_url: { url: "data:image/jpeg;base64,AAAA" } }];
   const pedido: PedidoLLM = { mensagens: [{ role: "system", content: "s" }, { role: "user", content: partes }], tools: [] };

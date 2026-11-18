@@ -7,6 +7,7 @@
  */
 
 import { s } from "../motor/esquema";
+import { RECADO_SEM_VISAO } from "../motor/provedor";
 import { definirTool } from "../motor/tools";
 import { lerIdFigura } from "../painel/figuras";
 import { envelopar } from "../seguranca/envelope";
@@ -42,6 +43,7 @@ export const TOOL_VER_IMAGEM = definirTool({
   rotulo: (a) => `Ver a figura ${String(a.figura)} do documento ${String(a.documento)}`,
   executar: async (a, ctx) => {
     if (!ctx.imagens) throw falha("Este agente n\u00E3o v\u00EA imagens: s\u00F3 a conversa principal pede a permiss\u00E3o do usu\u00E1rio. Liste a figura no resultado para quem pediu.", "IMAGEM_INDISPONIVEL");
+    if (ctx.imagens.semUsuario?.()) throw falha("H\u00E1 uma rotina em execu\u00E7\u00E3o: imagem s\u00F3 sai com o usu\u00E1rio olhando. Responda sem a figura e diga isso.", "IMAGEM_INDISPONIVEL");
     const numero = String(a.documento).trim();
     const figura = String(a.figura).trim();
     const id = lerIdFigura(figura);
@@ -52,7 +54,7 @@ export const TOOL_VER_IMAGEM = definirTool({
     if (restrito && !(await ctx.consentirRestrito(`Documento ${meta.numero} (${meta.titulo}), processo ${meta.processo}`))) {
       throw falha("Conte\u00FAdo restrito: o usu\u00E1rio n\u00E3o autorizou o envio ao modelo nesta conversa.", "CONTEUDO_RESTRITO_NAO_AUTORIZADO");
     }
-    if ((await ctx.imagens.enxerga()) === false) throw falha("O modelo escolhido n\u00E3o enxerga imagem. Escolha um modelo com vis\u00E3o em Configura\u00E7\u00E3o (o modelo auxiliar basta).", "MODELO_SEM_VISAO");
+    if ((await ctx.imagens.enxerga()) === false) throw falha(RECADO_SEM_VISAO, "MODELO_SEM_VISAO");
 
     let conteudo: { tipo: string; base64: string };
     if (id.tipo === "html") {
@@ -73,7 +75,9 @@ export const TOOL_VER_IMAGEM = definirTool({
     if (ctx.sinal.aborted) throw cancelado();
     if (!(await ctx.consentirImagem(img, { restrito }))) throw falha("O usu\u00E1rio n\u00E3o autorizou o envio desta imagem ao servi\u00E7o de IA. Responda sem ela e diga isso.", "IMAGEM_NAO_AUTORIZADA");
     if (ctx.sinal.aborted) throw cancelado();
-    const pergunta = typeof a.pergunta === "string" && a.pergunta.trim() ? ` O que procurar: ${a.pergunta.trim()}` : "";
+    // O motor reidrata os argumentos (o nome real volta no lugar de [PESSOA_1]):
+    // o que sai para o serviço de IA precisa ser mascarado de novo.
+    const pergunta = typeof a.pergunta === "string" && a.pergunta.trim() ? ` O que procurar: ${ctx.anonimizar(a.pergunta.trim())}` : "";
     const descricao = await ctx.imagens.descrever(img, `Documento ${doc}, figura ${figura}.${pergunta}`, ctx.sinal);
     if (ctx.sinal.aborted) throw cancelado();
     // A descrição é conteúdo do documento: uma imagem pode trazer texto

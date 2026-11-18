@@ -14,7 +14,7 @@ import { checar, secao } from "./util";
 
 type Resposta = "esta" | "todas" | "nao";
 
-function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; respostas?: Resposta[]; descricao?: string; restritoOk?: boolean; semImagens?: boolean; abortarEm?: "preparar" | "descrever" } = {}) {
+function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; respostas?: Resposta[]; descricao?: string; restritoOk?: boolean; semImagens?: boolean; semUsuario?: boolean; abortarEm?: "preparar" | "descrever" } = {}) {
   const pedidos: Array<{ op: string; args: Record<string, unknown> }> = [];
   const cartoes: Array<{ img: ImagemPronta; restrito: boolean }> = [];
   const descricoes: Array<{ img: ImagemPronta; pedido: string }> = [];
@@ -24,6 +24,7 @@ function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; r
   const estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
   const ui = { consentirImagem: async (img: ImagemPronta, x: { restrito: boolean }) => (cartoes.push({ img, restrito: x.restrito }), respostas.shift() ?? "nao") };
   const imagens: ServicoDeImagens = {
+    semUsuario: () => Boolean(o.semUsuario),
     enxerga: async () => (o.enxerga === undefined ? true : o.enxerga),
     preparar: async (conteudo, figura, rotulo) => {
       if (o.abortarEm === "preparar") parar.abort();
@@ -47,6 +48,7 @@ function cenario(o: { nivel?: string; tipo?: string; enxerga?: boolean | null; r
       return { ...meta, conteudo: { forma: "arquivo", tipo: o.tipo ?? "application/pdf", nome: "a.pdf", base64: "UERG" } };
     },
     consentirRestrito: async () => o.restritoOk ?? true,
+    anonimizar: (t: string) => t.replace(/Maria Silva/g, "[PESSOA_1]"),
     consentirImagem: (img: ImagemPronta, x: { restrito: boolean }) => consentirImagemNaConversa(estado, ui, img, x),
     registrarAchados: (doc: string, a: unknown[]) => void achados.push([doc, a]),
     ...(o.semImagens ? {} : { imagens }),
@@ -124,6 +126,20 @@ export async function verificarImagemTool(): Promise<void> {
     const c = cenario({ abortarEm: "descrever" });
     const r = await c.rodar({ documento: "2991250", figura: "p3-1" });
     checar("Parar durante a chamada de visao: nada volta", r.erro?.codigo === "CANCELADO" && !r.ok, r);
+  }
+
+  {
+    // Revisao final, item 1: rotina no motor principal com "todas" ja dado.
+    const c = cenario({ semUsuario: true });
+    c.estado.consentimentoImagens = true;
+    const r = await c.rodar({ documento: "2991250", figura: "p3-1" });
+    checar("rotina em curso: nao envia nem com 'todas' dado antes", r.erro?.codigo === "IMAGEM_INDISPONIVEL" && c.descricoes.length === 0 && c.pedidos.length === 0, r);
+  }
+  {
+    // Revisao final, item 2: o motor reidrata os argumentos; a pergunta sai mascarada de novo.
+    const c = cenario();
+    await c.rodar({ documento: "2991250", figura: "p3-1", pergunta: "a assinatura de Maria Silva aparece?" });
+    checar("a pergunta vai mascarada a chamada de visao", (c.descricoes[0]?.pedido ?? "").includes("[PESSOA_1]") && !(c.descricoes[0]?.pedido ?? "").includes("Maria Silva"), c.descricoes[0]?.pedido);
   }
 
   secao("ver_imagem: permissao por conversa");

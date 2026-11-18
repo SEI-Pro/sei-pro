@@ -26,16 +26,16 @@ const SEM_TEXTO = "[PDF sem camada de texto (digitalizado).]";
  * Até onde a leitura procura figuras. A lista de operações processa a página
  * inteira (e o worker carrega as imagens): num documento de 200 páginas, num
  * pedido de 20 documentos, sem teto a leitura ficaria lenta.
+ *
+ * Só por páginas, nunca por tempo: o texto da leitura tem de sair igual a cada
+ * vez — a continuação por `inicio` extrai o PDF de novo e emenda as fatias, e
+ * o recorte renumera as figuras pela mesma conta.
  */
-export const ORCAMENTO_FIGURAS = { maxPaginas: 60, maxMs: 5000 };
+export const ORCAMENTO_FIGURAS = { maxPaginas: 60 };
 
-/** Devolve, página a página, se ainda cabe procurar figuras. O relógio começa na primeira pergunta. */
-export function orcamentoDeFiguras(o: { maxPaginas: number; maxMs: number }, agora: () => number = Date.now): (n: number) => boolean {
-  let inicio: number | null = null;
-  return (n) => {
-    inicio ??= agora();
-    return n <= o.maxPaginas && agora() - inicio <= o.maxMs;
-  };
+/** Devolve, página a página, se ainda cabe procurar figuras. */
+export function orcamentoDeFiguras(o: { maxPaginas: number }): (n: number) => boolean {
+  return (n) => n <= o.maxPaginas;
 }
 
 /** O que o agente usa de uma página do pdf.js. */
@@ -43,6 +43,8 @@ export interface PaginaPdf {
   view?: number[];
   getTextContent(): Promise<{ items: unknown[] }>;
   getOperatorList?(): Promise<{ fnArray: number[]; argsArray: unknown[][] }>;
+  /** Solta os objetos da página (as imagens decodificadas pela lista de operações). */
+  cleanup?(): unknown;
 }
 
 interface DocPdf {
@@ -103,6 +105,10 @@ export async function lerPagina(pagina: PaginaPdf, n: number, OPS: Record<string
       caixas = caixasDasImagens(ops.fnArray, ops.argsArray, OPS).map((c) => ({ ...c, x: c.x - x0, y: c.y - y0 }));
     } catch {
       caixas = undefined;
+    } finally {
+      // A lista de operações decodifica as imagens (dezenas de MB numa página
+      // escaneada) e elas ficariam na memória até o fim do documento.
+      pagina.cleanup?.();
     }
   }
   return {
@@ -133,7 +139,7 @@ async function paginasDeTexto(doc: DocPdf, ate: number, aoLer?: (n: number) => v
  * imagens. `orcamento: null` procura em todas — é o que o recorte usa, para
  * achar a figura que a leitura marcou.
  */
-export async function paginasVistasDoPdf(bytes: Uint8Array, orcamento: { maxPaginas: number; maxMs: number } | null = ORCAMENTO_FIGURAS): Promise<{ paginas: PaginaComFiguras[]; total: number; naoProcuradasDe?: number }> {
+export async function paginasVistasDoPdf(bytes: Uint8Array, orcamento: { maxPaginas: number } | null = ORCAMENTO_FIGURAS): Promise<{ paginas: PaginaComFiguras[]; total: number; naoProcuradasDe?: number }> {
   return comPdf(bytes, async (doc, OPS) => {
     const ate = Math.min(doc.numPages, LIMITE_PAGINAS);
     const procura = orcamento ? orcamentoDeFiguras(orcamento) : () => true;

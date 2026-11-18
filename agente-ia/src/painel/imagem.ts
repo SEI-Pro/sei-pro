@@ -105,9 +105,8 @@ export async function prepararImagem(conteudo: { tipo: string; base64: string },
   }
   if (conteudo.tipo !== "application/pdf") throw erroDeFigura(`Arquivo ${conteudo.tipo}: só PDF e imagem têm figura para ver.`);
   if (id.tipo !== "figura" && id.tipo !== "pagina") throw erroDeFigura(`"${figura}" não vale para PDF: use p3-1 (figura) ou p3 (página inteira).`);
-  // Mesmo teto de páginas da leitura, sem o de tempo: a numeração das
-  // figuras tem de bater com a das marcas, e o tempo varia de uma vez para outra.
-  const caixa = id.tipo === "figura" ? figuraNoDocumento((await paginasVistasDoPdf(bytes, { maxPaginas: ORCAMENTO_FIGURAS.maxPaginas, maxMs: Infinity })).paginas, id) : null;
+  // Mesmo orçamento da leitura: a numeração das figuras tem de bater com a das marcas.
+  const caixa = id.tipo === "figura" ? figuraNoDocumento((await paginasVistasDoPdf(bytes, ORCAMENTO_FIGURAS)).paginas, id) : null;
   return comPdf(bytes, async (doc) => {
     if (id.pagina > doc.numPages) throw erroDeFigura(`O documento tem ${doc.numPages} página(s); não existe a página ${id.pagina}.`);
     const pagina = (await doc.getPage(id.pagina)) as unknown as PaginaRenderizavel;

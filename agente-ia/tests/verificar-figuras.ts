@@ -159,6 +159,9 @@ export async function verificarFiguras(): Promise<void> {
     checar("pagina com origem deslocada: caixa relativa a pagina", deslocada.caixas?.[0]?.y === 200, deslocada.caixas);
     const quebrada = await lerPagina({ ...pag, getOperatorList: async () => { throw new Error("fonte faltando"); } }, 1, OPS_REAIS);
     checar("lista de operacoes que falha: texto igual, sem caixas", quebrada.texto === lida.texto && quebrada.caixas === undefined, quebrada);
+    let limpou = 0;
+    await lerPagina({ ...pag, cleanup: () => void (limpou += 1) }, 1, OPS_REAIS);
+    checar("libera a pagina depois da lista de operacoes (memoria do escaneado)", limpou === 1, limpou);
     const semProcurar = await lerPagina(pag, 1, null);
     checar("sem procurar: nao chama a lista de operacoes", semProcurar.caixas === undefined && semProcurar.texto === lida.texto);
   }
@@ -203,15 +206,12 @@ export async function verificarFiguras(): Promise<void> {
 
   secao("figuras: orcamento de busca");
   {
-    checar("limites do spec", ORCAMENTO_FIGURAS.maxPaginas === 60 && ORCAMENTO_FIGURAS.maxMs === 5000);
-    let agora = 0;
-    const procura = orcamentoDeFiguras({ maxPaginas: 2, maxMs: 1000 }, () => agora);
+    // Revisao final, item 5: o texto da leitura nao pode depender do relogio
+    // (a continuacao por `inicio` re-extrai o PDF e emendaria fatias diferentes).
+    checar("orcamento so por paginas (60), sem tempo", ORCAMENTO_FIGURAS.maxPaginas === 60 && !("maxMs" in ORCAMENTO_FIGURAS), ORCAMENTO_FIGURAS);
+    const procura = orcamentoDeFiguras({ maxPaginas: 2 });
     checar("procura nas primeiras paginas", procura(1) && procura(2));
     checar("para depois do limite de paginas", !procura(3));
-    const porTempo = orcamentoDeFiguras({ maxPaginas: 60, maxMs: 1000 }, () => agora);
-    porTempo(1);
-    agora = 1500;
-    checar("para ao passar do tempo", !porTempo(2));
   }
 
   secao("figuras: documento do editor do SEI");
