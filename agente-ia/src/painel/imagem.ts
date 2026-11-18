@@ -8,16 +8,11 @@
  * e só isso, que vai ao serviço de IA, depois da permissão do usuário.
  */
 
+import type { ImagemPronta } from "../motor/tipos";
 import { figurasDasPaginas, lerIdFigura, type Caixa, type PaginaComFiguras } from "./figuras";
 import { comPdf, ORCAMENTO_FIGURAS, paginasVistasDoPdf } from "./pdf";
 
-export interface ImagemPronta {
-  dataUrl: string;
-  largura: number;
-  altura: number;
-  /** Texto curto para o cartão de permissão ("figura p3-1 do documento 1234567"). */
-  descricao: string;
-}
+export type { ImagemPronta };
 
 const LADO_MAXIMO = 1536;
 const QUALIDADE = 0.85;

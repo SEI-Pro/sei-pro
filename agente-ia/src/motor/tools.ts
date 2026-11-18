@@ -5,7 +5,20 @@
  */
 
 import type { Esquema } from "./esquema";
-import type { Efeito, InterfaceMotor, PreviaItem } from "./tipos";
+import type { Efeito, ImagemPronta, InterfaceMotor, PreviaItem } from "./tipos";
+
+/**
+ * O que o painel oferece ao `ver_imagem`. Só o motor da conversa principal
+ * recebe: o agente auxiliar e as rotinas não têm como pedir permissão ao
+ * usuário, e figura nenhuma sai sem ela.
+ */
+export interface ServicoDeImagens {
+  /** O modelo que vai olhar aceita imagem? `null` quando o serviço não informa. */
+  enxerga(): Promise<boolean | null>;
+  preparar(conteudo: { tipo: string; base64: string }, figura: string, rotulo: string): Promise<ImagemPronta>;
+  /** Chamada isolada, sem ferramentas; devolve o texto da descrição. */
+  descrever(img: ImagemPronta, pedido: string, sinal: AbortSignal): Promise<string>;
+}
 
 /** O que uma tool recebe para trabalhar. Montado pelo motor a cada chamada. */
 export interface ContextoTool {
@@ -25,6 +38,10 @@ export interface ContextoTool {
    * consentido" é o próprio conector.
    */
   consentirConector(detalhe: string): Promise<boolean>;
+  /** Mostra a miniatura e pergunta se a figura pode ir ao serviço de IA (ver `consentirImagemNaConversa`). */
+  consentirImagem(img: ImagemPronta, o: { restrito: boolean }): Promise<boolean>;
+  /** Recorte e chamada de visão (`ver_imagem`). Ausente no agente auxiliar e nas rotinas. */
+  imagens?: ServicoDeImagens;
   /**
    * Mascara dados pessoais. O motor reidrata os argumentos antes de executar,
    * para a escrita no SEI levar o valor real: o que sair daqui para fora do
@@ -73,6 +90,8 @@ export interface EstadoConversa {
   consentimentoRestrito: boolean | null;
   /** Arquivos anexados pelo usuário nesta conversa (CSV, planilhas...). */
   anexos: Array<{ nome: string; tipo: string; texto?: string }>;
+  /** O usuário escolheu "Enviar as imagens desta conversa" (não vale para documento restrito). */
+  consentimentoImagens: boolean;
 }
 
 export interface DefTool<A extends Record<string, unknown> = Record<string, unknown>> {

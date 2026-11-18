@@ -26,6 +26,15 @@ export interface ChamadaTool {
  * Parte de uma mensagem com imagem. Só a chamada de visão isolada (`ver_imagem`)
  * usa partes: o histórico do motor continua em texto puro.
  */
+/** Figura recortada e reduzida no painel, pronta para o cartão e para a chamada de visão. */
+export interface ImagemPronta {
+  dataUrl: string;
+  largura: number;
+  altura: number;
+  /** Texto curto para o cartão de permissão ("figura p3-1 do documento 1234567"). */
+  descricao: string;
+}
+
 export type ParteConteudo = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 
 export type Mensagem =
@@ -165,6 +174,13 @@ export interface InterfaceMotor {
    * conector, sem memorizar junto do restrito (são autorizações diferentes).
    */
   consentir(tipo: "restrito" | "conector", detalhe: string): Promise<boolean>;
+  /**
+   * Cartão com a miniatura da figura antes de ela ir ao serviço de IA
+   * (`ver_imagem`). "todas" vale para as próximas da conversa — menos as de
+   * documento restrito, que perguntam sempre (e o cartão nem oferece "todas").
+   * Sem cartão no painel, nada é enviado.
+   */
+  consentirImagem?(img: ImagemPronta, o: { restrito: boolean }): Promise<"esta" | "todas" | "nao">;
   /** Autoriza uma chamada a conector MCP (só quando a permissão é "aprovar"). */
   aprovarExterno?(p: PedidoExterno): Promise<DecisaoExterna>;
   /**

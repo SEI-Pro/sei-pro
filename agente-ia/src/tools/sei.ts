@@ -18,6 +18,7 @@ import { extrairTextoPdf } from "../painel/pdf";
 import { envelopar } from "../seguranca/envelope";
 import { resumoDosAchados, varrer, varrerCamposLivres } from "../seguranca/injecao";
 import { TOOL_FAVORITOS } from "./favoritos";
+import { TOOL_VER_IMAGEM } from "./imagem";
 import { historicoInstalado, TOOL_HISTORICO } from "./historico";
 import { projetosInstalado, TOOL_PROJETOS } from "./projetos";
 
@@ -103,6 +104,7 @@ export const TOOLS_SEI: DefTool[] = [
   ...(historicoInstalado() ? [TOOL_HISTORICO] : []),
   // Só no pacote com o gestor de projetos novo (o Lab): no oficial, o legado do Atividades não tem estes dados.
   ...(projetosInstalado() ? [TOOL_PROJETOS] : []),
+  TOOL_VER_IMAGEM,
 
   definirTool({
     nome: "contexto_tela",
@@ -421,9 +423,10 @@ export const TOOLS_SEI: DefTool[] = [
             saida.push({ ...meta, erro: "Conte\u00FAdo restrito: o usu\u00E1rio n\u00E3o autorizou o envio ao modelo nesta conversa.", codigo: "CONTEUDO_RESTRITO_NAO_AUTORIZADO" });
             continue;
           }
-          const r = await ctx.sei<Record<string, unknown> & { conteudo: { forma: string; texto?: string; base64?: string; tipo?: string; ocultos?: Array<{ texto: string; motivo: string }> } }>("documento.ler", { numero });
+          const r = await ctx.sei<Record<string, unknown> & { conteudo: { forma: string; texto?: string; base64?: string; tipo?: string; ocultos?: Array<{ texto: string; motivo: string }> } }>("documento.ler", { numero, marcarImagens: true });
           let texto = r.conteudo.texto ?? "";
           if (r.conteudo.forma === "arquivo" && r.conteudo.tipo === "application/pdf" && r.conteudo.base64) texto = await extrairTextoPdf(r.conteudo.base64);
+          else if (r.conteudo.forma === "arquivo" && /^image\//i.test(r.conteudo.tipo ?? "")) texto = '[arquivo de imagem; para ver: ver_imagem figura "arquivo"]';
           else if (r.conteudo.forma === "arquivo") texto = `[arquivo ${r.conteudo.tipo}: sem extra\u00E7\u00E3o de texto nesta vers\u00E3o]`;
           else if (r.conteudo.forma === "grande") texto = "[arquivo grande demais para ler]";
           const { conteudo: _c, ...m } = r;

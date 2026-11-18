@@ -19,6 +19,7 @@ import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso
 import { PontePainel } from "../ponte/cliente";
 import { toolsMotor } from "../tools/motor";
 import { atualizarOpcaoProjetos } from "../tools/projetos";
+import { TOOLS_FORA_DO_AUXILIAR } from "../tools/imagem";
 import { TOOLS_SEI } from "../tools/sei";
 import { duracao, formatarUso, h, icone, markdown, moeda } from "./dom";
 import * as historico from "./historico";
@@ -2242,7 +2243,8 @@ class App {
    * principal: [PESSOA_1] precisa ser a mesma pessoa nos dois lados.
    */
   private async delegar(tarefa: string, sinal: AbortSignal): Promise<string> {
-    const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => t.efeito === "leitura" || t.nome === "skill_ler");
+    // `ver_imagem` fica de fora: o auxiliar não tem como pedir permissão ao usuário.
+    const soLeitura = [...TOOLS_SEI, ...toolsMotor(this.skills)].filter((t) => (t.efeito === "leitura" || t.nome === "skill_ler") && !TOOLS_FORA_DO_AUXILIAR.includes(t.nome));
     let resposta = "";
     const fonte = this.contador.fonte();
     this.contador.anotarModelo(this.config.modeloAuxiliar || this.config.modelo);

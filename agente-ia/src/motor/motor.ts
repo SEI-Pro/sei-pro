@@ -18,10 +18,11 @@
 import type { Pseudonimos } from "@nucleo/privacidade/anonimizar";
 import { nonceDaConversa } from "../seguranca/envelope";
 import { validar } from "./esquema";
-import type { ContextoTool, DefTool, EstadoConversa, RegistroTools } from "./tools";
+import type { ContextoTool, DefTool, EstadoConversa, RegistroTools, ServicoDeImagens } from "./tools";
 import type {
   ChamadaTool,
   DecisaoPlano,
+  ImagemPronta,
   InterfaceMotor,
   Mensagem,
   PassoPlano,
@@ -48,6 +49,8 @@ export interface OpcoesMotor {
   regras?: (passos: Array<{ tool: string; rotulo: string; args: Record<string, unknown> }>) => { bloqueios: unknown[]; avisos: string[]; recado: string };
   /** Roda um agente auxiliar de leitura com contexto próprio (ver painel/main.ts). */
   delegar?: (tarefa: string, sinal: AbortSignal) => Promise<string>;
+  /** Recorte e visão para o `ver_imagem`; só a conversa principal recebe. */
+  imagens?: ServicoDeImagens;
   /** Guarda um fato sobre a unidade (ver painel/memoria.ts). */
   lembrar?: (fato: string) => Promise<{ guardado: boolean; motivo?: string }>;
   /** Lê a tela atual da aba do SEI. */
@@ -90,7 +93,7 @@ export class Motor {
   private readonly nonce = nonceDaConversa();
   private controlador: AbortController | null = null;
   private usoTotal: Uso = { entrada: 0, saida: 0, custo: 0 };
-  readonly estado: EstadoConversa = { consentimentoRestrito: null, anexos: [] };
+  readonly estado: EstadoConversa = { consentimentoRestrito: null, anexos: [], consentimentoImagens: false };
 
   constructor(private readonly o: OpcoesMotor) {}
 
@@ -113,6 +116,7 @@ export class Motor {
     this.usoTotal = { entrada: 0, saida: 0, custo: 0 };
     this.estado.consentimentoRestrito = null;
     this.estado.anexos = [];
+    this.estado.consentimentoImagens = false;
   }
 
   /**
@@ -219,12 +223,14 @@ export class Motor {
         return this.estado.consentimentoRestrito;
       },
       consentirConector: (detalhe) => this.o.ui.consentir("conector", detalhe),
+      consentirImagem: (img, o) => consentirImagemNaConversa(this.estado, this.o.ui, img, o),
       nonce: this.nonce,
       registrarAchados: (documento, achados) => this.o.ui.integridade?.(documento, achados),
       anonimizar: (texto) => this.o.privacidade.anonimizar(texto),
       pessoasVistas: (nomes) => this.o.privacidade.registrarPessoas(nomes),
       ui: this.o.ui,
       ...(this.o.delegar ? { delegar: this.o.delegar } : {}),
+      ...(this.o.imagens ? { imagens: this.o.imagens } : {}),
       ...(this.o.lembrar ? { lembrar: this.o.lembrar } : {}),
       ...extra,
     };
@@ -515,3 +521,15 @@ export function resolverReferencias<T>(valor: T, resultados: unknown[]): T {
 }
 
 export type { PreviaItem };
+
+/**
+ * A figura pode ir ao serviço de IA? "todas" vale para as próximas da
+ * conversa, menos as de documento restrito, que perguntam sempre. Sem cartão
+ * no painel, a resposta é não.
+ */
+export async function consentirImagemNaConversa(estado: EstadoConversa, ui: Pick<InterfaceMotor, "consentirImagem">, img: ImagemPronta, o: { restrito: boolean }): Promise<boolean> {
+  if (estado.consentimentoImagens && !o.restrito) return true;
+  const r = (await ui.consentirImagem?.(img, o)) ?? "nao";
+  if (r === "todas" && !o.restrito) estado.consentimentoImagens = true;
+  return r !== "nao";
+}
