@@ -351,6 +351,21 @@
     },
     {
       "js": [
+        "js/init_bloqueio.js"
+      ],
+      "matches": [
+        "*://*.br/sip/*",
+        "*://*.br/sei/*",
+        "*://*.br/*controlador*.php?acao=*",
+        "*://*.org/sip/*",
+        "*://*.org/sei/*",
+        "*://*.org/*controlador*.php?acao=*"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "js": [
         "js/init_estilo.js"
       ],
       "matches": [
