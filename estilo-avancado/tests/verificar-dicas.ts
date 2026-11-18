@@ -58,5 +58,23 @@ export function verificarDicas(): void {
     "desligar devolve o title do que estava sob o mouse e nao deixa caixa",
     g("campo").getAttribute("title") === "Pesquisar no Menu" && doc.querySelector("[data-spro-dica-caixa]") === null,
   );
+  const menu = doc.createElement("a");
+  menu.id = "lnkInfraMenuSistema";
+  menu.setAttribute("title", "Exibir Menu do Sistema");
+  g("divInfraBarraSistemaPadrao").appendChild(menu);
+  const parar2 = iniciarDicas(doc);
+  disparar(menu, "mouseover");
+  checar(
+    "botao do menu do sistema preserva o title no hover (o SEI le o title ao clicar)",
+    alvoDaDica(menu) === null && menu.getAttribute("title") === "Exibir Menu do Sistema",
+  );
+  disparar(g("a1"), "mouseover");
+  disparar(g("a1"), "mousedown");
+  checar(
+    "mousedown devolve o title antes do clique",
+    g("a1").getAttribute("title") === "Controle de Processos" && !g("a1").hasAttribute(ATRIBUTO_DICA),
+  );
+  parar2();
+
   checar("fora da casca o title nunca foi tocado", g("f1").getAttribute("title") === "Fora da casca");
 }
