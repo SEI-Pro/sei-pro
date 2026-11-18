@@ -3,7 +3,8 @@
  * Tudo aqui é cálculo puro: a suíte roda em Node 20, e o pdf.js 6 pede Node 22.
  */
 
-import { caixasDasImagens, figurasDoDocumento, LEGENDA, lerIdFigura, marcaDeFigura, marcaDeIntervalo, marcaDeLegenda, type Caixa, type PaginaVista } from "../src/painel/figuras";
+import { lerPagina, ORCAMENTO_FIGURAS, orcamentoDeFiguras } from "../src/painel/pdf";
+import { caixasDasImagens, figurasDoDocumento, LEGENDA, rodapeDeFiguras, textoDaPaginaComMarcas, textoDoDocumentoComFiguras, lerIdFigura, marcaDeFigura, marcaDeIntervalo, marcaDeLegenda, type Caixa, type PaginaVista } from "../src/painel/figuras";
 import { checar, secao } from "./util";
 
 /** Os códigos do pdf.js 6.3.289 (`pdfjs.OPS`). */
@@ -18,7 +19,7 @@ const imagem = (m: number[]): Array<[keyof typeof OPS, unknown[]]> => [["save", 
 const perto = (c: Caixa | undefined, x: number, y: number, l: number, a: number) => Boolean(c) && [c!.x - x, c!.y - y, c!.largura - l, c!.altura - a].every((d) => Math.abs(d) < 0.01);
 const pagina = (n: number, caixas: Caixa[], o: Partial<PaginaVista> = {}): PaginaVista => ({ n, ...A4, caixas, camada: true, ocrLeu: false, ...o });
 
-export function verificarFiguras(): void {
+export async function verificarFiguras(): Promise<void> {
   secao("figuras: onde a imagem foi desenhada");
   {
     const [f, a] = ops(...imagem([300, 0, 0, 200, 100, 300]));
@@ -108,6 +109,7 @@ export function verificarFiguras(): void {
     checar("legenda: Grafico 2", LEGENDA.test("Gráfico 2 – Movimentação"));
     checar("legenda: Figura nº 3", LEGENDA.test("Figura nº 3 - Mapa"));
     checar("legenda: FOTO 1", LEGENDA.test("FOTO 1"));
+    checar("legenda sem acento (PDF antigo, OCR): Grafico 2", LEGENDA.test("Grafico 2 - Movimentacao") && LEGENDA.test("Ilustracao 4"));
     checar("legenda: Fotografia 2", LEGENDA.test("Fotografia 2: cais"));
     checar("nao e legenda: Figura de linguagem", !LEGENDA.test("Figura de linguagem"));
     checar("nao e legenda: Quadro de pessoal", !LEGENDA.test("Quadro de pessoal"));
@@ -120,4 +122,93 @@ export function verificarFiguras(): void {
   checar("arquivo", lerIdFigura("arquivo")?.tipo === "arquivo");
   checar("com espaco e maiuscula", lerIdFigura(" P3-1 ")?.tipo === "figura");
   checar("invalidos", lerIdFigura("x") === null && lerIdFigura("p0") === null && lerIdFigura("img-0") === null && lerIdFigura("p3-0") === null);
+
+  secao("figuras: marca dentro do texto da pagina");
+  {
+    const linhas = [{ texto: "Titulo", y: 780 }, { texto: "Paragrafo depois", y: 500 }, { texto: "Fim", y: 200 }];
+    const f = { id: "p1-1", pagina: 1, caixa: { x: 100, y: 300, largura: 300, altura: 200 }, fracao: 0.12 };
+    const t = textoDaPaginaComMarcas(1, linhas, [f]);
+    checar("a marca sai entre a linha de cima e a de baixo da figura", t === `Titulo\n${marcaDeFigura(f)}\nParagrafo depois\nFim`, t);
+    const baixo = { ...f, caixa: { x: 100, y: 20, largura: 300, altura: 100 } };
+    checar("figura abaixo de todo o texto: marca no fim", textoDaPaginaComMarcas(1, linhas, [baixo]).endsWith(marcaDeFigura(baixo)));
+    const comLegenda = textoDaPaginaComMarcas(3, [{ texto: "Texto", y: 700 }, { texto: "Gráfico 2 – Movimentação", y: 400 }, { texto: "Fonte: ANTAQ", y: 380 }], []);
+    checar("sem figura, a legenda gera a marca logo depois dela", comLegenda === `Texto\nGráfico 2 – Movimentação\n${marcaDeLegenda(3, "Gráfico 2 – Movimentação")}\nFonte: ANTAQ`, comLegenda);
+    const legendaComFigura = textoDaPaginaComMarcas(1, [{ texto: "Figura 1 - Mapa", y: 250 }], [f]);
+    checar("com figura marcada, a legenda nao gera outra marca", !legendaComFigura.includes("poss\u00EDvel figura"), legendaComFigura);
+    checar("rodape sem figura e vazio", rodapeDeFiguras(0) === "");
+    checar("rodape com figuras", rodapeDeFiguras(2) === "[documento com 2 figura(s) marcada(s)]");
+  }
+
+  secao("figuras: leitura de uma pagina do pdf.js");
+  {
+    const OPS_REAIS = { ...OPS };
+    const itens = [
+      { str: "Linha um", hasEOL: true, transform: [1, 0, 0, 1, 50, 780] },
+      { str: "Linha", hasEOL: false, transform: [1, 0, 0, 1, 50, 200] },
+      { str: "  dois", hasEOL: true, transform: [1, 0, 0, 1, 90, 200] },
+    ];
+    const [fnArray, argsArray] = ops(...imagem([300, 0, 0, 200, 100, 300]));
+    const pag = { view: [0, 0, 595, 842], getTextContent: async () => ({ items: itens }), getOperatorList: async () => ({ fnArray, argsArray }) };
+    const lida = await lerPagina(pag, 1, OPS_REAIS);
+    checar("linhas com a altura da primeira palavra", JSON.stringify(lida.linhas) === JSON.stringify([{ texto: "Linha um", y: 780 }, { texto: "Linha dois", y: 200 }]), lida.linhas);
+    checar("texto como antes (espacos juntados)", lida.texto === "Linha um\nLinha dois", lida.texto);
+    checar("caixas da pagina", lida.caixas?.length === 1 && lida.largura === 595 && lida.altura === 842, lida);
+    const deslocada = await lerPagina({ ...pag, view: [0, 100, 595, 942] }, 1, OPS_REAIS);
+    checar("pagina com origem deslocada: caixa relativa a pagina", deslocada.caixas?.[0]?.y === 200, deslocada.caixas);
+    const quebrada = await lerPagina({ ...pag, getOperatorList: async () => { throw new Error("fonte faltando"); } }, 1, OPS_REAIS);
+    checar("lista de operacoes que falha: texto igual, sem caixas", quebrada.texto === lida.texto && quebrada.caixas === undefined, quebrada);
+    const semProcurar = await lerPagina(pag, 1, null);
+    checar("sem procurar: nao chama a lista de operacoes", semProcurar.caixas === undefined && semProcurar.texto === lida.texto);
+  }
+
+  secao("figuras: documento inteiro");
+  {
+    const base = { linhas: [{ texto: "texto", y: 700 }], texto: "texto", camada: true, ocrLeu: false, largura: 595, altura: 842 };
+    const paginas = [
+      { ...base, n: 1, caixas: [{ x: 100, y: 300, largura: 300, altura: 200 }] },
+      { ...base, n: 2, caixas: [] },
+      { ...base, n: 3, caixas: undefined },
+    ];
+    const t = textoDoDocumentoComFiguras(paginas, { total: 3, naoProcuradasDe: 3 });
+    checar("cada pagina com o rotulo de sempre", t.startsWith("[p\u00E1gina 1]\ntexto") && t.includes("[p\u00E1gina 2]\ntexto"), t);
+    checar("a figura da pagina 1 marcada", t.includes("[figura p1-1:"), t);
+    checar("aviso das paginas nao procuradas", t.includes("[figuras n\u00E3o procuradas a partir da p\u00E1gina 3]"), t);
+    checar("rodape", t.trimEnd().endsWith("[documento com 1 figura(s) marcada(s)]"), t);
+    const alem = textoDoDocumentoComFiguras(paginas.slice(0, 2), { total: 250 });
+    checar("paginas alem do limite de leitura avisadas como antes", alem.includes("[... 248 p\u00E1ginas n\u00E3o lidas]"), alem);
+    const misto = textoDoDocumentoComFiguras(
+      [
+        { ...base, n: 1, caixas: [] },
+        { ...base, n: 2, texto: "", linhas: [], camada: false, caixas: [{ x: 0, y: 0, largura: 595, altura: 842 }] },
+        { ...base, n: 3, texto: "", linhas: [], camada: false, caixas: [{ x: 0, y: 0, largura: 595, altura: 842 }] },
+      ],
+      { total: 3 },
+    );
+    checar("pdf misto: paginas escaneadas sem texto numa marca so", misto.includes('[p\u00E1ginas 2\u20133 digitalizadas sem texto reconhecido; para ver uma: ver_imagem figura "pN"]'), misto);
+    checar("e sem rodape de figuras", !misto.includes("figura(s) marcada(s)"), misto);
+    const longo = textoDoDocumentoComFiguras(
+      [
+        { ...base, n: 1, texto: "", linhas: [], camada: false, caixas: [{ x: 0, y: 0, largura: 595, altura: 842 }], ocrLeu: true },
+        { ...base, n: 2, texto: "", linhas: [], camada: false, caixas: [{ x: 0, y: 0, largura: 595, altura: 842 }] },
+        { ...base, n: 3, texto: "", linhas: [], camada: false, caixas: undefined },
+      ],
+      { total: 3, naoProcuradasDe: 3 },
+    );
+    checar("escaneado longo: pagina sem texto alem do orcamento tambem entra", longo.includes("[p\u00E1ginas 2\u20133 digitalizadas"), longo);
+    const branca = textoDoDocumentoComFiguras([{ ...base, n: 1 }, { ...base, n: 2, texto: "", linhas: [], camada: false, caixas: [] }], { total: 2 });
+    checar("pagina em branco procurada nao vira digitalizada", !branca.includes("digitalizada"), branca);
+  }
+
+  secao("figuras: orcamento de busca");
+  {
+    checar("limites do spec", ORCAMENTO_FIGURAS.maxPaginas === 60 && ORCAMENTO_FIGURAS.maxMs === 5000);
+    let agora = 0;
+    const procura = orcamentoDeFiguras({ maxPaginas: 2, maxMs: 1000 }, () => agora);
+    checar("procura nas primeiras paginas", procura(1) && procura(2));
+    checar("para depois do limite de paginas", !procura(3));
+    const porTempo = orcamentoDeFiguras({ maxPaginas: 60, maxMs: 1000 }, () => agora);
+    porTempo(1);
+    agora = 1500;
+    checar("para ao passar do tempo", !porTempo(2));
+  }
 }

@@ -160,7 +160,7 @@ export function marcaDeIntervalo(paginas: number[]): string {
 }
 
 /** Legenda de figura no começo da linha ("Gráfico 2 – ...", "Figura nº 3"). */
-export const LEGENDA = /^(Figura|Gráfico|Mapa|Imagem|Foto|Fotografia|Ilustração|Quadro|Diagrama|Fluxograma)\s*(n[ºo°.]\s*)?\d+/i;
+export const LEGENDA = /^(Figura|Gr[aá]fico|Mapa|Imagem|Foto|Fotografia|Ilustra[cç][aã]o|Quadro|Diagrama|Fluxograma)\s*(n[ºo°.]\s*)?\d+/i;
 
 /** Gráfico desenhado (vetorial) não tem imagem dentro: a legenda é a pista. */
 export function marcaDeLegenda(pagina: number, legenda: string): string {
@@ -181,4 +181,61 @@ export function lerIdFigura(id: string): IdFigura | null {
   m = /^img-(\d+)$/.exec(t);
   if (m) return Number(m[1]) > 0 ? { tipo: "html", indice: Number(m[1]) } : null;
   return null;
+}
+
+// ------------------------------------------------------------ texto com marcas
+
+export interface LinhaLida {
+  texto: string;
+  /** Altura da linha na página (pontos PDF, de baixo para cima). */
+  y: number;
+}
+
+/** Uma página como a leitura a entrega: texto, linhas e, se procuradas, as caixas das imagens. */
+export interface PaginaComFiguras {
+  n: number;
+  texto: string;
+  linhas: LinhaLida[];
+  camada: boolean;
+  ocrLeu?: boolean;
+  largura: number;
+  altura: number;
+  /** `undefined`: a página não foi procurada (orçamento) ou a lista de operações falhou. */
+  caixas?: Caixa[];
+}
+
+/** O texto da página com a marca de cada figura na linha em que ela começa, e a marca de legenda quando não há figura. */
+export function textoDaPaginaComMarcas(pagina: number, linhas: LinhaLida[], figuras: Figura[]): string {
+  const saida: string[] = [];
+  const pendentes = [...figuras];
+  for (const l of linhas) {
+    while (pendentes.length && l.y <= pendentes[0].caixa.y + pendentes[0].caixa.altura) saida.push(marcaDeFigura(pendentes.shift()!));
+    saida.push(l.texto);
+    if (!figuras.length && LEGENDA.test(l.texto.trim())) saida.push(marcaDeLegenda(pagina, l.texto.trim()));
+  }
+  for (const f of pendentes) saida.push(marcaDeFigura(f));
+  return saida.join("\n");
+}
+
+export function rodapeDeFiguras(total: number): string {
+  return total ? `[documento com ${total} figura(s) marcada(s)]` : "";
+}
+
+/** O texto do PDF inteiro, no formato de sempre (`[página N]`), com as marcas de figura. */
+export function textoDoDocumentoComFiguras(paginas: PaginaComFiguras[], o: { total: number; naoProcuradasDe?: number }): string {
+  const vistas: PaginaVista[] = paginas.map((p) => ({ n: p.n, largura: p.largura, altura: p.altura, caixas: p.caixas ?? [], camada: p.camada, ocrLeu: Boolean(p.ocrLeu) }));
+  const { figuras, paginasSemTexto } = figurasDoDocumento(vistas);
+  // Página não procurada (além do orçamento), sem camada e sem OCR: em PDF
+  // escaneado, é página que ninguém leu. Página PROCURADA sem imagem nenhuma
+  // é página em branco, e fica de fora.
+  const semTexto = new Set(paginasSemTexto);
+  for (const p of paginas) if (p.caixas === undefined && !p.camada && !p.ocrLeu && !p.texto) semTexto.add(p.n);
+  const partes = paginas.map((p) => `[página ${p.n}]\n${textoDaPaginaComMarcas(p.n, p.linhas, figuras.filter((f) => f.pagina === p.n))}`);
+  if (o.total > paginas.length) partes.push(`[... ${o.total - paginas.length} páginas não lidas]`);
+  const intervalo = marcaDeIntervalo([...semTexto].sort((a, b) => a - b));
+  if (intervalo) partes.push(intervalo);
+  if (o.naoProcuradasDe) partes.push(`[figuras não procuradas a partir da página ${o.naoProcuradasDe}]`);
+  const rodape = rodapeDeFiguras(figuras.length);
+  if (rodape) partes.push(rodape);
+  return partes.join("\n\n");
 }

@@ -72,7 +72,7 @@ verificarDesfazer();
 verificarRegras();
 verificarCusto();
 verificarUsoDaConversa();
-verificarFiguras();
+await verificarFiguras();
 verificarRotinas();
 await verificarRotinasUi();
 await verificarArquivoUi();

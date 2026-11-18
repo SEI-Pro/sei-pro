@@ -11,6 +11,7 @@
  */
 
 import { MAX_PAGINAS_OCR, montarTexto, planejarLeitura, temCamadaDeTexto, type PaginaLida, type PlanoLeitura } from "./anexo";
+import { caixasDasImagens, textoDoDocumentoComFiguras, type LinhaLida, type PaginaComFiguras } from "./figuras";
 
 const LIMITE_PAGINAS = 200;
 /**
@@ -21,13 +22,36 @@ const LIMITE_PAGINAS = 200;
 const PAGINAS_OCR = 5;
 const SEM_TEXTO = "[PDF sem camada de texto (digitalizado).]";
 
-interface DocPdf {
-  numPages: number;
-  getPage(n: number): Promise<{ getTextContent(): Promise<{ items: unknown[] }> }>;
+/**
+ * Até onde a leitura procura figuras. A lista de operações processa a página
+ * inteira (e o worker carrega as imagens): num documento de 200 páginas, num
+ * pedido de 20 documentos, sem teto a leitura ficaria lenta.
+ */
+export const ORCAMENTO_FIGURAS = { maxPaginas: 60, maxMs: 5000 };
+
+/** Devolve, página a página, se ainda cabe procurar figuras. O relógio começa na primeira pergunta. */
+export function orcamentoDeFiguras(o: { maxPaginas: number; maxMs: number }, agora: () => number = Date.now): (n: number) => boolean {
+  let inicio: number | null = null;
+  return (n) => {
+    inicio ??= agora();
+    return n <= o.maxPaginas && agora() - inicio <= o.maxMs;
+  };
 }
 
-/** Abre o PDF no pdf.js e entrega o documento a `corpo`, destruindo a tarefa no fim. */
-async function comPdf<T>(bytes: Uint8Array, corpo: (doc: DocPdf) => Promise<T>): Promise<T> {
+/** O que o agente usa de uma página do pdf.js. */
+export interface PaginaPdf {
+  view?: number[];
+  getTextContent(): Promise<{ items: unknown[] }>;
+  getOperatorList?(): Promise<{ fnArray: number[]; argsArray: unknown[][] }>;
+}
+
+interface DocPdf {
+  numPages: number;
+  getPage(n: number): Promise<PaginaPdf>;
+}
+
+/** Abre o PDF no pdf.js e entrega o documento (e os códigos de operação) a `corpo`, destruindo a tarefa no fim. */
+async function comPdf<T>(bytes: Uint8Array, corpo: (doc: DocPdf, OPS: Record<string, number>) => Promise<T>): Promise<T> {
   const { carregarPdfJs, opcoesDocumento } = await import("@/lib/ferramentas/pdfjs");
   const pdfjs = await carregarPdfJs();
   // Cópia: o pdf.js TRANSFERE o buffer para o worker, e o original ficaria
@@ -35,7 +59,7 @@ async function comPdf<T>(bytes: Uint8Array, corpo: (doc: DocPdf) => Promise<T>):
   const tarefa = pdfjs.getDocument(opcoesDocumento(bytes.slice()));
   const doc = (await tarefa.promise) as unknown as DocPdf;
   try {
-    return await corpo(doc);
+    return await corpo(doc, pdfjs.OPS as unknown as Record<string, number>);
   } finally {
     await tarefa.destroy();
   }
@@ -49,57 +73,111 @@ class LeituraCancelada extends Error {
   }
 }
 
+/**
+ * Uma página: a camada de texto, linha a linha com a altura de cada uma, e —
+ * com `OPS` — as caixas das imagens. Se a lista de operações falhar (fonte
+ * faltando, PDF torto), o texto vale igual e a página fica sem caixas.
+ */
+export async function lerPagina(pagina: PaginaPdf, n: number, OPS: Record<string, number> | null): Promise<PaginaComFiguras> {
+  const conteudo = await pagina.getTextContent();
+  const linhas: LinhaLida[] = [];
+  let linha = "";
+  let y: number | null = null;
+  const fechar = () => {
+    const texto = linha.replace(/[ \t]+/g, " ").trim();
+    if (texto) linhas.push({ texto, y: y ?? 0 });
+    linha = "";
+    y = null;
+  };
+  for (const item of conteudo.items as Array<{ str?: string; hasEOL?: boolean; transform?: number[] }>) {
+    if (y === null && item.str?.trim() && Array.isArray(item.transform)) y = item.transform[5];
+    linha += item.str ?? "";
+    if (item.hasEOL) fechar();
+  }
+  fechar();
+  const [x0 = 0, y0 = 0, x1 = 0, y1 = 0] = pagina.view ?? [];
+  let caixas: PaginaComFiguras["caixas"];
+  if (OPS && pagina.getOperatorList) {
+    try {
+      const ops = await pagina.getOperatorList();
+      caixas = caixasDasImagens(ops.fnArray, ops.argsArray, OPS).map((c) => ({ ...c, x: c.x - x0, y: c.y - y0 }));
+    } catch {
+      caixas = undefined;
+    }
+  }
+  return {
+    n,
+    texto: linhas.map((l) => l.texto).join("\n"),
+    linhas: linhas.map((l) => ({ ...l, y: l.y - y0 })),
+    camada: temCamadaDeTexto(conteudo.items as Array<{ str?: unknown }>),
+    largura: x1 - x0,
+    altura: y1 - y0,
+    ...(caixas ? { caixas } : {}),
+  };
+}
+
 /** Camada de texto das páginas `1..ate` (sem OCR); página digitalizada vem com texto vazio. */
 async function paginasDeTexto(doc: DocPdf, ate: number, aoLer?: (n: number) => void, cancelado?: () => boolean): Promise<Array<PaginaLida & { camada: boolean }>> {
   const paginas: Array<PaginaLida & { camada: boolean }> = [];
   for (let n = 1; n <= ate; n += 1) {
     if (cancelado?.()) throw new LeituraCancelada();
-    const conteudo = await (await doc.getPage(n)).getTextContent();
-    let linha = "";
-    const linhas: string[] = [];
-    for (const item of conteudo.items as Array<{ str?: string; hasEOL?: boolean }>) {
-      linha += item.str ?? "";
-      if (item.hasEOL) {
-        linhas.push(linha);
-        linha = "";
-      }
-    }
-    if (linha) linhas.push(linha);
-    paginas.push({ n, texto: linhas.join("\n").replace(/[ \t]+/g, " ").trim(), camada: temCamadaDeTexto(conteudo.items as Array<{ str?: unknown }>) });
+    const { texto, camada } = await lerPagina(await doc.getPage(n), n, null);
+    paginas.push({ n, texto, camada });
     aoLer?.(n);
   }
   return paginas;
 }
 
-/** Texto das páginas pela camada de texto do PDF (sem OCR). */
-async function textoDoPdf(bytes: Uint8Array): Promise<string> {
-  return comPdf(bytes, async (doc) => {
-    const total = Math.min(doc.numPages, LIMITE_PAGINAS);
-    const partes = (await paginasDeTexto(doc, total)).map((p) => `[página ${p.n}]\n${p.texto}`);
-    if (doc.numPages > total) partes.push(`[... ${doc.numPages - total} páginas não lidas]`);
-    const texto = partes.join("\n\n");
-    return texto.replace(/\[página \d+\]\n?/g, "").trim() ? texto : SEM_TEXTO;
+/**
+ * As páginas do PDF para o agente: texto e, dentro do orçamento, as caixas das
+ * imagens. `orcamento: null` procura em todas — é o que o recorte usa, para
+ * achar a figura que a leitura marcou.
+ */
+export async function paginasVistasDoPdf(bytes: Uint8Array, orcamento: { maxPaginas: number; maxMs: number } | null = ORCAMENTO_FIGURAS): Promise<{ paginas: PaginaComFiguras[]; total: number; naoProcuradasDe?: number }> {
+  return comPdf(bytes, async (doc, OPS) => {
+    const ate = Math.min(doc.numPages, LIMITE_PAGINAS);
+    const procura = orcamento ? orcamentoDeFiguras(orcamento) : () => true;
+    const paginas: PaginaComFiguras[] = [];
+    let naoProcuradasDe: number | undefined;
+    for (let n = 1; n <= ate; n += 1) {
+      const sim = procura(n);
+      if (!sim) naoProcuradasDe ??= n;
+      paginas.push(await lerPagina(await doc.getPage(n), n, sim ? OPS : null));
+    }
+    return { paginas, total: doc.numPages, ...(naoProcuradasDe ? { naoProcuradasDe } : {}) };
   });
 }
 
 /**
- * Texto de um PDF. Sem camada de texto (digitalizado), roda o OCR das
- * Ferramentas de PDF — que devolve um PDF pesquisável — e lê o texto dele.
- * Reaproveita o Tesseract já empacotado (`vendor/ferramentas-pdf/tesseract/`),
- * com o modelo de português, sem nada novo no pacote.
+ * Texto de um PDF, com as figuras marcadas (ver `figuras.ts`). Sem camada de
+ * texto (digitalizado), roda o OCR das Ferramentas de PDF — que devolve um PDF
+ * pesquisável — e lê o texto dele. Reaproveita o Tesseract já empacotado
+ * (`vendor/ferramentas-pdf/tesseract/`), com o modelo de português, sem nada
+ * novo no pacote.
  */
 export async function extrairTextoPdf(base64: string, o: { ocr?: boolean } = {}): Promise<string> {
   const bruto = atob(base64);
   const bytes = new Uint8Array(bruto.length);
   for (let i = 0; i < bruto.length; i += 1) bytes[i] = bruto.charCodeAt(i);
-  const texto = await textoDoPdf(bytes);
-  if (texto !== SEM_TEXTO || o.ocr === false) return texto;
+  const { paginas, total, naoProcuradasDe } = await paginasVistasDoPdf(bytes);
+  if (paginas.some((p) => p.texto)) return textoDoDocumentoComFiguras(paginas, { total, naoProcuradasDe });
+  if (o.ocr === false) return SEM_TEXTO;
   const { ocrPdf, ocrDisponivel } = await import("@/lib/ferramentas/ocr");
   if (!ocrDisponivel()) return `${SEM_TEXTO} Este navegador não suporta o OCR local.`;
   const r = await ocrPdf({ id: "agente", nome: "documento.pdf", tamanho: bytes.length, bytes }, { paginas: PAGINAS_OCR });
   if (r.semTexto) return `${SEM_TEXTO} O OCR não reconheceu texto.`;
   const resto = r.totalPaginas > r.paginasProcessadas ? ` de ${r.totalPaginas}; as demais não foram lidas` : "";
-  return `[texto obtido por OCR de ${r.paginasProcessadas} página(s)${resto}; pode conter erros de reconhecimento]\n\n${await textoDoPdf(r.bytes)}`;
+  // O texto vem do PDF pesquisável que o OCR devolve; as caixas, do original.
+  const lidas = await comPdf(r.bytes, async (doc) => {
+    const saida: PaginaComFiguras[] = [];
+    for (let n = 1; n <= Math.min(doc.numPages, paginas.length); n += 1) saida.push(await lerPagina(await doc.getPage(n), n, null));
+    return saida;
+  });
+  const combinadas = paginas.map((p) => {
+    const l = lidas[p.n - 1];
+    return l?.texto ? { ...p, texto: l.texto, linhas: l.linhas, ocrLeu: true } : p;
+  });
+  return `[texto obtido por OCR de ${r.paginasProcessadas} página(s)${resto}; pode conter erros de reconhecimento]\n\n${textoDoDocumentoComFiguras(combinadas, { total, naoProcuradasDe })}`;
 }
 
 // ------------------------------------------------------------ anexo do chat
