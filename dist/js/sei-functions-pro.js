@@ -1393,6 +1393,24 @@ function insertFontIcon(elementTo, target = $('html')) {
     }
     if (localStorage.getItem('seiSlim_editor')) {
         $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
+        if (target && target[0] === document.documentElement) { setAccentToolbarEditorPro(target); }
+    }
+}
+// Cor de destaque da barra do editor (Estilo Avancado): segue a paleta escolhida em "Cor personalizada".
+function setAccentToolbarEditorPro(target) {
+    try {
+        var base = (typeof getOptionsPro === 'function' && getOptionsPro('colorSlimPro')) ? getOptionsPro('colorSlimPro') : '#1f2a44';
+        if (!/^#[0-9a-f]{6}$/i.test(base)) { base = '#1f2a44'; }
+        var texto = (getBrightnessColor(base) > 125) ? '#2a3042' : '#ffffff';
+        var css = ':root, html, body {\n'
+                + '  --spro-accent: ' + base + ';\n'
+                + '  --spro-accent-text: ' + texto + ';\n'
+                + '  --spro-accent-soft: ' + addAlpha(base, 0.14) + ';\n'
+                + '  --spro-accent-shadow: ' + addAlpha(base, 0.35) + ';\n'
+                + '}';
+        estiloPro((target && target.length) ? target.find('head') : $('head'), 'seipro-accent-editor', css);
+    } catch (e) {
+        if (typeof avisarPro === 'function') { avisarPro('setAccentToolbarEditorPro', e); }
     }
 }
 function numberToLetter(number) {

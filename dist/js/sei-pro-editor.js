@@ -366,6 +366,15 @@ function htmlButton(status) {
             isNewEditor ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
         ) : '';
     
+    // Visualizacao do texto como folha de papel (liga/desliga). Estado em localStorage 'spro_editor_folha'.
+    const htmlButtonFolha =
+        htmlButtonPro(
+            'getPaperViewButtom',
+            'folhapapel',
+            'Ver o texto como folha de papel',
+            isNewEditor ? 'fab fa-file-alt azulColor' : 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M4 1.5h5.5L13 5v9.5H4z%27 fill=%27%23fff%27 stroke=%27%234285f4%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27/%3E%3Cpath d=%27M9.5 1.5V5H13M6 8h5M6 10.5h5M6 13h3%27 fill=%27none%27 stroke=%27%234285f4%27 stroke-width=%271.1%27 stroke-linecap=%27round%27/%3E%3C/svg%3E'
+        );
+
     const htmlButtonNewStyle = isNewSEI ? 
         htmlButtonPro(
             'getNewStyleButton',
@@ -410,18 +419,27 @@ function htmlButton(status) {
         : `<span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">${htmlButton}</span>`;
 
     const htmlNewBlock = isNewEditor 
-        ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle
+        ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonFolha+htmlButtonNewStyle
         : `
             <span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">
             ${htmlButtonSigilo}
             ${htmlButtonReview}
             ${htmlButtonLegis}
             ${htmlButtonDitado}
+            ${htmlButtonFolha}
             ${htmlButtonNewStyle}
             </span>
         `;
 
+    // Estilo Avancado no CK4: os dois grupos do SEI Pro entravam separados no .cke_toolbox.
+    // Reunidos num unico grupo, o CSS os desenha como uma so capsula, igual as do CKEditor.
+    const agruparPro = !isNewEditor && !!localStorage.getItem('seiSlim_editor');
+    const groupedHtmlButton = agruparPro
+        ? `<span class="cke_iconPro cke_toolgroup cke_toolgroupPro ${classStatus}" role="presentation">${htmlButton}${htmlButtonSigilo}${htmlButtonReview}${htmlButtonLegis}${htmlButtonDitado}${htmlButtonFolha}${htmlButtonNewStyle}</span>`
+        : null;
+
     return {
+        grouped: groupedHtmlButton,
         default: blockHtmlButton, 
         tables: htmlButtonTable, 
         beforeCut: htmlButtonBeforeCut, 
@@ -476,24 +494,24 @@ function addButton(TimeOut = 9000) {
                         $(txaEditor).each(function(index){ 
                             var idEditor = $(this).attr('id').replace('cke_', '');
                             if ( getIframeEditorPro(idEditor).contents().find('body').attr('contenteditable') == 'true' ) {
-                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('').default, 'append');
+                                htmlPro($(this).find('span.cke_toolbox'), (htmlButton('').grouped || htmlButton('').default), 'append');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__table'), htmlButton('').tables, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__minuscula'), htmlButton('').afterletters, 'after');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__cut'), htmlButton('').beforeCut, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__numberedlist'), htmlButton('').beforeList, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__base64image'), htmlButton('').afterImage, 'after');
                                 // htmlPro($(this).find('span.cke_toolgroup .cke_button__save'), htmlButton('').afterSave, 'after');
-                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('').newBlock, 'append');
+                                if (!htmlButton('').grouped) { htmlPro($(this).find('span.cke_toolbox'), htmlButton('').newBlock, 'append'); }
                                 insertFontIcon('head',getIframeEditorPro(idEditor).contents());
                             } else {
-                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('disable').default, 'append');
+                                htmlPro($(this).find('span.cke_toolbox'), (htmlButton('disable').grouped || htmlButton('disable').default), 'append');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__table'), htmlButton('disable').tables, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__minuscula'), htmlButton('disable').afterletters, 'after');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__cut'), htmlButton('disable').beforeCut, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__numberedlist'), htmlButton('disable').beforeList, 'before');
                                 htmlPro($(this).find('span.cke_toolgroup .cke_button__base64image'), htmlButton('disable').afterImage, 'after');
                                 // htmlPro($(this).find('span.cke_toolgroup .cke_button__save'), htmlButton('disable').afterSave, 'after');
-                                htmlPro($(this).find('span.cke_toolbox'), htmlButton('disable').newBlock, 'append');
+                                if (!htmlButton('disable').grouped) { htmlPro($(this).find('span.cke_toolbox'), htmlButton('disable').newBlock, 'append'); }
                             }
                         });
                     setClickButtons();
@@ -558,6 +576,7 @@ const setClickButtons = () => {
     $('.getCtrReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrReview(this) } });
     $('.getDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxDitado(this) } });
     $('.getCtrDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrDitado(this) } });
+    $('.getPaperViewButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPaperViewButtom(this) } });
     $('.getNewStyleButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxStyleEditor(this) } });
     // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
     $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
@@ -2437,6 +2456,7 @@ function initFunctions() {
         }
     };
     tryRun(initContextMenuPro, 'initContextMenuPro');
+    tryRun(initFolhaEditorPro, 'initFolhaEditorPro');
     tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
     tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
     tryRun(getDialogSyleTable, 'getDialogSyleTable');

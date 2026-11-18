@@ -562,7 +562,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Alterar os 12 manifests por script**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro" && python3 - <<'PY'
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro" && python3 - <<'PY'
 import glob, json
 for nome in sorted(glob.glob("dist/manifest*.json")):
     with open(nome, encoding="utf-8") as f: m = json.load(f)

@@ -3728,6 +3728,7 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__dadosprocesso_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__tinyurl_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__qrcode_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__folhapapel_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pagebreak_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__sessionbreak_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__latex_icon,
@@ -3985,6 +3986,10 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__qrcode_icon:before {
     content: "\f029";
     color: #ea48cc;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__folhapapel_icon:before {
+    content: "\f15c";
+    color: #4285f4;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pagebreak_icon:before {
     content: "\f877";
@@ -4704,4 +4709,176 @@ strong.title-reviewtip {
     to {
         left: 100%;
     }
+}
+
+/* ==========================================================================
+   Barra do editor (CKEditor 4) - Estilo Avancado: capsulas flutuantes
+   A cor de destaque (botao Assinar e botoes ativos) vem de --spro-accent,
+   definida por setAccentToolbarEditorPro() a partir da "Cor personalizada".
+   ========================================================================== */
+.seiSlim.seiSlim_parent.seiSlim_view {
+    --spro-bar-bg: #f3f4f7; /* mesmo fundo da pagina (--spro-pagina), para a barra parecer flutuar */
+    --spro-cap-bg: #ffffff;
+    --spro-cap-shadow: 0 1px 2px rgba(20, 25, 50, .08), 0 4px 14px rgba(20, 25, 50, .06);
+    --spro-ink: #2a3042;
+    --spro-hover: #f0f2f7;
+}
+.seiSlim.dark-mode.seiSlim_parent.seiSlim_view {
+    --spro-bar-bg: #141619; /* idem, modo escuro */
+    --spro-cap-bg: #2a2a2d;
+    --spro-cap-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .25);
+    --spro-ink: #e6e8ef;
+    --spro-hover: #3a3b40;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top,
+.seiSlim.dark-mode.seiSlim_parent.seiSlim_view .cke_top {
+    background: var(--spro-bar-bg) !important;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 10px 12px 4px;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbox {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbox > .cke_toolbar_break {
+    display: none;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbar,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbox > .cke_iconPro.cke_toolgroup {
+    float: none !important;
+    margin: 0 !important;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    background: var(--spro-cap-bg);
+    border: 0;
+    border-radius: 12px;
+    box-shadow: var(--spro-cap-shadow);
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbar_start,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbar_separator {
+    display: none;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolgroup {
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_combo_button {
+    margin: 0 !important;
+    padding: 0 7px;
+    height: 30px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 9px;
+    transition: background-color .15s, box-shadow .15s;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_combo_button {
+    width: auto;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_label,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top span.cke_button_label,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top span.cke_combo_text {
+    color: var(--spro-ink);
+    font-weight: 500;
+}
+/* hover: cinza suave em vez do azul chapado */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:hover,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:focus,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:active,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_combo_button:hover,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_combo_button:focus {
+    background: var(--spro-hover) !important;
+    box-shadow: none;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:hover span.cke_button_label,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:focus span.cke_button_label {
+    color: var(--spro-ink) !important;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:hover span.cke_button_icon:before,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_off:focus span.cke_button_icon:before {
+    color: var(--spro-accent, #1f2a44) !important;
+}
+/* ativo (negrito ligado etc.): cor da paleta do usuario */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_on,
+.seiSlim.dark-mode.seiSlim_parent.seiSlim_view .cke_top a.cke_button_on {
+    background: var(--spro-accent, #1f2a44) !important;
+    box-shadow: none;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_on span.cke_button_icon:before,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_on span.cke_button_label {
+    color: var(--spro-accent-text, #ffffff) !important;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button_disabled:not(.cke_button__assinatura) {
+    opacity: .38;
+}
+/* icones nativos em tracado grafite, sem arco-iris */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top :is(
+    .cke_button__bold_icon, .cke_button__italic_icon, .cke_button__underline_icon, .cke_button__strike_icon,
+    .cke_button__subscript_icon, .cke_button__superscript_icon, .cke_button__removeformat_icon,
+    .cke_button__find_icon, .cke_button__replace_icon, .cke_button__cut_icon, .cke_button__copy_icon,
+    .cke_button__pastefromword_icon, .cke_button__pastetext_icon, .cke_button__undo_icon,
+    .cke_button__redo_icon, .cke_button__showblocks_icon, .cke_button__symbol_icon,
+    .cke_button__numberedlist_icon, .cke_button__bulletedlist_icon, .cke_button__outdent_icon,
+    .cke_button__indent_icon, .cke_button__base64image_icon, .cke_button__table_icon,
+    .cke_button__simplelink_icon, .cke_button__copyformatting_icon, .cke_button__source_icon,
+    .cke_button__save_icon, .cke_button__textcolor_icon, .cke_button__bgcolor_icon,
+    .cke_button__align_left_pro_icon, .cke_button__align_center_pro_icon,
+    .cke_button__align_rigth_pro_icon, .cke_button__align_justify_pro_icon, .cke_button__align_pro_icon
+):before {
+    color: var(--spro-ink) !important;
+}
+/* ferramentas do SEI Pro mantem a cor por categoria, com saturacao mais contida */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top span.cke_button_icon {
+    filter: saturate(.85);
+}
+/* Assinar: capsula com a cor da paleta do usuario */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top .cke_toolbar:has(a.cke_button__assinatura) {
+    background: var(--spro-accent, #1f2a44);
+    box-shadow: 0 4px 12px var(--spro-accent-shadow, rgba(31, 42, 68, .3));
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura span.cke_button_icon:before,
+.seiSlim.dark-mode.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura span.cke_button_icon:before,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura span.cke_button_label {
+    color: var(--spro-accent-text, #ffffff) !important;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura:hover {
+    background: rgba(255, 255, 255, .14) !important;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura:hover span.cke_button_icon:before,
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button__assinatura:hover span.cke_button_label {
+    color: var(--spro-accent-text, #ffffff) !important;
+}
+
+/* Icones centrados no botao (caixa fixa, linha unitaria, sem a margem de 1px do skin) */
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button span.cke_button_icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 22px;
+    height: 22px;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    vertical-align: middle;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button span.cke_button_icon:before {
+    display: block;
+    line-height: 1 !important;
+    margin: 0;
+    padding: 0;
+}
+.seiSlim.seiSlim_parent.seiSlim_view .cke_top a.cke_button span.cke_button_label {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
 }

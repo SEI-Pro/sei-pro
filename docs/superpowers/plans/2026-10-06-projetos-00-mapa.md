@@ -27,7 +27,7 @@ são escritos depois que a fase anterior termina, lendo o código real).
 ## Global Constraints
 
 - Idioma: código, nomes, comentários, textos de interface e mensagens em português do Brasil; título de commit sem acento (ex.: `Projetos: ...`, `Comum: ...`), terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Git: trabalhar só na worktree `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
+- Git: trabalhar só na worktree `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
 - `dist/js` gerado: só ASCII (esbuild `charset: "ascii"` + portão de bytes > 0x7f no `build.mjs`). JS legado editado à mão (`init.js`, `sei-pro-projetos.js`, `background.js`): acentos como `\uXXXX`, conferidos por bytes (o grep BSD não detecta byte cru; as ferramentas Write/Edit convertem `\uXXXX` em caractere cru — conferir depois de editar).
 - DOM seguro: em TS só `h()`/`textContent`/`createElementNS`; proibido `innerHTML`, `outerHTML`, `insertAdjacentHTML`, atributos `on*` em string; no legado, `htmlPro`/`data-spro-*`.
 - Sessão do SEI: nunca montar URL do SEI; abrir processo/documento só por links da própria página ou pela pesquisa rápida; **nunca carregar a árvore de processo em segundo plano** (marca "recebido").

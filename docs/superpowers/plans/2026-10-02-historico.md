@@ -18,7 +18,7 @@
 
 ## Global Constraints
 
-- **Worktree:** `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-historico`, na branch `feat/historico-ts`. **Nunca** `git add -A`: adicione por caminho explícito. Confira `git branch --show-current` antes de comitar.
+- **Worktree:** `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-historico`, na branch `feat/historico-ts`. **Nunca** `git add -A`: adicione por caminho explícito. Confira `git branch --show-current` antes de comitar.
 - **Commits:** terminam com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. A mensagem é em português, sem acento (padrão do repo: "Historico: ...").
 - **Idioma:** textos de interface, comentários e nomes em português do Brasil, como no Favoritos.
 - **`dist/js/*.js` só com ASCII:**

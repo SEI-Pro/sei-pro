@@ -15,7 +15,7 @@
 ## Global Constraints
 
 - Idioma: código, nomes, comentários, textos de interface e mensagens em português do Brasil; título de commit sem acento (ex.: `Projetos: modelo de situacao e progresso`), terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Git: trabalhar só na worktree `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release. Neste P2 só nasce a pasta `projetos/`: nada em `dist/`, no manifest, em `sei-comum`, `sei-nucleo`, `favoritos`, `historico` ou `agente-ia`.
+- Git: trabalhar só na worktree `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release. Neste P2 só nasce a pasta `projetos/`: nada em `dist/`, no manifest, em `sei-comum`, `sei-nucleo`, `favoritos`, `historico` ou `agente-ia`.
 - Independência do P1 (que roda em paralelo): usar só o que já existe no `sei-comum` em 06/10/2026 — `armazenamento/area`, `armazenamento/colecao`, `sincronia/entidade`, `ordem/indice`, `datas/dias`, `datas/feriados`, `id`, `texto` e `tests/util`. Nada de Texto Padrão, diálogo ou painel embutido nesta fase.
 - JS gerado só ASCII: esbuild `charset: "ascii"` + portão de bytes > 0x7f no `build.mjs`; o `estatico/gantt.css` também só ASCII.
 - DOM seguro: em TS só `h()`/`textContent`/`createElementNS`; proibido `innerHTML`, `outerHTML`, `insertAdjacentHTML`, atributos `on*` em string. Vale para a Frappe vendorizada: o pacote gerado não contém essas palavras.
@@ -113,7 +113,7 @@ Notas de uso para as próximas fases:
 ## Como rodar
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
 npx tsx tests/verificar.ts   # ultima linha: "N ok, 0 falha(s)"
 npx tsc --noEmit             # sem saida
 npx biome check src tests    # "No fixes applied." e sem erro
@@ -137,7 +137,7 @@ Provas acumuladas ao fim de cada tarefa: 1 → 14 · 2 → 50 · 3 → 93 · 4 �
 - [ ] **Step 1: Conferir a branch e as dependências do sei-comum**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && ls sei-comum/node_modules/linkedom/package.json sei-comum/node_modules/fractional-indexing/package.json
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && ls sei-comum/node_modules/linkedom/package.json sei-comum/node_modules/fractional-indexing/package.json
 ```
 
 Expected: `feat/projetos-ts` e os dois caminhos. Se algum faltar: `cd sei-comum && npm install`.
@@ -223,7 +223,7 @@ O Biome ignora o vendor (fonte de terceiros, formatado com outro estilo):
 - [ ] **Step 3: Instalar as devDependencies**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm install && npx tsc --version && npx biome --version
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm install && npx tsc --version && npx biome --version
 ```
 
 Expected: `added … packages`, `Version 5.9.x` e `Version: 2.x`. (`package-lock.json` e `node_modules/` são ignorados pelo `.gitignore` da raiz.)
@@ -360,7 +360,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/constantes' imported from …/projetos/tests/verificar-escopo.ts`.
@@ -738,7 +738,7 @@ console.log("  portoes: ASCII e DOM seguro ok");
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `14 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho (cerca de 1 KB) e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -746,7 +746,7 @@ Expected: a suíte termina com `14 ok, 0 falha(s)`; `tsc` sem saída; Biome com 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/package.json \
   projetos/tsconfig.json \
   projetos/biome.json \
@@ -870,7 +870,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/calendario' imported from …/projetos/tests/verificar-calendario.ts`.
@@ -1000,7 +1000,7 @@ export type * from "./modelo/tipos";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `50 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -1008,7 +1008,7 @@ Expected: a suíte termina com `50 ok, 0 falha(s)`; `tsc` sem saída; Biome com 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/calendario.ts \
   projetos/tests/verificar-calendario.ts \
   projetos/src/api.ts \
@@ -1178,7 +1178,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/alertas' imported from …/projetos/tests/verificar-situacao.ts`.
@@ -1411,7 +1411,7 @@ export type * from "./modelo/tipos";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `93 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -1419,7 +1419,7 @@ Expected: a suíte termina com `93 ok, 0 falha(s)`; `tsc` sem saída; Biome com 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/situacao.ts \
   projetos/src/modelo/progresso.ts \
   projetos/src/modelo/alertas.ts \
@@ -1584,7 +1584,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/dependencias' imported from …/projetos/tests/verificar-dependencias.ts`.
@@ -1810,7 +1810,7 @@ export type * from "./modelo/tipos";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `121 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -1818,7 +1818,7 @@ Expected: a suíte termina com `121 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/dependencias.ts \
   projetos/src/modelo/linhaDeBase.ts \
   projetos/tests/verificar-dependencias.ts \
@@ -2106,7 +2106,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/historico' imported from …/projetos/tests/verificar-operacoes.ts`.
@@ -2564,7 +2564,7 @@ export * from "./modelo/validacao";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `174 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -2572,7 +2572,7 @@ Expected: a suíte termina com `174 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/validacao.ts \
   projetos/src/modelo/operacoes.ts \
   projetos/src/modelo/historico.ts \
@@ -2681,7 +2681,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/filtro' imported from …/projetos/tests/verificar-filtro.ts`.
@@ -2823,7 +2823,7 @@ export * from "./modelo/validacao";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `188 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -2831,7 +2831,7 @@ Expected: a suíte termina com `188 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/filtro.ts \
   projetos/tests/verificar-filtro.ts \
   projetos/src/api.ts \
@@ -3068,7 +3068,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/repositorio' imported from …/projetos/tests/apoioRepositorio.ts`.
@@ -3607,7 +3607,7 @@ export * from "./repositorio";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `229 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -3615,7 +3615,7 @@ Expected: a suíte termina com `229 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/repositorio.ts \
   projetos/tests/apoioRepositorio.ts \
   projetos/tests/verificar-repositorio.ts \
@@ -3841,7 +3841,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelo/vinculos' imported from …/projetos/tests/verificar-escopos.ts`.
@@ -4192,7 +4192,7 @@ export * from "./repositorio";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `261 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -4200,7 +4200,7 @@ Expected: a suíte termina com `261 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/vinculos.ts \
   projetos/src/repositorio.ts \
   projetos/tests/verificar-escopos.ts \
@@ -4370,7 +4370,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/modelos/aplicar' imported from …/projetos/tests/verificar-modelos.ts`.
@@ -4800,7 +4800,7 @@ export * from "./repositorio";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `290 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -4808,7 +4808,7 @@ Expected: a suíte termina com `290 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelos/embutidos.ts \
   projetos/src/modelos/aplicar.ts \
   projetos/src/modelos/salvar.ts \
@@ -4840,7 +4840,7 @@ EOF
 O pacote é dado de fora: vai para uma pasta própria e vazia, e nada dele roda.
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && rm -rf "$D" && mkdir -p "$D" \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && rm -rf "$D" && mkdir -p "$D" \
   && npm pack frappe-gantt@1.2.2 --pack-destination "$D" \
   && shasum -a 1 "$D/frappe-gantt-1.2.2.tgz" \
   && tar -xzf "$D/frappe-gantt-1.2.2.tgz" -C "$D" && ls "$D/package/src" "$D/package/dist"
@@ -5075,7 +5075,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/vendor/frappe-gantt/index' imported from …/projetos/tests/verificar-vendor.ts`.
@@ -5660,7 +5660,7 @@ console.log(`ok: ${trocas} trocas em ${ARQUIVOS.length} arquivos`);
 ````
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && mkdir -p src/vendor/frappe-gantt \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && mkdir -p src/vendor/frappe-gantt \
   && node "${TMPDIR:-/tmp}/seipro-ajustes/aplicar-ajustes-frappe.mjs" "$D/package/src" src/vendor/frappe-gantt \
   && ls src/vendor/frappe-gantt && grep -c "SEI Pro" src/vendor/frappe-gantt/*.js
 ```
@@ -5872,7 +5872,7 @@ console.log("  portoes: ASCII e DOM seguro ok");
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `320 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -5880,7 +5880,7 @@ Expected: a suíte termina com `320 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 9: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/vendor/frappe-gantt/index.js \
   projetos/src/vendor/frappe-gantt/bar.js \
   projetos/src/vendor/frappe-gantt/arrow.js \
@@ -6099,7 +6099,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/gantt/escalas' imported from …/projetos/tests/verificar-linhas.ts`.
@@ -6455,7 +6455,7 @@ export * from "./repositorio";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `344 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -6463,7 +6463,7 @@ Expected: a suíte termina com `344 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/gantt/escalas.ts \
   projetos/src/gantt/linhas.ts \
   projetos/src/gantt/tarefas.ts \
@@ -6723,7 +6723,7 @@ resumo();
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts
 ```
 
 Expected: FAIL — `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/gantt/montar' imported from …/projetos/tests/verificar-gantt.ts`.
@@ -7066,7 +7066,7 @@ export function montarGantt(area: HTMLElement, linhas: readonly Linha[], op: Opc
 - [ ] **Step 5: CSS do Gantt** (a parte da Frappe vem do `dist/frappe-gantt.css` do pacote baixado na Tarefa 10, formatada pelo esbuild; se a pasta `$D` sumiu, repita o Step 1 da Tarefa 10)
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && test -f "$D/package/dist/frappe-gantt.css" && mkdir -p estatico \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="${TMPDIR:-/tmp}/seipro-frappe-1.2.2" && test -f "$D/package/dist/frappe-gantt.css" && mkdir -p estatico \
   && { printf '%s\n' "/*" " * Frappe Gantt 1.2.2 (MIT, https://github.com/frappe/gantt): dist/frappe-gantt.css do pacote npm," " * formatado pelo esbuild. Ajustes do SEI Pro (tokens --spro-*, situacoes, marco, base) no fim." " */"; \
        npx esbuild "$D/package/dist/frappe-gantt.css" --loader:.css=css --log-level=error; } > estatico/gantt.css \
   && wc -l estatico/gantt.css
@@ -7075,7 +7075,7 @@ cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && D="$
 Expected: `342 estatico/gantt.css`. Depois acrescente as regras do SEI Pro (só tokens `--spro-*`, cores por situação da spec 3.4, fase fina, marco, linha de base, realce; escopo `.spro-gantt`, a classe que `montarGantt` põe na área):
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && cat >> estatico/gantt.css <<'EOF'
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && cat >> estatico/gantt.css <<'EOF'
 
 /* ---------- SEI Pro: Frappe nas cores e na fonte do SEI Pro (spec 3.4) ---------- */
 .spro-gantt .gantt-container {
@@ -7333,7 +7333,7 @@ export * from "./repositorio";
 Run:
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts | tail -2 && npx tsc --noEmit && npx biome check src tests && node build.mjs
 ```
 
 Expected: a suíte termina com `373 ok, 0 falha(s)`; `tsc` sem saída; Biome com `No fixes applied.` e sem erro; o build imprime `api (verificacao P2)` com o tamanho (cerca de 93 KB), `estatico/gantt.css` (12 KB) e `portoes: ASCII e DOM seguro ok`. Se o Biome acusar só formatação, rode `npx biome check --write src tests` e repita.
@@ -7341,7 +7341,7 @@ Expected: a suíte termina com `373 ok, 0 falha(s)`; `tsc` sem saída; Biome com
 - [ ] **Step 9: Conferir que nada fora de `projetos/` mudou e que o fuso não importa**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git status --short && node tools/check-dom-injection.mjs > /dev/null && echo dom-ok \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git status --short && node tools/check-dom-injection.mjs > /dev/null && echo dom-ok \
   && cd projetos && TZ=UTC npx tsx tests/verificar.ts | tail -2 && TZ=Asia/Tokyo npx tsx tests/verificar.ts | tail -2
 ```
 
@@ -7350,7 +7350,7 @@ Expected: `git status` só com os arquivos desta tarefa em `projetos/` (e, se ai
 - [ ] **Step 10: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/gantt/decorar.ts \
   projetos/src/gantt/montar.ts \
   projetos/estatico/gantt.css \

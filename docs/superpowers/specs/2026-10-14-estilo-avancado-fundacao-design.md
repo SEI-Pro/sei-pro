@@ -133,7 +133,7 @@ Cobre o suficiente para a cor da barra e o escuro serem demonstráveis no SEI re
 - **Diálogos** (`.ui-dialog`, `.modal-content`): superfície `--spro-fundo`, sombra `--spro-sombra-3`.
 - **Barras de rolagem**: `scrollbar-color` por `--spro-borda-forte`.
 
-Seletores são levantados no SEI 4.1.5 e no 5.0.4 (fontes locais em `/Users/phs/Documents/Git/ANTAQ/SEI`, ler com `grep -a`). A folha vive em `estilo-avancado/estatico/base.css` e entra no bundle como texto (`loader: text`).
+Seletores são levantados no SEI 4.1.5 e no 5.0.4 (fontes locais em `/Users/phs/Develop/Git/ANTAQ/SEI`, ler com `grep -a`). A folha vive em `estilo-avancado/estatico/base.css` e entra no bundle como texto (`loader: text`).
 
 ## 7. Estrutura de arquivos
 

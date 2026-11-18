@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-16-acoes-lote-ts-design.md`. Leia-o inteiro antes de qualquer tarefa.
 
-**Worktree:** `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-acoes-lote`, branch `feat/acoes-lote-ts`. Nunca `git add -A`: adicione só os arquivos da tarefa. Rode `npm install` dentro de `acoes-lote/` na Tarefa 1.
+**Worktree:** `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-acoes-lote`, branch `feat/acoes-lote-ts`. Nunca `git add -A`: adicione só os arquivos da tarefa. Rode `npm install` dentro de `acoes-lote/` na Tarefa 1.
 
 **Modelo por tarefa:** as Tarefas 4 e 5 (extensões do `sei-nucleo` com formulários do SEI sem molde no código) vão para o Opus. As demais vão para o Sonnet. A Tarefa 13 (SEI real) fica com o coordenador.
 
@@ -206,7 +206,7 @@ Regras de `planejar`:
 - Create: `sei-nucleo/src/dominio/moverDocumento.ts`, `sei-nucleo/src/dominio/pdfProcesso.ts`, `sei-nucleo/tests/verificar-acoes-lote.ts`
 - Fixtures:
   - usar `sei41/p_procedimento_gerar_pdf.html`;
-  - criar `sei41/documento_mover.html` a partir do HTML de `documento_mover.php` do SEI 5 (`/Users/phs/Documents/Git/ANTAQ/SEI/5.0.0/v5.0.0/sei/web/documento_mover.php`, lido com `iconv -f latin1`), marcada como sintética no `LEIAME`;
+  - criar `sei41/documento_mover.html` a partir do HTML de `documento_mover.php` do SEI 5 (`/Users/phs/Develop/Git/ANTAQ/SEI/5.0.0/v5.0.0/sei/web/documento_mover.php`, lido com `iconv -f latin1`), marcada como sintética no `LEIAME`;
   - na Tarefa 13, substituir pelas capturas reais do SP e do MJ.
 
 **Interfaces:**

@@ -149,7 +149,7 @@ do MV2. A Task 13 parte do master com esse branch mesclado (ou mescla antes de c
 - [ ] **Step 1: Branch e base**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
 git switch -c fix/dom-seguro-plano-3
 git update-ref refs/dom-seguro/base-plano3 HEAD
 export SPRO_REF_BASE=refs/dom-seguro/base-plano3

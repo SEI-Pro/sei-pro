@@ -17,7 +17,7 @@
 ## Global Constraints
 
 - Idioma: código, nomes, comentários, textos de interface e mensagens em português do Brasil; título de commit sem acento (ex.: `Projetos: ...`, `Comum: ...`, `Agente: ...`), terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Git: trabalhar só na worktree `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
+- Git: trabalhar só na worktree `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
 - `dist/js` gerado: só ASCII (esbuild `charset: "ascii"` + portão de bytes > 0x7f no `build.mjs`). JS legado editado à mão (`dist/background.js`): sem acento, conferido por bytes (`LC_ALL=C grep -c $'[\x80-\xff]'`; o grep BSD comum não detecta byte cru; as ferramentas Write/Edit convertem `\uXXXX` em caractere cru — conferir depois de editar). Nos fontes TS deste plano não há nenhuma sequência `\u` em regex.
 - DOM seguro: em TS só `h()`/`textContent`/`createElement(NS)`; proibido `innerHTML`, `outerHTML` (escrita), `insertAdjacentHTML`, atributos `on*` em string; nada de HTML vindo de dados (nome de projeto, etapa, responsável, observação, checklist, título de documento, especificação).
 - Sessão do SEI: nunca montar URL do SEI; abrir processo/documento só por links da própria página ou pela pesquisa rápida; ir ao Controle de Processos só pelo link do MENU da tela (`linkDoMenu`); **nunca buscar a árvore de um processo** (marca "Processo recebido" em nome do usuário): na tela do processo, só `lerArvore` sobre a página que o frame já tem.
@@ -146,7 +146,7 @@ docs/superpowers/specs/2026-10-06-projetos-pagina-ajuda.md   rascunho da ajuda
 ## Como rodar
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
 npx tsx tests/verificar.ts   # ultima linha: "N ok, 0 falha(s)"
 npm run tipos                # os dois tsc, sem saida
 npx biome check src tests    # sem erro
@@ -300,7 +300,7 @@ await verificarSincroniaRepo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `  FALHA a etapa sigilosa sem numero nao aparece no processo do projeto -- ["comum","sig"]` e `TypeError: repo.concluirSeAberta is not a function` (o índice ainda põe a etapa sigilosa no processo do projeto; o repositório não tem o método)
 
@@ -419,21 +419,21 @@ por:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1320 ok, 0 falha(s)` (+12).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
 ```
 Expected: sem saída do `tsc`; Biome sem erro.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/vinculos.ts \
   projetos/src/repositorio.ts \
   projetos/tests/verificar-integracao-modelo.ts \
@@ -555,7 +555,7 @@ por:
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"); (cd agente-ia && npx tsx tests/verificar.ts 2>&1 | grep -m1 FALHA)
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"); (cd agente-ia && npx tsx tests/verificar.ts 2>&1 | grep -m1 FALHA)
 ```
 Expected: no favoritos, `  FALHA ordem Favoritos | Historico | Projetos | Agente -- ["Favoritos","Histórico","Agente de IA"]`, `  FALHA abre na aba pedida pelo background` e `  FALHA iframe do app dos projetos em modo lateral -- chrome-extension://x/html/favoritos.html#modo=lateral`; no agente-ia, `  FALHA abrirPainel na aba Projetos (caixa, arvore)` (o background ainda manda "projetos" para os Favoritos)
 
@@ -730,21 +730,21 @@ por:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsx tests/verificar.ts 2>&1 | tail -2) && (cd agente-ia && npx tsx tests/verificar.ts 2>&1 | tail -2)
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsx tests/verificar.ts 2>&1 | tail -2) && (cd agente-ia && npx tsx tests/verificar.ts 2>&1 | tail -2)
 ```
 Expected: `585 ok, 0 falha(s)` (favoritos, +7) e `1056 ok, 0 falha(s)` (agente-ia, +2).
 
 - [ ] **Step 5: Portões e o bundle do shell**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsc --noEmit && npx biome check src tests && node build.mjs | tail -2) && LC_ALL=C grep -c $'[\x80-\xff]' dist/background.js dist/js/favoritos/painel.js; git status --short dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd favoritos && npx tsc --noEmit && npx biome check src tests && node build.mjs | tail -2) && LC_ALL=C grep -c $'[\x80-\xff]' dist/background.js dist/js/favoritos/painel.js; git status --short dist
 ```
 Expected: `tsc` sem saída; Biome sem erro (1 aviso antigo do pacote); `dist/background.js:0` e `dist/js/favoritos/painel.js:0`; no `dist` mudam só `background.js` e `js/favoritos/painel.js` (o app e o content script dos Favoritos não mudam).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   favoritos/src/shell/painel.ts \
   favoritos/src/shell/main.ts \
   favoritos/tests/verificar-shell.ts \
@@ -1014,7 +1014,7 @@ await verificarGantt();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/lateral/agenda' imported from …/projetos/tests/verificar-lateral-modelo.ts`
 
@@ -1256,21 +1256,21 @@ export function miniGantt(linhas: readonly Linha[], hoje: DataISO): MiniGantt {
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1362 ok, 0 falha(s)` (+42).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
 ```
 Expected: sem saída do `tsc`; Biome sem erro.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/modelo/prazo.ts \
   projetos/src/app/lateral/agenda.ts \
   projetos/src/gantt/miniGantt.ts \
@@ -1582,7 +1582,7 @@ await verificarAppColaboracao();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `  FALHA topo: Agenda | Projetos (Agenda primeiro), a unidade, Novo projeto e o menu`, `  FALHA sem abas nem Gantt no lateral` e `  FALHA menu do lateral: so o que serve no estreito -- ["Mostrar lista de etapas",…]` (sem o modo lateral, o app desenha as abas do painel)
 
@@ -2561,21 +2561,21 @@ html[data-modo="lateral"] #app {
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1394 ok, 0 falha(s)` (+32; a prova estática do P3 confere que toda classe `prj-lat-*`/`prj-mg-*` nova tem regra no CSS).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
 ```
 Expected: sem saída do `tsc`; Biome sem erro.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/componentes/lateral.ts \
   projetos/src/app/icones.ts \
   projetos/src/app/app.ts \
@@ -2807,7 +2807,7 @@ await verificarAppColaboracao();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/lateral/montagem' imported from …/projetos/tests/verificar-app-lateral-ponte.ts`
 
@@ -3268,21 +3268,21 @@ Acrescente ao fim de `projetos/estatico/projetos.css`:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1414 ok, 0 falha(s)` (+20).
 
 - [ ] **Step 5: Portões e o app empacotado**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -2 && cd .. && git checkout -- dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -2 && cd .. && git checkout -- dist
 ```
 Expected: sem saída do `tsc`; Biome sem erro; o build passa nos portões (o `main.ts` do app só é empacotado, não provado); os bundles voltam (são gerados de novo e comitados na Tarefa 11).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/ponte/tipos.ts \
   projetos/src/app/lateral/montagem.ts \
   projetos/src/app/main.ts \
@@ -3609,7 +3609,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/pagina/foco' imported from …/projetos/tests/pagina/verificar-pagina-integracao.ts` (depois de todas as outras suítes passarem: as do content script são as últimas do agregador)
 
@@ -4252,21 +4252,21 @@ function ligarSincronia(
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1439 ok, 0 falha(s)` (+25; as provas do P3 do content script, inclusive "nada lê a árvore" e a marca antes de tudo, continuam verdes).
 
 - [ ] **Step 5: Portões e o content script empacotado**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && cd .. && git checkout -- dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && cd .. && git checkout -- dist
 ```
 Expected: sem saída do `tsc` (o `tsconfig.pagina.json` confere `src/pagina` e `tests/pagina`); Biome sem erro; `portoes: ASCII, DOM seguro e content script sem arvore/atribuicao ok` (o `linkDoMenu` e o `procedimento_controlar` não são endereços proibidos); os bundles voltam (Tarefa 11).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/pagina/tela.ts \
   projetos/src/pagina/foco.ts \
   projetos/src/pagina/lateral.ts \
@@ -4619,7 +4619,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/pagina/balao' imported from …/projetos/tests/pagina/verificar-caixa.ts`
 
@@ -5624,21 +5624,21 @@ function abrirLateral(ctx: ContextoProjetos, area: Area, id: string, etapa?: str
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1476 ok, 0 falha(s)` (+37).
 
 - [ ] **Step 5: Portões e o content script empacotado**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && cd .. && git checkout -- dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && cd .. && git checkout -- dist
 ```
 Expected: sem saída do `tsc`; Biome sem erro; os portões do build passam (o `base.css` entra como texto, só ASCII depois do `charset: "ascii"`); os bundles voltam (Tarefa 11).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/pagina/tipos.d.ts \
   projetos/src/pagina/estilo.ts \
   projetos/src/pagina/balao.ts \
@@ -6014,7 +6014,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m2 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m2 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `  FALHA da arvore, so o lerArvore sobre a propria pagina do frame (pagina/arvore.ts), sem buscar nem acao -- []` e `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/pagina/arvore' imported from …/projetos/tests/pagina/verificar-arvore.ts`
 
@@ -6375,21 +6375,21 @@ console.log("  portoes: ASCII, DOM seguro e content script sem busca de arvore/a
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1499 ok, 0 falha(s)` (+23).
 
 - [ ] **Step 5: Portões e o content script empacotado (sem endereço da árvore)**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && grep -c "procedimento_visualizar\|arvore_montar" ../dist/js/init_projetos.js; cd .. && git checkout -- dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests && node build.mjs | tail -1 && grep -c "procedimento_visualizar\|arvore_montar" ../dist/js/init_projetos.js; cd .. && git checkout -- dist
 ```
 Expected: sem saída do `tsc`; Biome sem erro; `portoes: ASCII, DOM seguro e content script sem busca de arvore/atribuicao ok`; `0` (o `abrirArvore` do núcleo, que tem esses endereços, sai do pacote pelo tree-shaking); os bundles voltam (Tarefa 11).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/pagina/arvore.ts \
   projetos/src/pagina/main.ts \
   projetos/build.mjs \
@@ -6633,7 +6633,7 @@ por:
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsx tests/verificar.ts 2>&1 | grep -m1 -E "^(Error|TypeError|SyntaxError)|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/agente-ia/src/tools/projetos' imported from …/agente-ia/tests/verificar-projetos-tool.ts`
 
@@ -6874,21 +6874,21 @@ por:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsx tests/verificar.ts 2>&1 | tail -2
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsx tests/verificar.ts 2>&1 | tail -2
 ```
 Expected: `1075 ok, 0 falha(s)` (+19).
 
 - [ ] **Step 5: Portões e o pacote do agente**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsc --noEmit && node build.mjs | tail -1 && grep -c "projetos_listar" ../dist/js/agente/painel.js; cd .. && git checkout -- dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/agente-ia" && npx tsc --noEmit && node build.mjs | tail -1 && grep -c "projetos_listar" ../dist/js/agente/painel.js; cd .. && git checkout -- dist
 ```
 Expected: `tsc` sem saída (o código do projetos compila também com o tsconfig do agente); o build termina; `1` (a ferramenta no pacote); os bundles voltam (Tarefa 11).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   agente-ia/src/tools/projetos.ts \
   agente-ia/src/tools/sei.ts \
   agente-ia/src/painel/sugestoes.ts \
@@ -7048,7 +7048,7 @@ por:
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd sei-comum && npx tsx tests/verificar.ts 2>&1 | grep -m2 FALHA); (cd projetos && npx tsx tests/verificar.ts 2>&1 | grep -m3 FALHA)
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd sei-comum && npx tsx tests/verificar.ts 2>&1 | grep -m2 FALHA); (cd projetos && npx tsx tests/verificar.ts 2>&1 | grep -m3 FALHA)
 ```
 Expected: no sei-comum, `  FALHA marcavel: menuitemcheckbox com aria-checked; o check so no marcado` e `  FALHA item comum continua menuitem, sem aria-checked`; no projetos, `  FALHA a11y: no tablist so abas (o 'Mais N' fica fora dele, ao lado)`, `  FALHA a11y: o leitor de tela ouve o escopo, o atraso e o percentual da aba -- [null,null,null,null]` e `  FALHA marcaveis com o estado atual`
 
@@ -7252,21 +7252,21 @@ por:
 - [ ] **Step 4: Rodar as provas (o comum é de todos)**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum projetos favoritos historico; do (cd $p && npx tsx tests/verificar.ts 2>&1 | grep -E "ok, [0-9]+ falha"); done
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum projetos favoritos historico; do (cd $p && npx tsx tests/verificar.ts 2>&1 | grep -E "ok, [0-9]+ falha"); done
 ```
 Expected: `454 ok, 0 falha(s)` (sei-comum, +3), `1501 ok, 0 falha(s)` (projetos, +2), `585 ok, 0 falha(s)` (favoritos, igual), `485 ok, 0 falha(s)` (historico, igual).
 
 - [ ] **Step 5: Portões e os bundles que levam o menu**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd sei-comum && npx tsc --noEmit && npx biome check src tests) && (cd projetos && npm run tipos && npx biome check src tests) && (cd favoritos && node build.mjs | tail -1) && (cd historico && node build.mjs | tail -1) && LC_ALL=C grep -c $'[\x80-\xff]' dist/js/favoritos/app.js dist/js/historico/app.js; git status --short dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd sei-comum && npx tsc --noEmit && npx biome check src tests) && (cd projetos && npm run tipos && npx biome check src tests) && (cd favoritos && node build.mjs | tail -1) && (cd historico && node build.mjs | tail -1) && LC_ALL=C grep -c $'[\x80-\xff]' dist/js/favoritos/app.js dist/js/historico/app.js; git status --short dist
 ```
 Expected: `tsc` sem saída; Biome sem erro (8 avisos antigos no sei-comum); `:0` nos dois bundles; mudam só `dist/js/favoritos/app.js` e `dist/js/historico/app.js`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   sei-comum/src/ui/menu.ts \
   sei-comum/tests/verificar-menu.ts \
   projetos/src/app/componentes/menuAjustes.ts \
@@ -7301,21 +7301,21 @@ Expected: `feat/projetos-ts` e o commit criado.
 - [ ] **Step 1: Gerar os pacotes**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd projetos && node build.mjs) && (cd favoritos && node build.mjs | tail -1) && (cd historico && node build.mjs | tail -1) && (cd agente-ia && node build.mjs | tail -1) && git status --short dist
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd projetos && node build.mjs) && (cd favoritos && node build.mjs | tail -1) && (cd historico && node build.mjs | tail -1) && (cd agente-ia && node build.mjs | tail -1) && git status --short dist
 ```
 Expected: o build do projetos lista `js/init_projetos.js` (~160 KB), `js/projetos/app.js` (~260 KB), `html/projetos.html`, `css/projetos.css` e termina com `portoes: ASCII, DOM seguro e content script sem busca de arvore/atribuicao ok`, sem linha `ERRO:`; mudam `dist/css/projetos.css`, `dist/js/init_projetos.js`, `dist/js/projetos/app.js` e `dist/js/agente/painel.js` (favoritos e histórico já foram gerados nas Tarefas 2 e 10 e não mudam de novo).
 
 - [ ] **Step 2: Portões de toda a extensão**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && diff tools/check-dom-injection.mjs "../sei-pro/tools/check-dom-injection.mjs" && grep -c "dist/js/init_projetos.js\|dist/js/projetos/app.js" tools/check-dom-injection.mjs && node tools/check-dom-injection.mjs | tail -1 && node tools/patch-manifests.mjs --check | grep "manifest(s)" && LC_ALL=C grep -c $'[\x80-\xff]' dist/js/init_projetos.js dist/js/projetos/app.js dist/css/projetos.css dist/js/agente/painel.js dist/background.js
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && diff tools/check-dom-injection.mjs "../sei-pro/tools/check-dom-injection.mjs" && grep -c "dist/js/init_projetos.js\|dist/js/projetos/app.js" tools/check-dom-injection.mjs && node tools/check-dom-injection.mjs | tail -1 && node tools/patch-manifests.mjs --check | grep "manifest(s)" && LC_ALL=C grep -c $'[\x80-\xff]' dist/js/init_projetos.js dist/js/projetos/app.js dist/css/projetos.css dist/js/agente/painel.js dist/background.js
 ```
 Expected: o `diff` sem saída (a cópia da worktree e a do clone principal iguais); `2`; `check-dom-injection: 0 erro(s), 0 aviso(s)`; `0 manifest(s) precisam de ajuste, 1 ja em dia`; `:0` em todos os arquivos.
 
 - [ ] **Step 3: Todas as suítes e os tipos**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum sei-nucleo favoritos historico agente-ia projetos; do echo "$p: $(cd $p && npx tsx tests/verificar.ts 2>&1 | grep -E "ok, [0-9]+ falha")"; done && for p in sei-comum sei-nucleo favoritos historico agente-ia; do (cd $p && npx tsc --noEmit); done && (cd projetos && npm run tipos | grep -v "^>" | grep -v "^$")
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum sei-nucleo favoritos historico agente-ia projetos; do echo "$p: $(cd $p && npx tsx tests/verificar.ts 2>&1 | grep -E "ok, [0-9]+ falha")"; done && for p in sei-comum sei-nucleo favoritos historico agente-ia; do (cd $p && npx tsc --noEmit); done && (cd projetos && npm run tipos | grep -v "^>" | grep -v "^$")
 ```
 Expected: `sei-comum: 454 ok, 0 falha(s)`, `sei-nucleo: 125 ok, 0 falha(s)`, `favoritos: 585 ok, 0 falha(s)`, `historico: 485 ok, 0 falha(s)`, `agente-ia: 1075 ok, 0 falha(s)`, `projetos: 1501 ok, 0 falha(s)`; nenhuma saída dos `tsc`.
 
@@ -7488,7 +7488,7 @@ A função vem **ligada** de fábrica, em [Configurações do SEI Pro](../pages/
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   dist/js/init_projetos.js \
   dist/js/projetos/app.js \
   dist/css/projetos.css \

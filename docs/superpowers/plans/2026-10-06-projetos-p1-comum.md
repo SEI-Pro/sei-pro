@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Idioma: código, nomes, comentários, textos de interface e mensagens em português do Brasil; título de commit sem acento (`Comum: ...`), terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Git: trabalhar só na worktree `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current` antes do primeiro commit; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
+- Git: trabalhar só na worktree `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current` antes do primeiro commit; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
 - `dist/js` gerado: só ASCII (esbuild `charset: "ascii"` + portão de bytes > 0x7f no `build.mjs`). **O portão grava o `dist/` antes de reprovar**: depois de todo `node build.mjs`, conferir que a saída termina na tabela "Favoritos -- build"/"Historico -- build" e não tem linha `ERRO:`.
 - Escapes `\uXXXX`: as ferramentas de edição e o heredoc do shell desta máquina convertem `\uXXXX` em caractere cru, e caractere cru dentro de **regex** passa direto pelo esbuild e reprova o portão ASCII. Nenhum código novo deste plano usa `\u` (o BOM sai por `charCodeAt(0) === 0xfeff`; nos testes, `String.fromCharCode(0xfeff)`). Arquivo que já tem `\uXXXX` (`favoritos/src/app/app.ts:1135`) só recebe `Edit` pontual, nunca `Write` do arquivo inteiro. Regex com faixa de acentos usa `normalizarTexto` de `@comum/texto`.
 - DOM seguro: em TS só `h()`/`textContent`/`createElementNS`/`style.setProperty`; proibido `innerHTML`, `outerHTML`, `insertAdjacentHTML`, atributos `on*` em string.
@@ -91,7 +91,7 @@
 - Tipos: `cd <pacote> && npx tsc --noEmit` (sem saída = ok). Lint/formato: `cd <pacote> && npx biome check src tests`.
 - Formatar só os arquivos novos de uma tarefa (nunca `--write` no pacote inteiro, que mexeria em avisos antigos): `npx biome format --write <arquivos>`.
 - Build: `cd favoritos && node build.mjs`, `cd historico && node build.mjs`.
-- Todos os comandos partem da raiz da worktree: `cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos"`.
+- Todos os comandos partem da raiz da worktree: `cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos"`.
 - Números de linha citados numa tarefa são os do arquivo **antes daquela tarefa** (as tarefas anteriores já aplicadas). Aplique cada troca pelo texto exato mostrado (o `Edit` casa o texto); dentro de uma mesma tarefa, uma troca anterior pode deslocar as linhas das seguintes.
 
 ---

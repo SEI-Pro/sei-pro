@@ -132,7 +132,7 @@ teste foi encaixado:
 - [ ] **Step 1: Copiar ferramentas e testes para o worktree e instalar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
 rsync -a --exclude node_modules --exclude 'perfil-chrome' ../sei-pro/tools/ tools/
 rsync -a --exclude node_modules --exclude 'perfil-chrome' ../sei-pro/tests/ tests/
 (cd tests && npm install --no-fund --no-audit && npm install --no-save puppeteer-core@24)
@@ -322,7 +322,7 @@ export async function conectarAtividades(p) {
 - [ ] **Step 7: Subir o daemon e conferir a extensão no SEI SP**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro"
 node tests/ao-vivo/daemon.mjs &    # em segundo plano; anotar o PID
 sleep 15 && cat tests/ao-vivo/.extensao-id
 ```
@@ -1012,7 +1012,7 @@ Aplicados a cópias dos cinco: `node --check` passa, a contagem de acentos não 
 - [ ] **Step 1: Instalar o `acorn` como dependência de desenvolvimento dos testes**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro/tests"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-dom-seguro/tests"
 npm install --save-dev --no-fund --no-audit acorn@8
 node -e "console.log(require('acorn/package.json').version)"
 ```
@@ -3380,7 +3380,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 arquivo, de outra frente (campo de descrição no Documentos em Lote). Antes de começar:
 
 ```bash
-git -C "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro" status --short dist/js/sei-pro-docs-lote.js
+git -C "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro" status --short dist/js/sei-pro-docs-lote.js
 git log --oneline master -3 -- dist/js/sei-pro-docs-lote.js
 ```
 Se a alteração ainda estiver pendente no clone principal, **parar e perguntar ao autor** — mexer

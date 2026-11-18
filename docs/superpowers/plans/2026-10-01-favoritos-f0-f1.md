@@ -165,14 +165,14 @@ legado (edição mínima)
 
 **Interfaces:**
 - Consumes: nada.
-- Produces: o diretório de trabalho de todas as tarefas seguintes, `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-favoritos` (chamado de `$W` daqui em diante).
+- Produces: o diretório de trabalho de todas as tarefas seguintes, `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-favoritos` (chamado de `$W` daqui em diante).
 
 Contexto: outra sessão usa o clone principal, que estava na branch `feat/mcp-e-rotinas` em 01/10/2026, e duas sessões no mesmo clone se atropelam. Por isso o trabalho vai numa worktree própria. Spec e plano estão **não rastreados** no clone principal e precisam ser copiados.
 
 - [ ] **Step 1: Criar a worktree a partir do master**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro"
 git fetch --all --prune
 git worktree add "../sei-pro-favoritos" -b feat/favoritos-ts master
 cd "../sei-pro-favoritos" && git branch --show-current
@@ -182,8 +182,8 @@ Expected: `feat/favoritos-ts`
 - [ ] **Step 2: Copiar spec, plano e ferramentas locais**
 
 ```bash
-W="/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-favoritos"
-P="/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro"
+W="/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-favoritos"
+P="/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro"
 mkdir -p "$W/docs/superpowers/specs" "$W/docs/superpowers/plans"
 cp "$P/docs/superpowers/specs/2026-10-01-favoritos-design.md" "$W/docs/superpowers/specs/"
 cp "$P/docs/superpowers/plans/2026-10-01-favoritos-f0-f1.md" "$W/docs/superpowers/plans/"

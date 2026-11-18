@@ -300,6 +300,7 @@
         'ghs-unlock.js',
         'checkbox.js',
         'page-break.js',
+        'folha-papel.js',
         'session-break.js',
         'cap-letter.js',
         'qr-code.js',

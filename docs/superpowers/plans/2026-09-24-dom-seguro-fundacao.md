@@ -1758,7 +1758,7 @@ Trocar **so o valor da versao**. Reserializar o JSON inteiro reindentaria os 12 
 produziria um diff ilegivel, escondendo a mudanca de verdade.
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro"
 for f in dist/manifest*.json; do
   perl -0pi -e 's/("version"\s*:\s*")[^"]*(")/${1}2.1.2${2}/' "$f"
 done

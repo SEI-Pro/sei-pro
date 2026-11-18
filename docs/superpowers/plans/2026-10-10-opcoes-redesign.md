@@ -47,7 +47,7 @@ Também cobertos: busca com acento/caixa/`Esc`, switch por teclado, `homepage_ur
 O working tree principal tem alterações de outra sessão (`_data/icones.yml`, `pages/FAVORITOS.md`...). Trabalhe em worktree e **nunca** use `git add -A`; sempre `git add <caminhos>`.
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro"
 git worktree add .claude/worktrees/opcoes-redesign -b feat/opcoes-redesign
 cd .claude/worktrees/opcoes-redesign
 (cd sei-comum && npm ci)

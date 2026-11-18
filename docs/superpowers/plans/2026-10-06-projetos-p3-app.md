@@ -15,7 +15,7 @@
 ## Global Constraints
 
 - Idioma: código, nomes, comentários, textos de interface e mensagens em português do Brasil; título de commit sem acento (ex.: `Projetos: ...`, `Comum: ...`), terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- Git: trabalhar só na worktree `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
+- Git: trabalhar só na worktree `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos` (branch `feat/projetos-ts`); conferir `git branch --show-current`; **nunca `git add -A`** (adicionar por caminho); sem push, merge, release.
 - `dist/js` gerado: só ASCII (esbuild `charset: "ascii"` + portão de bytes > 0x7f no `build.mjs`). JS legado editado à mão (`init.js`, `sei-pro-projetos.js`): sem acento (se precisar, `\uXXXX`), conferido por bytes (o grep BSD não detecta byte cru; as ferramentas Write/Edit convertem `\uXXXX` em caractere cru — conferir depois de editar). Nos fontes TS deste plano não há nenhuma sequência `\u` (BOM do CSV é `String.fromCharCode(0xfeff)`).
 - DOM seguro: em TS só `h()`/`textContent`/`createElementNS`; proibido `innerHTML`, `outerHTML` (escrita), `insertAdjacentHTML`, atributos `on*` em string; no legado, nada de HTML novo vindo de dados.
 - Sessão do SEI: nunca montar URL do SEI; abrir processo/documento só por links da própria página ou pela pesquisa rápida; **nunca carregar a árvore de processo em segundo plano** (marca "recebido") — a única leitura de árvore deste plano (lista completa de usuários) usa um processo da caixa já visualizado e não sigiloso (Decisão 4).
@@ -114,7 +114,7 @@ tools/check-dom-injection.mjs (gitignored: mod local, nos dois clones)
 ## Como rodar
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos"
 npx tsx tests/verificar.ts   # ultima linha: "N ok, 0 falha(s)"
 npx tsc --noEmit             # sem saida (a partir da Tarefa 12: npm run tipos)
 npx biome check src tests    # sem erro
@@ -137,7 +137,7 @@ Provas acumuladas do projetos ao fim de cada tarefa (ensaio; base 393 = fim do P
 - [ ] **Step 1: Conferir a branch e o ponto de partida**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && (cd sei-comum && npx tsx tests/verificar.ts 2>&1 | tail -2) && (cd projetos && npx tsx tests/verificar.ts 2>&1 | tail -2)
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && (cd sei-comum && npx tsx tests/verificar.ts 2>&1 | tail -2) && (cd projetos && npx tsx tests/verificar.ts 2>&1 | tail -2)
 ```
 Expected: `feat/projetos-ts`, `406 ok, 0 falha(s)` (sei-comum) e a contagem do fim do P2 no projetos (393 no ensaio).
 
@@ -309,7 +309,7 @@ resumo();
 - [ ] **Step 3: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/sei-comum" && npx tsx tests/verificar.ts 2>&1 | grep -m1 Error
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/sei-comum" && npx tsx tests/verificar.ts 2>&1 | grep -m1 Error
 ```
 Expected: `SyntaxError: The requested module '../src/painel/aviso' does not provide an export named 'avisoComAcoesNaPagina'`.
 
@@ -689,21 +689,21 @@ por:
 - [ ] **Step 5: Rodar as provas do sei-comum e dos pacotes que o usam**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum favoritos historico; do (cd $p && echo "$p: $(npx tsx tests/verificar.ts 2>&1 | tail -2 | head -1)" && npx tsc --noEmit); done
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && for p in sei-comum favoritos historico; do (cd $p && echo "$p: $(npx tsx tests/verificar.ts 2>&1 | tail -2 | head -1)" && npx tsc --noEmit); done
 ```
 Expected: `sei-comum: 419 ok, 0 falha(s)` (+13), `favoritos: 578 ok, 0 falha(s)`, `historico: 485 ok, 0 falha(s)`; nenhum erro de `tsc`.
 
 - [ ] **Step 6: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/sei-comum" && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/sei-comum" && npx biome check src tests
 ```
 Expected: sem erro (os 8 avisos que já existiam continuam; nenhum nos arquivos desta tarefa).
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   sei-comum/src/ponte/conexaoDaAba.ts \
   sei-comum/src/painel/embutido.ts \
   sei-comum/src/painel/aviso.ts \
@@ -947,7 +947,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: o processo para com `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/dados'`.
 
@@ -1443,21 +1443,21 @@ por:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `420 ok, 0 falha(s)` (+27 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/ponte/tipos.ts \
   projetos/src/app/sincronia.ts \
   projetos/src/app/preferencias.ts \
@@ -1844,7 +1844,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/componentes/…'` (o primeiro componente que falta).
 
@@ -2219,21 +2219,21 @@ export function montarVazio(o: OpcoesVazio): HTMLElement {
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `441 ok, 0 falha(s)` (+21 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/icones.ts \
   projetos/src/app/componentes/abas.ts \
   projetos/src/app/componentes/menuAjustes.ts \
@@ -2482,7 +2482,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/componentes/cabecalho'`.
 
@@ -2850,21 +2850,21 @@ export function projetoNoFiltro(p: Pick<ProjetoNaTela, "projeto" | "etapas">, f:
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `463 ok, 0 falha(s)` (+22 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/componentes/camada.ts \
   projetos/src/app/componentes/cabecalho.ts \
   projetos/src/app/componentes/filtro.ts \
@@ -3169,7 +3169,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/componentes/tabelaEtapas'`.
 
@@ -3442,21 +3442,21 @@ export class VistaProjeto {
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `488 ok, 0 falha(s)` (+25 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/componentes/vistaProjeto.ts \
   projetos/src/app/componentes/tabelaEtapas.ts \
   projetos/tests/ganttFalso.ts \
@@ -3615,7 +3615,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/componentes/vistaTodos'`.
 
@@ -3790,21 +3790,21 @@ export function montarTabelaProjetos(itens: readonly ProjetoNaTela[], o: { aoAbr
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `501 ok, 0 falha(s)` (+13 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/componentes/vistaTodos.ts \
   projetos/tests/verificar-app-todos.ts \
   projetos/tests/verificar.ts
@@ -4017,7 +4017,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/componentes/balaoEtapa'`.
 
@@ -4230,21 +4230,21 @@ export function abrirBalaoEtapa(ancora: Element, d: DadosBalao, a: AcoesBalao, a
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `523 ok, 0 falha(s)` (+22 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/componentes/balaoEtapa.ts \
   projetos/tests/verificar-app-balao.ts \
   projetos/tests/verificar.ts
@@ -4573,7 +4573,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/dialogos/etapa'`.
 
@@ -5286,21 +5286,21 @@ export function abrirDialogoEtapa(c: ContextoDialogoEtapa): { fechar(): void } {
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `550 ok, 0 falha(s)` (+27 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/dialogos/campos.ts \
   projetos/src/app/dialogos/etapa.ts \
   projetos/tests/verificar-app-etapa.ts \
@@ -5596,7 +5596,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/dialogos/apoio'`.
 
@@ -5966,21 +5966,21 @@ export function pedirNomeDoModelo(c: { abrirModal: AbrirModal; sugestao: string;
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `576 ok, 0 falha(s)` (+26 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/dialogos/projeto.ts \
   projetos/src/app/dialogos/apoio.ts \
   projetos/tests/verificar-app-projeto.ts \
@@ -6194,7 +6194,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/impressao'`.
 
@@ -6416,21 +6416,21 @@ export async function montarImpressao(raiz: HTMLElement, p: ParametrosImpressao,
 - [ ] **Step 4: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `591 ok, 0 falha(s)` (+15 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/arquivo/csv.ts \
   projetos/src/app/impressao.ts \
   projetos/tests/verificar-app-csv.ts \
@@ -6867,7 +6867,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/app/app'`.
 
@@ -7682,21 +7682,21 @@ export class AppProjetos {
 - [ ] **Step 4: Rodar as provas (duas vezes: há esperas de 30 ms do redesenho)**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `628 ok, 0 falha(s)` (+37 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 5: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsc --noEmit && npx biome check src tests
 ```
 Expected: o `tsc` sem saída; o Biome termina com `No fixes applied.` e sem erro (rode `npx biome check --write src tests` se só a formatação reclamar).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/app.ts \
   projetos/tests/verificar-app.ts \
   projetos/tests/verificar.ts
@@ -8066,7 +8066,7 @@ resumo();
 - [ ] **Step 3: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/projetos/src/pagina/contexto'`.
 
@@ -8589,21 +8589,21 @@ function ligarAlertas(
 - [ ] **Step 5: Rodar as provas**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `659 ok, 0 falha(s)` (+31 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 - [ ] **Step 6: Portões (os dois tsconfig)**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
 ```
 Expected: os dois `tsc` (pacote e `tsconfig.pagina.json`) sem saída; Biome sem erro.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/tsconfig.json \
   projetos/tsconfig.pagina.json \
   projetos/package.json \
@@ -8766,7 +8766,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: o processo para com `Error: ENOENT: no such file or directory, open '…/projetos/estatico/projetos.html'`.
 
@@ -9948,12 +9948,12 @@ console.log("  portoes: ASCII e DOM seguro ok");
 - [ ] **Step 5: Rodar as provas e o build**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `665 ok, 0 falha(s)` (+6 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && node build.mjs
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && node build.mjs
 ```
 Expected (tamanhos do ensaio, podem variar alguns KB):
 ```
@@ -9968,19 +9968,19 @@ Projetos -- build
 - [ ] **Step 6: Portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npm run tipos && npx biome check src tests
 ```
 Expected: os dois `tsc` (pacote e `tsconfig.pagina.json`) sem saída; Biome sem erro.
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && LC_ALL=C grep -c '[^ -~	]' dist/js/init_projetos.js dist/js/projetos/app.js
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && LC_ALL=C grep -c '[^ -~	]' dist/js/init_projetos.js dist/js/projetos/app.js
 ```
 Expected: `0` nos dois (conferência por bytes, além do portão do build).
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   projetos/src/app/main.ts \
   projetos/estatico/projetos.html \
   projetos/estatico/projetos.css \
@@ -10140,7 +10140,7 @@ resumo();
 - [ ] **Step 2: Rodar e ver falhar**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | grep -m3 -E "Error|FALHA"
 ```
 Expected: quatro `FALHA` (content script novo, WAR, guarda do `init.js`, título do legado); as duas provas de ASCII passam.
 
@@ -10266,29 +10266,29 @@ por:
 ];
 ```
 
-Faça a mesma troca em `/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro/tools/check-dom-injection.mjs` (o clone principal; spec 4.3). Nenhuma mudança no `tools/patch-manifests.mjs`: os recursos do Projetos não precisam entrar em `RECURSOS_NOVOS` (como os do Favoritos e do Histórico, só o manifest Lab os declara).
+Faça a mesma troca em `/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro/tools/check-dom-injection.mjs` (o clone principal; spec 4.3). Nenhuma mudança no `tools/patch-manifests.mjs`: os recursos do Projetos não precisam entrar em `RECURSOS_NOVOS` (como os do Favoritos e do Histórico, só o manifest Lab os declara).
 
 - [ ] **Step 6: Rodar as provas e todos os portões**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos/projetos" && npx tsx tests/verificar.ts 2>&1 | tail -3
 ```
 Expected: `671 ok, 0 falha(s)` (+6 provas; base: 393 ao fim do P2 no ensaio — se o P2 fechou com outro número, some a diferença).
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && node tools/patch-manifests.mjs --check && node tools/check-dom-injection.mjs 2>/dev/null | tail -1 && LC_ALL=C grep -c '[^ -~	]' dist/js/init.js dist/js/sei-pro-projetos.js && node -e "for (const f of ['dist/js/init.js','dist/js/sei-pro-projetos.js']) new Function(require('fs').readFileSync(f,'utf8')); console.log('sintaxe ok')"
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && node tools/patch-manifests.mjs --check && node tools/check-dom-injection.mjs 2>/dev/null | tail -1 && LC_ALL=C grep -c '[^ -~	]' dist/js/init.js dist/js/sei-pro-projetos.js && node -e "for (const f of ['dist/js/init.js','dist/js/sei-pro-projetos.js']) new Function(require('fs').readFileSync(f,'utf8')); console.log('sintaxe ok')"
 ```
 Expected: `0 manifest(s) precisam de ajuste, 1 ja em dia`, `check-dom-injection: 0 erro(s), 0 aviso(s)`, `0` nos dois arquivos legados e `sintaxe ok`.
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd projetos && npm run tipos && npx biome check src tests && node build.mjs | tail -1) && for p in sei-comum sei-nucleo favoritos historico agente-ia; do (cd $p && echo "$p: $(npx tsx tests/verificar.ts 2>&1 | tail -2 | head -1)"); done
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && (cd projetos && npm run tipos && npx biome check src tests && node build.mjs | tail -1) && for p in sei-comum sei-nucleo favoritos historico agente-ia; do (cd $p && echo "$p: $(npx tsx tests/verificar.ts 2>&1 | tail -2 | head -1)"); done
 ```
 Expected: `portoes: ASCII e DOM seguro ok`; sei-comum 419, sei-nucleo 110, favoritos 578, historico 485, agente-ia 1054 (todos `0 falha(s)`).
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd "/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
+cd "/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro-projetos" && git branch --show-current && git add \
   dist/manifest.json \
   dist/js/init.js \
   dist/js/sei-pro-projetos.js \

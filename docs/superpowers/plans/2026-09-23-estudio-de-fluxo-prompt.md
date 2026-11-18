@@ -1,7 +1,7 @@
 # Prompt para a sessão que vai implementar o Estúdio de Fluxo
 
 Copie o bloco abaixo inteiro como primeira mensagem de uma sessão nova do Claude Code, aberta em
-`/Users/phs/Documents/Git/Lab2Code/SEI Pro/sei-pro`.
+`/Users/phs/Develop/Git/Lab2Code/SEI Pro/sei-pro`.
 
 ---
 
