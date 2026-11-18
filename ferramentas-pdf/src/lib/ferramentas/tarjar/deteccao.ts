@@ -296,6 +296,20 @@ const SEPARADOR_FORTE = /[%,;:|]/;
 const QUANTIDADES_VIZINHAS = /\d\.\d{3}\s+\d|\d\s+\d{1,3}\.\d{3}(?![\d-])/;
 
 /**
+ * Número decimal com ponto (coordenada UTM, medida: "7470277.6260",
+ * "692182.0730"). Nenhum número de documento tem seis ou mais dígitos antes de
+ * um ponto (CPF 3.3.3, CNPJ 2.3.3, RG, PIS, título e cartão em grupos curtos,
+ * processo SEI 5.6, telefone 4.4 ou 2.4.4), então dígito que pertence a um
+ * decimal assim não entra em detecção nenhuma. Sem isto, a projeção compacta
+ * (que descarta o ponto) lia "692182.0730" como DDD 69 + 2182-0730 e tirava
+ * telefone ou título de "VT-333 7470277.6260" (relato da 3.9.2).
+ *
+ * Custo aceito: telefone com o DDD colado e ponto ("613411.4000") deixa de ser
+ * achado — escrita rara, e indistinguível, dígito a dígito, da coordenada.
+ */
+const DECIMAL_COM_PONTO = /\d{6,}\.\d+/g;
+
+/**
  * O mínimo de que os detectores precisam: o texto, a projeção só com letras e
  * dígitos e o caminho de volta. `TextoPagina` (PDF) satisfaz isto, e
  * `baseDeTexto` monta o mesmo para texto puro (o agente de IA do SEI Pro usa
@@ -482,6 +496,7 @@ export function detectarIntervalos<E extends object>(
 ): Array<Omit<Deteccao, "pagina" | "caixas"> & E> {
   const ativos = new Set(opcoes.tipos ?? TIPOS_PADRAO);
   const achados: Array<Omit<Deteccao, "pagina" | "caixas"> & E> = [];
+  const decimais = [...tp.texto.matchAll(DECIMAL_COM_PONTO)].map((m) => ({ inicio: m.index ?? 0, fim: (m.index ?? 0) + m[0].length }));
 
   const registrar = (
     tipo: TipoDado,
@@ -535,6 +550,7 @@ export function detectarIntervalos<E extends object>(
             // Não é vazamento, é acabamento — mas acabamento é o que faz o
             // usuário confiar no que está vendo.
             if (tp.texto[intervalo.inicio - 1] === "(") intervalo.inicio -= 1;
+            if (decimais.some((d) => sobrepoe(d, intervalo.inicio, intervalo.fim))) continue;
             if (det.exigeContexto && !det.exigeContexto(tp.texto, intervalo.inicio, intervalo.fim)) {
               continue;
             }

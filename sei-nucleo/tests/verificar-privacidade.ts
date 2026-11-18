@@ -33,6 +33,13 @@ export async function verificarPrivacidade(): Promise<void> {
     const fones = n.anonimizar("Fones (51) 99000-2850, 61 3411 4000 e +55 61 9 9876-5432.");
     checar("telefones de verdade continuam mascarados", !/99000|3411|9876/.test(fones) && (fones.match(/\[TELEFONE_\d+\]/g) ?? []).length === 3, fones);
   }
+  {
+    // Relato da 3.9.2: quadro de coordenadas das estações georreferenciadas.
+    const n = new Pseudonimos();
+    const quadro = "Estação Norte Este Cota\nVT-332 7470118.8000 691715.6230 2.341\nVT-333 7470277.6260 692182.0730 2.892\nVT-334 7470332.8430 692203.3890 1.635\nEste\n691715.6230\n692182.0730\n692203.3890";
+    const tq = n.anonimizar(quadro);
+    checar("quadro de coordenadas intacto", tq === quadro, tq);
+  }
 
   secao("privacidade: rotulos de contexto");
   const q = new Pseudonimos();

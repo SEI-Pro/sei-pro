@@ -377,12 +377,19 @@ async function main() {
     checar("CNPJ", achar("empresa CNPJ 11.222.333/0001-81 sediada").join() === "cnpj:11.222.333/0001-81");
     checar("e-mail institucional NÃO é ignorado", achar("protocolo@antaq.gov.br").join() === "email:protocolo@antaq.gov.br");
     checar("telefone com DDD entre parênteses", achar("fone (61) 99887-6655 recado").join() === "telefone:(61) 99887-6655");
-    checar("linha de tabela com percentual e milhares não vira telefone", achar("Março 9,5% 19.000 28.500").length === 0, achar("Março 9,5% 19.000 28.500"));
-    checar("quantidades vizinhas não viram telefone", achar("Total 11.350 32.000").length === 0, achar("Total 11.350 32.000"));
+    checar("linha de tabela com percentual e milhares não vira telefone", achar("Março 9,5% 19.000 28.500").length === 0, achar("Março 9,5% 19.000 28.500").join());
+    checar("quantidades vizinhas não viram telefone", achar("Total 11.350 32.000").length === 0, achar("Total 11.350 32.000").join());
+    // Relato da 3.9.2 (quadro de coordenadas UTM): decimal com ponto virava telefone (DDD 69 + 2182.0730) e o
+    // código da estação colado na coordenada virava telefone ou título ("VT-333 7470277.6260").
+    for (const c of ["692182.0730", "692203.3890", "VT-332 7470118.8000", "VT-3337470277.6260", "VT-334 7470332.8430 692203.3890 1.635"]) {
+      checar(`coordenada decimal não é dado pessoal: ${c}`, achar(c).length === 0, achar(c).join());
+    }
+    checar("telefone com ponto no sufixo continua achado", achar("fone (61) 3411.4000 ramal").filter((x) => x.startsWith("telefone:")).length === 1, achar("fone (61) 3411.4000 ramal").join());
+    checar("telefone ao lado de uma coordenada continua achado", achar("692182.0730 fone 61 3411-4000").filter((x) => x.startsWith("telefone:")).length === 1, achar("692182.0730 fone 61 3411-4000").join());
     checar(
       "telefones em lista separados por vírgula são todos achados",
       achar("fones (51) 99000-2850, 61 3411 4000 recado").filter((x) => x.startsWith("telefone:")).length === 2,
-      achar("fones (51) 99000-2850, 61 3411 4000 recado"),
+      achar("fones (51) 99000-2850, 61 3411 4000 recado").join(),
     );
     checar("linha digitável de boleto não vira nada", achar("23793381286000782177370000063305895670000215000").length === 0);
     checar("CEP sem hífen nem rótulo é ignorado", achar("valor 70070600 reais").length === 0);
