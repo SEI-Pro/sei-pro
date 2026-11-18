@@ -106,6 +106,8 @@ export async function verificarImagemTool(): Promise<void> {
     const c = cenario({ enxerga: false });
     const r = await c.rodar({ documento: "2991250", figura: "p3-1" });
     checar("modelo sem visao: recado, sem cartao", /não enxerga imagem/.test(r.erro?.message ?? "") && c.cartoes.length === 0, r);
+    // Teste de campo (18/11): sem esta ordem o modelo delegava ao auxiliar (também cego) e perguntava "deseja que eu visualize?".
+    checar("modelo sem visao: manda nao delegar nem perguntar e responder sem a figura", /não delegue/i.test(r.erro?.message ?? "") && /nem pergunte/i.test(r.erro?.message ?? "") && /figura não foi considerada/i.test(r.erro?.message ?? ""), r.erro?.message);
   }
   {
     const c = cenario({ respostas: ["nao"] });

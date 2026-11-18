@@ -54,7 +54,8 @@ export const TOOL_VER_IMAGEM = definirTool({
     if (restrito && !(await ctx.consentirRestrito(`Documento ${meta.numero} (${meta.titulo}), processo ${meta.processo}`))) {
       throw falha("Conte\u00FAdo restrito: o usu\u00E1rio n\u00E3o autorizou o envio ao modelo nesta conversa.", "CONTEUDO_RESTRITO_NAO_AUTORIZADO");
     }
-    if ((await ctx.imagens.enxerga()) === false) throw falha(RECADO_SEM_VISAO, "MODELO_SEM_VISAO");
+    if ((await ctx.imagens.enxerga()) === false)
+      throw falha(`${RECADO_SEM_VISAO} N\u00E3o delegue nem pergunte de novo ao usu\u00E1rio: nenhum modelo desta configura\u00E7\u00E3o v\u00EA a figura. Responda com o que o texto permite e diga que a figura n\u00E3o foi considerada.`, "MODELO_SEM_VISAO");
 
     let conteudo: { tipo: string; base64: string };
     if (id.tipo === "html") {
