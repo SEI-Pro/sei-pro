@@ -38,6 +38,7 @@ function carregar(rotinas: unknown[], opcoes: Opcoes = {}) {
   const ouvintes: Ouvintes = { instalado: [], mensagem: [], conexao: [], alarme: [], clique: [] };
   const notificadas: Array<{ id: string; titulo: string; corpo: string }> = [];
   const abas: string[] = [];
+  const janelas: Array<{ url: string; type: string }> = [];
   const paineisAbertos: number[] = [];
   const sessao: Array<{ painelAba?: { aba?: string; janela?: number | null } }> = [];
   const chrome = {
@@ -71,12 +72,13 @@ function carregar(rotinas: unknown[], opcoes: Opcoes = {}) {
       onClicked: { addListener: (f: (id: string) => void) => ouvintes.clique.push(f) },
     },
     tabs: { create: (o: { url: string }) => void abas.push(o.url), query: async () => [{ id: 7 }] },
+    windows: { create: (o: { url: string; type: string }) => void janelas.push(o) },
     sidePanel: { open: async (o: { tabId: number }) => void paineisAbertos.push(o.tabId) },
   };
   // O arquivo roda como script de service worker: `self`/`chrome` globais.
   const executar = new Function("chrome", "self", `${FONTE}\nreturn typeof portasDoAgente;`);
   const tipo = executar(chrome, chrome) as string;
-  return { ouvintes, notificadas, abas, paineisAbertos, sessao, tipo };
+  return { ouvintes, notificadas, abas, janelas, paineisAbertos, sessao, tipo };
 }
 
 export async function verificarBackground(): Promise<void> {
@@ -143,6 +145,17 @@ export async function verificarBackground(): Promise<void> {
     amb.ouvintes.clique[0]("promocao-qualquer");
     await new Promise((r) => setTimeout(r, 10));
     checar("notificacao de outra origem e ignorada", amb.paineisAbertos.length === 1 && amb.abas.length === 0);
+  }
+
+  secao("background: janela para escolher o arquivo de sincronia (#186)");
+  {
+    const amb = carregar([]);
+    amb.ouvintes.mensagem[0]({ tipo: "escolherArquivoEmJanela", id: "p1", modo: "novo", nome: "a b.json", descricao: "Demandas do SEI Pro" }, {});
+    const j = amb.janelas[0];
+    checar("abre a janela da extensao, de nivel superior (popup)", j?.type === "popup" && /html\/escolher-arquivo\.html\?/.test(j.url), amb.janelas);
+    const q = new URLSearchParams(j?.url.split("?")[1] ?? "");
+    checar("leva o pedido na URL", q.get("id") === "p1" && q.get("modo") === "novo" && q.get("nome") === "a b.json" && q.get("descricao") === "Demandas do SEI Pro");
+    checar("nao abre painel por isso", amb.paineisAbertos.length === 0);
   }
 
   secao("background: pedidos para abrir o painel");

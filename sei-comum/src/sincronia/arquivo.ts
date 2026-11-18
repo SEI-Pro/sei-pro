@@ -15,6 +15,7 @@
 
 import type { Area } from "../armazenamento/area";
 import { noDeposito } from "./banco";
+import { escolherPelaJanelaDaExtensao, seletorBarradoNoIframe } from "./escolhaPorJanela";
 import type { Dono } from "./copias";
 import { versaoMaisNova } from "./textoPadraoCodec";
 
@@ -254,12 +255,17 @@ export class ControleArquivo<E> {
   }
 }
 
-/** Seletor de arquivo do navegador (File System Access). Cancelar devolve null. */
+/**
+ * Seletor de arquivo do navegador (File System Access). Cancelar devolve null.
+ * Em iframe de outra origem o Chrome recusa o seletor (issue #186): então a escolha vai para uma janela da
+ * extensão (`viaJanela`; `null` desliga, para a janela que já é de nível superior e para os testes).
+ */
 export async function escolherArquivoSync(
   modo: "novo" | "existente",
   nomeSugerido: string,
   descricao: string,
   janela: unknown = globalThis,
+  viaJanela: typeof escolherPelaJanelaDaExtensao | null = escolherPelaJanelaDaExtensao,
 ): Promise<HandleArquivo | null> {
   const tipos = [{ description: descricao, accept: { "application/json": [".json"] } }];
   const w = janela as {
@@ -271,6 +277,7 @@ export async function escolherArquivoSync(
     return (await w.showOpenFilePicker({ types: tipos, multiple: false }))[0] ?? null;
   } catch (e) {
     if ((e as { name?: string }).name === "AbortError") return null;
+    if (viaJanela && seletorBarradoNoIframe(e)) return await viaJanela(modo, nomeSugerido, descricao);
     throw e;
   }
 }

@@ -101,7 +101,21 @@ function gravarAbaDoPainel(aba, janela) {
   } catch (e) { /* idem */ }
 }
 
+/******************************************************************************
+ * Escolher arquivo de sincronia (issue #186): o Chrome nao deixa o seletor de arquivo abrir
+ * em iframe de outra origem, e os apps do SEI Pro rodam em iframe na pagina do SEI. O app pede
+ * {tipo: "escolherArquivoEmJanela", id, modo, nome, descricao}; aqui abrimos html/escolher-arquivo.html
+ * numa janela de nivel superior, onde o seletor funciona. A janela grava o handle no IndexedDB da
+ * extensao e avisa o app (sei-comum/src/sincronia/escolhaPorJanela.ts). No Firefox nao ha seletor.
+ ******************************************************************************/
+function abrirJanelaDeEscolha(msg) {
+  if (typeof chrome === "undefined" || !chrome.windows || !chrome.windows.create) return;
+  var q = new URLSearchParams({ id: String(msg.id || ""), modo: String(msg.modo || ""), nome: String(msg.nome || ""), descricao: String(msg.descricao || "") });
+  chrome.windows.create({ url: chrome.runtime.getURL("html/escolher-arquivo.html?" + q.toString()), type: "popup", width: 520, height: 320, focused: true });
+}
+
 browser.runtime.onMessage.addListener(function (msg, sender) {
+  if (msg && msg.tipo === "escolherArquivoEmJanela") { abrirJanelaDeEscolha(msg); return; }
   if (!msg || (msg.tipo !== "abrirAgente" && msg.tipo !== "abrirPainel") || !sender || !sender.tab) return;
   var aba = msg.tipo === "abrirAgente" || msg.aba === "agente" ? "agente" : msg.aba === "historico" ? "historico" : msg.aba === "projetos" ? "projetos" : msg.aba === "demandas" ? "demandas" : "favoritos";
   if (typeof chrome !== "undefined" && chrome.sidePanel && chrome.sidePanel.open) {

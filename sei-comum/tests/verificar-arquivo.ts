@@ -9,6 +9,7 @@ import {
   SincroniaArquivo,
   temSeletorDeArquivo,
 } from "../src/sincronia/arquivo";
+import { escolherPelaJanelaDaExtensao, escolhaNoIndexedDB, MSG_ESCOLHA_FEITA, seletorBarradoNoIframe, type DepsEscolhaPorJanela } from "../src/sincronia/escolhaPorJanela";
 import { adaptadorArquivoTeste, repoTeste } from "./adaptadorTeste";
 import { idbFalso } from "./idbFalso";
 import { checar, lanca, secao, tique } from "./util";
@@ -193,4 +194,59 @@ export async function verificarArquivo(): Promise<void> {
     },
   };
   checar("outro erro sobe", (await lanca(() => escolherArquivoSync("novo", "x", "y", quebrado)))?.message === "sem permissao de seletor");
+
+  // Issue #186: em iframe de outra origem o Chrome barra o seletor; a escolha vai para a janela da extensao.
+  const barrado = Object.assign(new Error("Failed to execute 'showOpenFilePicker' on 'Window': Third party iframes are not allowed to show a file picker."), {
+    name: "NotAllowedError",
+  });
+  checar("reconhece o erro do iframe", seletorBarradoNoIframe(barrado) && !seletorBarradoNoIframe(new Error("x")));
+  const emIframe = {
+    showSaveFilePicker: async () => {
+      throw barrado;
+    },
+  };
+  const chamadas: string[] = [];
+  const viaJanela = (async (modo: string, nome: string, desc: string) => {
+    chamadas.push(`${modo}|${nome}|${desc}`);
+    return handle;
+  }) as unknown as typeof escolherPelaJanelaDaExtensao;
+  checar("iframe barrado: usa a janela da extensao", (await escolherArquivoSync("novo", "a.json", "Demandas", emIframe, viaJanela)) === handle && chamadas[0] === "novo|a.json|Demandas");
+  checar(
+    "janela desligada: o erro sobe",
+    (await lanca(() => escolherArquivoSync("novo", "a.json", "Demandas", emIframe, null))) !== undefined,
+  );
+
+  const armazem = escolhaNoIndexedDB(idbFalso().fabrica);
+  let ouvinte: ((m: unknown) => void) | undefined;
+  const pedidos: Array<{ id: string; modo: string; nome: string; descricao: string }> = [];
+  const mk = (aoPedir: (id: string) => Promise<void> | void, prazoMs = 5000): DepsEscolhaPorJanela => ({
+    pedirJanela: async (p) => {
+      pedidos.push(p);
+      await aoPedir(p.id);
+    },
+    ouvir: (cb) => {
+      ouvinte = cb;
+      return () => {
+        ouvinte = undefined;
+      };
+    },
+    armazem,
+    novoId: () => "pedido-1",
+    prazoMs,
+  });
+  const escolhido = await escolherPelaJanelaDaExtensao(
+    "existente",
+    "b.json",
+    "Projetos",
+    mk(async (id) => {
+      await armazem.guardar(id, { name: "escolhido.json" } as unknown as HandleArquivo);
+      ouvinte?.({ tipo: MSG_ESCOLHA_FEITA, id, ok: true });
+    }),
+  );
+  checar("janela: devolve o handle gravado", escolhido?.name === "escolhido.json" && pedidos[0]?.modo === "existente" && pedidos[0]?.descricao === "Projetos");
+  checar("janela: o handle de passagem e apagado", (await armazem.ler("pedido-1")) === undefined && ouvinte === undefined);
+  const fechada = await escolherPelaJanelaDaExtensao("novo", "c.json", "X", mk((id) => void ouvinte?.({ tipo: MSG_ESCOLHA_FEITA, id, ok: false })));
+  checar("janela fechada sem escolher: null", fechada === null);
+  const outro = await escolherPelaJanelaDaExtensao("novo", "d.json", "X", mk((id) => void ouvinte?.({ tipo: MSG_ESCOLHA_FEITA, id: "outro", ok: true }), 30));
+  checar("resposta de outro pedido e ignorada (vence o prazo)", outro === null);
 }
