@@ -21,6 +21,7 @@
  */
 
 import { build } from "esbuild";
+import { blindarPastas } from "./sem-codigo-remoto.mjs";
 import { cp, mkdir, rm, stat, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -178,6 +179,9 @@ async function main() {
   await copiarAssets();
   console.log("\nbundles:");
   await empacotar();
+  // Portao do Manifest V3: nenhuma URL de CDN com codigo dentro do pacote.
+  const trocas = await blindarPastas([SAIDA_JS, join(VENDOR, "tesseract")]);
+  console.log(`  portao: ${trocas} URL(s) de CDN neutralizada(s), nenhuma sobrou`);
   for (const f of await readdir(SAIDA_JS)) {
     console.log(`  js/ferramentas-pdf/${f.padEnd(36)} ${humano(await tamanhoDe(join(SAIDA_JS, f))).padStart(8)}`);
   }

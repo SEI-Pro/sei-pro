@@ -2,6 +2,11 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.9.1
+18/11/2026
+
+**Corrigido — pacote da 3.9 recusado pela Chrome Web Store** (*SEI Pro Lab*). A revisão automática da loja encontrou, dentro do leitor de texto de imagens (OCR) usado pelo [Agente de IA](../pages/AGENTEIA.md) e pelas Ferramentas de PDF, endereços de download de um servidor externo que a extensão nunca usou, e recusou a 3.9. Esses endereços foram retirados do pacote. **Nada muda no uso**: o OCR continua rodando no seu computador, com os arquivos que já vêm na extensão, e nenhum código é baixado da internet. Esta versão traz tudo o que a 3.9 trouxe.
+
 ### Versão 3.9
 17/11/2026
 

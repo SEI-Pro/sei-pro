@@ -18,6 +18,7 @@ import { copyFile, mkdir, rm, readdir, stat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { blindarPastas } from "../ferramentas-pdf/sem-codigo-remoto.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(AQUI, "..", "dist");
@@ -83,6 +84,11 @@ const gerados = [
   join(DIST, "js", "sei-pro-agente-editor.js"),
 ].filter((f) => f.endsWith(".js"));
 execFileSync(process.execPath, [resolve(AQUI, "escape-nonascii.mjs"), ...gerados], { stdio: "inherit" });
+
+// Portao do Manifest V3: o tesseract.js empacotado traz URLs de CDN como valor padrao. O Agente passa
+// caminhos locais, mas a revisao da loja le o texto do pacote (ver ferramentas-pdf/sem-codigo-remoto.mjs).
+const trocasCdn = await blindarPastas([SAIDA_PAINEL, SAIDA_ESTUDIO]);
+console.log(`portao: ${trocasCdn} URL(s) de CDN neutralizada(s), nenhuma sobrou`);
 
 await copyFile(resolve(AQUI, "estatico/agente.html"), join(DIST, "html", "agente.html"));
 await copyFile(resolve(AQUI, "estatico/fluxos.html"), join(DIST, "html", "fluxos.html"));
