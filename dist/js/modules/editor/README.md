@@ -75,6 +75,11 @@ enumeração/diagnóstico:
 - Ao extrair, **remova** as definições correspondentes do monólito
   `js/sei-pro-editor.js` para não duplicar globais.
 
+## Módulos gerados
+
+- `tabela-colunas.js` é **gerado** a partir de [`tabela-colunas/`](../../../../tabela-colunas/) (TypeScript, com
+  testes). Não edite aqui: altere o fonte e rode `npm run build` naquela pasta.
+
 ## Registrar um módulo novo
 
 Adicione o nome do arquivo ao array `MODULES` em `js/sei-pro-editor-adapter.js`

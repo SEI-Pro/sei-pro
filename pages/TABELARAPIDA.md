@@ -24,4 +24,4 @@ O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
 
 ## Próximo item
 
-> [Alinhar o texto à esquerda, ao centro, à direita ou justificado](../pages/ALINHARTEXTO.md)
+> [Tabela com colunas em %](../pages/TABELACOLUNAS.md)
