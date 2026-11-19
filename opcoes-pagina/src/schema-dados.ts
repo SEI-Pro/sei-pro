@@ -270,6 +270,14 @@ export const SECOES_GERAL: Secao[] = [
         visivelEm: "fora-antaq",
       },
       {
+        nome: "modelolimpo",
+        rotulo: "Gerar documento com modelo limpo (remove a formatação herdada do Google Docs e do editor antigo)",
+        tipo: "chave",
+        icone: "fa fa-broom",
+        manual: "MODELOLIMPO",
+        padrao: false,
+      },
+      {
         nome: "revisaotexto",
         rotulo: "Revisão de texto no editor de documentos",
         tipo: "chave",
