@@ -96,10 +96,17 @@ interface ConfigCk5 {
    * `setConfiguracao('estilo.itens', ...)` do SEI vira objeto ANINHADO (chave
    * pontuada, ver `InfraEditorCK5.php`), então a lista chega aqui.
    */
-  estilo?: {
-    itens?: Array<{ nome?: string; classeCss?: string; permitidoEm?: string[] }>;
-    estiloPadrao?: Record<string, string>;
-  };
+  estilo?: EstilosCk5;
+  /**
+   * No SEI 5.0.5 (PMM) a mesma lista chega sob `infra.estilo`, junto com o CSS
+   * das classes. Ler só a raiz dava zero estilos permitidos nesse órgão.
+   */
+  infra?: { estilo?: EstilosCk5 };
+}
+
+interface EstilosCk5 {
+  itens?: Array<{ nome?: string; classeCss?: string; permitidoEm?: string[] }>;
+  estiloPadrao?: Record<string, string>;
 }
 
 /**
@@ -128,8 +135,9 @@ export function lerEditor(pagina: Pagina): EditorDocumento {
     const cfg = json ? (JSON.parse(json) as ConfigCk5) : null;
     if (!cfg?.initialData || !cfg.sei?.urlSalvar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Configura\u00E7\u00E3o do editor CK5 n\u00E3o reconhecida.");
     const attrs = cfg.rootsAttributes ?? {};
-    const itens = cfg.estilo?.itens ?? [];
-    const padrao = cfg.estilo?.estiloPadrao ?? {};
+    const estilo = cfg.estilo?.itens?.length ? cfg.estilo : (cfg.infra?.estilo ?? cfg.estilo);
+    const itens = estilo?.itens ?? [];
+    const padrao = estilo?.estiloPadrao ?? {};
     return {
       tipo: "ck5",
       pagina,
