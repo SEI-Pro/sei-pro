@@ -3,4 +3,4 @@
  * (`init_editor.js`) importa: so ids, nenhum codigo de recurso. O mesmo id e o nome do modulo
  * legado em `dist/js/modules/editor/<id>.js` que passa a ceder.
  */
-export const IDS_RECURSOS: readonly string[] = ["ghs-unlock", "page-break", "session-break"];
+export const IDS_RECURSOS: readonly string[] = ["ghs-unlock", "page-break", "session-break", "checkbox", "cap-letter"];

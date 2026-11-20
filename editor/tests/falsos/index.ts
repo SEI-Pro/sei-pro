@@ -50,3 +50,20 @@ export function inseridoAntes(c: CasoEditor, p: Element): string | null {
   const pos = ins?.posicao as { antes?: { elemento?: Element } } | undefined;
   return ins && pos?.antes?.elemento === p ? ins.html : null;
 }
+
+/** Poe o cursor em `el` com `texto`/`html` selecionados. */
+export function selecionarTexto(c: CasoEditor, el: Element, texto: string, html = texto, raiz = "main"): void {
+  if (c.versao === 4) (c.ed as FalsoCk4).selecionar("txaEditor_1", { elemento: el, texto, html });
+  else (c.ed as FalsoCk5).selecionar({ raiz, elemento: el, texto, html });
+}
+
+/** O ultimo HTML inserido no editor (CK4: `insertHtml`; CK5: `model.insertContent`), ou null. */
+export function ultimoInserido(c: CasoEditor): string | null {
+  if (c.versao === 4) return (c.ed as FalsoCk4).instancia("txaEditor_1").inseridos.at(-1) ?? null;
+  return (c.ed as FalsoCk5).instancia().insercoes.at(-1)?.html ?? null;
+}
+
+/** Quantas insercoes o editor recebeu. */
+export function totalInseridos(c: CasoEditor): number {
+  return c.versao === 4 ? (c.ed as FalsoCk4).instancia("txaEditor_1").inseridos.length : (c.ed as FalsoCk5).instancia().insercoes.length;
+}
