@@ -11,6 +11,8 @@ export interface Contexto {
   checkOpcao(nome: string): boolean;
   /** Regra `verifyConfigValue`: opcao ausente conta como desligada. */
   verifyOpcao(nome: string): boolean;
+  /** Rede, injetavel nos testes; o padrao e o `fetch` da pagina. */
+  fetch?: typeof fetch;
 }
 
 /** Formato das funcoes globais que o monolito chama pelo nome (`this_` = elemento clicado). */

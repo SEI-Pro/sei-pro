@@ -7,6 +7,7 @@
 import { criarAdaptador } from "../adaptador";
 import { ATRIBUTO_BASE } from "../contrato";
 import { checkOpcao, verifyOpcao } from "../opcoes";
+import "../ui"; // entrega o CSS base ao dialogo
 import { RECURSOS } from "../recursos/indice";
 import { iniciarRecursos, instalarRecursos } from "../recursos/instalar";
 import type { Contexto } from "../recursos/tipos";

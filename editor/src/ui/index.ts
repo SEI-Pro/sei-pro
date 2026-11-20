@@ -1,8 +1,9 @@
 import cssBase from "@comum/ui/base.css";
-import { criarAbridorDeDialogo } from "./dialogo";
+import { definirCssBase } from "./abrir";
 
+export { abrirDialogo, definirCssBase } from "./abrir";
 export { avisarEditor } from "./avisar";
 export type { OpcoesDialogo } from "./dialogo";
 
-/** Dialogo modal do editor (X e Esc fecham; sem "Cancelar"). Importa o CSS: so o bundle usa; os testes usam `dialogo.ts`. */
-export const abrirDialogo = criarAbridorDeDialogo(cssBase);
+// O bundle importa este modulo: o CSS base entra uma vez, aqui.
+definirCssBase(cssBase);
