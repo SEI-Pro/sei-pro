@@ -34,17 +34,20 @@ const REGRAS_ATRIBUTOS = [
  * O `data.get` (o que o SEI grava) devolvia `<span onmouseover=...>` e `<img onerror=...>` colados de outra
  * pagina. O DataFilter consome os proibidos antes dos liberados, entao o descarte vale sobre as regras acima.
  */
-const REGRAS_ATRIBUTOS_PROIBIDOS = [
+/** `javascript` -> `j[\t\n\r]*a[\t\n\r]*v...`: o navegador ignora tab, LF e CR DENTRO do esquema (`java\tscript:` executa). */
+const comQuebras = (palavra: string) => palavra.split("").join("[\\t\\n\\r]*");
+
+/** Valor de URL que executa: esquema javascript/vbscript/livescript ou `data:text/html`, com espacos e controles antes e tab/LF/CR dentro. */
+export const URL_EXECUTAVEL = new RegExp(
+  `^[\\s\\x00-\\x20]*(${comQuebras("javascript")}|${comQuebras("vbscript")}|${comQuebras("livescript")}|${comQuebras("data")}[\\t\\n\\r\\s]*:[\\t\\n\\r\\s]*${comQuebras("text/html")})`,
+  "i",
+);
+
+export const REGRAS_ATRIBUTOS_PROIBIDOS = [
   { name: /[\s\S]+/, attributes: [{ key: /^on/i, value: true }] },
   {
     name: /[\s\S]+/,
-    attributes: [
-      {
-        key: /^(href|src|srcset|action|formaction|background|poster|lowsrc|dynsrc|data|xlink:href)$/i,
-        // biome-ignore lint/suspicious/noControlCharactersInRegex: o navegador ignora estes caracteres antes do esquema da URL (javascript:), por isso entram na regra
-        value: /^[\s\x00-\x20]*(javascript|vbscript|livescript|data\s*:\s*text\/html)/i,
-      },
-    ],
+    attributes: [{ key: /^(href|src|srcset|action|formaction|background|poster|lowsrc|dynsrc|data|xlink:href)$/i, value: URL_EXECUTAVEL }],
   },
 ];
 

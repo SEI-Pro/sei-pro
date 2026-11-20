@@ -1,5 +1,5 @@
 import { criarAdaptador } from "../../src/adaptador";
-import { REGRA_TAGS, recurso } from "../../src/recursos/ghs-unlock";
+import { REGRA_TAGS, REGRAS_ATRIBUTOS_PROIBIDOS, recurso, URL_EXECUTAVEL } from "../../src/recursos/ghs-unlock";
 import type { Contexto } from "../../src/recursos/tipos";
 import { criarCk4, criarCk5, type FalsoCk5 } from "../falsos";
 import { checar, igual, secao } from "../util";
@@ -60,6 +60,36 @@ export async function verificarGhsUnlock(): Promise<void> {
     "TAGS liberadas NAO incluem script, iframe, object nem form",
     ["script", "iframe", "object", "form"].every((t) => !REGRA_TAGS.test(t)),
   );
+
+  for (const perigoso of [
+    "javascript:alert(1)",
+    "JaVaScRiPt:alert(1)",
+    "  javascript:alert(1)",
+    "\u0001\u0002javascript:alert(1)",
+    "java\tscript:alert(1)",
+    "java\nscr\r\nipt:alert(1)",
+    "j\ta\tv\ta\ts\tc\tr\ti\tp\tt:alert(1)",
+    "vbscript:msgbox(1)",
+    "live\tscript:x",
+    "data:text/html,<script>alert(1)</script>",
+    "data : text/html;base64,AAA",
+    "da\tta:text/ht\nml,x",
+  ]) {
+    checar(`URL executavel bloqueada: ${JSON.stringify(perigoso)}`, URL_EXECUTAVEL.test(perigoso));
+  }
+  for (const seguro of [
+    "https://sei.antaq.gov.br/x",
+    "http://javascript.com/a",
+    "mailto:a@b.gov.br",
+    "#ancora",
+    "/rota/relativa",
+    "./x.html",
+    "data:image/png;base64,AAA",
+    "",
+  ]) {
+    checar(`URL segura nao e bloqueada: ${JSON.stringify(seguro)}`, !URL_EXECUTAVEL.test(seguro));
+  }
+  checar("a regra de atributos proibidos usa essa mesma expressao", REGRAS_ATRIBUTOS_PROIBIDOS[1]?.attributes[0]?.value === URL_EXECUTAVEL);
 
   {
     const f = criarCk5({ secoes: [{ raiz: "corpo", label: "Corpo do Texto", html: "<p id='p1'>um</p>", principal: true }] });
