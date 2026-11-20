@@ -3097,9 +3097,6 @@ function initSeiProArvore(loop = true) {
     if (typeof parent.setClickUrlAmigavel !== 'undefined'  && parent.verifyConfigValue('urlamigavel')) {
         parent.setClickUrlAmigavel();
     }
-    if (typeof parent.appendIconsFormArvore !== 'undefined' && typeof parent.dadosFormularioObj !== 'undefined' && parent.verifyConfigValue('gerenciarformularios')) {
-        parent.appendIconsFormArvore();
-    }
     if (typeof parent.getOptionsPro !== 'undefined' && parent.getOptionsPro('iframeSizeSlimPro') && typeof parent.setSizeIframePro !== 'undefined') {
         parent.setSizeIframePro(parent.getOptionsPro('iframeSizeSlimPro'));
     }

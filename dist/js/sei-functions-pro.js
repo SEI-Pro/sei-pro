@@ -480,14 +480,6 @@ function loginsEquivalentesPro(a, b) {
 var userSEI = getLoginSEIPro();
     userSEI = (userSEI) ? userSEI.login : false;
 
-// var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
-// var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
-// var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
-// var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
-// var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
-var CLIENT_ID_PRO = false;
-var API_KEY_PRO = false;
-
 var sortListSaved = (typeof localStorageRestorePro('tablesorter-savesort') !== 'undefined' && localStorageRestorePro('tablesorter-savesort') !== null) ? localStorageRestorePro('tablesorter-savesort')[window.location.pathname] : false;
 
 var iconSeiPro = URL_SPRO + 'icons/menu/seipro.png';
@@ -533,14 +525,6 @@ function compareVersionNumbers(v1, v2){
     return 0;
 }
 
-/* function _G() { // get  Session Google Name Space
-    var _return = localStorage.getItem('SEIPro_google_projetos');
-        _return = (_return === null) ? localStorage.getItem('SEIPro_google_processos') : _return;
-        _return = (_return === null) ? localStorage.getItem('SEIPro_google_formularios') : _return;
-        _return = (_return === null) ? false : _return;
-
-    return _return ? JSON.parse(_return) : false;
-} */
 function _P() { // get  Session Name Space
     return JSON.parse(sessionStorage.getItem('new_extension'));
 }
@@ -7660,83 +7644,6 @@ function execConcluirReabrirProcessoPro(url) {
         targetIfrVisualizacaoPro(url);
     }
 }
-//Initializes the API client library and sets up sign-in state listeners.
-/* function initClientPro() {
-    if ( typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdAtividades_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined'  || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' ) {
-
-        gapi.client.init({
-          apiKey: API_KEY_PRO,
-          clientId: CLIENT_ID_PRO,
-          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-          scope: 'https://www.googleapis.com/auth/spreadsheets'
-        }).then(function () {
-          // Listen for sign-in state changes.
-            
-            if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-            if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-            if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
-
-            // Handle the initial sign-in state.
-            updateSigninStatusPro(gapi.auth2.getAuthInstance().isSignedIn.get());
-            $('#authorizeButtonPro').on('click',function() { handleAuthClickPro() });
-            $('#signoutButtonPro').on('click',function() { handleSignoutClickPro() });
-
-        }, function(error) {
-          alertaBoxPro('Error', 'exclamation-triangle', JSON.stringify(error, null, 2));
-        });
-    }
-}
-function onSignInPro(response) {
-    const responsePayload = parseJwt(response.credential);
-    var googleUser = {response: response, decode: responsePayload};
-        window.googleUser = googleUser;
-        sessionStorageStorePro('googleUser', googleUser);
-}
-// Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
-function updateSigninStatusPro(isSignedIn) {
-    if (isSignedIn) {
-        $('#authorizeButtonPro').hide();
-        $('#signoutButtonPro').show();
-        if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-        if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-        if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-    } else {
-        $('#authorizeButtonPro').show();
-        $('#signoutButtonPro').hide();
-    }
-}
-function loadSheetIconPro(status) {
-    if ( status == 'load' ) {
-      $('#signoutButtonPro').removeClass('noperfil').addClass('spinner');
-      $('#signoutButtonPro i').attr('class','fas fa-spinner fa-spin brancoColor');
-    } else if ( status == 'noperfil' ) {
-        $('#signoutButtonPro').removeClass('spinner');
-        $('#signoutButtonPro').addClass('noperfil').show().attr('onmouseover', 'return infraTooltipMostrar(\'Perfil n&atilde;o autorizado. Solicite acesso &agrave; planilha\')').find('i').attr('class','fas fa-user-slash brancoColor');
-    } else {
-        $('#signoutButtonPro').removeClass('noperfil').removeClass('spinner');
-        $('#signoutButtonPro i').attr('class','fas fa-power-off brancoColor');
-    }
-}
-// Sign in the user upon button click.
-function handleAuthClickPro(event) {
-    gapi.auth2.getAuthInstance().signIn();
-}
-
-// Sign out the user upon button click.
-function handleSignoutClickPro(event) {
-    gapi.auth2.getAuthInstance().signOut();
-    logoutSheetPro();
-}
-function logoutSheetPro() {
-    $('#projetosGantt').remove();
-    localStorageRemovePro('loadEtapasSheet');
-    localStorageRemovePro('loadFormulariosSheet');
-    //localStorageRemovePro('configBasePro');
-    removeOptionsPro('configBaseSelectedPro');
-    removeOptionsPro('configBaseSelectedFormPro');
-    removeOptionsPro('projetosGanttActiveTabs');
-} */
 function uniqPro(a) {
     return a.sort().filter(function(item, pos, ary) {
         return !pos || item != ary[pos - 1];
@@ -13471,21 +13378,6 @@ function appendIconDynamicField(loop = true) {
             htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconDynamicField, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconDynamicField', appendIconDynamicField); }
-}
-function insertIconFormSheet() {
-    waitLoadPro($('#ifrArvore').contents(), '#divArvore', 'img[src*="formulario1.gif"]', appendIconFormSheet);
-}
-function appendIconFormSheet(loop = true) {
-    var ifrArvore = $('#ifrArvore').contents();
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
-    if (ifrVisualizacao.find('#iconFormSheet').length == 0 && ifrArvore.find('span.infraArvoreNoSelecionado').closest('a').prev().find('img[src*="formulario1.gif"]').length > 0 ) {
-        var base64IconFormSheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA4NpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkNDkxZTA3Ni04ZjNkLTQ0MzctOTAxMS02MDAwOTNlYTQ0OGEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUY1NEE2MzM4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUY1NEE2MzI4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpiMjRmYmE0Mi1iN2UyLTQ0NmEtYWMzMS04MjAzNjhiNTg3YzkiIHN0UmVmOmRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpiNDkyMWRjZi1kZDNhLTI4NGYtOWEyMC1h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';
-        var htmlIconFormSheet =  '<a href="#" id="iconFormSheet" data-spro-click="parent.openFormSheet" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
-                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconFormSheet+'" alt="Salvar dados na planilha" title="Salvar dados na planilha">'+
-                                 '</a>';
-            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconFormSheet, 'append');
-    }
-    if (loop) { reagendarIconeBarraPro('appendIconFormSheet', appendIconFormSheet); }
 }
 // O link de download fica no iframe interno a partir do SEI 4.1, que ainda pode estar carregando
 // quando a barra chama esta funcao: o conteudo e resolvido de novo a cada tentativa.

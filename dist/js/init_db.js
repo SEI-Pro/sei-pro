@@ -237,27 +237,6 @@ function observeAcaoPro() {
             // console.log(data);
             getOptionsSEIPro(data);
         }
-    } else if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_database' && typeof param.client_id !== 'undefined') {
-        if (param.base == 'projetos') {
-            var baseName = manifest.short_name;
-            var data = { 
-                type: "NEW_BASE", 
-                mode: param.mode, 
-                base: param.base, 
-                alert: true, 
-                newItem: {
-                    "baseName": param.base_name,
-                    "baseTipo": param.base,
-                    "conexaoTipo": 'sheets',
-                    "CLIENT_ID": param.client_id,
-                    "API_KEY": param.api_key,
-                    "spreadsheetId": param.sheet_id,
-                    "URL_API": "",
-                    "KEY_USER": ""
-                }
-            };
-            getOptionsSEIPro(data);
-        }
     } else if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_option' && typeof param.option_key !== 'undefined' && typeof param.option_value !== 'undefined') {
         setOptionsSEIPro(param.option_key, param.option_value);
     }
