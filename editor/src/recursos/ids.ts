@@ -13,4 +13,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "font-size",
   "style-editor",
   "quick-table",
+  "folha-papel",
 ];

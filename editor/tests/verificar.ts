@@ -1,6 +1,7 @@
 import { IDS_RECURSOS } from "../src/recursos/ids";
 import { verificarAlign } from "./recursos/align";
 import { verificarCheckboxCapLetter } from "./recursos/checkbox-cap-letter";
+import { verificarFolhaPapel } from "./recursos/folha-papel";
 import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarQuebras } from "./recursos/quebras";
@@ -31,5 +32,6 @@ await verificarCheckboxCapLetter();
 verificarAlign();
 await verificarFontSizeStyleEditor();
 verificarQuickTable();
+verificarFolhaPapel();
 
 resumo();
