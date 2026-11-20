@@ -1176,19 +1176,6 @@ a.newLink.iconBoxSlim .newIconTitle,
     display: inline-block!important;
     animation: fa-spin 2s linear infinite;
 }
-.seiSlim .infraBarraSistemaPadraoD a#signoutButtonPro:before,
-.seiSlim .infraAcaoBarraSistema a#signoutButtonPro:before {
-    content: "\f011";
-}
-.seiSlim .infraBarraSistemaPadraoD a#signoutButtonPro.noperfil:before,
-.seiSlim .infraAcaoBarraSistema a#signoutButtonPro.noperfil:before {
-    content: "\f506" !important;
-    font-weight: bold !important;
-}
-.seiSlim .infraBarraSistemaPadraoD a#authorizeButtonPro:before,
-.seiSlim .infraAcaoBarraSistema a#authorizeButtonPro:before {
-    content: "\f1e6";
-}
 .seiSlim tr.infraCaption,
 .seiSlim caption.infraCaption span,
 .seiSlim caption.infraCaption a,

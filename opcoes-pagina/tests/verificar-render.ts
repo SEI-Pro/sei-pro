@@ -46,8 +46,8 @@ export function verificarRender(): void {
   checar("icone sem classe de cor", ico.className.includes("fa-") && !/Color/.test(ico.className));
   checar(
     "linha so do Lab fica hidden fora do Lab",
-    montarLinha(opcao("sincronizarprocessos"), { ...CTX, lab: false }).hasAttribute("hidden") &&
-      !montarLinha(opcao("sincronizarprocessos"), CTX).hasAttribute("hidden"),
+    montarLinha(opcao("gradecontrole"), { ...CTX, lab: false }).hasAttribute("hidden") &&
+      !montarLinha(opcao("gradecontrole"), CTX).hasAttribute("hidden"),
   );
   checar("ferramentasia hidden no ANTAQ", montarLinha(opcao("ferramentasia"), { ...CTX, foraAntaq: false }).hasAttribute("hidden"));
   checar("salvamentoautomatico sempre hidden", montarLinha(opcao("salvamentoautomatico"), CTX).hasAttribute("hidden"));
@@ -82,8 +82,8 @@ export function verificarRender(): void {
     ),
   );
   checar(
-    "5 em Complementos",
-    montarComplementos(CTX).querySelectorAll(".opcao").length === 5 && montarComplementos(CTX).getAttribute("data-aba") === "complementos",
+    "4 em Complementos",
+    montarComplementos(CTX).querySelectorAll(".opcao").length === 4 && montarComplementos(CTX).getAttribute("data-aba") === "complementos",
   );
   checar(
     "sub-opcao leva data-depende",

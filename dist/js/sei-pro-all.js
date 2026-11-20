@@ -157,10 +157,11 @@ function insertNewLinksMenu() {
         htmlPro($(idMenu), newLinkMenu, 'append');
     }
 }
-// A guarda do onclick antigo: o sei-pro-proc-lote.js nao carrega em toda tela (na Pesquisa, por
-// exemplo), e ali o item do menu nao fazia nada, em silencio.
+// Ponte para o modulo TS dos Processos em lote (init_processos_lote.js): so dispara o evento dele. Sem o content
+// script na tela (a Pesquisa, por exemplo), avisa em vez de o item do menu nao fazer nada, em silencio.
 function abrirProcessosLotePro() {
-    if (typeof initProcLoteModal === 'function') initProcLoteModal();
+    if (document.documentElement.hasAttribute('data-seipro-processos-lote')) { document.dispatchEvent(new CustomEvent('spro-processos-lote-abrir')); return; }
+    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir os Processos em Lote nesta tela. Recarregue a p\u00E1gina (F5) e tente de novo.');
 }
 function setTableSorter() {
     var observerFilterTable = new MutationObserver(function(mutations) {
@@ -458,35 +459,6 @@ function initScrollToElement(TimeOut = 9000) {
             initScrollToElement(TimeOut - 100); 
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initScrollToElement => '+TimeOut); 
         }, 500);
-    }
-}
-function initAppendIconFavorites(TimeOut = 9000) {
-    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
-    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '') ||  table.length == 0) { return; }
-    // typeof jmespath: ver initPagesInfiniteSearch
-    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof htmlIconFavorites !== 'undefined' && typeof getStoreFavoritePro !== 'undefined') {
-        if (checkConfigValue('gerenciarfavoritos')) {
-            setAppendIconFavorites();
-        }
-    } else {
-        setTimeout(function(){ 
-            initAppendIconFavorites(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAppendIconFavorites => '+TimeOut); 
-        }, 500);
-    }
-}
-function setAppendIconFavorites() {
-    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
-    if (table.length > 0) {
-        table.find('tbody tr').each(function(){
-            var _this = $(this);
-            var td = _this.find('td').eq(2);
-            var id_procedimento = td.find('a[href*="acao=procedimento_trabalhar"]').attr('href');
-                id_procedimento = (typeof id_procedimento !== 'undefined') ? String(getParamsUrlPro(id_procedimento).id_procedimento) : false;
-            var iconStar = (id_procedimento) ? htmlIconFavorites(id_procedimento, 'left') : '';
-                td.find('.iconFavoritePro').remove();
-                td.prepend(iconStar);
-        });
     }
 }
 function setOnClickExcluirProcBloco() {
@@ -976,7 +948,6 @@ function initSeiProAll() {
     initSetMomentPtBr();
     initTablePesquisaDownload();
     initReplaceSelectAll();
-    initAppendIconFavorites();
     initQuickViewSearch();
     initObserveUrlPage();
     initSlimPro();

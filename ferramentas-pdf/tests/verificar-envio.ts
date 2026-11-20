@@ -457,10 +457,10 @@ checar(
 {
   const { readFileSync } = await import("node:fs");
   const { runInNewContext } = await import("node:vm");
-  const js = readFileSync(new URL("../../dist/js/sei-pro-proc-lote.js", import.meta.url), "utf8");
+  const js = readFileSync(new URL("../../dist/js/sei-functions-pro.js", import.meta.url), "utf8");
   const tabela = /var PROCLOTE_TROCAS = \{[\s\S]*?\n\};/.exec(js)?.[0];
   const funcao = /var procLote_paraLatin1 = \(texto\) => \{[\s\S]*?\n\};/.exec(js)?.[0];
-  checar("a funcao do Processos em Lote foi encontrada no dist", Boolean(tabela && funcao));
+  checar("a funcao procLote_paraLatin1 foi encontrada no dist (sei-functions-pro.js)", Boolean(tabela && funcao));
   if (tabela && funcao) {
     const ctx: { PROCLOTE_TROCAS?: Record<string, string>; procLote_paraLatin1?: (t: string) => string } = {};
     runInNewContext(`${tabela}\n${funcao}\nthis.PROCLOTE_TROCAS = PROCLOTE_TROCAS; this.procLote_paraLatin1 = procLote_paraLatin1;`, ctx);

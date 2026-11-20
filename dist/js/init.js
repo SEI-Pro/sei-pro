@@ -46,8 +46,6 @@ $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
     $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 });
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
-$.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
-$.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
 // O teste de window.name serve as janelas e iframes nomeados (editor, iframes internos), onde o init_all.js
 // nao injeta o arquivo no mundo da pagina. Mas o jquery.modalLink (do SEI e o nosso) faz window.name = idModal
 // na janela principal ao abrir qualquer modal - Assinar Documento, por exemplo - e o nome dura enquanto a aba
@@ -92,23 +90,6 @@ function criarIconeBarraPro(id, classeIcone, dicaTooltip, dicaAtributo) {
     a.appendChild(i);
     ligarTooltipIsoladoPro(a, dicaTooltip);
     return a;
-}
-function divIconsLoginPro() {
-    var destino = null;
-    if ($(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').length > 0) {
-        destino = $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD');
-    } else if ($('#divInfraBarraSistemaPadraoD').length > 0) {
-        destino = $('#divInfraBarraSistemaPadraoD');
-    }
-    if (!destino || !destino.length) return;
-    var caixa = document.createElement('div');
-    caixa.className = 'infraAcaoBarraSistema sheetsLoginPro';
-    caixa.style.display = 'inline-block';
-    caixa.appendChild(criarIconeBarraPro('authorizeButtonPro', 'fas fa-toggle-off brancoColor',
-        'Conectar Base de Dados (SeiPro)', 'Conectar Base de Dados (SeiPro)'));
-    caixa.appendChild(criarIconeBarraPro('signoutButtonPro', 'fas fa-toggle-on brancoColor',
-        'Conectado! Clique para desconectar Base de Dados (SeiPro)', 'Desconectar Base de Dados (SeiPro)'));
-    destino[0].appendChild(caixa);
 }
 function classBodyPro() {
     if (typeof getParamsUrlPro === 'function') {
@@ -200,28 +181,9 @@ function loadScriptDataBasePro(dataValues) {
        script: nao passam mais pelo localStorage da pagina (ver
        cacheConfigPaginaPro). O parametro era recebido e ignorado. */
     var dataValues = (dataValues && dataValues.length) ? dataValues : [];
-    var dataValues_ProjetosSheets = jmespath.search(dataValues, "[?baseTipo=='projetos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
-    var dataValues_FormulariosSheets = jmespath.search(dataValues, "[?baseTipo=='formularios'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
-    var dataValues_ProcessosSheets = jmespath.search(dataValues, "[?baseTipo=='processos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_OpenAI = jmespath.search(dataValues, "[?baseTipo=='openai'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_Gemini = jmespath.search(dataValues, "[?baseTipo=='gemini'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
-    // console.log(dataValues, dataValues_ProjetosSheets);
-    if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
-        // loadDataBaseSheetsProjetosPro(dataValues_ProjetosSheets);
-    } else {
-        localStorageRemovePro('loadEtapasSheet');
-    }
-    if (dataValues_FormulariosSheets.length > 0 && checkConfigValue('gerenciarformularios')) {
-        loadDataBaseSheetsFormulariosPro(dataValues_FormulariosSheets);
-    } else {
-        localStorageRemovePro('loadFormulariosSheet');
-    }
-    if (dataValues_ProcessosSheets.length > 0 && checkConfigValue('sincronizarprocessos')) {
-        loadDataBaseSheetsProcessosPro(dataValues_ProcessosSheets);
-    } else {
-        localStorageRemovePro('loadSyncProcessosSheet');
-    }
     if (dataValues_AtividadesAPI.length > 0 && checkConfigValue('gerenciaratividades')) {
         loadDataBaseApiAtividadesPro(dataValues_AtividadesAPI);
     } else {
@@ -270,74 +232,14 @@ function loadDataBaseApiAtividadesPro(dataValues) {
         removeLocalStorageAtividades();
     }
 }
-/* function loadDataBaseSheetsProjetosPro(dataValues) { 
-            // dataValues = ( jmespath.search(dataValues, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(dataValues, "[?baseTipo=='projetos']") : dataValues;
-    var dataPerfil = [];
-    var perfilSelected = (getOptionsPro('configBaseSelectedPro')) ? getOptionsPro('configBaseSelectedPro') : 0;
-    for (var i = 0; i < dataValues.length; i++) {
-        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-    }
-
-    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
-            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
-            typeof dataPerfil.API_KEY !== 'undefined' ) {
-            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdProjetos_Pro: dataPerfil.spreadsheetId});
-            $.getScript(getUrlExtension("js/sei-gantt.js"));
-    } else {
-        console.log('loadDataBaseSheetsProjetosPro','ERROR!!!');
-        localStorage.removeItem('loadEtapasSheet');
-        removeOptionsPro('configBaseSelectedPro');
-    }
-}
-function loadDataBaseSheetsFormulariosPro(dataValues) { 
-    var dataPerfil = [];
-    var perfilSelected = (getOptionsPro('configBaseSelectedFormPro')) ? getOptionsPro('configBaseSelectedFormPro') : 0;
-    for (var i = 0; i < dataValues.length; i++) {
-        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-    }
-
-    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
-            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
-            typeof dataPerfil.API_KEY !== 'undefined' ) {
-            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdFormularios_Pro: dataPerfil.spreadsheetId});
-            $.getScript(getUrlExtension("js/sei-forms.js"));
-    } else {
-        console.log('loadDataBaseSheetsFormulariosPro','ERROR!!!');
-        localStorage.removeItem('loadFormulariosSheet');
-        removeOptionsPro('configBaseSelectedFormPro');
-    }
-}
-function loadDataBaseSheetsProcessosPro(dataValues) { 
-    var dataPerfil = [];
-    var perfilSelected = (getOptionsPro('configBaseSelectedProcessosPro')) ? getOptionsPro('configBaseSelectedProcessosPro') : 0;
-    for (var i = 0; i < dataValues.length; i++) {
-        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-    }
-
-    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
-            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
-            typeof dataPerfil.API_KEY !== 'undefined' ) {
-            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdSyncProcessos_Pro: dataPerfil.spreadsheetId});
-            $.getScript(getUrlExtension("js/sei-sync-processos.js"));
-    } else {
-        console.log('loadDataBaseSheetsProcessosPro','ERROR!!!');
-        localStorage.removeItem('loadSyncProcessosSheet');
-        removeOptionsPro('configBaseSelectedFormPro');
-    }
-}
-function setSessionGoogle(type, param) {
-    localStorage.setItem('SEIPro_google_'+type,  JSON.stringify(param));
-} */
 function loadDataBaseProStorage(items) { 
     if (typeof getParamsUrlPro === 'function') {
         if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' && typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
-            divIconsLoginPro();
             //localStorage.setItem('configBasePro', items.dataValues);
             
             var dataValues = JSON.parse(items.dataValues);
             loadScriptDataBasePro(dataValues);
         } else {
-            localStorageRemovePro('loadEtapasSheet');
             removeLocalStorageAtividades();
         }
     }
@@ -482,8 +384,6 @@ function loadScriptPro() {
             loadConfigPro();
             if (typeof moment !== 'undefined' && typeof moment().isoAddWeekdaysFromSet === 'undefined') $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
-            // Favoritos novos (js/init_favoritos.js, pacote Lab) marcam o <html> no document_start: o legado fica de fora.
-            if (typeof loadFavoritosPro === 'undefined' && !document.documentElement.hasAttribute('data-seipro-favoritos')) $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
             if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             // Projetos novos (js/init_projetos.js, pacote Lab) marcam o <html>: o legado so carrega sem eles ou
             // com servidor do Atividades configurado (os dois convivem; o legado vira "Projetos (Atividades)").

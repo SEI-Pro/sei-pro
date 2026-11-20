@@ -255,7 +255,7 @@ function acharPrefixoDoTipo(nome: string, nomeSerie: string): number {
  * gravava "Relatório Teste â¿¿ â¿¿aspasâ¿" (documento 0103966, SEI 4.1.5).
  * Acento de português cabe em latin-1 e fica como está.
  *
- * É a tabela do `procLote_paraLatin1` (js/sei-pro-proc-lote.js), que o upload
+ * É a tabela do `procLote_paraLatin1` (js/sei-functions-pro.js), que o upload
  * pela árvore e o controle de prazo já usam: um arquivo arrastado para a árvore
  * e o mesmo arquivo devolvido pela ferramenta entram com o mesmo nome.
  * `verificar-envio.ts` confere que as duas cópias dão o mesmo resultado.

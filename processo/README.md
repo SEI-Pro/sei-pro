@@ -123,14 +123,13 @@ de Favoritos (`favorites`), do Editor (`editor`) e de Projetos (`projeto`). Cons
 
 | Consumidor | Onde lê `dadosProcessoPro` | Observação |
 | --- | --- | --- |
-| Favoritos legado | `sei-pro-favoritos.js`: `initDadosSelectDoc`, `getDadosSelectDoc`, `updateSelectFavorites`, `updateArraySelectFavorites`, `checkDataFavoritePro`, `storeFavoritePro`, `addFavoritePro` | o Favoritos em TS (só no Lab) não precisa, mas o legado segue nos outros pacotes |
 | Editor | `sei-pro-editor.js`: `arrayDadosEditor`, `replaceDadosEditor`; `sei-functions-pro.js`: `camposDinamicosProcesso`, `openCamposDinamicosForm`, `getInteressadosProcesso`, `getListaAtribuicaoProcesso`, `sumTagValue`, título do editor (`updateTitlePage`, modo `editor`) | janela do editor, outro documento: o módulo não roda lá |
 | Edição legada de dados do processo | `editDadosArvorePro_`, `updateDadosArvore*` (Iframe, Mult), `updateDadosProcesso`, `formControlerAlterarProcesso`, `getSelectHipoteseLegal`, `getHipoteseLegal`, `addUrgenteProcessoPro`, `addTrancadoProcessoPro`, `getIsProcUrgente`, `getIsProcTrancado`, `confirmaDadosUrgencia` | chamada pelo menu legado, pelo Enviar Processo (remover marcador/atribuição) e pelas Ações em lote |
 | URL amigável | `updateUrlPage` (opção `urlamigavel`; o título já não passa por ela) | lê o número do processo de `dadosProcessoPro.propProcesso` |
-| Lista de documentos e Ações em lote | `getListDocumentosArvore`, `checkDadosIframeDocumentosPro`, `arrayDadosIframeDocumentosPro`, `getBatchActionsPro`, `fillDocumentosActionsPro`, `refreshDocumentosActionsPro`, `getDocumentosActions`, `resetDocsActions`, `openDialogDoc`, `getNewDocCompareDocs`, `setAppendIconsDocumentosActions` | `initCheckNaoAssinados`/`boxCheckNaoAssinados` (o aviso antigo) só rodam agora sem o módulo |
+| Lista de documentos e Ações em lote | `getListDocumentosArvore`, `checkDadosIframeDocumentosPro`, `arrayDadosIframeDocumentosPro`, `getBatchActionsPro`, `fillDocumentosActionsPro`, `refreshDocumentosActionsPro`, `getDocumentosActions`, `resetDocsActions`, `openDialogDoc`, `setAppendIconsDocumentosActions` | `initCheckNaoAssinados`/`boxCheckNaoAssinados` (o aviso antigo) só rodam agora sem o módulo |
 | Histórico legado | `mergeAllAndamentosProcesso`, `initMergeAllAndamentosProcesso`, `setHistoryProcessosPro` (opção `historicoproc`), `getDadosAndamentoPro`, `getBlocoProcessoHistorico`/`initBlocoProcessoHistorico`, `getDataRecebimentoPro` (esta alimenta o `configDataRecebimentoPro` que a capa nova lê) | o Gantt e os cards já usam o leitor do núcleo |
 | Controle de processos e pesquisa | `getDadosProcedimentosControlar`, `initCheckDadosProcedimentos`, `newTabDadosProcedimentosControlar`, `breakDadosProcedimentosControlar`, `getDadosPesquisaPro` | |
-| Atividades, prescrição, projetos | `sei-pro-atividades.js` (`getServersPro`, `removeTokenAcessoRevogado`), `sei-pro-prescricoes.js` (`optionSelectDocsPrescricao`, `checkListTipoPrescricaoInProcesso`), `checkTipoPrescricaoProcesso`, `sei-pro-projetos.js` (`updateSelectConcluirProjetoEtapa`), `sei-pro-docs-lote.js` | |
+| Atividades, prescrição, projetos | `sei-pro-atividades.js` (`getServersPro`, `removeTokenAcessoRevogado`), `sei-pro-prescricoes.js` (`optionSelectDocsPrescricao`, `checkListTipoPrescricaoInProcesso`), `checkTipoPrescricaoProcesso`, `sei-pro-projetos.js` (`updateSelectConcluirProjetoEtapa`) | |
 | Upload pela árvore | `sei-pro.js`: `iniciarUploadArvoreProcessoPro`, `loadIframeProcessUpload`, `setUploadFilesInProcess` | |
 | Outros | `enableConsultasExtras`, `getLinksProcessoPro`, `getAjaxListaAtribuicao`, `setSessionProcessosPro`/`pullDadosProcessoSession`, `getToolbarPro`/`getLinksArvore`/`initPanelPrescricaoProcesso` (árvore) | |
 
@@ -702,8 +701,7 @@ Ao vivo (SEI SP, tema `#0494c7`, trocado para verde, vermelho e amarelo, claro e
   desenhou a dele, a troca (uma raiz só).
 - O iframe oculto `#frmCheckerProcessoPro` (`initDadosProcesso`, sei-pro.js) e `dadosProcessoPro` NÃO foram desligados: sobram
   consumidores, e a capa legada era só um deles. Os que sobraram (funções, `dist/js`):
-  - Favoritos (`sei-pro-favoritos.js`: `addFavoritePro`, `initDadosSelectDoc`, `getDadosSelectDoc`, `storeFavoritePro`,
-    `checkDataFavoritePro`, `updateSelectFavorites`...): `propProcesso`, `listAndamento`, `listDocumentosAssinados`, `tiposDocumentos`;
+  - (Favoritos legado, `sei-pro-favoritos.js`: removido em 20/11/2026, não é mais consumidor);
   - Editor (`sei-pro-editor.js`: `arrayDadosEditor`, `replaceDadosEditor`, `initFunctions`; e `camposDinamicosProcesso`,
     `openCamposDinamicosForm`, `getInteressadosProcesso`, `getListaAtribuicaoProcesso`);
   - Edição legada de dados do processo: `editDadosArvorePro_`, `addUrgenteProcessoPro`, `addTrancadoProcessoPro`, `getIsProcUrgente`,
@@ -711,7 +709,7 @@ Ao vivo (SEI SP, tema `#0494c7`, trocado para verde, vermelho e amarelo, claro e
     `getSelectHipoteseLegal`, `getHipoteseLegal`;
   - Documentos assinados e lista de documentos: `initCheckNaoAssinados`/`boxCheckNaoAssinados` (o aviso de não assinados),
     `getListDocumentosArvore`, `fillDocumentosActionsPro`, `refreshDocumentosActionsPro`, `getDocumentosActions`, `openDialogDoc`,
-    `getNewDocCompareDocs`, `getBatchActionsPro` (ações em lote);
+    `getBatchActionsPro` (ações em lote);
   - Histórico legado: `mergeAllAndamentosProcesso`, `setHistoryProcessosPro`, `getDadosAndamentoPro`, `getBlocoProcessoHistorico`,
     `getDataRecebimentoPro` (esta é quem alimenta o `configDataRecebimentoPro` que a capa nova lê);
   - Título da página e URL amigável: `updateTitlePage`, `updateUrlPage`;

@@ -9,9 +9,6 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconDynamicField === 'function' || typeof parent.insertIconDynamicField !== 'undefined') {
         parent.insertIconDynamicField();
     }
-    if ((typeof parent.insertIconFormSheet === 'function' || typeof parent.insertIconFormSheet !== 'undefined') && parent.checkConfigValue('gerenciarformularios')) {
-        parent.insertIconFormSheet();
-    }
     if (typeof parent.initDocVideoPro === 'function' || typeof parent.initDocVideoPro !== 'undefined' || typeof parent.initDocZipPro !== 'undefined') {
         parent.initDocVideoPro();
         parent.initDocImagemPro();

@@ -55,17 +55,6 @@
     padding-top: 6px;
     background: #fff;
 }
-.sheetsLoginPro i {
-    font-size: 1em !important;
-    margin: 0 3px !important;
-}
-#authorizeButtonPro, #signoutButtonPro {
-    padding: 3px !important;
-    background-color: transparent;
-}
-#authorizeButtonPro {
-    padding: 3px 6px !important;
-}
 .sheetsUpdate {
     position: absolute;
     right: 0;

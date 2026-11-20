@@ -10,7 +10,6 @@ AUMENTARFONTE: a-large-small
 AUTOPREENCHERSENHA: key-round
 BAIXARDOCUMENTO: download
 BARRAACOES: square-mouse-pointer
-BASEDADOS: database
 CAIXASELECAO: square-check-big
 CAPAPROCESSO: file-badge
 CERTIDAOSIGILO: file-lock
@@ -73,9 +72,6 @@ PRAZOS: alarm-clock
 PRESCRICOES: hourglass
 PROCESSOSEMLOTE: folders
 PROJETOS: folder-kanban
-PROJETOSEDIT: folder-pen
-PROJETOSIMPORT: key
-PROJETOSSHARE: share-2
 QRCODE: qr-code
 QUALIDADEIMAGENS: image-down
 QUEBRAPAGINA: separator-horizontal
@@ -90,7 +86,6 @@ RESIZEARVORE: move-horizontal
 REVISARDOC: file-pen-line
 ROLAGEMINFINITA: infinity
 SALVAMENTOAUTOMATICO: save
-SEISHEETS: sheet
 SIGILODOC: spro-tarja
 SUBSTITUIRSELECAO: chevrons-up-down
 SUMARIO: list-tree

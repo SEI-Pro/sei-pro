@@ -28,25 +28,6 @@ function setTimeTest() {
     var seconds = Math.floor(totalSecondsTest % 60);
     totalSecondsTestText = pad(hours,2)+':'+pad(minutes,2)+':'+pad(seconds,2);
 }
-// On load, called to load the auth2 library and API client library.
-function handleClientLoadPro(TimeOut = 3000) {
-    if (TimeOut <= 0) { return; }
-    if ((typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined' || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined') && typeof gapi !== 'undefined' && typeof initClientPro !== 'undefined') { 
-        gapi.load('client:auth2', initClientPro);
-    } else if (
-            (typeof spreadsheetIdProjetos_Pro !== 'undefined' && spreadsheetIdProjetos_Pro === false) || 
-            (typeof spreadsheetIdFormularios_Pro !== 'undefined' && spreadsheetIdFormularios_Pro === false) ||
-            (typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' && spreadsheetIdSyncProcessos_Pro === false)
-        ) {
-        console.log('notConfig handleClientLoadPro'); 
-        return;
-    } else {
-        setTimeout(function(){ 
-            handleClientLoadPro(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload handleClientLoadPro'); 
-        }, 500);
-    }
-}
 
 //// Agrupamento de lista de processos
 function getListTypes(acaoType) {
@@ -986,7 +967,6 @@ function getProcessosPaginacao(this_, index, tipo) {
                 var ItensHash_ = $('#hdn'+tipo+'ItensHash');
                     //ItensHash_.val(ItensHash);
                 getProcessosPaginacao(this_, index+1, tipo);
-                if (checkConfigValue('gerenciarfavoritos') && typeof appendStarOnProcess === 'function') appendStarOnProcess();
                 initControlePrazo(true);
                 initViewEspecifacaoProcesso();
                 addAcompanhamentoEspIcon();
@@ -1339,40 +1319,6 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
     } else {
         resetDialogBoxPro('dialogBoxPro');
         alertaBoxPro('Sucess', 'check-circle', 'Informa\u00E7\u00F5es editadas com sucesso!');
-    }
-}
-function initPanelFavorites(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelFavorites !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
-        if (checkConfigValue('gerenciarfavoritos') && typeof getStoreFavoritePro() !== 'undefined' && getStoreFavoritePro().hasOwnProperty('favorites')) {
-            setTimeout(function(){ 
-                setPanelFavorites('insert');
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('setPanelFavorites');
-            }, 500);
-        }
-    } else {
-        setTimeout(function(){ 
-            initPanelFavorites(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPanelFavorites'); 
-        }, 500);
-    }
-}
-function checkLoadConfigSheets(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof checkConfigValue !== 'undefined') { 
-        if (
-            (checkConfigValue('gerenciarprojetos') && typeof spreadsheetIdProjetos_Pro !== 'undefined' && spreadsheetIdProjetos_Pro !== false && spreadsheetIdProjetos_Pro !== 'undefined') ||
-            (checkConfigValue('gerenciarformularios') && typeof spreadsheetIdFormularios_Pro !== 'undefined' && spreadsheetIdFormularios_Pro !== false && spreadsheetIdFormularios_Pro !== 'undefined') ||
-            (checkConfigValue('sincronizarprocessos') && typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' && spreadsheetIdSyncProcessos_Pro !== false && spreadsheetIdSyncProcessos_Pro !== 'undefined')
-        ){
-            handleClientLoadPro();
-            // console.log('handleClientLoadPro');
-        }
-    } else {
-        setTimeout(function(){ 
-            checkLoadConfigSheets(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload checkLoadConfigSheets'); 
-        }, 500);
     }
 }
 function orderDivPanel(html, idOrder, name) {
@@ -3627,8 +3573,6 @@ function initSeiPro() {
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();
-        initPanelFavorites();
-        checkLoadConfigSheets();
         insertDivPanel();
         setTimeout(() => { initNewTabProcesso() }, 2000);
         forceOnLoadBody();
@@ -3654,7 +3598,6 @@ function initSeiPro() {
         // oculto frmCheckerProcessoPro) nao eram carregados naquela abertura.
         initDadosProcesso();
         initObserveUrlChange();
-        checkLoadConfigSheets();
         //observeHistoryBrowserPro();
 	}
     initReloadModalLink();

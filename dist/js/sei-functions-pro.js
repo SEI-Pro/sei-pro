@@ -26,8 +26,6 @@ var andamentoPaginacaoTemp = [];
 var dataDocs = [];
 var filesystem = null;
 var FileError = null;
-var fileSystemPro = false;
-var fileSystemContentPro = false;
 var delayCrash = false;
 var isProcUrgente = false;
 var isNewSEI = getIsNewSEI();
@@ -480,14 +478,6 @@ function loginsEquivalentesPro(a, b) {
 var userSEI = getLoginSEIPro();
     userSEI = (userSEI) ? userSEI.login : false;
 
-// var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
-// var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
-// var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
-// var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
-// var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
-var CLIENT_ID_PRO = false;
-var API_KEY_PRO = false;
-
 var sortListSaved = (typeof localStorageRestorePro('tablesorter-savesort') !== 'undefined' && localStorageRestorePro('tablesorter-savesort') !== null) ? localStorageRestorePro('tablesorter-savesort')[window.location.pathname] : false;
 
 var iconSeiPro = URL_SPRO + 'icons/menu/seipro.png';
@@ -533,14 +523,44 @@ function compareVersionNumbers(v1, v2){
     return 0;
 }
 
-/* function _G() { // get  Session Google Name Space
-    var _return = localStorage.getItem('SEIPro_google_projetos');
-        _return = (_return === null) ? localStorage.getItem('SEIPro_google_processos') : _return;
-        _return = (_return === null) ? localStorage.getItem('SEIPro_google_formularios') : _return;
-        _return = (_return === null) ? false : _return;
+// Tabela de equivalentes ASCII usada por quem grava texto no SEI (marcador, nome de documento enviado por arrastar).
+// Veio do sei-pro-proc-lote.js, que saiu (o Processos em lote agora e o modulo TS): os chamadores seguem aqui.
+/**
+ * O SEI recebe o formulario em ISO-8859-1 e o SEI Pro serializa com escape(),
+ * que transforma o que nao cabe em latin-1 num %uXXXX que o PHP nao decodifica:
+ * o caractere entra no processo como o texto literal "%u2014". Como as
+ * especificacoes normalmente sao coladas do Word ou do Excel -- que trocam
+ * hifen por travessao e aspas retas por curvas -- isso aconteceria o tempo
+ * todo. Comprovado no SEI 4.1.5: "Teste travessao (travessao) aqui" gravou
+ * "Teste travessao %u2014 aqui".
+ */
+var PROCLOTE_TROCAS = {
+    '\u2010': '-', '\u2011': '-', '\u2012': '-', '\u2013': '-', '\u2014': '-', '\u2015': '-', '\u2212': '-',
+    '\u2018': "'", '\u2019': "'", '\u201A': "'", '\u201B': "'", '\u2032': "'",
+    '\u201C': '"', '\u201D': '"', '\u201E': '"', '\u201F': '"', '\u2033': '"',
+    '\u2026': '...', '\u2022': '-', '\u00A0': ' ', '\u2007': ' ', '\u2008': ' ',
+    '\u2009': ' ', '\u200A': ' ', '\u202F': ' ', '\u200B': '', '\uFEFF': '',
+    '\u20AC': 'EUR', '\u2122': '(TM)', '\u2190': '<-', '\u2192': '->', '\u2264': '<=', '\u2265': '>='
+};
 
-    return _return ? JSON.parse(_return) : false;
-} */
+/** Deixa o texto inteiro representavel em ISO-8859-1, sem perder sentido. */
+var procLote_paraLatin1 = (texto) => {
+    return String((texto === null || typeof texto === 'undefined') ? '' : texto)
+        .normalize('NFC')
+        .replace(/[\s\S]/g, (c) => {
+            // A tabela vem ANTES do atalho de latin-1 de proposito: o espaco
+            // nao separavel (U+00A0) cabe em latin-1, mas colado do Word ele
+            // quebra a busca no SEI -- "Contrato 123" nao acha "Contrato\u00A0123".
+            if (Object.prototype.hasOwnProperty.call(PROCLOTE_TROCAS, c)) return PROCLOTE_TROCAS[c];
+            if (c.charCodeAt(0) < 256) return c;
+            // ultimo recurso: tira o acento e fica com a letra base
+            const base = c.normalize('NFD').replace(/[\u0300-\u036F]/g, '');
+            for (let i = 0; i < base.length; i++) {
+                if (base.charCodeAt(i) > 255) return '';
+            }
+            return base;
+        });
+};
 function _P() { // get  Session Name Space
     return JSON.parse(sessionStorage.getItem('new_extension'));
 }
@@ -1712,196 +1732,7 @@ function getColumnsSortable(elemTable) {
     }).get();
     return arrayColumns;
 }
-function initFileSystem() {
-    // Allow for vendor prefixes.
-    window.requestFileSystem = window.requestFileSystem ||
-    window.webkitRequestFileSystem;
-    // Create a variable that will store a reference to the FileSystem.
-    // Start the app by requesting a FileSystem (if the browser supports the API)
-    if (window.requestFileSystem) {
-        setFileSystem();
-    } else {
-        console.log('Desculpe! Seu navegador n\u00E3o possui suporte ao sistema de arquivos local (FileSystem API)');
-    }
-}
 // A simple error handler to be used throughout this demo.
-function errorHandler(error) {
-    console.log(error);
-}
-// Request a FileSystem and set the filesystem variable.
-function setFileSystem() {
-    navigator.webkitPersistentStorage.requestQuota(1024 * 1024 * 5,
-        function(grantedSize) {
-            // Request a file system with the new size.
-            window.requestFileSystem(window.PERSISTENT, grantedSize, function(fs) {
-                // Set the filesystem variable.
-                filesystem = fs;
-                // Setup event listeners on the form.
-                // Update the file browser.
-                fileSystemListFiles();
-            }, errorHandler);
-        }, errorHandler);
-}
-  
-function fileSystemLoadFile(filename) {
-    filesystem.root.getFile(filename, {}, function(fileEntry) {
-        fileEntry.file(function(file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                // Update the form fields.
-                var return_this = (typeof this.result !== 'undefined') ? this.result : false;
-                    return_this = (return_this && isJson(JSON.parse(this.result))) ? JSON.parse(this.result) : [];
-                // console.log(filename, return_this);
-                fileSystemContentPro = return_this;
-            };
-            reader.readAsText(file);
-        }, errorHandler);
-
-    }, errorHandler);
-}
-function fileSystemListFiles() {
-    var dirReader = filesystem.root.createReader();
-    var entries = [];
-    var fetchEntries = function() {
-        dirReader.readEntries(function(results) {
-            if (!results.length) {
-                fileSystemPro = entries.sort().reverse();
-            } else {
-                entries = entries.concat(results);
-                fetchEntries();
-            }
-        }, errorHandler);
-    };
-    fetchEntries();
-}
-// Save a file in the FileSystem.
-function fileSystemSaveFile(filename, content) {
-    filesystem.root.getFile(filename, {create: true}, function(fileEntry) {
-        fileEntry.createWriter(function(fileWriter) {
-            fileWriter.onwriteend = function(e) {
-                // Update the file browser.
-                fileSystemListFiles();
-                // console.log('File saved');
-            };
-            fileWriter.onerror = function(e) {
-                console.log('Write error: ' + e.toString());
-                console.log('Ocorreu um erro e n\u00E3o foi poss\u00EDvel salvar seu arquivo');
-            };
-            var contentBlob = new Blob([content], {type: 'text/plain'});
-            fileWriter.write(contentBlob);
-        }, errorHandler);
-    }, errorHandler);
-}
-function fileSystemDeleteFile(filename) {
-    filesystem.root.getFile(filename, {create: false}, function(fileEntry) {
-        fileEntry.remove(function(e) {
-            // Update the file browser.
-            fileSystemListFiles();
-            // console.log('File deleted!');
-        }, errorHandler);
-    }, errorHandler);
-}
-function fileSystemUpdateFile(filename, content) {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { fileSystemDeleteFile(filename); }
-    }, 10);
-    setTimeout(function(){ 
-        fileSystemSaveFile(filename, content);
-        fileSystemLoadFile(filename);
-    }, 100);
-}
-function getLocalFilePro() {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { 
-            fileSystemLoadFile('configPro.json'); 
-            setTimeout(function(){ 
-                // console.log(fileSystemPro, fileSystemContentPro);
-            }, 100);
-        }
-    }, 10);
-}
-function setLocalFilePro(content) {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { 
-            fileSystemUpdateFile('configPro.json', JSON.stringify(content)); 
-            // console.log('setLocalFilePro', content);
-        }
-    }, 10);
-    setTimeout(function(){ 
-        getLocalFilePro();
-    }, 500);
-}
-function initDownloadLocalFilePro(this_, TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if ((typeof fileSystemContentPro !== 'undefined' && fileSystemContentPro) || (typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro'))) ) { 
-        downloadLocalFilePro(this_);
-    } else {
-        $(this_).find('i').attr('class','fas fa-spinner fa-spin cinzaColor');
-        if (TimeOut == 9000) fileSystemLoadFile('configPro.json');
-        setTimeout(function(){ 
-            initDownloadLocalFilePro(this_, TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDownloadLocalFilePro'); 
-        }, 500);
-    }
-}
-function downloadLocalFilePro(this_) {
-    var _this = $(this_);
-    var configPro = JSON.stringify(localStorageRestorePro('configDataFavoritesPro'));
-    var nameFile = 'configPro';
-
-    var downloadLink = document.createElement("a");
-    var blob = new Blob(["\ufeff", configPro]);
-    var url = URL.createObjectURL(blob);
-    downloadLink.href = url;
-    downloadLink.download = nameFile+'_'+moment().format('YYYYMMDD_HH:mm:ss')+'.json';
-
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-
-    _this.find('i').attr('class','fas fa-thumbs-up azulColor');
-    setTimeout(function(){ 
-        _this.find('i').attr('class','fas fa-download azulColor');
-    }, 1000);
-}
-function initLoadLocalFilePro() {
-    $('#selectLocalFilesPro[type=file]').trigger('click');
-}
-function loadLocalFilePro() {
-    confirmaFraseBoxPro('Esta a\u00E7\u00E3o ir\u00E1 substituir todos os dados de processos monitorados. Tem certeza que deseja prosseguir?', 'SIM', 
-        function(){
-            var files = document.getElementById('selectLocalFilesPro').files;
-            if (files.length <= 0) { return false; }
-            
-            var fr = new FileReader();
-            fr.onload = function(e) { 
-                var result = JSON.parse(e.target.result); 
-                    result.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
-
-                    setLocalFilePro(result);
-                    localStorageStorePro('configDataFavoritesPro', result);
-                    setPanelFavorites('refresh');
-                    resetDialogBoxPro('dialogBoxPro');
-                setTimeout(function(){ 
-                        alertaBoxPro('Sucess', 'check-circle', 'Configura\u00E7\u00F5es carregadas com sucesso!');
-                        console.log('loadLocalFilePro', result.datetime, result, getStoreFavoritePro());
-                }, 500);
-            }
-            fr.readAsText(files.item(0));
-    });
-}
-function htmlIconFavorites(id_procedimento, float = false) {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-    var dataFavorites = (jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
-    var floatStyle = (float) ? 'float: '+float+';' : '';
-    var iconStar = (dataFavorites == '') 
-                    ? '<i title="Monitorar Processo" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'add\')" class="far fa-dot-circle iconFavoritePro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
-                    : '<i title="Parar de Monitorar Processo" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'remove\')" class="fas fa-bullseye starGold iconFavoritePro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
-    return iconStar;
-}
 function resizeWinArvore(widthArvore) {
     var indent = 10; // reduz 10 pixel a largura do visualizador para compensar a barra divisoria existente entre a arvore e o visualizador
     var widthConteudo = $('#divConteudo').width(); // capta o tamanho total da janela do SEI (janela interna)
@@ -6420,7 +6251,6 @@ function filterTagTable(this_) {
         });
         */
        
-        updateCountTableFav();
         th_head.find('.tablesorter-header-inner').append(htmlFilter);
         setOptionsPro('filterTag_'+typeTable, tagName_);
         infraTooltipOcultar();
@@ -6505,11 +6335,6 @@ function saveFollowDesc(this_, mode) {
                     kanban_item.find('span.info').text(value);
                     kanban_item.find('span.info_txt input').val(value);
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
-            var favoriteIndex = (id_procedimento) ? storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento)) : index;
-                storeFavorites['favorites'][favoriteIndex].descricao = value;
-                localStorageStorePro('configDataFavoritesPro', storeFavorites);
         }
     }
 }
@@ -6538,9 +6363,6 @@ function editFollowDesc(this_, mode) {
 function keyFollowDesc(e, mode) {
     if(e.which == 13) {
         parent.saveFollowDesc(e.target || e.srcElement, mode);
-        if (mode == 'fav') {
-            saveConfigFav();
-        }
     }
 }
 function showFollowEtiqueta(this_, status, mode) {
@@ -6572,11 +6394,6 @@ function showFollowEtiqueta(this_, status, mode) {
         td.find('.info_tags_follow_txt').show().find('input.tag-input').focus().trigger('click').after(btnClose);
         addOptionsEtiqueta(this_, mode);
     } 
-    setTimeout(function(){ 
-        if (status == 'close' && mode == 'fav' && !_this.closest('tr').find('.content_desc span.info_txt').is(':visible')) {
-            saveConfigFav();
-        }
-    }, 500);
     if ($($ifrVisualizacao).length > 0) {
         // o tooltip foi aberto no frame do formulario (aninhado no SEI 4.1+)
         var janelaTooltip = getIframeVisualizacaoPro()[0].contentWindow;
@@ -6596,13 +6413,13 @@ function checkEtiquetaPriority(this_) {
         tr.removeClass('urgenteBoxDisplay').removeClass('importanteBoxDisplay');
     }
 }
-// Favoritos novos (pacote Lab) nao carregam sei-pro-favoritos.js: sem getStoreFavoritePro, etiquetas dos Projetos usam a lista vazia.
+// O Favoritos (modulo TS) guarda as proprias etiquetas: so o modo 'ativ' (Atividades) usa esta lista.
 function getColorTags(mode) {
     var colorTags = (mode == 'ativ') 
             ? (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== 'undefined' && arrayConfigAtivUnidade.config !== null && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined' && arrayConfigAtivUnidade.config.etiquetas !== null) 
                 ? arrayConfigAtivUnidade.config.etiquetas.config.colortags
                 : []
-            : (typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}}).config.colortags;
+            : [];
         colorTags = (typeof colorTags !== 'undefined') ? colorTags : [];
     return colorTags;
 }
@@ -6643,7 +6460,6 @@ function selectIconEtiqueta(this_, tagName, mode) {
                 ? $('.tableAtividades tbody, .atividadeInfo') 
                 : $('.kanbanAtividade, .atividadeInfo')
             : $('.tableFavoritos tbody');
-        table = (getContentsVisualizacaoPro().find('.favoritosLabelOptions').length > 0) ? getContentsVisualizacaoPro().find('.favoritosLabelOptions table') : table;
         table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
@@ -6670,7 +6486,7 @@ function saveConfigEtiqueta(name, value, icon, mode) {
     var storeEtiqueta = (mode == 'ativ') 
             ? (typeof arrayConfigAtivUnidade.config !== 'undefined' && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined') 
                 ? arrayConfigAtivUnidade.config.etiquetas : {config: {colortags: []}}
-            : (typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}});
+            : {favorites: [], config: {colortags: []}};
             // console.log(storeEtiqueta);
     var colorTags = (Object.keys(storeEtiqueta).length > 0 && typeof storeEtiqueta.config.colortags !== 'undefined') 
                         ? storeEtiqueta.config.colortags : [];
@@ -6691,8 +6507,6 @@ function saveConfigEtiqueta(name, value, icon, mode) {
             console.log(itemPushConfig, arrayConfigAtivUnidade['config']);
         }
         getServerAtividades({action: 'edit_etiqueta_config', config_etiquetas: arrayConfigAtivUnidade['config']['etiquetas']}, 'edit_etiqueta_config');
-    } else if (mode == 'fav') {
-        localStorageStorePro('configDataFavoritesPro', storeEtiqueta);
     }
 }
 function saveFollowEtiqueta() {
@@ -6740,12 +6554,6 @@ function saveFollowEtiqueta() {
             if (atividadeIndex != -1) {
                 tableConfigList.atividades[atividadeIndex].etiquetas = tags;
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
-            var id_procedimento = parseInt($(this).closest('tr').data('id_procedimento'));
-            var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-            storeFavorites['favorites'][favoriteIndex].etiquetas = tags;
-            localStorageStorePro('configDataFavoritesPro', storeFavorites);
         }
         infraTooltipOcultar();
     }
@@ -6756,7 +6564,7 @@ function normalizeNameTag(tag) {
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
         ? (typeof arrayConfigAtividades.etiquetas !== 'undefined' ? arrayConfigAtividades['etiquetas']['list'] : [])
-        : uniqPro($.map((typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}})['favorites'], function (value) { return value.etiquetas; }));
+        : [];
 }
 function getHtmlEtiqueta(name, mode) {
     var colorTags = getColorTags(mode);
@@ -6895,14 +6703,6 @@ function getDateSemantic(config) {
                         : (calcalert == 1) ? 'em '+calcalert+' dia' : (calcalert > 1) ? 'em '+calcalert+' dias' : (calcalert == 0) ? moment(duedate,formatDate).fromNow() : '';
     
     return {date: config.date, dateref: frowNow, duedate: duedate.format(displayFormat), alertdate: alertdate, calcalert: calcalert, duecalcref: duecalcref};
-}
-function configDatesPreview() {
-    var config = getConfigDatesFav();
-    if (config.selectdoc) { configDatesSetUpdate() }
-        config.dateTo = moment().format('YYYY-MM-DD');
-    var htmlDatePreview = getDatesPreview(config, true);
-        $('#dateboxPreview').show().html(htmlDatePreview);
-        //console.log(config);
 }
 function getProgressPreview(config) {
     var max = moment(config.dateDue, 'YYYY-MM-DD').diff(moment(config.date, 'YYYY-MM-DD'), 'days');
@@ -7660,83 +7460,6 @@ function execConcluirReabrirProcessoPro(url) {
         targetIfrVisualizacaoPro(url);
     }
 }
-//Initializes the API client library and sets up sign-in state listeners.
-/* function initClientPro() {
-    if ( typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdAtividades_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined'  || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' ) {
-
-        gapi.client.init({
-          apiKey: API_KEY_PRO,
-          clientId: CLIENT_ID_PRO,
-          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-          scope: 'https://www.googleapis.com/auth/spreadsheets'
-        }).then(function () {
-          // Listen for sign-in state changes.
-            
-            if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-            if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-            if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
-
-            // Handle the initial sign-in state.
-            updateSigninStatusPro(gapi.auth2.getAuthInstance().isSignedIn.get());
-            $('#authorizeButtonPro').on('click',function() { handleAuthClickPro() });
-            $('#signoutButtonPro').on('click',function() { handleSignoutClickPro() });
-
-        }, function(error) {
-          alertaBoxPro('Error', 'exclamation-triangle', JSON.stringify(error, null, 2));
-        });
-    }
-}
-function onSignInPro(response) {
-    const responsePayload = parseJwt(response.credential);
-    var googleUser = {response: response, decode: responsePayload};
-        window.googleUser = googleUser;
-        sessionStorageStorePro('googleUser', googleUser);
-}
-// Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
-function updateSigninStatusPro(isSignedIn) {
-    if (isSignedIn) {
-        $('#authorizeButtonPro').hide();
-        $('#signoutButtonPro').show();
-        if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-        if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-        if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-    } else {
-        $('#authorizeButtonPro').show();
-        $('#signoutButtonPro').hide();
-    }
-}
-function loadSheetIconPro(status) {
-    if ( status == 'load' ) {
-      $('#signoutButtonPro').removeClass('noperfil').addClass('spinner');
-      $('#signoutButtonPro i').attr('class','fas fa-spinner fa-spin brancoColor');
-    } else if ( status == 'noperfil' ) {
-        $('#signoutButtonPro').removeClass('spinner');
-        $('#signoutButtonPro').addClass('noperfil').show().attr('onmouseover', 'return infraTooltipMostrar(\'Perfil n&atilde;o autorizado. Solicite acesso &agrave; planilha\')').find('i').attr('class','fas fa-user-slash brancoColor');
-    } else {
-        $('#signoutButtonPro').removeClass('noperfil').removeClass('spinner');
-        $('#signoutButtonPro i').attr('class','fas fa-power-off brancoColor');
-    }
-}
-// Sign in the user upon button click.
-function handleAuthClickPro(event) {
-    gapi.auth2.getAuthInstance().signIn();
-}
-
-// Sign out the user upon button click.
-function handleSignoutClickPro(event) {
-    gapi.auth2.getAuthInstance().signOut();
-    logoutSheetPro();
-}
-function logoutSheetPro() {
-    $('#projetosGantt').remove();
-    localStorageRemovePro('loadEtapasSheet');
-    localStorageRemovePro('loadFormulariosSheet');
-    //localStorageRemovePro('configBasePro');
-    removeOptionsPro('configBaseSelectedPro');
-    removeOptionsPro('configBaseSelectedFormPro');
-    removeOptionsPro('projetosGanttActiveTabs');
-} */
 function uniqPro(a) {
     return a.sort().filter(function(item, pos, ary) {
         return !pos || item != ary[pos - 1];
@@ -9096,10 +8819,6 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         updateSelectConcluirEtapa();
     } else if (mode == 'projeto') { 
         updateSelectConcluirProjetoEtapa();
-    } else if (mode == 'favorites') {
-        parent.updateSelectFavorites();
-        parent.initAppendIconFavorites();
-        console.log('updateSelectFavorites');
     } else if (mode == 'dados') {
         //loopIDProcedimentos();
     }
@@ -13286,18 +13005,9 @@ function appendIconBatchDocs(loop = true) {
     }
     if (loop) { reagendarIconeBarraPro('appendIconBatchDocs', appendIconBatchDocs); }
 }
-function initDocLoteModalSelecaoDoc(TimeOut = 9000) {
+function initDocLoteModalSelecaoDoc() {
     if (document.documentElement.hasAttribute('data-seipro-documentos-lote')) { document.dispatchEvent(new CustomEvent('spro-documentos-lote-abrir')); return; }
-    if (TimeOut <= 0) { return; }
-    if (typeof $().chosen !== 'undefined' && typeof URL_SPRO !== 'undefined') { 
-        docLoteModalSelecaoDoc();
-    } else {
-        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-        setTimeout(function(){ 
-            initDocLoteModalSelecaoDoc(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDocLoteModalSelecaoDoc'); 
-        }, 500);
-    }
+    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir os Documentos em Lote nesta tela. Recarregue a p\u00E1gina (F5) e tente de novo.');
 }
 function setProgressBarOnProcesso() {
     if (typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.prescricoes !== 'undefined' && checkConfigValue('gerenciarprescricoes')) {
@@ -13471,21 +13181,6 @@ function appendIconDynamicField(loop = true) {
             htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconDynamicField, 'append');
     }
     if (loop) { reagendarIconeBarraPro('appendIconDynamicField', appendIconDynamicField); }
-}
-function insertIconFormSheet() {
-    waitLoadPro($('#ifrArvore').contents(), '#divArvore', 'img[src*="formulario1.gif"]', appendIconFormSheet);
-}
-function appendIconFormSheet(loop = true) {
-    var ifrArvore = $('#ifrArvore').contents();
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
-    if (ifrVisualizacao.find('#iconFormSheet').length == 0 && ifrArvore.find('span.infraArvoreNoSelecionado').closest('a').prev().find('img[src*="formulario1.gif"]').length > 0 ) {
-        var base64IconFormSheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA4NpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkNDkxZTA3Ni04ZjNkLTQ0MzctOTAxMS02MDAwOTNlYTQ0OGEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUY1NEE2MzM4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUY1NEE2MzI4N0QwMTFFQzkxMzY4RjBERUI1MTJBOEYiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpiMjRmYmE0Mi1iN2UyLTQ0NmEtYWMzMS04MjAzNjhiNTg3YzkiIHN0UmVmOmRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDpiNDkyMWRjZi1kZDNhLTI4NGYtOWEyMC1h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';
-        var htmlIconFormSheet =  '<a href="#" id="iconFormSheet" data-spro-click="parent.openFormSheet" data-spro-args="'+argsPro()+'" tabindex="452" class="botaoSEI">'+
-                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconFormSheet+'" alt="Salvar dados na planilha" title="Salvar dados na planilha">'+
-                                 '</a>';
-            htmlPro(ifrVisualizacao.find('#divArvoreAcoes'), htmlIconFormSheet, 'append');
-    }
-    if (loop) { reagendarIconeBarraPro('appendIconFormSheet', appendIconFormSheet); }
 }
 // O link de download fica no iframe interno a partir do SEI 4.1, que ainda pode estar carregando
 // quando a barra chama esta funcao: o conteudo e resolvido de novo a cada tentativa.
@@ -14729,7 +14424,6 @@ function scriptVisualizacaoPro(ifrV) {
     if (typeof loadFontIcons === 'function') loadFontIcons('head', ifrV);
     if (typeof checkPageVisualizacao === 'function') checkPageVisualizacao();
     if (typeof checkPageAtividadesVisualizacao === 'function') checkPageAtividadesVisualizacao();
-    if (typeof checkPageFavoritosVisualizacao === 'function') checkPageFavoritosVisualizacao();
 }
 
 function loadScriptArvorePro() {
