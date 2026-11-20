@@ -1,0 +1,2004 @@
+/* GERADO por comparador-documentos/build.mjs. NAO EDITE ESTE ARQUIVO. */
+/*
+ * Base visual dos módulos novos do SEI Pro.
+ *
+ * Tokens no :root (e no :host, para valerem dentro de Shadow DOM: o balão que o
+ * content script abre na página do SEI). O modo escuro vem de duas formas:
+ * forçado por data-tema (o painel abaixo da lista segue o SEI, que só é escuro
+ * com o modo noturno do SEI Pro) ou pelo sistema, quando ninguém forçou nada
+ * (o painel lateral). A cor de destaque pode vir do tema do SEI
+ * (--spro-cor-sei, posta pelo app embutido).
+ */
+:root,
+:host {
+  --spro-fundo: #ffffff;
+  --spro-fundo-2: #f6f7f9;
+  --spro-fundo-3: #eceef2;
+  --spro-pagina: #f3f4f7;
+  --spro-texto: #1b1f24;
+  --spro-suave: #5d6772;
+  --spro-fraco: #8b939c;
+  --spro-borda: #e3e6eb;
+  --spro-borda-forte: #cfd4db;
+  --spro-destaque: #1f5fbf;
+  --spro-destaque-texto: #ffffff;
+  --spro-perigo: #d1352b;
+  --spro-aviso: #b45c0a;
+  --spro-ok: #12805c;
+  --spro-novidade: #6d4fd8;
+  --spro-estrela: #f2a516;
+  --spro-sombra-1: 0 1px 2px rgb(16 24 40 / 6%);
+  --spro-sombra-2: 0 2px 4px -2px rgb(16 24 40 / 8%), 0 6px 14px -4px rgb(16 24 40 / 12%);
+  --spro-sombra-3: 0 10px 24px -6px rgb(16 24 40 / 18%), 0 24px 56px -12px rgb(16 24 40 / 24%);
+  --spro-veu: rgb(17 21 28 / 46%);
+  --spro-raio-p: 6px;
+  --spro-raio: 8px;
+  --spro-raio-g: 12px;
+  --spro-raio-xg: 16px;
+  --spro-fonte: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --spro-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --spro-dur: 150ms;
+  --spro-curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 10%, transparent);
+  --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 18%, transparent);
+  --spro-anel: 0 0 0 3px color-mix(in srgb, var(--spro-destaque) 30%, transparent);
+  color-scheme: light;
+}
+:root[data-tema="escuro"],
+:host([data-tema="escuro"]) {
+  --spro-fundo: #1a1d21;
+  --spro-fundo-2: #22262b;
+  --spro-fundo-3: #2b3036;
+  --spro-pagina: #141619;
+  --spro-texto: #e7e9ec;
+  --spro-suave: #a4abb3;
+  --spro-fraco: #767e87;
+  --spro-borda: #2f343a;
+  --spro-borda-forte: #3d434a;
+  --spro-destaque: #79acff;
+  --spro-destaque-texto: #0a1526;
+  --spro-perigo: #ff7d73;
+  --spro-aviso: #e8b04a;
+  --spro-ok: #4fcf96;
+  --spro-novidade: #ab98ff;
+  --spro-estrela: #f6b73c;
+  --spro-sombra-1: 0 1px 2px rgb(0 0 0 / 30%);
+  --spro-sombra-2: 0 2px 4px -2px rgb(0 0 0 / 40%), 0 6px 14px -4px rgb(0 0 0 / 45%);
+  --spro-sombra-3: 0 10px 24px -6px rgb(0 0 0 / 50%), 0 24px 56px -12px rgb(0 0 0 / 60%);
+  --spro-veu: rgb(0 0 0 / 58%);
+  --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 14%, transparent);
+  --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 24%, transparent);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema]),
+  :host(:not([data-tema])) {
+    --spro-fundo: #1a1d21;
+    --spro-fundo-2: #22262b;
+    --spro-fundo-3: #2b3036;
+    --spro-pagina: #141619;
+    --spro-texto: #e7e9ec;
+    --spro-suave: #a4abb3;
+    --spro-fraco: #767e87;
+    --spro-borda: #2f343a;
+    --spro-borda-forte: #3d434a;
+    --spro-destaque: #79acff;
+    --spro-destaque-texto: #0a1526;
+    --spro-perigo: #ff7d73;
+    --spro-aviso: #e8b04a;
+    --spro-ok: #4fcf96;
+    --spro-novidade: #ab98ff;
+    --spro-estrela: #f6b73c;
+    --spro-sombra-1: 0 1px 2px rgb(0 0 0 / 30%);
+    --spro-sombra-2: 0 2px 4px -2px rgb(0 0 0 / 40%), 0 6px 14px -4px rgb(0 0 0 / 45%);
+    --spro-sombra-3: 0 10px 24px -6px rgb(0 0 0 / 50%), 0 24px 56px -12px rgb(0 0 0 / 60%);
+    --spro-veu: rgb(0 0 0 / 58%);
+    --spro-destaque-suave: color-mix(in srgb, var(--spro-destaque) 14%, transparent);
+    --spro-destaque-medio: color-mix(in srgb, var(--spro-destaque) 24%, transparent);
+    color-scheme: dark;
+  }
+}
+/* Destaque na cor do tema do SEI (painel abaixo da lista). No escuro, clareado para ter contraste. */
+:root[data-cor-sei] {
+  --spro-destaque: var(--spro-cor-sei);
+}
+:root[data-cor-sei][data-tema="escuro"] {
+  --spro-destaque: color-mix(in srgb, var(--spro-cor-sei) 45%, #ffffff);
+}
+
+/* [hidden] perde para display de classe; o agente aprendeu isso do jeito difícil. */
+[hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: [hidden] precisa vencer o display das classes */
+  display: none !important;
+}
+.spro-icone {
+  flex: none;
+  vertical-align: middle;
+}
+
+/* ---------- Botões ---------- */
+.spro-botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  box-shadow: var(--spro-sombra-1);
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur),
+    box-shadow var(--spro-dur),
+    color var(--spro-dur);
+}
+.spro-botao:hover {
+  background: var(--spro-fundo-2);
+  border-color: color-mix(in srgb, var(--spro-borda-forte) 60%, var(--spro-texto));
+}
+.spro-botao:active {
+  background: var(--spro-fundo-3);
+}
+.spro-botao .spro-icone {
+  color: var(--spro-suave);
+}
+.spro-botao.primario {
+  color: var(--spro-destaque-texto);
+  background: var(--spro-destaque);
+  border-color: transparent;
+  box-shadow:
+    var(--spro-sombra-1),
+    inset 0 1px 0 rgb(255 255 255 / 14%);
+}
+.spro-botao.primario .spro-icone {
+  color: inherit;
+}
+.spro-botao.primario:hover {
+  background: color-mix(in srgb, var(--spro-destaque) 88%, #000000);
+}
+.spro-botao.perigo {
+  color: var(--spro-perigo);
+}
+.spro-botao.perigo .spro-icone {
+  color: inherit;
+}
+.spro-botao.primario.perigo {
+  color: #ffffff;
+  background: var(--spro-perigo);
+}
+.spro-botao.fantasma {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.spro-botao.fantasma:hover {
+  background: var(--spro-fundo-3);
+}
+.spro-botao.pequeno {
+  min-height: 26px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+.spro-botao:disabled,
+.spro-botao-icone:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.spro-botao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--spro-suave);
+  background: none;
+  border: 0;
+  border-radius: var(--spro-raio);
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    color var(--spro-dur);
+}
+.spro-botao-icone:hover,
+.spro-botao-icone[aria-expanded="true"] {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-botao-icone.pequeno {
+  width: 26px;
+  height: 26px;
+}
+
+/* ---------- Campos ---------- */
+.spro-campo {
+  box-sizing: border-box;
+  min-height: 32px;
+  min-width: 0;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  transition:
+    border-color var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+.spro-campo::placeholder {
+  color: var(--spro-fraco);
+}
+.spro-campo:hover {
+  border-color: color-mix(in srgb, var(--spro-borda-forte) 70%, var(--spro-texto));
+}
+textarea.spro-campo {
+  resize: vertical;
+  line-height: 1.45;
+  padding: 8px 10px;
+}
+.spro-campo:focus,
+.spro-campo:focus-visible {
+  outline: none;
+  border-color: var(--spro-destaque);
+  box-shadow: var(--spro-anel);
+}
+.spro-botao:focus-visible,
+.spro-botao-icone:focus-visible,
+.spro-combo:focus-visible,
+.spro-chip:focus-visible,
+.spro-segmentado button:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+/* No menu o fundo já mostra o item em foco (o foco anda junto com o mouse). */
+.spro-menu-item:focus-visible {
+  outline: none;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--spro-destaque);
+}
+
+/* ---------- Controle segmentado ---------- */
+.spro-segmentado {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px;
+  background: var(--spro-fundo-3);
+  border-radius: calc(var(--spro-raio) + 1px);
+}
+.spro-segmentado button {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--spro-suave);
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--spro-dur),
+    color var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+.spro-segmentado button:hover {
+  color: var(--spro-texto);
+}
+.spro-segmentado button[aria-selected="true"],
+.spro-segmentado button[aria-pressed="true"],
+.spro-segmentado button[aria-checked="true"] {
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  box-shadow: var(--spro-sombra-1);
+  font-weight: 600;
+}
+
+/* ---------- Chips (etiquetas) e pílulas ---------- */
+.spro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--spro-texto);
+  background: color-mix(in srgb, var(--cor, var(--spro-fundo-3)) 30%, var(--spro-fundo));
+  border: 1px solid color-mix(in srgb, var(--cor, var(--spro-borda-forte)) 60%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur),
+    opacity var(--spro-dur);
+}
+:root[data-tema="escuro"] .spro-chip,
+:host([data-tema="escuro"]) .spro-chip {
+  background: color-mix(in srgb, var(--cor, var(--spro-fundo-3)) 16%, var(--spro-fundo));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema]) .spro-chip,
+  :host(:not([data-tema])) .spro-chip {
+    background: color-mix(in srgb, var(--cor, var(--spro-fundo-3)) 16%, var(--spro-fundo));
+  }
+}
+.spro-chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cor, var(--spro-fraco));
+}
+.spro-chip[aria-pressed="false"] {
+  color: var(--spro-suave);
+  background: transparent;
+  border-color: var(--spro-borda-forte);
+  border-style: dashed;
+}
+.spro-pilula {
+  --tom: var(--spro-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  max-width: 100%;
+  padding: 0 7px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--tom);
+  background: color-mix(in srgb, var(--tom) 11%, transparent);
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+.spro-pilula > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Seletor inteligente (combobox) ---------- */
+.spro-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 30px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 8px 0 10px;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  box-shadow: var(--spro-sombra-1);
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+.spro-combo:hover {
+  background: var(--spro-fundo-2);
+}
+.spro-combo > .spro-icone {
+  color: var(--spro-suave);
+}
+.spro-combo > .spro-icone:last-child {
+  margin-left: auto;
+  color: var(--spro-fraco);
+  transition: transform var(--spro-dur) var(--spro-curva);
+}
+.spro-combo-aberto {
+  border-color: var(--spro-destaque);
+  box-shadow: var(--spro-anel);
+}
+.spro-combo-aberto > .spro-icone:last-child {
+  transform: rotate(180deg);
+}
+.spro-combo-ativo {
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+  border-color: color-mix(in srgb, var(--spro-destaque) 45%, transparent);
+}
+.spro-combo-ativo:hover {
+  background: var(--spro-destaque-medio);
+}
+.spro-combo-ativo > .spro-icone {
+  color: inherit;
+}
+.spro-combo-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.spro-combo-rotulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-combo-vazio {
+  color: var(--spro-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spro-combo-compl {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--spro-suave);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-combo-erro {
+  border-color: var(--spro-perigo);
+}
+.spro-combo-mais {
+  flex: none;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--spro-destaque-texto);
+  background: var(--spro-destaque);
+  border-radius: 999px;
+}
+.spro-combo-cor {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+}
+.spro-combo-pop,
+.spro-menu-pop {
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: var(--spro-fonte);
+  font-size: 13px;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+  box-shadow: var(--spro-sombra-3);
+  animation: spro-surgir 140ms var(--spro-curva);
+  transform-origin: top center;
+}
+.spro-flutuante-cima {
+  transform-origin: bottom center;
+}
+@keyframes spro-surgir {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.spro-combo-cabeca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--spro-fraco);
+  border-bottom: 1px solid var(--spro-borda);
+}
+.spro-combo-busca {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0;
+  font: inherit;
+  color: var(--spro-texto);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.spro-combo-busca::placeholder {
+  color: var(--spro-fraco);
+}
+.spro-combo-lista {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  list-style: none;
+  outline: none;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.spro-combo-op {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+  user-select: none;
+}
+.spro-combo-op > .spro-icone {
+  color: var(--spro-suave);
+}
+.spro-combo-op-ativa {
+  background: var(--spro-fundo-3);
+}
+.spro-combo-op[aria-selected="true"] {
+  font-weight: 600;
+}
+.spro-combo-op-textos {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.spro-combo-op-rotulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-combo-op-rotulo mark {
+  color: inherit;
+  background: color-mix(in srgb, var(--spro-estrela) 35%, transparent);
+  border-radius: 2px;
+}
+.spro-combo-op-linha {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.spro-combo-op-linha > .spro-combo-op-rotulo {
+  flex: none;
+  max-width: 55%;
+}
+.spro-combo-op-compl {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--spro-suave);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-combo-op-compl mark {
+  color: inherit;
+  background: color-mix(in srgb, var(--spro-estrela) 35%, transparent);
+  border-radius: 2px;
+}
+.spro-combo-op-desc {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--spro-suave);
+  white-space: normal;
+}
+.spro-combo-caixa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  color: var(--spro-destaque-texto);
+  border: 1.5px solid var(--spro-borda-forte);
+  border-radius: 5px;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur);
+}
+.spro-combo-op[aria-selected="true"] .spro-combo-caixa {
+  background: var(--spro-destaque);
+  border-color: var(--spro-destaque);
+}
+.spro-combo-caixa .spro-icone {
+  stroke-width: 3;
+}
+.spro-combo-conta {
+  flex: none;
+  margin-left: auto;
+  min-width: 18px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-3);
+  border-radius: 999px;
+}
+.spro-combo-marca {
+  flex: none;
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--spro-destaque);
+}
+.spro-combo-conta + .spro-combo-marca {
+  margin-left: 0;
+}
+.spro-combo-extras:empty {
+  display: none;
+}
+.spro-combo-nada {
+  margin: 0;
+  padding: 14px 12px;
+  text-align: center;
+  color: var(--spro-suave);
+}
+.spro-combo-resumo {
+  margin: 0;
+  padding: 6px 12px 7px;
+  font-size: 11.5px;
+  color: var(--spro-fraco);
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-combo-falha {
+  color: var(--spro-perigo);
+}
+.spro-combo-esqueleto {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px;
+}
+.spro-combo-esqueleto > span {
+  display: block;
+  height: 10px;
+  background: linear-gradient(90deg, var(--spro-fundo-3) 25%, var(--spro-fundo-2) 50%, var(--spro-fundo-3) 75%);
+  background-size: 200% 100%;
+  border-radius: 5px;
+  animation: spro-brilho-esqueleto 1.3s linear infinite;
+}
+@keyframes spro-brilho-esqueleto {
+  to {
+    background-position: -200% 0;
+  }
+}
+.spro-combo-criar {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 4px;
+  padding: 7px 8px;
+  font-weight: 500;
+  color: var(--spro-destaque);
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-combo-criar:hover,
+.spro-combo-criar:focus-visible {
+  background: var(--spro-destaque-suave);
+}
+.spro-combo-rodape {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 6px 12px;
+  background: var(--spro-fundo-2);
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-combo-total {
+  flex: 1;
+  font-size: 12px;
+  color: var(--spro-suave);
+  white-space: nowrap;
+}
+.spro-combo-acao {
+  all: unset;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--spro-destaque);
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-combo-acao:hover,
+.spro-combo-acao:focus-visible {
+  background: var(--spro-destaque-suave);
+}
+.spro-combo-acao:disabled {
+  color: var(--spro-fraco);
+  pointer-events: none;
+}
+
+/* ---------- Menu ---------- */
+.spro-menu-pop {
+  padding: 5px;
+  overflow: auto;
+}
+.spro-menu-item {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 8px;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.spro-menu-item:hover,
+.spro-menu-item:focus {
+  background: var(--spro-fundo-3);
+}
+.spro-menu-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-p);
+  box-sizing: border-box;
+}
+.spro-menu-item:hover .spro-menu-icone,
+.spro-menu-item:focus .spro-menu-icone {
+  color: var(--spro-destaque);
+  background: var(--spro-fundo);
+}
+.spro-menu-rotulo {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spro-menu-dica {
+  font-size: 11.5px;
+  color: var(--spro-fraco);
+  font-variant-numeric: tabular-nums;
+}
+.spro-menu-perigo {
+  color: var(--spro-perigo);
+}
+.spro-menu-perigo .spro-menu-icone,
+.spro-menu-perigo:hover .spro-menu-icone,
+.spro-menu-perigo:focus .spro-menu-icone {
+  color: var(--spro-perigo);
+  background: color-mix(in srgb, var(--spro-perigo) 10%, transparent);
+  border-color: color-mix(in srgb, var(--spro-perigo) 22%, transparent);
+}
+.spro-menu-sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--spro-borda);
+}
+
+/* ---------- Diálogo ---------- */
+dialog.spro-dialogo {
+  box-sizing: border-box;
+  width: min(580px, calc(100vw - 24px));
+  max-width: none;
+  max-height: min(calc(100vh - 32px), 820px);
+  padding: 0;
+  font-family: var(--spro-fonte);
+  font-size: 13px;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-xg);
+  box-shadow: var(--spro-sombra-3);
+  overflow: hidden;
+}
+dialog.spro-dialogo[open] {
+  display: flex;
+  flex-direction: column;
+  animation: spro-dialogo-entrar 180ms var(--spro-curva);
+}
+@keyframes spro-dialogo-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+dialog.spro-dialogo::backdrop {
+  background: var(--spro-veu);
+  backdrop-filter: blur(2px);
+}
+dialog.spro-dialogo > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px 18px;
+  flex: none;
+}
+.spro-dialogo-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+  border-radius: var(--spro-raio);
+}
+dialog.spro-dialogo > header h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-dialogo-corpo {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  padding: 2px 18px 18px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.spro-dialogo-rodape {
+  position: sticky;
+  bottom: -18px;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 6px -18px -18px;
+  padding: 12px 18px;
+  background: var(--spro-fundo-2);
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-dialogo-rodape > .spro-esquerda {
+  margin-right: auto;
+}
+
+/* ---------- Aviso (toast) ---------- */
+.spro-aviso {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 2147483001;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 24px));
+  box-sizing: border-box;
+  padding: 10px 10px 10px 14px;
+  font-family: var(--spro-fonte);
+  font-size: 13px;
+  line-height: 1.35;
+  color: #f3f5f8;
+  background: #1f2329;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: var(--spro-raio-g);
+  box-shadow: var(--spro-sombra-3);
+  transform: translateX(-50%);
+  animation: spro-aviso-entrar 220ms var(--spro-curva);
+}
+/* Como popover (camada de cima, acima de diálogo aberto): sem a posição e a margem padrão do navegador. */
+.spro-aviso[popover] {
+  inset: auto auto 16px 50%;
+  margin: 0;
+  overflow: visible;
+}
+.spro-aviso > .spro-icone {
+  color: #8fd6b4;
+}
+.spro-aviso > span {
+  flex: 1;
+}
+@keyframes spro-aviso-entrar {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+.spro-aviso button {
+  flex: none;
+  padding: 5px 10px;
+  font: inherit;
+  font-weight: 600;
+  color: #9cc3ff;
+  background: rgb(255 255 255 / 6%);
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-aviso button:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spro-combo-pop,
+  .spro-menu-pop,
+  dialog.spro-dialogo[open],
+  .spro-combo-esqueleto > span,
+  .spro-aviso {
+    animation: none;
+  }
+  * {
+    transition-duration: 0ms !important;
+  }
+}
+
+/*
+ * Lista dos apps do SEI Pro (classes spro-lista-*), com o desenho do Favoritos:
+ * cada regra vem de favoritos/estatico/favoritos.css, com as mesmas medidas,
+ * cores, raios, sombras e estados. Vem depois de base.css (tokens --spro-*).
+ *
+ * A raiz do app precisa ser um contêiner (container-type: inline-size): as
+ * consultas @container do fim trocam a linha larga pela empilhada.
+ */
+
+/* ---------- Faixas (avisos no topo do app) ---------- */
+.spro-lista-faixas {
+  display: grid;
+  gap: 8px;
+}
+.spro-lista-faixas:empty {
+  display: none;
+}
+.spro-lista-faixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  background: var(--spro-destaque-suave);
+  border: 1px solid color-mix(in srgb, var(--spro-destaque) 22%, transparent);
+  border-radius: var(--spro-raio-g);
+}
+.spro-lista-faixa > span {
+  flex: 1 1 260px;
+}
+.spro-lista-faixa > .spro-icone {
+  color: var(--spro-destaque);
+}
+
+/* ---------- Cabeçalho: título e ações ---------- */
+.spro-lista-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.spro-lista-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+/* O ícone no quadro do cabeçalho dos diálogos (.spro-dialogo-icone: 34 px). */
+.spro-lista-titulo > .spro-icone {
+  box-sizing: content-box;
+  padding: 8px;
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+  border-radius: var(--spro-raio);
+}
+.spro-lista-titulo h1 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+/* Total ao lado do título: a contagem das abas do Favoritos (.fav-conta). */
+.spro-lista-total {
+  min-width: 18px;
+  padding: 1px 7px;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--spro-suave);
+  background: color-mix(in srgb, var(--spro-texto) 8%, transparent);
+  border-radius: 999px;
+}
+.spro-lista-topo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* ---------- Ferramentas: busca e filtros ---------- */
+.spro-lista-ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.spro-lista-busca-caixa {
+  flex: 1 1 240px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px 0 10px;
+  color: var(--spro-fraco);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  box-shadow: var(--spro-sombra-1);
+  cursor: text;
+  transition:
+    border-color var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+.spro-lista-busca-caixa:focus-within {
+  border-color: var(--spro-destaque);
+  box-shadow: var(--spro-anel);
+}
+.spro-lista-busca {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  font: inherit;
+  color: var(--spro-texto);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.spro-lista-busca::placeholder {
+  color: var(--spro-fraco);
+}
+.spro-lista-atalho {
+  flex: none;
+  min-width: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  font: 600 11px / 18px var(--spro-mono);
+  text-align: center;
+  color: var(--spro-fraco);
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+.spro-lista-busca-caixa:focus-within .spro-lista-atalho {
+  display: none;
+}
+.spro-lista-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.spro-lista-filtros-campos,
+.spro-lista-filtros-vista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.spro-lista-filtros-campos .spro-combo {
+  max-width: 190px;
+}
+/* A ordem (o .fav-ordem). */
+.spro-lista-filtros-vista .spro-combo {
+  max-width: 200px;
+}
+.spro-lista-agrupar {
+  min-height: 30px;
+  color: var(--spro-suave);
+}
+.spro-lista-agrupar[aria-pressed="true"] {
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+}
+/* Com :where(), a especificidade é a de .spro-botao .spro-icone (base.css); esta regra vence por vir depois. */
+.spro-lista-agrupar:where([aria-pressed="true"]) .spro-icone {
+  color: inherit;
+}
+
+/* Filtros ligados, como fichas. */
+.spro-lista-ativos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: -2px;
+}
+.spro-lista-ficha {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 3px 7px 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--spro-destaque);
+  background: var(--spro-destaque-suave);
+  border: 1px solid color-mix(in srgb, var(--spro-destaque) 25%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--spro-dur);
+}
+.spro-lista-ficha > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spro-lista-ficha .spro-icone {
+  opacity: 0.7;
+}
+.spro-lista-ficha:hover,
+.spro-lista-ficha:focus-visible {
+  background: var(--spro-destaque-medio);
+}
+.spro-lista-limpar {
+  all: unset;
+  padding: 3px 6px;
+  font-size: 12px;
+  color: var(--spro-suave);
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+.spro-lista-limpar:hover,
+.spro-lista-limpar:focus-visible {
+  color: var(--spro-texto);
+  text-decoration: underline;
+}
+
+/* ---------- Resumo: selecionar todos e total ---------- */
+.spro-lista-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 0 4px 0 13px;
+  font-size: 12.5px;
+  color: var(--spro-suave);
+}
+.spro-lista-sel-todos {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  color: var(--spro-destaque-texto);
+  background: var(--spro-fundo);
+  border: 1.5px solid var(--spro-borda-forte);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.spro-lista-sel-todos:hover {
+  border-color: var(--spro-destaque);
+}
+.spro-lista-sel-todos:focus-visible {
+  box-shadow: var(--spro-anel);
+}
+.spro-lista-sel-todos[aria-checked="true"],
+.spro-lista-sel-todos[aria-checked="mixed"] {
+  background: var(--spro-destaque);
+  border-color: var(--spro-destaque);
+}
+.spro-lista-sel-todos:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.spro-lista-sel-todos .spro-icone {
+  stroke-width: 3;
+}
+.spro-lista-traco {
+  width: 8px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+.spro-lista-contagem strong {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--spro-texto);
+}
+
+/* ---------- Barra de seleção ---------- */
+.spro-lista-lote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 10px 8px 6px;
+  background: var(--spro-fundo);
+  border: 1px solid color-mix(in srgb, var(--spro-destaque) 35%, var(--spro-borda));
+  border-radius: var(--spro-raio-g);
+  box-shadow: var(--spro-sombra-2);
+}
+.spro-lista-lote-entrar {
+  animation: spro-surgir 160ms var(--spro-curva);
+}
+.spro-lista-lote-qtd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.spro-lista-lote-qtd strong {
+  font-weight: 650;
+  color: var(--spro-destaque);
+  white-space: nowrap;
+}
+.spro-lista-lote-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ---------- Lista ---------- */
+.spro-lista-corpo {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+.spro-lista-tudo {
+  display: grid;
+  gap: 6px;
+}
+/* Itens de grade não encolhem abaixo do conteúdo por padrão: sem isto, um número longo alargaria o painel. */
+.spro-lista-corpo > *,
+.spro-lista-tudo > * {
+  min-width: 0;
+}
+.spro-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+  box-shadow: var(--spro-sombra-1);
+}
+/*
+ * Uma grade só para a lista inteira (todos os dias e o "Mostrar mais"), com as listas e
+ * os itens em subgrid: as colunas são as mesmas em todos os dias, e a descrição começa no
+ * mesmo ponto com números de tamanhos diferentes (o SP usa 99906.713-630.000032/2025-82).
+ *
+ * A descrição tem a prioridade: a linha de apoio fica embaixo do número, e só sobe para a
+ * mesma linha (o lugar do .fav-meta) quando o app é largo o bastante (@container no fim).
+ */
+@supports (grid-template-columns: subgrid) {
+  .spro-lista-tudo {
+    grid-template-columns: 18px auto max-content auto minmax(0, 1fr) auto;
+    /* O espaço entre colunas é o da grade: o dos itens (subgrid) não alarga as colunas. */
+    column-gap: 10px;
+  }
+  .spro-lista-tudo > * {
+    grid-column: 1 / -1;
+  }
+  .spro-lista {
+    display: grid;
+    grid-template-columns: subgrid;
+  }
+  .spro-lista > .spro-lista-item {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+}
+.spro-lista-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px auto 14rem auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sel estrela proto selo princ acao"
+    ". . apoio apoio apoio .";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 1px;
+  min-height: 42px;
+  padding: 6px 8px 6px 13px;
+  transition: background var(--spro-dur);
+}
+.spro-lista-item + .spro-lista-item {
+  border-top: 1px solid var(--spro-borda);
+}
+.spro-lista-item:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.spro-lista-item:last-child {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+.spro-lista-item:hover {
+  background: var(--spro-fundo-2);
+}
+.spro-lista-item-selecionado,
+.spro-lista-item-selecionado:hover {
+  background: var(--spro-destaque-suave);
+}
+.spro-lista-sel-caixa {
+  grid-area: sel;
+  display: flex;
+  align-items: center;
+}
+.spro-lista-sel {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  cursor: pointer;
+  /* 0,8: contraste de 3:1 ou mais com o fundo da linha nos dois temas (a caixa nativa e a estrela). */
+  opacity: 0.8;
+  transition: opacity var(--spro-dur);
+}
+/* Estrela: um .spro-botao-icone.pequeno. Mais apagada, como a caixa de seleção, até o item ganhar o mouse. */
+.spro-lista-estrela {
+  grid-area: estrela;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--spro-suave);
+  background: none;
+  border: 0;
+  border-radius: var(--spro-raio);
+  cursor: pointer;
+  opacity: 0.8;
+  transition:
+    background var(--spro-dur),
+    color var(--spro-dur),
+    opacity var(--spro-dur);
+}
+.spro-lista-estrela:hover {
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+}
+.spro-lista-estrela:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+.spro-lista-estrela[aria-pressed="true"] {
+  color: #e0a100;
+  opacity: 1;
+}
+.spro-lista-estrela[aria-pressed="true"]:hover {
+  color: #e0a100;
+  background: color-mix(in srgb, #e0a100 14%, transparent);
+}
+.spro-lista-proto-cel {
+  grid-area: proto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.spro-lista-protocolo {
+  flex: 0 1 auto;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+  color: var(--spro-destaque);
+  text-decoration: none;
+  white-space: nowrap;
+  /* Reticências só em último caso (painel estreito com o número longo do SP). */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spro-lista-protocolo:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.spro-lista-protocolo:focus-visible {
+  outline: none;
+  border-radius: 4px;
+  box-shadow: var(--spro-anel);
+}
+.spro-lista-selo {
+  grid-area: selo;
+  justify-self: start;
+}
+.spro-lista-principal {
+  grid-area: princ;
+  /* Sem selo, a descrição ocupa também a coluna dele: a largura do selo só pesa nas linhas que o têm. */
+  grid-column: selo-start / princ-end;
+  display: flex;
+  align-items: center;
+  gap: 2px 8px;
+  min-width: 0;
+}
+.spro-lista-selo + .spro-lista-principal {
+  grid-column: princ;
+}
+.spro-lista-tipo {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--spro-suave);
+}
+.spro-lista-tipo:only-child {
+  max-width: none;
+}
+.spro-lista-esp {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--spro-texto);
+}
+/* Linha de apoio: quando, quantas vezes, unidade e interessados (embaixo do número). */
+.spro-lista-apoio {
+  grid-area: apoio;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--spro-suave);
+}
+/* O menu da linha aparece ao passar o mouse (as .fav-acoes). */
+.spro-lista-acao {
+  grid-area: acao;
+  opacity: 0;
+  transition:
+    background var(--spro-dur),
+    color var(--spro-dur),
+    opacity var(--spro-dur);
+}
+.spro-lista-item:hover .spro-lista-sel,
+.spro-lista-item:focus-within .spro-lista-sel,
+.spro-lista-tudo:has(.spro-lista-item-selecionado) .spro-lista-sel,
+.spro-lista-item:hover .spro-lista-estrela,
+.spro-lista-item:focus-within .spro-lista-estrela,
+.spro-lista-item:hover .spro-lista-acao,
+.spro-lista-item:focus-within .spro-lista-acao,
+.spro-lista-acao[aria-expanded="true"] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .spro-lista-sel,
+  .spro-lista-estrela,
+  .spro-lista-acao {
+    opacity: 1;
+  }
+}
+
+/* ---------- Grupos por dia e "Mostrar mais" ---------- */
+.spro-lista-grupo {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 6px 4px 4px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--spro-suave);
+  background: var(--spro-pagina);
+}
+.spro-lista-grupo > span {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--spro-fraco);
+}
+.spro-lista + .spro-lista-grupo {
+  margin-top: 6px;
+}
+.spro-lista-mais {
+  justify-self: center;
+  margin: 12px;
+}
+
+/* ---------- Vazio e desligado ---------- */
+.spro-lista-vazio {
+  /* A cor da arte: o Favoritos usa a da estrela; aqui, a do destaque. */
+  --spro-lista-arte: var(--spro-destaque);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 34px 16px;
+  text-align: center;
+  color: var(--spro-suave);
+  background: var(--spro-fundo);
+  border: 1px dashed var(--spro-borda-forte);
+  border-radius: var(--spro-raio-g);
+}
+.spro-lista-desligado {
+  --spro-lista-arte: var(--spro-suave);
+}
+.spro-lista-vazio-arte {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  color: var(--spro-lista-arte);
+  background: radial-gradient(
+    circle at 30% 30%,
+    color-mix(in srgb, var(--spro-lista-arte) 26%, transparent),
+    color-mix(in srgb, var(--spro-lista-arte) 10%, transparent)
+  );
+  border-radius: 50%;
+}
+.spro-lista-vazio p {
+  margin: 0;
+}
+.spro-lista-vazio-texto {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--spro-texto);
+}
+.spro-lista-vazio-dica {
+  max-width: 420px;
+  font-size: 12.5px;
+}
+
+/* ---------- Sem a aba do SEI (lateral) e erro ao abrir ---------- */
+.spro-lista-sem-aba {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--spro-suave);
+}
+.spro-lista-sem-aba > .spro-icone {
+  color: var(--spro-destaque);
+}
+.spro-lista-sem-aba p {
+  margin: 0;
+}
+.spro-lista-dica {
+  margin: 0;
+  font-size: 12px;
+  color: var(--spro-suave);
+}
+.spro-lista-erro {
+  margin: 0;
+  color: var(--spro-perigo);
+}
+
+/* ---------- Formulários dos diálogos ---------- */
+/*
+ * Nos diálogos o seletor com escolha não ganha o realce de "filtro ligado". Só no corpo
+ * deles: o próprio app pode morar num .spro-dialogo (o modal do histórico), e lá o realce fica.
+ */
+.spro-dialogo-corpo .spro-combo-ativo {
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border-color: var(--spro-borda-forte);
+}
+.spro-dialogo-corpo .spro-combo-ativo > .spro-icone:first-child {
+  color: var(--spro-suave);
+}
+.spro-lista-form {
+  display: grid;
+  gap: 14px;
+}
+.spro-lista-form > p {
+  margin: 0;
+}
+/* Rádios em cartões, como as preferências do Favoritos (.spro-fav-opcoes). */
+.spro-lista-opcoes {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.spro-lista-opcoes > legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--spro-suave);
+}
+.spro-lista-opcao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur);
+}
+.spro-lista-opcao > input {
+  margin: 0;
+}
+.spro-lista-opcao:hover {
+  background: var(--spro-fundo-2);
+}
+.spro-lista-opcao:has(input:checked) {
+  background: var(--spro-destaque-suave);
+  border-color: color-mix(in srgb, var(--spro-destaque) 50%, transparent);
+}
+/* Aviso de consequência (o .fav-aviso-lembrete). */
+.spro-lista-aviso {
+  padding: 10px 12px;
+  font-size: 12.5px;
+  background: color-mix(in srgb, var(--spro-aviso) 9%, var(--spro-fundo));
+  border: 1px solid color-mix(in srgb, var(--spro-aviso) 30%, transparent);
+  border-radius: var(--spro-raio);
+}
+
+/* ---------- Largo: o apoio sobe para a linha do número (a descrição ainda fica com 450 px ou mais) ---------- */
+@supports (grid-template-columns: subgrid) {
+  @container (min-width: 1200px) {
+    .spro-lista-tudo {
+      grid-template-columns: 18px auto max-content auto minmax(0, 1fr) fit-content(18rem) auto;
+    }
+    .spro-lista-item {
+      grid-template-areas: "sel estrela proto selo princ apoio acao";
+    }
+    /* Ocupa a coluna inteira (e não só o texto): assim as reticências respeitam o teto da coluna. */
+    .spro-lista-apoio {
+      text-align: right;
+    }
+  }
+}
+
+/* ---------- Estreito (barra lateral, telas pequenas) ---------- */
+@container (max-width: 720px) {
+  .spro-lista-tudo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .spro-lista {
+    display: block;
+  }
+  .spro-lista > .spro-lista-item,
+  .spro-lista-item {
+    /* O número cede antes do selo: 1fr (= minmax(auto, 1fr)) não deixa o selo encolher. */
+    grid-template-columns: 18px auto minmax(0, max-content) 1fr auto;
+    grid-template-areas:
+      "sel estrela proto selo acao"
+      ". . princ princ princ"
+      ". . apoio apoio apoio";
+    align-items: start;
+    row-gap: 3px;
+    padding: 9px 8px 9px 12px;
+  }
+  .spro-lista-principal,
+  .spro-lista-selo + .spro-lista-principal {
+    grid-column: princ;
+  }
+  .spro-lista-sel-caixa {
+    min-height: 26px;
+  }
+  .spro-lista-protocolo,
+  .spro-lista-selo {
+    align-self: center;
+  }
+  /* A estrela encosta na caixa e no número: o botão de 26 px ocupa só o ícone na coluna. */
+  .spro-lista-estrela {
+    margin: 0 -6px;
+  }
+  /* Tipo e especificação num texto só, em até duas linhas (o .fav-titulo no estreito). */
+  .spro-lista-principal {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .spro-lista-tipo,
+  .spro-lista-esp {
+    display: inline;
+    max-width: none;
+    white-space: normal;
+  }
+  .spro-lista-tipo {
+    margin-right: 6px;
+  }
+  .spro-lista-acao {
+    opacity: 1;
+  }
+}
+@container (max-width: 560px) {
+  .spro-lista-busca-caixa {
+    flex-basis: 100%;
+  }
+  .spro-lista-filtros,
+  .spro-lista-filtros-campos,
+  .spro-lista-filtros-vista {
+    width: 100%;
+  }
+  .spro-lista-filtros-campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .spro-lista-filtros-campos .spro-combo {
+    max-width: none;
+    width: 100%;
+  }
+  .spro-lista-filtros-vista .spro-combo {
+    flex: 1;
+    max-width: none;
+  }
+  .spro-lista-lote-texto {
+    display: none;
+  }
+  .spro-lista-lote-acoes {
+    margin-left: 0;
+  }
+  .spro-lista-resumo {
+    padding-left: 12px;
+  }
+}
+@container (max-width: 400px) {
+  /* Selo só com o cadeado (a cor diz restrito ou sigiloso; o title diz por extenso). */
+  .spro-lista-selo {
+    gap: 0;
+    padding: 0 5px;
+    font-size: 0;
+  }
+}
+@container (max-width: 380px) {
+  .spro-lista-agrupar > span {
+    display: none;
+  }
+}
+
+/* Altura limitada com rolagem interna e a alca que a redimensiona (alturaRedimensionavel.ts). Usa os tokens de base.css. */
+.spro-altura-rolagem {
+  max-height: var(--spro-altura-max, 480px);
+  overflow: auto;
+}
+/* Tabela dentro da area: o cabecalho acompanha a rolagem. */
+.spro-altura-rolagem > table > thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--spro-fundo);
+  box-shadow: inset 0 -1px 0 var(--spro-borda);
+}
+.spro-altura-alca {
+  position: relative;
+  box-sizing: border-box;
+  height: 14px;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: var(--spro-fundo-2);
+  border-top: 1px solid var(--spro-borda);
+  outline: none;
+}
+.spro-altura-alca::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 4px;
+  content: "";
+  background: var(--spro-borda-forte);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: background var(--spro-dur), width var(--spro-dur);
+}
+.spro-altura-alca[data-altura="auto"]::before {
+  width: 28px;
+}
+.spro-altura-alca:hover::before,
+.spro-altura-alca.spro-altura-arrastando::before {
+  background: var(--spro-destaque);
+}
+.spro-altura-alca:focus-visible {
+  box-shadow: inset var(--spro-anel);
+}
+.spro-altura-alca:focus-visible::before {
+  background: var(--spro-destaque);
+}
+@media (pointer: coarse) {
+  .spro-altura-alca {
+    height: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spro-altura-alca::before {
+    transition: none;
+  }
+}
+
+/*
+ * Janela do Comparador de Documentos (html/comparador-documentos.html). Os tokens e a lista vêm de
+ * sei-comum/src/ui/base.css e lista.css; aqui entra só o que é da janela.
+ *
+ * Tema: nada aqui. O app põe html[data-tema] "claro" ou "escuro" (segue o SEI) e
+ * html[data-cor-sei] com --spro-cor-sei; base.css troca os tokens --spro-*.
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--spro-texto);
+  font: 13px / 1.45 var(--spro-fonte);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Modal (iframe transparente sobre a tela do SEI) ---------- */
+html[data-modo="modal"],
+html[data-modo="modal"] body {
+  background: transparent;
+  height: 100%;
+  overflow: hidden;
+}
+dialog.cmp-modal[open] {
+  width: min(1100px, calc(100vw - 32px));
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--spro-pagina);
+}
+dialog.cmp-modal:focus-visible {
+  outline: none;
+}
+dialog.cmp-modal::backdrop {
+  background: var(--spro-veu);
+}
+
+#app {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 16px 16px;
+}
+#app > * {
+  flex: none;
+}
+@media (max-width: 520px) {
+  #app {
+    padding: 10px;
+  }
+}
+
+/* ---------- A, B e inverter ---------- */
+.cmp-docs {
+  display: grid;
+  gap: 8px;
+}
+.cmp-a,
+.cmp-b {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.cmp-b .spro-combo {
+  flex: 1;
+  min-width: 0;
+}
+.cmp-rotulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--spro-suave-fundo, var(--spro-borda));
+  color: var(--spro-suave);
+  font-weight: 700;
+}
+.cmp-titulo {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmp-aviso {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--spro-perigo, #c62828);
+}
+
+/* ---------- Resultado ---------- */
+.cmp-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 240px;
+}
+.cmp-dica,
+.cmp-erro {
+  margin: 0;
+  padding: 14px;
+  color: var(--spro-suave);
+}
+.cmp-erro {
+  color: var(--spro-perigo, #c62828);
+}
+.cmp-legenda {
+  margin: 0;
+  color: var(--spro-suave);
+  font-size: 12px;
+}
+.cmp-ret {
+  background: #fff0f5;
+  color: #ff0000;
+  text-decoration: line-through;
+  padding: 0 4px;
+}
+.cmp-acr {
+  background: #f0f8ff;
+  color: #0000ff;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+/* O documento comparado é um papel branco: o iframe não segue o tema escuro. */
+.cmp-resultado {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+  background: #fff;
+}
+
+/* ---------- Rodapé ---------- */
+.cmp-rodape {
+  align-items: center;
+}
+.cmp-espaco {
+  flex: 1;
+}
+.cmp-status {
+  margin: 0;
+  color: var(--spro-suave);
+}
+.cmp-status[hidden] {
+  display: none;
+}
+.cmp-criar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: min(420px, 80vw);
+}
+.cmp-criar p {
+  margin: 0;
+}

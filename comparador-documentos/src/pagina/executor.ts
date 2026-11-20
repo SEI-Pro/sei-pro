@@ -89,6 +89,8 @@ export function tratadoresComparador(d: DepsExecutor): Record<string, Tratador> 
       return { ok: true, idA: fixoA?.id ?? null, tituloA: fixoA?.titulo ?? "", host: d.ctx.host };
     },
 
+    tema: () => ({ ok: true, temaEscuro: d.ctx.temaEscuro, ...(d.ctx.corTema ? { corTema: d.ctx.corTema } : {}) }),
+
     candidatos: async () => {
       try {
         arvore = await c.abrirArvore(d.sei, d.ctx.linkArvore);

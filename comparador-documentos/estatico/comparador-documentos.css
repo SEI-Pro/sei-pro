@@ -1,0 +1,165 @@
+/*
+ * Janela do Comparador de Documentos (html/comparador-documentos.html). Os tokens e a lista vêm de
+ * sei-comum/src/ui/base.css e lista.css; aqui entra só o que é da janela.
+ *
+ * Tema: nada aqui. O app põe html[data-tema] "claro" ou "escuro" (segue o SEI) e
+ * html[data-cor-sei] com --spro-cor-sei; base.css troca os tokens --spro-*.
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--spro-texto);
+  font: 13px / 1.45 var(--spro-fonte);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Modal (iframe transparente sobre a tela do SEI) ---------- */
+html[data-modo="modal"],
+html[data-modo="modal"] body {
+  background: transparent;
+  height: 100%;
+  overflow: hidden;
+}
+dialog.cmp-modal[open] {
+  width: min(1100px, calc(100vw - 32px));
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--spro-pagina);
+}
+dialog.cmp-modal:focus-visible {
+  outline: none;
+}
+dialog.cmp-modal::backdrop {
+  background: var(--spro-veu);
+}
+
+#app {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 16px 16px;
+}
+#app > * {
+  flex: none;
+}
+@media (max-width: 520px) {
+  #app {
+    padding: 10px;
+  }
+}
+
+/* ---------- A, B e inverter ---------- */
+.cmp-docs {
+  display: grid;
+  gap: 8px;
+}
+.cmp-a,
+.cmp-b {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.cmp-b .spro-combo {
+  flex: 1;
+  min-width: 0;
+}
+.cmp-rotulo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--spro-suave-fundo, var(--spro-borda));
+  color: var(--spro-suave);
+  font-weight: 700;
+}
+.cmp-titulo {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmp-aviso {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--spro-perigo, #c62828);
+}
+
+/* ---------- Resultado ---------- */
+.cmp-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 240px;
+}
+.cmp-dica,
+.cmp-erro {
+  margin: 0;
+  padding: 14px;
+  color: var(--spro-suave);
+}
+.cmp-erro {
+  color: var(--spro-perigo, #c62828);
+}
+.cmp-legenda {
+  margin: 0;
+  color: var(--spro-suave);
+  font-size: 12px;
+}
+.cmp-ret {
+  background: #fff0f5;
+  color: #ff0000;
+  text-decoration: line-through;
+  padding: 0 4px;
+}
+.cmp-acr {
+  background: #f0f8ff;
+  color: #0000ff;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+/* O documento comparado é um papel branco: o iframe não segue o tema escuro. */
+.cmp-resultado {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+  background: #fff;
+}
+
+/* ---------- Rodapé ---------- */
+.cmp-rodape {
+  align-items: center;
+}
+.cmp-espaco {
+  flex: 1;
+}
+.cmp-status {
+  margin: 0;
+  color: var(--spro-suave);
+}
+.cmp-status[hidden] {
+  display: none;
+}
+.cmp-criar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: min(420px, 80vw);
+}
+.cmp-criar p {
+  margin: 0;
+}

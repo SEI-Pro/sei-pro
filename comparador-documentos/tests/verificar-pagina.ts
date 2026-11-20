@@ -161,6 +161,10 @@ export async function verificarPagina(): Promise<void> {
   }
   {
     const { t } = montar(null);
+    igual("tema: modo escuro e cor do SEI (so o que existe)", await t.tema!(null), { ok: true, temaEscuro: false });
+  }
+  {
+    const { t } = montar(null);
     igual("tipos: sem o externo", await t.tipos!(null), { ok: true, tipos: [{ id: "12", nome: "Despacho" }] });
   }
   {
