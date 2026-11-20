@@ -1,0 +1,24 @@
+{
+  "name": "sei-pro-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Editor de documentos do SEI Pro",
+  "scripts": {
+    "build": "npm run verificar && node build.mjs",
+    "build:rapido": "node build.mjs",
+    "tipos": "tsc --noEmit",
+    "verificar": "tsx tests/verificar.ts",
+    "checar": "biome check src tests"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "acorn": "^8.19.0"
+  }
+}
