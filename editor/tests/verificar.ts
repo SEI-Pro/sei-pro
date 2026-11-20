@@ -1,6 +1,7 @@
 import { IDS_RECURSOS } from "../src/recursos/ids";
 import { verificarAlign } from "./recursos/align";
 import { verificarCheckboxCapLetter } from "./recursos/checkbox-cap-letter";
+import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarQuebras } from "./recursos/quebras";
 import { igual, resumo, secao } from "./util";
@@ -27,5 +28,6 @@ await verificarGhsUnlock();
 await verificarQuebras();
 await verificarCheckboxCapLetter();
 verificarAlign();
+await verificarFontSizeStyleEditor();
 
 resumo();
