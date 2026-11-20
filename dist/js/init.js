@@ -46,8 +46,6 @@ $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
     $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 });
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
-$.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
-$.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
 // O teste de window.name serve as janelas e iframes nomeados (editor, iframes internos), onde o init_all.js
 // nao injeta o arquivo no mundo da pagina. Mas o jquery.modalLink (do SEI e o nosso) faz window.name = idModal
 // na janela principal ao abrir qualquer modal - Assinar Documento, por exemplo - e o nome dura enquanto a aba
