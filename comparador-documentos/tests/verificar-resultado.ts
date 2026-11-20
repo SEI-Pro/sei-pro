@@ -55,6 +55,16 @@ export function verificarResultado(): void {
   checar("script, onclick e javascript: nao chegam ao resultado", !/<script|onclick|javascript:|c\(\)|d\(\)/i.test(mau.html), mau.html);
   checar("estilo inline do cabecalho e mantido, link externo nao", mau.html.includes("p{color:red}") && !/<link/i.test(mau.html), mau.html);
 
+  const corpoMau = comparar(
+    doc("<p>x</p>"),
+    '<html onclick="h()"><body onload="a()" onclick="b()" background="javascript:c()"><p>novo texto no corpo</p></body></html>',
+  );
+  checar(
+    "on* e javascript: no proprio <body> e no <html> nao chegam ao resultado",
+    !/onload|onclick|javascript:/i.test(corpoMau.html),
+    corpoMau.html,
+  );
+
   const imgs = comparar(
     doc("<p>x</p>"),
     doc('<p><img src="a.png"></p><p>texto no meio</p><p><img src="a.png"></p><p><img src="b.png"></p>'),

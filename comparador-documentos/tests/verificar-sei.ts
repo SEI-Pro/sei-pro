@@ -109,6 +109,21 @@ export async function verificarSei(): Promise<void> {
     },
   );
   igual("processo restrito: restrito", nivelDoComparativo(arvore([], "restrito"), [doc({ id: "1" })]).nivel, "restrito");
+  igual(
+    "processo restrito com hipotese e documentos publicos: herda a hipotese do processo",
+    nivelDoComparativo({ ...arvore([], "restrito"), hipotese: "Sigilo comercial" } as unknown as Arvore, [
+      doc({ id: "1" }),
+      doc({ id: "2" }),
+    ]),
+    { nivel: "restrito", hipotese: "Sigilo comercial" },
+  );
+  igual(
+    "hipotese do documento restrito vence a do processo",
+    nivelDoComparativo({ ...arvore([], "restrito"), hipotese: "do processo" } as unknown as Arvore, [
+      doc({ id: "1", nivel: "restrito", hipotese: "do documento" }),
+    ]),
+    { nivel: "restrito", hipotese: "do documento" },
+  );
 
   secao("sei: criarComparativo");
   const chamadas: string[] = [];

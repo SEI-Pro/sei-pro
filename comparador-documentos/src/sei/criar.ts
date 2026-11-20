@@ -34,7 +34,7 @@ export const tiposParaCriar = tiposDocumento;
 export function nivelDoComparativo(arvore: Arvore, docs: DocumentoArvore[]): { nivel: "publico" | "restrito"; hipotese?: string } {
   const restritos = docs.filter((d) => d.nivel === "restrito");
   if (arvore.nivel !== "restrito" && !restritos.length) return { nivel: "publico" };
-  const hipotese = restritos.find((d) => d.hipotese)?.hipotese;
+  const hipotese = restritos.find((d) => d.hipotese)?.hipotese ?? (arvore.nivel === "restrito" ? arvore.hipotese : undefined);
   return hipotese ? { nivel: "restrito", hipotese } : { nivel: "restrito" };
 }
 

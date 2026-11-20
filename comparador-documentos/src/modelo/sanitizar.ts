@@ -25,10 +25,12 @@ export function urlSegura(atributo: string, valor: string): boolean {
   return false;
 }
 
-/** Aplica a higiene ao corpo todo, em uma passada. */
+/** Aplica a higiene ao corpo todo (o próprio corpo e a raiz do documento inclusive), em uma passada. */
 export function higienizar(corpo: Element): void {
   for (const el of Array.from(corpo.querySelectorAll(TAGS_DESCARTADAS))) el.remove();
-  for (const el of Array.from(corpo.querySelectorAll("*"))) {
+  const raiz = corpo.ownerDocument?.documentElement;
+  const todos = [...(raiz && raiz !== corpo ? [raiz] : []), corpo, ...Array.from(corpo.querySelectorAll("*"))];
+  for (const el of todos) {
     for (const nome of el.getAttributeNames()) {
       const n = nome.toLowerCase();
       if (n.startsWith("on") || ATRIBUTOS_DESCARTADOS.includes(n)) el.removeAttribute(nome);
