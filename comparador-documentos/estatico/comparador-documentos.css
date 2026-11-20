@@ -49,6 +49,10 @@ dialog.cmp-modal::backdrop {
 #app > * {
   flex: none;
 }
+/* O resultado ocupa o espaço que sobra (mais específico que o `#app > *` acima); o rodapé fica embaixo. */
+#app > .cmp-corpo {
+  flex: 1 1 auto;
+}
 @media (max-width: 520px) {
   #app {
     padding: 10px;

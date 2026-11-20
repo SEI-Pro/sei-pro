@@ -2638,6 +2638,7 @@ function decodeHtml(html) {
     return decodificarEntidadesPro(html);
 }
 function initDialogCompareDocs(TimeOut = 9000) {
+    if (document.documentElement.hasAttribute('data-seipro-comparador')) { document.dispatchEvent(new CustomEvent('spro-comparador-abrir')); return; }
     if (TimeOut <= 0) { return; }
     if (typeof $().chosen !== 'undefined') {
         parent.openDialogCompareDocs();

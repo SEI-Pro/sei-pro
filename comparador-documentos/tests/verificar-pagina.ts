@@ -111,6 +111,12 @@ export async function verificarPagina(): Promise<void> {
     checar("contexto sem documento selecionado: idA null", c.ok === true && c.idA === null, c);
   }
   {
+    // Com o proprio processo marcado na arvore (span<id do processo>), nao ha documento selecionado.
+    const { t } = montar({ id: "900", titulo: "99906.713-630.000032/2025-82" });
+    const c = (await t.contexto!(null)) as { ok: boolean; idA: string | null; tituloA: string };
+    checar("processo marcado na arvore: sem documento A", c.ok === true && c.idA === null && c.tituloA === "", c);
+  }
+  {
     const { t } = montar({ id: "1", titulo: "Doc 1" });
     await t.contexto!(null);
     const r = (await t.candidatos!(null)) as { ok: true; candidatos: Array<Record<string, string>>; aLegivel: boolean };

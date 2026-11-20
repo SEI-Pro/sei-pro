@@ -85,7 +85,9 @@ export function tratadoresComparador(d: DepsExecutor): Record<string, Tratador> 
 
   return {
     contexto: () => {
-      fixoA = d.selecionado();
+      // O próprio processo marcado na árvore (o nó raiz tem id `span<id do processo>`) não é um documento.
+      const marcado = d.selecionado();
+      fixoA = marcado && marcado.id !== d.ctx.idProcedimento ? marcado : null;
       return { ok: true, idA: fixoA?.id ?? null, tituloA: fixoA?.titulo ?? "", host: d.ctx.host };
     },
 
