@@ -967,7 +967,6 @@ function getProcessosPaginacao(this_, index, tipo) {
                 var ItensHash_ = $('#hdn'+tipo+'ItensHash');
                     //ItensHash_.val(ItensHash);
                 getProcessosPaginacao(this_, index+1, tipo);
-                if (checkConfigValue('gerenciarfavoritos') && typeof appendStarOnProcess === 'function') appendStarOnProcess();
                 initControlePrazo(true);
                 initViewEspecifacaoProcesso();
                 addAcompanhamentoEspIcon();
@@ -1320,22 +1319,6 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
     } else {
         resetDialogBoxPro('dialogBoxPro');
         alertaBoxPro('Sucess', 'check-circle', 'Informa\u00E7\u00F5es editadas com sucesso!');
-    }
-}
-function initPanelFavorites(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelFavorites !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
-        if (checkConfigValue('gerenciarfavoritos') && typeof getStoreFavoritePro() !== 'undefined' && getStoreFavoritePro().hasOwnProperty('favorites')) {
-            setTimeout(function(){ 
-                setPanelFavorites('insert');
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('setPanelFavorites');
-            }, 500);
-        }
-    } else {
-        setTimeout(function(){ 
-            initPanelFavorites(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPanelFavorites'); 
-        }, 500);
     }
 }
 function orderDivPanel(html, idOrder, name) {
@@ -3590,7 +3573,6 @@ function initSeiPro() {
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();
-        initPanelFavorites();
         insertDivPanel();
         setTimeout(() => { initNewTabProcesso() }, 2000);
         forceOnLoadBody();

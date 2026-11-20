@@ -3082,12 +3082,6 @@ function initSeiProArvore(loop = true) {
         ) {
         parent.initAtividadesProcesso();
     }
-    if (
-        (typeof parent.insertIconFavorites === 'function' || typeof parent.insertIconFavorites !== 'undefined') && 
-        typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('gerenciarfavoritos')
-        ) {
-        parent.insertIconFavorites();
-    }
     if (typeof parent.checkHostLimit !== 'undefined'  && !parent.checkHostLimit() && (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined')) {
         parent.initCheckDadosProcesso();
     }

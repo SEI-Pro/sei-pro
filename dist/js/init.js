@@ -384,8 +384,6 @@ function loadScriptPro() {
             loadConfigPro();
             if (typeof moment !== 'undefined' && typeof moment().isoAddWeekdaysFromSet === 'undefined') $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
-            // Favoritos novos (js/init_favoritos.js, pacote Lab) marcam o <html> no document_start: o legado fica de fora.
-            if (typeof loadFavoritosPro === 'undefined' && !document.documentElement.hasAttribute('data-seipro-favoritos')) $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
             if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             // Projetos novos (js/init_projetos.js, pacote Lab) marcam o <html>: o legado so carrega sem eles ou
             // com servidor do Atividades configurado (os dois convivem; o legado vira "Projetos (Atividades)").

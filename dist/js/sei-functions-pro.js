@@ -26,8 +26,6 @@ var andamentoPaginacaoTemp = [];
 var dataDocs = [];
 var filesystem = null;
 var FileError = null;
-var fileSystemPro = false;
-var fileSystemContentPro = false;
 var delayCrash = false;
 var isProcUrgente = false;
 var isNewSEI = getIsNewSEI();
@@ -1734,196 +1732,7 @@ function getColumnsSortable(elemTable) {
     }).get();
     return arrayColumns;
 }
-function initFileSystem() {
-    // Allow for vendor prefixes.
-    window.requestFileSystem = window.requestFileSystem ||
-    window.webkitRequestFileSystem;
-    // Create a variable that will store a reference to the FileSystem.
-    // Start the app by requesting a FileSystem (if the browser supports the API)
-    if (window.requestFileSystem) {
-        setFileSystem();
-    } else {
-        console.log('Desculpe! Seu navegador n\u00E3o possui suporte ao sistema de arquivos local (FileSystem API)');
-    }
-}
 // A simple error handler to be used throughout this demo.
-function errorHandler(error) {
-    console.log(error);
-}
-// Request a FileSystem and set the filesystem variable.
-function setFileSystem() {
-    navigator.webkitPersistentStorage.requestQuota(1024 * 1024 * 5,
-        function(grantedSize) {
-            // Request a file system with the new size.
-            window.requestFileSystem(window.PERSISTENT, grantedSize, function(fs) {
-                // Set the filesystem variable.
-                filesystem = fs;
-                // Setup event listeners on the form.
-                // Update the file browser.
-                fileSystemListFiles();
-            }, errorHandler);
-        }, errorHandler);
-}
-  
-function fileSystemLoadFile(filename) {
-    filesystem.root.getFile(filename, {}, function(fileEntry) {
-        fileEntry.file(function(file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                // Update the form fields.
-                var return_this = (typeof this.result !== 'undefined') ? this.result : false;
-                    return_this = (return_this && isJson(JSON.parse(this.result))) ? JSON.parse(this.result) : [];
-                // console.log(filename, return_this);
-                fileSystemContentPro = return_this;
-            };
-            reader.readAsText(file);
-        }, errorHandler);
-
-    }, errorHandler);
-}
-function fileSystemListFiles() {
-    var dirReader = filesystem.root.createReader();
-    var entries = [];
-    var fetchEntries = function() {
-        dirReader.readEntries(function(results) {
-            if (!results.length) {
-                fileSystemPro = entries.sort().reverse();
-            } else {
-                entries = entries.concat(results);
-                fetchEntries();
-            }
-        }, errorHandler);
-    };
-    fetchEntries();
-}
-// Save a file in the FileSystem.
-function fileSystemSaveFile(filename, content) {
-    filesystem.root.getFile(filename, {create: true}, function(fileEntry) {
-        fileEntry.createWriter(function(fileWriter) {
-            fileWriter.onwriteend = function(e) {
-                // Update the file browser.
-                fileSystemListFiles();
-                // console.log('File saved');
-            };
-            fileWriter.onerror = function(e) {
-                console.log('Write error: ' + e.toString());
-                console.log('Ocorreu um erro e n\u00E3o foi poss\u00EDvel salvar seu arquivo');
-            };
-            var contentBlob = new Blob([content], {type: 'text/plain'});
-            fileWriter.write(contentBlob);
-        }, errorHandler);
-    }, errorHandler);
-}
-function fileSystemDeleteFile(filename) {
-    filesystem.root.getFile(filename, {create: false}, function(fileEntry) {
-        fileEntry.remove(function(e) {
-            // Update the file browser.
-            fileSystemListFiles();
-            // console.log('File deleted!');
-        }, errorHandler);
-    }, errorHandler);
-}
-function fileSystemUpdateFile(filename, content) {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { fileSystemDeleteFile(filename); }
-    }, 10);
-    setTimeout(function(){ 
-        fileSystemSaveFile(filename, content);
-        fileSystemLoadFile(filename);
-    }, 100);
-}
-function getLocalFilePro() {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { 
-            fileSystemLoadFile('configPro.json'); 
-            setTimeout(function(){ 
-                // console.log(fileSystemPro, fileSystemContentPro);
-            }, 100);
-        }
-    }, 10);
-}
-function setLocalFilePro(content) {
-    initFileSystem();
-    setTimeout(function(){ 
-        if (fileSystemPro) { 
-            fileSystemUpdateFile('configPro.json', JSON.stringify(content)); 
-            // console.log('setLocalFilePro', content);
-        }
-    }, 10);
-    setTimeout(function(){ 
-        getLocalFilePro();
-    }, 500);
-}
-function initDownloadLocalFilePro(this_, TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if ((typeof fileSystemContentPro !== 'undefined' && fileSystemContentPro) || (typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro'))) ) { 
-        downloadLocalFilePro(this_);
-    } else {
-        $(this_).find('i').attr('class','fas fa-spinner fa-spin cinzaColor');
-        if (TimeOut == 9000) fileSystemLoadFile('configPro.json');
-        setTimeout(function(){ 
-            initDownloadLocalFilePro(this_, TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDownloadLocalFilePro'); 
-        }, 500);
-    }
-}
-function downloadLocalFilePro(this_) {
-    var _this = $(this_);
-    var configPro = JSON.stringify(localStorageRestorePro('configDataFavoritesPro'));
-    var nameFile = 'configPro';
-
-    var downloadLink = document.createElement("a");
-    var blob = new Blob(["\ufeff", configPro]);
-    var url = URL.createObjectURL(blob);
-    downloadLink.href = url;
-    downloadLink.download = nameFile+'_'+moment().format('YYYYMMDD_HH:mm:ss')+'.json';
-
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-
-    _this.find('i').attr('class','fas fa-thumbs-up azulColor');
-    setTimeout(function(){ 
-        _this.find('i').attr('class','fas fa-download azulColor');
-    }, 1000);
-}
-function initLoadLocalFilePro() {
-    $('#selectLocalFilesPro[type=file]').trigger('click');
-}
-function loadLocalFilePro() {
-    confirmaFraseBoxPro('Esta a\u00E7\u00E3o ir\u00E1 substituir todos os dados de processos monitorados. Tem certeza que deseja prosseguir?', 'SIM', 
-        function(){
-            var files = document.getElementById('selectLocalFilesPro').files;
-            if (files.length <= 0) { return false; }
-            
-            var fr = new FileReader();
-            fr.onload = function(e) { 
-                var result = JSON.parse(e.target.result); 
-                    result.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
-
-                    setLocalFilePro(result);
-                    localStorageStorePro('configDataFavoritesPro', result);
-                    setPanelFavorites('refresh');
-                    resetDialogBoxPro('dialogBoxPro');
-                setTimeout(function(){ 
-                        alertaBoxPro('Sucess', 'check-circle', 'Configura\u00E7\u00F5es carregadas com sucesso!');
-                        console.log('loadLocalFilePro', result.datetime, result, getStoreFavoritePro());
-                }, 500);
-            }
-            fr.readAsText(files.item(0));
-    });
-}
-function htmlIconFavorites(id_procedimento, float = false) {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-    var dataFavorites = (jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
-    var floatStyle = (float) ? 'float: '+float+';' : '';
-    var iconStar = (dataFavorites == '') 
-                    ? '<i title="Monitorar Processo" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'add\')" class="far fa-dot-circle iconFavoritePro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
-                    : '<i title="Parar de Monitorar Processo" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'remove\')" class="fas fa-bullseye starGold iconFavoritePro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
-    return iconStar;
-}
 function resizeWinArvore(widthArvore) {
     var indent = 10; // reduz 10 pixel a largura do visualizador para compensar a barra divisoria existente entre a arvore e o visualizador
     var widthConteudo = $('#divConteudo').width(); // capta o tamanho total da janela do SEI (janela interna)
@@ -6442,7 +6251,6 @@ function filterTagTable(this_) {
         });
         */
        
-        updateCountTableFav();
         th_head.find('.tablesorter-header-inner').append(htmlFilter);
         setOptionsPro('filterTag_'+typeTable, tagName_);
         infraTooltipOcultar();
@@ -6527,11 +6335,6 @@ function saveFollowDesc(this_, mode) {
                     kanban_item.find('span.info').text(value);
                     kanban_item.find('span.info_txt input').val(value);
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
-            var favoriteIndex = (id_procedimento) ? storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento)) : index;
-                storeFavorites['favorites'][favoriteIndex].descricao = value;
-                localStorageStorePro('configDataFavoritesPro', storeFavorites);
         }
     }
 }
@@ -6560,9 +6363,6 @@ function editFollowDesc(this_, mode) {
 function keyFollowDesc(e, mode) {
     if(e.which == 13) {
         parent.saveFollowDesc(e.target || e.srcElement, mode);
-        if (mode == 'fav') {
-            saveConfigFav();
-        }
     }
 }
 function showFollowEtiqueta(this_, status, mode) {
@@ -6594,11 +6394,6 @@ function showFollowEtiqueta(this_, status, mode) {
         td.find('.info_tags_follow_txt').show().find('input.tag-input').focus().trigger('click').after(btnClose);
         addOptionsEtiqueta(this_, mode);
     } 
-    setTimeout(function(){ 
-        if (status == 'close' && mode == 'fav' && !_this.closest('tr').find('.content_desc span.info_txt').is(':visible')) {
-            saveConfigFav();
-        }
-    }, 500);
     if ($($ifrVisualizacao).length > 0) {
         // o tooltip foi aberto no frame do formulario (aninhado no SEI 4.1+)
         var janelaTooltip = getIframeVisualizacaoPro()[0].contentWindow;
@@ -6618,13 +6413,13 @@ function checkEtiquetaPriority(this_) {
         tr.removeClass('urgenteBoxDisplay').removeClass('importanteBoxDisplay');
     }
 }
-// Favoritos novos (pacote Lab) nao carregam sei-pro-favoritos.js: sem getStoreFavoritePro, etiquetas dos Projetos usam a lista vazia.
+// O Favoritos (modulo TS) guarda as proprias etiquetas: so o modo 'ativ' (Atividades) usa esta lista.
 function getColorTags(mode) {
     var colorTags = (mode == 'ativ') 
             ? (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== 'undefined' && arrayConfigAtivUnidade.config !== null && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined' && arrayConfigAtivUnidade.config.etiquetas !== null) 
                 ? arrayConfigAtivUnidade.config.etiquetas.config.colortags
                 : []
-            : (typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}}).config.colortags;
+            : [];
         colorTags = (typeof colorTags !== 'undefined') ? colorTags : [];
     return colorTags;
 }
@@ -6665,7 +6460,6 @@ function selectIconEtiqueta(this_, tagName, mode) {
                 ? $('.tableAtividades tbody, .atividadeInfo') 
                 : $('.kanbanAtividade, .atividadeInfo')
             : $('.tableFavoritos tbody');
-        table = (getContentsVisualizacaoPro().find('.favoritosLabelOptions').length > 0) ? getContentsVisualizacaoPro().find('.favoritosLabelOptions table') : table;
         table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
@@ -6692,7 +6486,7 @@ function saveConfigEtiqueta(name, value, icon, mode) {
     var storeEtiqueta = (mode == 'ativ') 
             ? (typeof arrayConfigAtivUnidade.config !== 'undefined' && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined') 
                 ? arrayConfigAtivUnidade.config.etiquetas : {config: {colortags: []}}
-            : (typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}});
+            : {favorites: [], config: {colortags: []}};
             // console.log(storeEtiqueta);
     var colorTags = (Object.keys(storeEtiqueta).length > 0 && typeof storeEtiqueta.config.colortags !== 'undefined') 
                         ? storeEtiqueta.config.colortags : [];
@@ -6713,8 +6507,6 @@ function saveConfigEtiqueta(name, value, icon, mode) {
             console.log(itemPushConfig, arrayConfigAtivUnidade['config']);
         }
         getServerAtividades({action: 'edit_etiqueta_config', config_etiquetas: arrayConfigAtivUnidade['config']['etiquetas']}, 'edit_etiqueta_config');
-    } else if (mode == 'fav') {
-        localStorageStorePro('configDataFavoritesPro', storeEtiqueta);
     }
 }
 function saveFollowEtiqueta() {
@@ -6762,12 +6554,6 @@ function saveFollowEtiqueta() {
             if (atividadeIndex != -1) {
                 tableConfigList.atividades[atividadeIndex].etiquetas = tags;
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
-            var id_procedimento = parseInt($(this).closest('tr').data('id_procedimento'));
-            var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-            storeFavorites['favorites'][favoriteIndex].etiquetas = tags;
-            localStorageStorePro('configDataFavoritesPro', storeFavorites);
         }
         infraTooltipOcultar();
     }
@@ -6778,7 +6564,7 @@ function normalizeNameTag(tag) {
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
         ? (typeof arrayConfigAtividades.etiquetas !== 'undefined' ? arrayConfigAtividades['etiquetas']['list'] : [])
-        : uniqPro($.map((typeof getStoreFavoritePro === 'function' ? getStoreFavoritePro() : {favorites: [], config: {colortags: []}})['favorites'], function (value) { return value.etiquetas; }));
+        : [];
 }
 function getHtmlEtiqueta(name, mode) {
     var colorTags = getColorTags(mode);
@@ -6917,14 +6703,6 @@ function getDateSemantic(config) {
                         : (calcalert == 1) ? 'em '+calcalert+' dia' : (calcalert > 1) ? 'em '+calcalert+' dias' : (calcalert == 0) ? moment(duedate,formatDate).fromNow() : '';
     
     return {date: config.date, dateref: frowNow, duedate: duedate.format(displayFormat), alertdate: alertdate, calcalert: calcalert, duecalcref: duecalcref};
-}
-function configDatesPreview() {
-    var config = getConfigDatesFav();
-    if (config.selectdoc) { configDatesSetUpdate() }
-        config.dateTo = moment().format('YYYY-MM-DD');
-    var htmlDatePreview = getDatesPreview(config, true);
-        $('#dateboxPreview').show().html(htmlDatePreview);
-        //console.log(config);
 }
 function getProgressPreview(config) {
     var max = moment(config.dateDue, 'YYYY-MM-DD').diff(moment(config.date, 'YYYY-MM-DD'), 'days');
@@ -9041,10 +8819,6 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         updateSelectConcluirEtapa();
     } else if (mode == 'projeto') { 
         updateSelectConcluirProjetoEtapa();
-    } else if (mode == 'favorites') {
-        parent.updateSelectFavorites();
-        parent.initAppendIconFavorites();
-        console.log('updateSelectFavorites');
     } else if (mode == 'dados') {
         //loopIDProcedimentos();
     }
@@ -14650,7 +14424,6 @@ function scriptVisualizacaoPro(ifrV) {
     if (typeof loadFontIcons === 'function') loadFontIcons('head', ifrV);
     if (typeof checkPageVisualizacao === 'function') checkPageVisualizacao();
     if (typeof checkPageAtividadesVisualizacao === 'function') checkPageAtividadesVisualizacao();
-    if (typeof checkPageFavoritosVisualizacao === 'function') checkPageFavoritosVisualizacao();
 }
 
 function loadScriptArvorePro() {

@@ -246,13 +246,9 @@ function getServerAtividades(param, mode) {
                             } else {
                                 setChartAtividades(ativData['chart'], mode);
                             }
-                        } else if (mode == 'check_favoritos') {
-                            checkFileRemoteFav('set',ativData);
                         } else if (mode == 'check_entregas_atividades') {
                             checkTempoPlanoEntrega(false, 'set', ativData);
                             loadingButtonConfirm(false);
-                        } else if (mode == 'get_favoritos') {
-                            restoreFavServer(ativData['config']);
                         } else if (mode == 'set_favoritos') {
                             loadingButtonConfirm(false);
                         } else if (mode == 'view_documento') {
@@ -26429,7 +26425,6 @@ function initAtividades(TimeOut = 9000) {
     if (typeof localStorageRestorePro !== 'undefined' && typeof checkLoadingButtonConfirm !== 'undefined' && typeof $().tabs !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') { 
         urlServerAtiv = perfilLoginAtiv.URL_API;
         userHashAtiv = perfilLoginAtiv.KEY_USER;
-        if (typeof initPanelFavorites !== 'undefined') initPanelFavorites();
         initEmptyAtividades();
         getAtividades();
         if (typeof $.mask === 'undefined') $.getScript(URL_SPRO+"js/lib/jquery.maskedinput.min.js"); 
