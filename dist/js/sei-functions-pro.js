@@ -525,6 +525,44 @@ function compareVersionNumbers(v1, v2){
     return 0;
 }
 
+// Tabela de equivalentes ASCII usada por quem grava texto no SEI (marcador, nome de documento enviado por arrastar).
+// Veio do sei-pro-proc-lote.js, que saiu (o Processos em lote agora e o modulo TS): os chamadores seguem aqui.
+/**
+ * O SEI recebe o formulario em ISO-8859-1 e o SEI Pro serializa com escape(),
+ * que transforma o que nao cabe em latin-1 num %uXXXX que o PHP nao decodifica:
+ * o caractere entra no processo como o texto literal "%u2014". Como as
+ * especificacoes normalmente sao coladas do Word ou do Excel -- que trocam
+ * hifen por travessao e aspas retas por curvas -- isso aconteceria o tempo
+ * todo. Comprovado no SEI 4.1.5: "Teste travessao (travessao) aqui" gravou
+ * "Teste travessao %u2014 aqui".
+ */
+var PROCLOTE_TROCAS = {
+    '\u2010': '-', '\u2011': '-', '\u2012': '-', '\u2013': '-', '\u2014': '-', '\u2015': '-', '\u2212': '-',
+    '\u2018': "'", '\u2019': "'", '\u201A': "'", '\u201B': "'", '\u2032': "'",
+    '\u201C': '"', '\u201D': '"', '\u201E': '"', '\u201F': '"', '\u2033': '"',
+    '\u2026': '...', '\u2022': '-', '\u00A0': ' ', '\u2007': ' ', '\u2008': ' ',
+    '\u2009': ' ', '\u200A': ' ', '\u202F': ' ', '\u200B': '', '\uFEFF': '',
+    '\u20AC': 'EUR', '\u2122': '(TM)', '\u2190': '<-', '\u2192': '->', '\u2264': '<=', '\u2265': '>='
+};
+
+/** Deixa o texto inteiro representavel em ISO-8859-1, sem perder sentido. */
+var procLote_paraLatin1 = (texto) => {
+    return String((texto === null || typeof texto === 'undefined') ? '' : texto)
+        .normalize('NFC')
+        .replace(/[\s\S]/g, (c) => {
+            // A tabela vem ANTES do atalho de latin-1 de proposito: o espaco
+            // nao separavel (U+00A0) cabe em latin-1, mas colado do Word ele
+            // quebra a busca no SEI -- "Contrato 123" nao acha "Contrato\u00A0123".
+            if (Object.prototype.hasOwnProperty.call(PROCLOTE_TROCAS, c)) return PROCLOTE_TROCAS[c];
+            if (c.charCodeAt(0) < 256) return c;
+            // ultimo recurso: tira o acento e fica com a letra base
+            const base = c.normalize('NFD').replace(/[\u0300-\u036F]/g, '');
+            for (let i = 0; i < base.length; i++) {
+                if (base.charCodeAt(i) > 255) return '';
+            }
+            return base;
+        });
+};
 function _P() { // get  Session Name Space
     return JSON.parse(sessionStorage.getItem('new_extension'));
 }
@@ -13193,18 +13231,9 @@ function appendIconBatchDocs(loop = true) {
     }
     if (loop) { reagendarIconeBarraPro('appendIconBatchDocs', appendIconBatchDocs); }
 }
-function initDocLoteModalSelecaoDoc(TimeOut = 9000) {
+function initDocLoteModalSelecaoDoc() {
     if (document.documentElement.hasAttribute('data-seipro-documentos-lote')) { document.dispatchEvent(new CustomEvent('spro-documentos-lote-abrir')); return; }
-    if (TimeOut <= 0) { return; }
-    if (typeof $().chosen !== 'undefined' && typeof URL_SPRO !== 'undefined') { 
-        docLoteModalSelecaoDoc();
-    } else {
-        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-        setTimeout(function(){ 
-            initDocLoteModalSelecaoDoc(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDocLoteModalSelecaoDoc'); 
-        }, 500);
-    }
+    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir os Documentos em Lote nesta tela. Recarregue a p\u00E1gina (F5) e tente de novo.');
 }
 function setProgressBarOnProcesso() {
     if (typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.prescricoes !== 'undefined' && checkConfigValue('gerenciarprescricoes')) {
