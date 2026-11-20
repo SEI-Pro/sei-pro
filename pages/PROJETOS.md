@@ -192,9 +192,9 @@ recarregue a página do SEI. Para mudar a posição do painel ou escondê-lo, us
   unidade" e "Só eu"). Projetos concluídos podem ser **arquivados** (no menu do projeto) e voltam por
   **Projetos arquivados**, no menu de ajustes.
 
-### Ferramenta antiga (descontinuada)
+### Ferramenta antiga (descontinuada e removida)
 
-Antes da versão 2.7, os projetos usavam uma planilha do Google como base de dados. Essa ferramenta foi descontinuada, porque dependia de uma API do Google que foi desativada. As páginas abaixo ficam só como registro: [Base de dados no Google Spreadsheets](../pages/BASEDADOS.md), [Conectar ao Google Spreadsheets](../pages/SEISHEETS.md), [Compartilhar projetos](../pages/PROJETOSSHARE.md), [Carregar chaves de outro usuário](../pages/PROJETOSIMPORT.md) e [Criar e editar projetos](../pages/PROJETOSEDIT.md).
+Antes da versão 2.7, os projetos usavam uma planilha do Google como base de dados. Essa ferramenta foi descontinuada, porque dependia de uma API do Google que foi desativada, e foi removida do SEI Pro na versão 3.9.5.
 
 ## Próximo item
 

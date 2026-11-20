@@ -1,6 +1,6 @@
 # Mapa do legado do SEI Pro
 
-Data: 20/11/2026 (branch `master` após o Comparador de Documentos em TS, versão em preparação 3.9.5).
+Data: 20/11/2026 (após o Comparador de Documentos em TS e a limpeza do legado, versão em preparação 3.9.5).
 
 Este documento diz **o que já foi refatorado para a stack TypeScript** e **o que ainda roda no código legado** (JavaScript com jQuery, em `dist/js/`), com o tamanho de cada pedaço, as dependências que impedem removê-lo e uma ordem sugerida para as próximas refatorações.
 
@@ -95,27 +95,24 @@ Tamanho = linhas do arquivo em `dist/js/`; "restantes" = funções que **não** 
 - Pilha jQuery: jQuery 3.4.1, jQuery UI, chosen, tablesorter, entre outros em `dist/js/lib/`.
 - Cadeia do iframe oculto `#frmCheckerProcessoPro` (`dadosProcessoPro`, criada por `initDadosProcesso`): continua ativa porque ainda há consumidores — Favoritos legado, editor, edição legada de dados do processo, URL amigável, lista de documentos e Ações em lote, histórico legado, controle e pesquisa, Atividades/Prescrição/Projetos e upload pela árvore (lista completa em `processo/README.md`, "O que sobra no legado").
 
-### 2.10 Integração com o Google (Sheets e login)
+### 2.10 Integração com o Google
 
-Dois usos diferentes, que **não** têm o mesmo destino:
-
-- **Google Sheets como base de dados** (Projetos antigo, Formulários e Sincronizar processos). Descontinuado: a API do Google que sustentava foi desativada (`pages/PROJETOS.md`, `pages/BASEDADOS.md`, `pages/SEISHEETS.md`). Pegadas no código: `init.js` (`loadDataBaseSheetsFormulariosPro`, `loadDataBaseSheetsProcessosPro` e o bloco comentado de Projetos), `sei-pro.js` (`handleClientLoadPro`, `checkLoadConfigSheets`), `sei-functions-pro.js` (`initClientPro`, `onSignInPro`, `updateSigninStatusPro`, `handleSignoutClickPro`, com escopo `spreadsheets`), `spreadsheetId*` em `init_db.js` e em `opcoes-pagina/src/perfis.ts`, a opção `sincronizarprocessos` em `opcoes-pagina/src/schema-dados.ts`, `gerenciarformularios` no legado e as páginas `BASEDADOS.md` e `SEISHEETS.md`.
-- **Login Google do Atividades** (`gapi.auth2`, token de identificação em `sei-pro-atividades.js`): **depende do destino do Atividades** (2.2).
+- **Google Sheets como base de dados** (Projetos antigo, Formulários e Sincronizar processos): **removido em 20/11/2026**. Já estava descontinuado, e o código vivo (carregadores em `init.js`, `handleClientLoadPro`, botões "Conectar Base de Dados", ícone de formulário na planilha, a opção `sincronizarprocessos`, as páginas de ajuda) saiu. Sobra apenas o formato de perfil com `CLIENT_ID`/`API_KEY`/`spreadsheetId`, que a página de opções preserva sem usar.
+- **Login Google do Atividades**: o código (`getTokenGoogle`, `onLoad`, `signOutProfile` em `sei-pro-atividades.js` e o bloco `initClientPro…` em `sei-functions-pro.js`) já estava **comentado**; os comentários foram removidos de `sei-functions-pro.js` e ficam em `sei-pro-atividades.js` até a decisão sobre o Atividades. O `CLIENT_ID` do perfil do Atividades (`perfilLoginAtiv`) continua em uso.
 
 ## 3. Resíduos de funcionalidades já refatoradas
 
-Arquivos legados de módulos que já têm versão TS. Cada um tem uma condição de carga e dependências próprias:
+Em 20/11/2026 saíram `sei-pro-favoritos.js` (1,8 mil linhas), `sei-pro-docs-lote.js` (1,5 mil) e `sei-pro-proc-lote.js` (0,8 mil), junto com ~60 funções de Favoritos legado em outros arquivos (cluster de arquivo local/File System, estrela, painel, etiquetas, "config dates"). As pontes viraram evento ou aviso (`abrirProcessosLotePro`, `initDocLoteModalSelecaoDoc`), e `procLote_paraLatin1` (tabela de travessão e aspas curvas) passou para `sei-functions-pro.js`, porque três chamadores dependem dela.
 
-| Arquivo | Linhas | Quando carrega hoje | O que impede remover |
+Resta um resíduo:
+
+| Arquivo | Linhas | Quando carrega | O que impede remover |
 |---|---|---|---|
-| `sei-pro-favoritos.js` | 1,8 mil | `init.js:486`, **só sem** o marcador `data-seipro-favoritos` (ou seja, sem o módulo TS na página) | Funções suas leem `dadosProcessoPro` (2.9); outros arquivos citam `getStoreFavoritePro`/`loadFavoritosPro` (há comentário em `sei-functions-pro.js:6599`). Sai só se **todo** pacote distribuído tiver `init_favoritos.js`. |
-| `sei-pro-projetos.js` | 2,0 mil | `init.js:493`, sem o marcador **ou com servidor do Atividades configurado** (vira "Projetos (Atividades)") | Enquanto o Atividades existir, ele continua. |
-| `sei-pro-docs-lote.js` | 1,5 mil | **Sempre**, por `$.getScript` em `init.js:49`, mesmo com o módulo TS | No Firefox já fica só com as pontes (`getInitialProcUrl`, `getInitialProcHtml`, `getSerieForm`, `extractFormParams`, `createProc`, `extractProcId`), que o código que fica ainda chama (o gerador do pacote confere cada chamador; **quem são** ainda não foi levantado). |
-| `sei-pro-proc-lote.js` | 0,8 mil | **Sempre**, por `$.getScript` em `init.js:50` | O pacote oficial recebe o `processos-lote` TS só no Lab (receita `SO_LAB` do gerador do Firefox); no oficial, este arquivo é o único Processos em lote. |
+| `sei-pro-projetos.js` | 2,0 mil | `init.js`, sem o marcador `data-seipro-projetos` **ou com servidor do Atividades configurado** (vira "Projetos (Atividades)") | Enquanto o Atividades existir, ele continua. |
 
 ## 4. Ordem sugerida
 
-1. **Limpeza de baixo risco e alto ganho:** Google Sheets (2.10, primeiro uso) e as pontes de `sei-pro-docs-lote.js`; ambos são código que não executa mais ou que só existe por causa de outro resíduo.
+1. ~~Limpeza de baixo risco (Google Sheets e pontes dos lotes)~~: feita em 20/11/2026.
 2. **Pequenos e isolados:** Prescrições (2.7), Legística (2.6), ZIP (2.8).
 3. **Fechar a cadeia do iframe oculto:** Árvore (2.4) e home/controle (2.5), que são os consumidores que sobram de `dadosProcessoPro`.
 4. **Editor** (2.1): o maior em uso visível; segue o port para CK5.
