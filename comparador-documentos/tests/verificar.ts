@@ -4,6 +4,7 @@ import { verificarConstantes } from "./verificar-constantes";
 import { verificarDiff } from "./verificar-diff";
 import { verificarResultado } from "./verificar-resultado";
 import { verificarSanitizar } from "./verificar-sanitizar";
+import { verificarSei } from "./verificar-sei";
 import { verificarTrabalhador } from "./verificar-trabalhador";
 
 verificarConstantes();
@@ -12,4 +13,5 @@ verificarDiff();
 verificarSanitizar();
 verificarResultado();
 await verificarTrabalhador();
+await verificarSei();
 resumo();
