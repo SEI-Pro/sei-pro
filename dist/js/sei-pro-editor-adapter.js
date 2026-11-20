@@ -370,7 +370,10 @@
         if (!base || !jq || typeof jq.getScript !== 'function') return false;
         if (loadModules._done) return true;
         loadModules._done = true;
+        // Recursos que o pacote TS (js/editor/pagina.js) assumiu: init_editor.js grava os ids no <html>.
+        var cedidos = (document.documentElement.getAttribute('data-seipro-editor-ts') || '').split(',');
         MODULES.forEach(function (name) {
+            if (cedidos.indexOf(name.replace(/\.js$/, '')) !== -1) return;
             try { jq.getScript(base + 'js/modules/editor/' + name); } catch (e) {}
         });
         return true;
