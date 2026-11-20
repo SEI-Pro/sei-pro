@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "3.9.3",
+  "version": "3.9.4",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://seipro.app",
   "icons": {
@@ -386,24 +386,6 @@
         "*://sistemas.unir.br/sip/*"
       ],
       "run_at": "document_idle"
-    },
-    {
-      "js": [
-        "js/init_bloqueio.js"
-      ],
-      "matches": [
-        "*://*.br/sip/*",
-        "*://*.br/sei/*",
-        "*://*.br/*controlador*.php?acao=*",
-        "*://*.org/sip/*",
-        "*://*.rio/sip/*",
-        "*://*.org/sei/*",
-        "*://*.rio/sei/*",
-        "*://*.org/*controlador*.php?acao=*",
-        "*://*.rio/*controlador*.php?acao=*"
-      ],
-      "run_at": "document_start",
-      "all_frames": true
     },
     {
       "js": [

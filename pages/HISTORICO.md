@@ -2,6 +2,15 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.9.4
+20/11/2026
+
+- **Corrigido — a caixa de controle de processos não lia o tipo e a especificação no SEI 4.0.x**, e mostrava tudo em "Sem tipo" na Grade do Controle. O SEI 4.0 não traz esses dados no formato que o SEI 4.1 e o 5 usam, só no texto de ajuda do número do processo. Correção de [@laestacheski](https://github.com/laestacheski), a partir de um relato no SEI do IFPR.
+- **Corrigido — o seletor de arquivo da Sincronização não abria** nos Monitorados, nos Projetos e nas Demandas, com o erro "Third party iframes are not allowed to show a file picker". Agora, quando isso acontece, o SEI Pro abre uma janela própria para escolher o arquivo.
+- **Corrigido — o envio de documento externo, por arrastar na árvore ou pelo "Enviar ao processo" das Ferramentas de PDF, podia escolher sozinho um tipo de documento errado** quando o nome dele só continha a palavra "anexo" (por exemplo, "DFI - Controle de Anexo"). Agora só um tipo chamado exatamente "Anexo" é escolhido sem perguntar.
+- **Corrigido (Estilo Avançado antigo) — a lupa e o X de "Documentos do processo" na janela de e-mail iam para o topo da página**, ao lado do campo "Para", em vez de ficarem ao lado da lista de documentos.
+- **Corrigido — o domínio `.rio` (SEI Rio) não era reconhecido pela extensão**, e o Chrome nem oferecia a opção de permitir o SEI Pro nesse domínio.
+
 ### Versão 3.9.3
 18/11/2026
 
