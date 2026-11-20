@@ -4,6 +4,7 @@ import { recurso as checkbox } from "./checkbox";
 import { recurso as folhaPapel } from "./folha-papel";
 import { recurso as fontSize } from "./font-size";
 import { recurso as ghsUnlock } from "./ghs-unlock";
+import { recurso as latex } from "./latex";
 import { recurso as pageBreak } from "./page-break";
 import { recurso as quickTable } from "./quick-table";
 import { recurso as sessionBreak } from "./session-break";
@@ -24,4 +25,5 @@ export const RECURSOS: readonly Recurso[] = [
   quickTable,
   folhaPapel,
   tinyUrl,
+  latex,
 ];

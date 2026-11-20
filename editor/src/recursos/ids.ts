@@ -15,4 +15,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "quick-table",
   "folha-papel",
   "tiny-url",
+  "latex",
 ];

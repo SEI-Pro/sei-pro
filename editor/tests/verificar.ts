@@ -4,6 +4,7 @@ import { verificarCheckboxCapLetter } from "./recursos/checkbox-cap-letter";
 import { verificarFolhaPapel } from "./recursos/folha-papel";
 import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
+import { verificarLatex } from "./recursos/latex";
 import { verificarQuebras } from "./recursos/quebras";
 import { verificarQuickTable } from "./recursos/quick-table";
 import { verificarTinyUrl } from "./recursos/tiny-url";
@@ -35,5 +36,6 @@ await verificarFontSizeStyleEditor();
 verificarQuickTable();
 verificarFolhaPapel();
 await verificarTinyUrl();
+await verificarLatex();
 
 resumo();

@@ -36,7 +36,7 @@ export function clicar(raiz: ParentNode, texto: string): void {
 }
 
 /** Digita `valor` no campo e dispara `input`. */
-export function digitar(campo: HTMLInputElement, valor: string): void {
+export function digitar(campo: HTMLInputElement | HTMLTextAreaElement, valor: string): void {
   campo.value = valor;
   const Ev = (campo.ownerDocument.defaultView as unknown as { Event: typeof Event }).Event;
   campo.dispatchEvent(new Ev("input", { bubbles: true }));

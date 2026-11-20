@@ -13,6 +13,8 @@ export interface Contexto {
   verifyOpcao(nome: string): boolean;
   /** Rede, injetavel nos testes; o padrao e o `fetch` da pagina. */
   fetch?: typeof fetch;
+  /** Baixa uma imagem e a devolve como data URI (canvas); injetavel nos testes. */
+  imagemParaDataUri?: (src: string) => Promise<string>;
 }
 
 /** Formato das funcoes globais que o monolito chama pelo nome (`this_` = elemento clicado). */
