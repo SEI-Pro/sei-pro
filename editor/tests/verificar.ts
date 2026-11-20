@@ -4,6 +4,7 @@ import { verificarAdaptadorCk4 } from "./verificar-adaptador-ck4";
 import { verificarAdaptadorCk5 } from "./verificar-adaptador-ck5";
 import { verificarVersao } from "./verificar-adaptador-versao";
 import { verificarCedencia } from "./verificar-cedencia";
+import { verificarContrato } from "./verificar-contrato";
 import { verificarInstalar } from "./verificar-instalar";
 import { verificarOpcoes } from "./verificar-opcoes";
 import { verificarUi } from "./verificar-ui";
@@ -17,5 +18,6 @@ await verificarAdaptadorCk5();
 verificarUi();
 verificarInstalar();
 verificarCedencia();
+verificarContrato();
 
 resumo();
