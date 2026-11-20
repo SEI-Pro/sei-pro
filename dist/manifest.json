@@ -1175,7 +1175,6 @@
         "js/lib/favico-0.3.10.min.js",
         "js/lib/papaparse.js",
         "js/lib/jschardet.min.js",
-        "js/lib/diff2html.min.js",
         "js/lib/mammoth.browser.min.js",
         "js/lib/modalLink.js",
         "js/sei-functions-pro.js",

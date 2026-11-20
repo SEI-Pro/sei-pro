@@ -10,14 +10,14 @@ Mostra **o que mudou entre dois documentos do processo** — uma minuta e sua ve
 
 1. Na árvore do processo, clique no primeiro documento — ele será o documento **A**;
 2. Na barra de botões, clique em **Iniciar Comparador de Documentos**;
-3. Em **B**, escolha na lista o documento com o qual deseja comparar;
+3. Em **B**, escolha na lista o documento com o qual deseja comparar (dá para pesquisar digitando parte do título ou do número);
 4. A comparação aparece logo abaixo;
 5. Se quiser inverter a ordem (o que é "antes" e o que é "depois"), clique em **Inverter (A/B → B/A)**.
 
 Com o resultado na tela, você pode:
 
 * **Baixar** a comparação como arquivo HTML;
-* **Criar Novo Documento**: escolha o tipo de documento e o SEI Pro cria no processo um documento com a comparação marcada — útil para registrar as alterações entre versões.
+* **Criar Novo Documento**: escolha o tipo de documento e o SEI Pro cria no processo um documento com a comparação marcada — útil para registrar as alterações entre versões. Se o processo ou um dos dois documentos for restrito, o novo documento também é criado como restrito, com a mesma hipótese legal.
 
 ### Como ativar
 
@@ -25,9 +25,9 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 
 ### Bom saber
 
-* Compara documentos **gerados no SEI**, do mesmo processo. PDFs e outros anexos não entram na lista.
-* A comparação é feita no seu computador, a partir do conteúdo dos documentos.
-* Se nenhum documento estiver selecionado na árvore ao abrir o comparador, o campo A avisa: *Nenhum documento selecionado na árvore do processo*. Feche, clique no documento e abra de novo.
+* Compara documentos **gerados no SEI**, do mesmo processo. PDFs e outros anexos não entram na lista, e documentos cancelados ou sigilosos também não.
+* A comparação é feita no seu computador, a partir do conteúdo dos documentos, em segundo plano: a tela do SEI não trava enquanto o SEI Pro compara, mesmo em documentos grandes.
+* Se nenhum documento estiver selecionado na árvore ao abrir o comparador (ou se o próprio processo estiver marcado), o campo A avisa: *Nenhum documento selecionado na árvore do processo*. Feche, clique no documento e abra de novo.
 
 ## Próximo item
 

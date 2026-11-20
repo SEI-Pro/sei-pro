@@ -2634,147 +2634,11 @@ function extractDataFormulario(output = 'obj', allFields = false) {
                     ? fieldsOut
                     : stringOut;
 }
-function decodeHtml(html) {
-    return decodificarEntidadesPro(html);
-}
-function initDialogCompareDocs(TimeOut = 9000) {
+// O Comparador de Documentos e o modulo TS (comparador-documentos/, content script init_comparador.js): este botao
+// so dispara o evento dele. Sem o content script na pagina, avisa em vez de sumir.
+function initDialogCompareDocs() {
     if (document.documentElement.hasAttribute('data-seipro-comparador')) { document.dispatchEvent(new CustomEvent('spro-comparador-abrir')); return; }
-    if (TimeOut <= 0) { return; }
-    if (typeof $().chosen !== 'undefined') {
-        parent.openDialogCompareDocs();
-    } else {
-        if (TimeOut == 9000 && typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-        setTimeout(function(){ 
-            parent.initDialogCompareDocs(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDialogCompareDocs => '+TimeOut); 
-        }, 500);
-    }
-}
-function invertCompareDoc(this_) {
-    $(this_).toggleClass('newLink_confirm');
-    $('#docLoteSelect').trigger('change');
-}
-function openDialogCompareDocs() {
-    var elemRef1 = $('#ifrArvore').contents().find('#content .infraArvoreNoSelecionado');
-    var docRef1 = elemRef1.text().trim();
-        docRef1 = docRef1 == '' ? '<span style="color:#FF0000;"><i class="fas fa-exclamation-triangle vermelhoColor" style="margin-right: 5px;"></i> Nenhum documento selecionado na \u00E1rvore do processo</span>' : docRef1;
-    var idRef = elemRef1.length ? parseInt(elemRef1.attr('id').replace('span','')) : false;
-    const urlNewDoc = getUrlNewDocArvore();
-    if (!urlNewDoc) {
-        flagError = true;
-        alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
-    } else {
-        var htmlBox =   '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
-                        '               <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> <strong>A</strong>: '+docRef1+'</label>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
-                        '               <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> <strong>B</strong>: Selecione abaixo o documento para compara\u00E7\u00E3o:</label>'+
-                        '               <a class="newLink newLink_active invertCompareDoc" data-spro-click="invertCompareDoc" style="float: right;font-size: 10pt;"><i class="fas fa-exchange-alt"></i>Inverter (A/B \u2192 B/A)</a>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '           <td class="required">'+
-                        '               <select id="docLoteSelect" data-spro-change="getCompareDocs"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '  </table>';
-                        
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'<div class="iframeBoxDiv" style="display:none;width: 100%; height: calc(100vh - 320px); margin: 0;"></div></div>')
-            .find('#dialogBoxDocLote .iframeBoxDiv').append(iframePro({ src: 'about:blank', frameborder: 0, height: '100%', width: '100%' })).end()
-            .dialog({
-                title: 'Comparar Documentos',
-                width: 950,
-                // height: $(window).height()-80,
-                open: function() { 
-                    $("#btnSelecaoDoc").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
-                    $('#docLoteSelect').chosen({
-                        placeholder_text_single: ' ', 
-                        no_results_text: 'Nenhum resultado encontrado',
-                        normalize_search_text: function(text) {
-                            return removeAcentos(text.toLowerCase());
-                        }
-                    })
-                    $('#docLoteSelect_chosen').addClass('chosenLoading');
-                    // Lista de documentos da arvore no select (era o docsLote_getDocsArvore do sei-pro-docs-lote.js,
-                    // que nao vai no pacote do Firefox): as duas funcoes moram aqui.
-                    getDocsArvore($('#docLoteSelect'), function(select, optionBlank, disableId) { getDocsArvore_fillSelect(select, optionBlank, disableId); }, function() {}, true, idRef);
-                    $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", true).addClass("ui-state-disabled");
-                },
-                buttons: [{
-                    text: 'Baixar',
-                    icon: 'ui-icon-disk',
-                    click: function(event) {
-                        var docRef2 = $('#docLoteSelect option:selected').text();
-                        var nameFile = 'Comparativo '+docRef1+' - '+docRef2+' ('+NAMESPACE_SPRO+')';
-                        var iframeBoxDiv = $('.iframeBoxDiv iframe').contents();
-                        var contentDocument = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
-                            contentDocument += iframeBoxDiv.find('html')[0].outerHTML;
-                        var downloadLink = document.createElement("a");
-                        var blob = new Blob(["\ufeff", contentDocument]);
-                        var url = URL.createObjectURL(blob);
-                        downloadLink.href = url;
-                        downloadLink.download = nameFile+'.html';
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
-                    }
-                },{
-                    text: 'Criar Novo Documento',
-                    icon: 'ui-icon-extlink',
-                    click: function(event) {
-                        var iframeBoxDiv = $('.iframeBoxDiv iframe').contents();
-                        var contentDocument = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
-                            contentDocument += iframeBoxDiv.find('html')[0].outerHTML;
-                        getNewDocCompareDocs(contentDocument);
-                    }
-                }]
-            });
-    }
-}
-function getNewDocCompareDocs(contentDocument) {
-    var tiposDocumentos = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.tiposDocumentos !== 'undefined' && dadosProcessoPro.tiposDocumentos.length ? $.map(dadosProcessoPro.tiposDocumentos, function(v){ return '<option value="'+v.id+'">'+v.name+'</option>' }).join('') : false;
-    var htmlBox =   '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                    '      <tr>'+
-                    '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
-                    '               <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> Selecione o tipo de documento que deseja criar:</label>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '      <tr>'+
-                    '           <td class="required">'+
-                    '               <select id="docTipoSelect"><option value="">&nbsp;</option>'+tiposDocumentos+'</select>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '  </table>';
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = htmlPro($('#dialogBoxPro'), '<div class="dialogBoxDiv"> '+htmlBox+'</span>')
-        .dialog({
-            width: 450,
-            title: 'Criar novo documento comparado',
-        	open: function(){
-                updateButtonConfirm(this, true);
-                initChosenReplace('box_init', this, true);
-            },
-            buttons: [{
-                text: 'Criar Novo Documento',
-                icon: 'ui-icon-extlink',
-                click: function(event) {
-                    var id_tipo_documento = $('#docTipoSelect').val();
-                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
-                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
-                        sessionStorageStorePro('dadosDocAutomatico',contentDocument);
-                        sessionStorageStorePro('nomeDocAutomatico',$('#docTipoSelect option:selected').text());
-                        setNewDoc(id_procedimento, id_tipo_documento, true);
-                        resetDialogBoxPro('dialogBoxPro');
-                        alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Gerando documento comparado');
-                }
-            }]
-        });
+    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir o Comparador de Documentos nesta tela. Recarregue a p\u00E1gina (F5) e tente de novo.');
 }
 // Envio de arquivos arrastados para a arvore (submitUploadArvore, em sei-pro-arvore.js): o nome do
 // arquivo nao comeca com um tipo de documento e o orgao nao tem tipo padrao configurado nem o tipo
@@ -2837,64 +2701,6 @@ function escolherTipoUploadArvorePro(nomeArquivo, tiposDoc, valorSugerido, callb
                 }
             }]
         });
-}
-function getCompareDocs(this_) {
-    var _this = $(this_);
-    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
-        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
-    var id_documento = _this.find('option:selected').data('id_documento');
-    var param = {
-        id_documento: id_documento,
-        id_procedimento: id_procedimento
-    }
-    if (!!id_procedimento && !!id_documento) {
-        dialogBoxPro.dialog('option','height', $(window).height()-80);
-        // Tela de espera no iframe do diff: marcacao da extensao, por DOM API (o <link> nao passa no portao).
-        var docLoad = $('.iframeBoxDiv').show().find('iframe').contents()[0];
-        var raizLoad = docLoad.documentElement;
-        while (raizLoad.firstChild) raizLoad.removeChild(raizLoad.firstChild);
-        var headLoad = docLoad.createElement('head'), bodyLoad = docLoad.createElement('body'), linkLoad = docLoad.createElement('link');
-        linkLoad.setAttribute('rel', 'stylesheet');
-        linkLoad.setAttribute('type', 'text/css');
-        linkLoad.setAttribute('datastyle', 'seipro-fonticon');
-        linkLoad.setAttribute('href', URL_SPRO+'css/fontawesome.pro.min.css');
-        headLoad.appendChild(linkLoad);
-        raizLoad.appendChild(headLoad);
-        raizLoad.appendChild(bodyLoad);
-        htmlPro(bodyLoad, '<div style="text-align: center;font-size: 5em;padding-top: calc(50% - 2em);color: #ccc;"><i class="fas fa-sync fa-spin" style=""></i></div>');
-        $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", true).addClass("ui-state-disabled");
-
-        getContentDocSEI(param, function(compareHTML) {
-            var ifrArvoreHtml = $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents();
-            var originalHTML = ifrArvoreHtml.find('html').html();
-                originalHTML = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">'+decodeHtml(originalHTML);
-                compareHTML = decodeHtml(compareHTML);
-            
-            // Diff HTML strings
-            var output = ($('.invertCompareDoc').hasClass('newLink_confirm')) ? htmldiff(compareHTML, originalHTML) : htmldiff(originalHTML, compareHTML);
-                output = output.replace(/<del>/g, '<del style="background-color: #FFF0F5;color: #FF0000;">');
-                output = output.replace(/<ins>/g, '<ins style="background-color: #F0F8FF;color: #0000FF;">');
-                
-            // Remove imagens duplicadas
-            setTimeout(() => {
-                var srcs = [],
-                    temp;
-                $('.iframeBoxDiv iframe').contents().find("img").filter(function(){
-                    temp = $(this).attr("src");
-                    if ($.inArray(temp, srcs) < 0){
-                        srcs.push(temp);   
-                        return false;
-                    }
-                    return true;
-                }).remove();
-                $('.iframeBoxDiv iframe').contents().find("[onclick]").each(function(){ $(this).removeAttr('onclick')});
-            }, 200);
-            
-            reescreverDocumentoPro($('.iframeBoxDiv iframe').contents().find('html'), output);
-            $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", false).removeClass("ui-state-disabled");
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log({originalHTML:originalHTML, compareHTML:compareHTML});
-        });
-    }
 }
 function openCamposDinamicosForm() {
     var arrayNewDynamicField = extractDataFormulario('array');
@@ -12801,32 +12607,6 @@ function openDialogDoc(param, forceDownload = false, _this = false) {
             resetDialogBoxPro('iframeBoxPro');
             alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
         }
-    });
-}
-function getContentDocSEI(param, callback) {
-    var urlProcesso = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+param.id_procedimento+'&id_documento='+param.id_documento;
-    $.ajax({ url: urlProcesso }).done(function (html) {
-        let $html = lerHtmlPro(html);
-        var urlArvore = $html.find("#ifrArvore").attr('src');
-        $.ajax({ url: urlArvore }).done(function (htmlArvore) {
-            var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
-                    return (substr.indexOf("'controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento="+param.id_documento+"&") !== -1) ? substr : null;
-                }).join('');
-                urlVisualizacao = (urlVisualizacao != '') ? urlVisualizacao.split("'")[1] : false;
-                urlVisualizacao = (urlVisualizacao) ? url_host+urlVisualizacao.replace('controlador.php', '') : false;
-                
-            if (urlVisualizacao) {
-                $.ajax({ url: urlVisualizacao }).done(function (contentDoc) {
-                    if (typeof callback === 'function') callback(contentDoc);
-                }).fail(function(data){
-                    alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
-                });
-            }
-        }).fail(function(data){
-            alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
-        });
-    }).fail(function(data){
-        alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
     });
 }
 function updateDialogDefinitionPro() {
