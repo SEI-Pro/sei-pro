@@ -2,6 +2,11 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 3.9.5
+Em preparação
+
+- **Corrigido — notas de rodapé apareciam como "[?]" no SEI 5.** Se o cursor estava fora do corpo do documento (por exemplo, no Cabeçalho), a marca da nota ficava como [?] e o texto do rodapé era descartado. O mesmo acontecia na segunda nota inserida em seguida, porque o editor devolvia o cursor ao Cabeçalho depois de numerar a primeira. Agora a nota é sempre inserida no corpo, o cursor é preservado e as notas são numeradas corretamente.
+
 ### Versão 3.9.4
 20/11/2026
 
