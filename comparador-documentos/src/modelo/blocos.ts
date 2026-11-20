@@ -6,6 +6,8 @@
  * resultado usa `folhas[i]`, o elemento de `blocos[i]`, para pôr o diff no lugar certo do documento "depois".
  */
 
+import { higienizar } from "./sanitizar";
+
 /** O que o Worker recebe de cada bloco. */
 export interface Bloco {
   /** Conteúdo (innerHTML) da folha, já sem `on*` nem `javascript:`. */
@@ -24,8 +26,6 @@ export interface DocumentoBlocos {
 }
 
 const SELETOR_BLOCO = "p,div,li,h1,h2,h3,h4,h5,h6,td,th,blockquote,pre,caption";
-const DESCARTAR = "script,style,link,meta,noscript,title";
-const ATRIBUTOS_URL = ["href", "src", "action", "formaction", "xlink:href"];
 
 const ELEMENTO = 1;
 const TEXTO = 3;
@@ -39,16 +39,6 @@ function tirarComentarios(no: Node): void {
   for (const filho of Array.from(no.childNodes)) {
     if (filho.nodeType === COMENTARIO) no.removeChild(filho);
     else if (filho.nodeType === ELEMENTO) tirarComentarios(filho);
-  }
-}
-
-/** Remove `on*` e URLs `javascript:` de todo o corpo (uma passada). */
-function higienizar(corpo: Element): void {
-  for (const el of Array.from(corpo.querySelectorAll("*"))) {
-    for (const nome of el.getAttributeNames()) {
-      if (/^on/i.test(nome)) el.removeAttribute(nome);
-      else if (ATRIBUTOS_URL.includes(nome.toLowerCase()) && /^\s*javascript:/i.test(el.getAttribute(nome) ?? "")) el.removeAttribute(nome);
-    }
   }
 }
 
@@ -101,7 +91,6 @@ function coletar(contenedor: Element, folhas: Element[]): void {
 export function lerBlocos(html: string, parser: DOMParser = new DOMParser()): DocumentoBlocos {
   const doc = parser.parseFromString(html, "text/html");
   const corpo = doc.body ?? doc.documentElement;
-  for (const el of Array.from(corpo.querySelectorAll(DESCARTAR))) el.remove();
   tirarComentarios(corpo);
   higienizar(corpo);
   const folhas: Element[] = [];
