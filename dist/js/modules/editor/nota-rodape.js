@@ -194,9 +194,39 @@
         }
     };
 
+    // CK5: raiz do modelo que corresponde ao "Corpo do Texto" (null no CK4).
+    function getBodyRootCK5(editor) {
+        if (!editor || !editor.model || !editor.editing) return null;
+        var bodyEl = SeiProEditorAdapter.getBodyContainer(editor);
+        if (!bodyEl) return null;
+        var roots = Array.from(editor.model.document.roots || []);
+        for (var i = 0; i < roots.length; i++) {
+            var r = roots[i];
+            if (!r || r.rootName === '$graveyard' || (r.isAttached && !r.isAttached())) continue;
+            try {
+                var viewRoot = editor.editing.view.document.getRoot(r.rootName);
+                if (viewRoot && editor.editing.view.domConverter.mapViewToDom(viewRoot) === bodyEl) return r;
+            } catch (e) { /* continua */ }
+        }
+        return null;
+    }
+
+    // A marca da nota e o paragrafo do rodape precisam ficar na MESMA secao
+    // (o corpo). Se o cursor esta em outra secao (ex.: Cabecalho, para onde o
+    // CK5 devolve a selecao apos recarregar o conteudo), leva o cursor ao fim
+    // do corpo; senao a marca fica como [?] e o rodape e descartado como orfao.
+    function ensureSelectionInBody(editor) {
+        var root = getBodyRootCK5(editor);
+        if (!root) return;
+        var pos = editor.model.document.selection.getFirstPosition();
+        if (pos && pos.root === root) return;
+        editor.model.change(function (writer) { writer.setSelection(root, 'end'); });
+    }
+
     window.insertNtRodape = function (txt_NotaRodape, editor) {
         editor = editor || SeiProEditorAdapter.getInstance();
         if (!editor) return;
+        ensureSelectionInBody(editor);
         var randRef = randomString(16);
         // Placeholder temporario "?"; reorderNtRodape numera sequencialmente depois.
         var ntRodapeHtml_footer = '<p class="Tabela_Texto_Alinhado_Esquerda ntRodape"><a name="footer_' + randRef + '" href="#item_' + randRef + '" class="anchorRefInternaPro"><span class="ntRodape_footer ancoraSei" data-ntrodape-ref="' + randRef + '" data-ntrodape="?"  contenteditable="false">[?]</span></a> ' + txt_NotaRodape + '</p>';
@@ -233,6 +263,21 @@
             var doc = new DOMParser().parseFromString('<!doctype html><html><body>' + html + '</body></html>', 'text/html');
             var body = doc.body;
 
+            // Marcas que vivem em OUTRAS secoes (CK5 multi-root): o rodape delas
+            // nao e orfao, so nao e visivel daqui.
+            var outrasRefs = {};
+            try {
+                var rootCorpo = getBodyRootCK5(editor);
+                Array.from(editor.model.document.roots || []).forEach(function (r) {
+                    if (!r || r === rootCorpo || r.rootName === '$graveyard') return;
+                    var h = editor.data.get({ rootName: r.rootName });
+                    var tmp = new DOMParser().parseFromString('<!doctype html><html><body>' + h + '</body></html>', 'text/html');
+                    tmp.body.querySelectorAll('.ntRodape_item[data-ntrodape-ref]').forEach(function (el) {
+                        outrasRefs[el.getAttribute('data-ntrodape-ref')] = true;
+                    });
+                });
+            } catch (e) { /* CK4: sem outras raizes */ }
+
             // 1. Renumera items (sup) e footers em ordem do DOM.
             var items = Array.from(body.querySelectorAll('.ntRodape_item[data-ntrodape-ref]'));
             items.forEach(function (item, idx) {
@@ -255,7 +300,7 @@
             footerParas.forEach(function (p) {
                 var ftr = p.querySelector('.ntRodape_footer');
                 var ref = ftr.getAttribute('data-ntrodape-ref');
-                var hasItem = body.querySelector('.ntRodape_item[data-ntrodape-ref="' + ref + '"]');
+                var hasItem = outrasRefs[ref] || body.querySelector('.ntRodape_item[data-ntrodape-ref="' + ref + '"]');
                 // O no e guardado e devolvido (P4), sem reparse do outerHTML.
                 if (hasItem) keep.push({ id: parseInt(ftr.getAttribute('data-ntrodape')), no: p });
                 p.parentNode.removeChild(p);

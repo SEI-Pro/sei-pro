@@ -876,9 +876,35 @@
             var html = editor.data.get({ rootName: targetRootName, seiProInterno: true });
             var newHtml = transformFn(html);
             if (typeof newHtml === 'string' && newHtml !== html) {
+                // data.set devolve a selecao para a primeira secao (Cabecalho);
+                // guarda e restaura onde o usuario estava.
+                var saved = null;
+                try {
+                    var rg = editor.model.document.selection.getFirstRange();
+                    if (rg) saved = {
+                        root: rg.start.root.rootName, ps: rg.start.path.slice(), pe: rg.end.path.slice(),
+                        rootEnd: rg.end.root.rootName, backward: editor.model.document.selection.isBackward
+                    };
+                } catch (e) { saved = null; }
                 var payload = {};
                 payload[targetRootName] = newHtml;
                 editor.data.set(payload);
+                if (saved && saved.root === saved.rootEnd) {
+                    try {
+                        var rootSel = editor.model.document.getRoot(saved.root);
+                        editor.model.change(function (writer) {
+                            var a, b;
+                            try {
+                                a = editor.model.createPositionFromPath(rootSel, saved.ps);
+                                b = editor.model.createPositionFromPath(rootSel, saved.pe);
+                            } catch (e2) {
+                                // caminho invalido apos a transformacao: cai no fim da secao
+                                a = b = writer.createPositionAt(rootSel, 'end');
+                            }
+                            writer.setSelection(writer.createRange(a, b), { backward: !!saved.backward });
+                        });
+                    } catch (e3) { /* selecao perdida: sem efeito colateral */ }
+                }
             }
         },
 
