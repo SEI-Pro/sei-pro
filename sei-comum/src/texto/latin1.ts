@@ -1,6 +1,6 @@
 /**
  * Conversao para ISO-8859-1 (porta de PROCLOTE_TROCAS e procLote_paraLatin1,
- * dist/js/sei-pro-proc-lote.js).
+ * dist/js/sei-functions-pro.js).
  *
  * O SEI grava a especificacao em latin-1: um caractere fora dessa faixa entra no processo
  * como texto literal ("%u2014"). Coladas do Word ou do Excel, as especificacoes trazem

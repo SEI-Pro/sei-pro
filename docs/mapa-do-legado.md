@@ -119,6 +119,10 @@ Resta um resíduo:
 5. **Atividades** (2.2) e, com ele, `sei-pro-projetos.js` legado e o login Google: decisão de produto antes de qualquer trabalho.
 6. **`sei-functions-pro.js`** (2.3): vai diminuindo conforme os itens acima levam suas funções; no fim, o que sobrar vira `sei-comum`/`sei-nucleo` ou é descartado.
 
+## 4.1. Regra de empacotamento depois da limpeza (20/11/2026)
+
+Sem os arquivos legados, **nenhum pacote pode sair sem os três content scripts TS** `js/init_favoritos.js`, `js/init_processos_lote.js` e `js/init_documentos_lote.js`: sem eles, o botão Documentos em lote e o item Processos em lote só mostram "Recarregue a página (F5)", e o Favoritos desaparece. O último zip oficial do Chrome em `release/` (3.4) e os manifests de marca locais (`dist/manifest_*.json`) **não** têm esses scripts: regenere-os a partir de `dist/manifest.json` e ajuste a receita do Chrome oficial (que tratava o Processos em lote como "só do Lab") antes de qualquer build que não seja o Lab.
+
 ## 5. Atualizações de documentação pendentes
 
 - `processo/README.md` ("O que sobra no legado") ainda cita `getNewDocCompareDocs` como consumidor de `dadosProcessoPro`; a função foi removida com o comparador legado (20/11/2026).
