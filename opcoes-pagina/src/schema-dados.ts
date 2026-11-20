@@ -480,7 +480,7 @@ export const SECOES_GERAL: Secao[] = [
       {
         nome: "processoparado",
         rotulo: "Avisar na capa do processo quando ele estiver parado na unidade há mais de (dias; 0 desliga o aviso)",
-        ajuda: "O card \"Na unidade atual\" da capa ganha destaque quando o processo está há mais dias que este limite na sua unidade.",
+        ajuda: 'O card "Na unidade atual" da capa ganha destaque quando o processo está há mais dias que este limite na sua unidade.',
         tipo: "numero",
         icone: "fa fa-hourglass-half",
         padrao: 15,
@@ -779,13 +779,5 @@ export const OPCOES_COMPLEMENTOS: Opcao[] = [
     icone: "fa fa-bolt",
     manual: "DESATIVACONSULTAS",
     padrao: false,
-  },
-  {
-    nome: "sincronizarprocessos",
-    rotulo: "Sincronizar Base de Processos",
-    tipo: "chave",
-    icone: "fas fa-folder-open",
-    padrao: true,
-    visivelEm: "lab",
   },
 ];

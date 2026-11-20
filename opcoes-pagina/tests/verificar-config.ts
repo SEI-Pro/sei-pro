@@ -72,12 +72,12 @@ export function verificarConfig(): void {
     atual: atualSemNovas.length,
     legado: legado.length,
   });
-  // 60 chaves (62 menos formularios e natjus) + 1 texto preenchido (certidaosigilo_nomedoc) + 3 numeros + 3 selects com valor (newdocsigilo, vazio, nao entra)
-  checar("67 itens legados na pagina intocada (69 menos as 2 removidas)", atualSemNovas.length === 67, atualSemNovas.length);
+  // 59 chaves (62 menos formularios, natjus e sincronizarprocessos) + 1 texto preenchido (certidaosigilo_nomedoc) + 3 numeros + 3 selects com valor (newdocsigilo, vazio, nao entra)
+  checar("66 itens legados na pagina intocada (69 menos as 3 removidas)", atualSemNovas.length === 66, atualSemNovas.length);
   const iProj = nomes(atual).indexOf("gerenciarprojetos");
   checar(
-    "gerenciardemandas gravada LIGADA (padrao novo), logo depois de gerenciarprojetos (71 itens)",
-    atual.length === 71 && atual[iProj + 1]?.name === "gerenciardemandas" && atual[iProj + 1]?.value === true,
+    "gerenciardemandas gravada LIGADA (padrao novo), logo depois de gerenciarprojetos (70 itens)",
+    atual.length === 70 && atual[iProj + 1]?.name === "gerenciardemandas" && atual[iProj + 1]?.value === true,
   );
 
   secao("config: dependencias");
@@ -243,6 +243,5 @@ export function verificarConfig(): void {
     (r5.querySelector('[data-opcao="ferramentasia"]') as Element).hasAttribute("hidden") &&
       valor(coletarConfigGeral(r5), "ferramentasia") === true,
   );
-  checar("sincronizarprocessos (so Lab) coletado fora do Lab", valor(coletarConfigGeral(r5), "sincronizarprocessos") === true);
   checar("opcoes removidas nao sao mais gravadas", !nomes(coletarConfigGeral(r5)).some((n) => REMOVIDAS.includes(n)));
 }
