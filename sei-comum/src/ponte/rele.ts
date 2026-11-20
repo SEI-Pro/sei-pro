@@ -26,6 +26,7 @@ export const CANAIS_IFRAME: readonly string[] = [
   "seipro-documentos-lote",
   "seipro-processos-lote",
   "seipro-link-permanente",
+  "seipro-comparador",
 ];
 
 export interface PortaRele extends PortaRpc {

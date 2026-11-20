@@ -5,6 +5,8 @@
 ### Versão 3.9.5
 Em preparação
 
+- **Melhorado — o [Comparador de Documentos](../pages/COMPARARDOCUMENTOS.md) ficou muito mais rápido e não trava mais a tela.** Num documento de teste de cerca de 120 KB (300 parágrafos), a comparação que levava mais de um minuto e meio passou a levar menos de um segundo. O cálculo agora roda em segundo plano, o documento B é lido com uma consulta ao SEI (eram três) e a janela ganhou o visual novo, com busca na lista de documentos. O resultado é o mesmo de antes: o texto retirado em vermelho riscado e o acrescentado em azul sublinhado
+- **Melhorado — o "Criar Novo Documento" do comparador cria o documento como restrito quando o processo ou um dos dois documentos comparados é restrito**, com a mesma hipótese legal, para a comparação não ficar mais aberta do que os documentos que ela mostra.
 - **Corrigido — notas de rodapé apareciam como "[?]" no SEI 5.** Se o cursor estava fora do corpo do documento (por exemplo, no Cabeçalho), a marca da nota ficava como [?] e o texto do rodapé era descartado. O mesmo acontecia na segunda nota inserida em seguida, porque o editor devolvia o cursor ao Cabeçalho depois de numerar a primeira. Agora a nota é sempre inserida no corpo, o cursor é preservado e as notas são numeradas corretamente.
 
 ### Versão 3.9.4
