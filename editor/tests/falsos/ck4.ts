@@ -132,7 +132,7 @@ export interface FalsoCk4 {
   win: JanelaFalsa;
   instancia(nome: string): InstanciaCk4;
   /** Marca a selecao da instancia: elemento onde esta o cursor, texto e HTML selecionados. */
-  selecionar(nome: string, s: { elemento?: Element | null; texto?: string; html?: string }): void;
+  selecionar(nome: string, s: { elemento?: Element | null; texto?: string; html?: string; ancora?: Node | null; foco?: Node | null }): void;
   /** Define a instancia com foco (`CKEDITOR.currentInstance`). */
   focar(nome: string | null): void;
 }
@@ -169,6 +169,13 @@ export function criarCk4(opcoes: { secoes: SecaoCk4[] }): FalsoCk4 {
     selecionar(nome, s) {
       const i = instances[nome] as InstanciaCk4;
       i.selecao = { elemento: s.elemento ?? null, texto: s.texto ?? "", html: s.html ?? "" };
+      // a selecao nativa do documento do iframe da secao (o que `doc.getSelection()` devolve)
+      const ancora = s.ancora ?? s.elemento ?? null;
+      (i.corpo.ownerDocument as unknown as { getSelection(): unknown }).getSelection = () => ({
+        rangeCount: ancora ? 1 : 0,
+        anchorNode: ancora,
+        focusNode: s.foco ?? ancora,
+      });
     },
     focar(nome) {
       ckeGlobal.currentInstance = nome ? instances[nome] : undefined;

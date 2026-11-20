@@ -1,4 +1,5 @@
 import { IDS_RECURSOS } from "../src/recursos/ids";
+import { verificarAlign } from "./recursos/align";
 import { verificarCheckboxCapLetter } from "./recursos/checkbox-cap-letter";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarQuebras } from "./recursos/quebras";
@@ -25,5 +26,6 @@ verificarContrato();
 await verificarGhsUnlock();
 await verificarQuebras();
 await verificarCheckboxCapLetter();
+verificarAlign();
 
 resumo();

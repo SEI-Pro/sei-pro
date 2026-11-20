@@ -9,6 +9,13 @@ export interface SecaoCk5 {
   principal?: boolean;
 }
 
+interface ModeloFalso {
+  elemento: Element;
+  rootName: string | null;
+  is(tipo: string): boolean;
+  getAttribute(nome: string): string | undefined;
+}
+
 interface RaizFalsa {
   rootName: string;
   isAttached(): boolean;
@@ -28,6 +35,26 @@ export class InstanciaCk5 {
   readonly roots: RaizFalsa[];
   readonly elementos = new Map<string, HTMLElement>();
   readonly selecoesDefinidas: unknown[] = [];
+  /** Paragrafos (DOM) que `getSelectedBlocks()` devolve. */
+  blocos: Element[] = [];
+  /** Atributos do model por elemento DOM (o que `writer.setAttribute` grava), p.ex. `estilo`. */
+  readonly atributos = new Map<Element, Record<string, string>>();
+  private readonly modelos = new Map<Element, ModeloFalso>();
+
+  /** Elemento do model de um elemento DOM (sempre o mesmo objeto). */
+  modeloDe(el: Element): ModeloFalso {
+    let m = this.modelos.get(el);
+    if (!m) {
+      m = {
+        elemento: el,
+        rootName: this.raizDoElemento(el),
+        is: (t: string) => t === "element",
+        getAttribute: (n: string) => this.atributos.get(el)?.[n],
+      };
+      this.modelos.set(el, m);
+    }
+    return m;
+  }
 
   constructor(secoes: SecaoCk5[], doc: Document) {
     this.roots = [...secoes.map((s) => ({ rootName: s.raiz, isAttached: () => true })), { rootName: "$graveyard", isAttached: () => true }];
@@ -44,7 +71,7 @@ export class InstanciaCk5 {
     this.selecaoRaiz = (secoes.find((s) => s.principal) ?? (secoes[0] as SecaoCk5)).raiz;
   }
 
-  private raizDoElemento(el: Element | null): string | null {
+  raizDoElemento(el: Element | null): string | null {
     for (const [nome, dom] of this.elementos) if (el && (dom === el || dom.contains(el))) return nome;
     return null;
   }
@@ -63,6 +90,9 @@ export class InstanciaCk5 {
     createRange: (a: unknown, b: unknown) => ({ a, b }),
     addMarker: (nome: string, o: unknown) => {
       this.marcadores.set(nome, o);
+    },
+    setAttribute: (nome: string, valor: string, modelo: ModeloFalso) => {
+      this.atributos.set(modelo.elemento, { ...this.atributos.get(modelo.elemento), [nome]: valor });
     },
     removeMarker: (nome: string) => {
       this.marcadores.delete(nome);
@@ -92,6 +122,7 @@ export class InstanciaCk5 {
       getRoot: (nome: string) => this.roots.find((r) => r.rootName === nome),
       selection: {
         isBackward: false,
+        getSelectedBlocks: () => self.blocos.map((b) => self.modeloDe(b)),
         getFirstPosition: () => ({ root: this.roots.find((r) => r.rootName === this.selecaoRaiz) }),
         getFirstRange: () => {
           const raiz = this.roots.find((r) => r.rootName === this.selecaoRaiz);
@@ -121,7 +152,8 @@ export class InstanciaCk5 {
       },
     },
     mapper: {
-      toModelElement: (v: { dom: Element }) => ({ elemento: v.dom, rootName: this.raizDoElemento(v.dom) }),
+      toModelElement: (v: { dom: Element }) => this.modeloDe(v.dom),
+      toViewElement: (m: ModeloFalso) => ({ dom: m.elemento, name: "p" }),
     },
   };
 
@@ -137,7 +169,15 @@ export interface FalsoCk5 {
   instancia(): InstanciaCk5;
   elemento(raiz: string): HTMLElement;
   /** Define onde esta a selecao: raiz do model, elemento do DOM, texto e HTML selecionados. */
-  selecionar(s: { raiz?: string; elemento?: Element | null; texto?: string; html?: string }): void;
+  selecionar(s: {
+    raiz?: string;
+    elemento?: Element | null;
+    texto?: string;
+    html?: string;
+    blocos?: Element[];
+    ancora?: Node | null;
+    foco?: Node | null;
+  }): void;
 }
 
 /** Pagina SEI 5: `INFRA_EDITOR_CONFIG` desde o inicio; o DOM do CK5 so depois de `montar()` (`montarLogo` o faz de imediato). */
@@ -160,11 +200,13 @@ export function criarCk5(opcoes: { secoes: SecaoCk5[]; montarLogo?: boolean }): 
     selecionar(s) {
       const i = inst as InstanciaCk5;
       if (s.raiz) i.selecaoRaiz = s.raiz;
+      i.blocos = s.blocos ?? [];
       const el = s.elemento ?? null;
       win.getSelection = () =>
         ({
           rangeCount: el ? 1 : 0,
-          anchorNode: el,
+          anchorNode: s.ancora ?? el,
+          focusNode: s.foco ?? s.ancora ?? el,
           toString: () => s.texto ?? "",
           getRangeAt: () =>
             ({
