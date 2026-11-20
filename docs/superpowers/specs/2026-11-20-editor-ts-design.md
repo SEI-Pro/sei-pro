@@ -1,0 +1,186 @@
+# Editor de documentos em TS: desenho
+
+Data: 20/11/2026. Branch: `feat/editor-ts`. Status: desenho aprovado na conversa (abordagem A, primeiro plano = Fundação + grupos 0 e 1); este documento aguarda a aprovação final antes do plano.
+
+## 1. Intenção
+
+Levar o editor de documentos do SEI Pro (hoje JavaScript com jQuery) para a stack TS no molde de `documentos-lote/` e `comparador-documentos/`: `src/`, `tests/` com linkedom, `build.mjs` com esbuild, aliases `@comum/*` e `@nucleo/*`, scripts `tipos`, `verificar` e `checar`. O editor tem de funcionar em CKEditor 4 (SEI 3.1/4.x) e CKEditor 5 (SEI 5). A migração é feita feature por feature, sem quebrar o legado enquanto ele existir.
+
+Por quê: é o maior bloco do legado com uso visível (`docs/mapa-do-legado.md`, 2.1); o port para CK5 deixou funções "parecendo portadas" com CK4 cru por dentro, mascaradas pelo `tryRun` do monólito; e sem tipos nem provas cada correção (ver `project_campos_dinamicos_regressao`) é descoberta pelo usuário.
+
+## 2. Objetivos, não objetivos, anti-objetivos
+
+**Objetivos**
+- Cada feature portada funciona em CK4 e em CK5, provada por teste automatizado e ao vivo nos dois editores.
+- Contrato de nomes globais preservado enquanto o legado existir (o monólito chama `window.getInsertCheckboxButtom` etc.).
+- Legado cede por feature, de forma reversível, e só é apagado com prova de que nada vivo o referencia.
+- Nenhuma mudança de comportamento visível ao usuário nas features portadas, exceto onde o legado estava quebrado em CK5 (aí o port corrige, e fica registrado).
+
+**Não objetivos (deste plano)**
+- Grupos 2, 3, 4 e o monólito (barra, colar/soltar, salvamento automático, `setParamEditor`): planos seguintes.
+- Trocar o CKEditor, atualizar `lib/ckeditor`, mexer no Agente (`sei-pro-agente-editor.js`).
+- Publicar release, subir versão do manifest, push ou merge.
+
+**Anti-objetivos (seria falha mesmo funcionando)**
+- Duas cópias ativas da mesma feature (legado e TS) no mesmo editor.
+- `innerHTML` cru, `onclick` inline, modal com botão "Cancelar", acento cru em `dist/js`.
+- Código TS que só funciona em CK4 ou só em CK5.
+
+## 3. Restrições conhecidas
+
+- O CKEditor (`CKEDITOR.instances` no CK4; `ckeditorInstance` e `INFRA_EDITOR_CONFIG` no CK5) só existe no **mundo da página**. O bloco 8 do manifest (`editor_montar`, `document_end`, frame topo, sem `all_frames`) roda `init.js` no mundo **isolado**, que injeta adapter, módulos e monólito na página via `$.getScript`. O Agente tem o mesmo problema e resolveu com `sei-pro-agente-editor.js` + `postMessage` com token.
+- Ordem de carga atual: adapter -> módulos (lista `MODULES` do adapter) -> monólito. Módulos definem globais com os mesmos nomes que o monólito referencia.
+- Opções do usuário: o legado lê `localStorage.configBasePro` na própria página (`getConfigValue`/`checkConfigValue`/`verifyConfigValue`); a regra "ausente = ligada" (`checkConfigValue`) ou "ausente = desligada" (`verifyConfigValue`) existe em `sei-comum/src/opcoes/legadas.ts`.
+- `esbuild` mira `chrome116` e `firefox115`: `world: "MAIN"` declarativo (Chrome 111+, Firefox 128+) fica fora.
+- Em `dist/js/*.js` os acentos ficam como `\uXXXX` (os bundles TS saem ASCII pelo build). `tools/` e `dist/manifest_*.json` estão no `.gitignore`; só `dist/manifest.json` é versionado.
+- O `sei-nucleo/src/dominio/editor.ts` lê/grava seções por HTTP, sem editor aberto. Serve de referência para estilos e seções, **não** substitui o editor ao vivo.
+
+## 4. Abordagens consideradas
+
+| | Onde roda | A favor | Contra |
+|---|---|---|---|
+| **A (escolhida)** | Um bundle TS (IIFE) no mundo da página, injetado por um content script mínimo | Mesmo modelo de execução de hoje; handlers síncronos (colar, soltar, tecla) continuam possíveis; globais no mesmo mundo do monólito; sem RPC | Sem `chrome.*` na página (config vem do `localStorage`; URLs da extensão vêm do `data-*` do script) |
+| B | TS no mundo isolado, RPC para a página (desenho do Agente) | `chrome.*` e testes mais simples | Paste/drop/keydown exigem código síncrono na página de qualquer jeito; globais em mundos diferentes do monólito quebram o contrato de nomes; tudo assíncrono |
+| C | `world: "MAIN"` no manifest | Sem `<script>` injetado | Exige Chrome 111+/Firefox 128+; o projeto mira Firefox 115 |
+
+Escolha do autor: **A**.
+
+## 5. Inventário (medido com `acorn` em 20/11/2026)
+
+Colunas: linhas; **CK4 cru** = ocorrências de `CKEDITOR.` (candidatas a quebrar no CK5); **monólito** = quantas das funções exportadas o `sei-pro-editor.js` referencia; **fora** = quantas são referenciadas em outros arquivos do legado (`sei-functions-pro.js`, `sei-pro.js`, `sei-pro-all.js`, `sei-pro-ai.js`, árvore, visualização); **helpers** = globais que o módulo usa do monólito/`sei-functions-pro.js`.
+
+### Grupo 0 (primeiro plano): quase só adapter
+
+| Módulo | Linhas | CK4 cru | monólito | fora | Helpers de fora do adapter |
+|---|---|---|---|---|---|
+| page-break | 25 | 0 | 1 | 0 | nenhum |
+| session-break | 26 | 0 | 1 | 0 | nenhum |
+| checkbox | 45 | 0 | 1 | 0 | `randomString` |
+| cap-letter | 30 | 1 | 1 | 0 | `capitalizeFirstLetter`, `alertaBoxPro` |
+| style-editor | 60 | 1 | 2 | 0 | `insertFontIcon` |
+| font-size | 93 | 4 | 1 | 0 | `alertaBoxPro` |
+| align | 220 | 1 | 3 | 0 | nenhum |
+| folha-papel | 153 | 4 | 2 | 1 | `getIframesEditorPro` |
+| quick-table | 210 | 0 | 4 | 0 | `htmlPro`, `randomString` |
+| ghs-unlock | 373 | 0 | 2 | 3 | nenhum (expõe `SeiProGhs`, usado por todos) |
+
+### Grupo 1 (primeiro plano): diálogo + helpers genéricos de UI
+
+| Módulo | Linhas | CK4 cru | monólito | fora | Helpers |
+|---|---|---|---|---|---|
+| tiny-url | 121 | 0 | 1 | 0 | `ajaxTinyUrl`, diálogo, `sanitizeHTML` |
+| latex | 126 | 2 | 3 | 0 | `setParamEditor`, diálogo |
+| ref-interna | 259 | 2 | 3 | 0 | `clickScroolToRef`, diálogo |
+| table-styles | 177 | 1 | 7 | 0 | `getStyleTable`, `getColorID`, `setBgTableColor`, `detectSyleSelectedTable` |
+| sumario | 182 | 4 | 6 | 0 | diálogo, `uniqPro` |
+| link-pro | 209 | 1 | 8 | 0 | `restoreIframeDisplayLink`, `idEditor` |
+| nota-rodape | 317 | 1 | 8 | 0 | `clickScroolToRef`, `setMomentPtBr` |
+| copy-style | 233 | 5 | 6 | 0 | `getElementStyleSelected`, `setParamEditor` |
+| qr-code | 280 | 7 | 11 | 0 | `ajaxTinyUrl`, `iconSeiPro` |
+| legis | 578 | 6 | 6 | 0 | `setChosenInCke`, `onlyNumber` |
+
+Total do primeiro plano: 20 módulos, cerca de 3,7 mil linhas.
+
+### Planos seguintes (fora de escopo agora)
+
+- **Grupo 2, imagens:** image-quality (103), image-base64 (694), image-background (677), image-editor (377). Dependem de `qualityImages`, `qualidadeImagens`, `isDarkMode` do monólito e da lib `filerobot`.
+- **Grupo 3, `dadosProcessoPro` (iframe oculto):** dados-processo (498), escrita-interativa (525), citacao (133), processo-publico (261), link-sei-lote (592), minuta-watermark (206), sigilo (631). Dependem de `arrayDadosEditor`, `replaceDadosEditor`, `camposDinamicosProcesso`, `openCamposDinamicosForm`, `getInteressadosProcesso`, `getListaAtribuicaoProcesso`, `sumTagValue`. Aqui fecha-se a cadeia do iframe oculto (`#frmCheckerProcessoPro`).
+- **Grupo 4, grandes ou parciais:** review (727, 11 `CKEDITOR.`), ditado (588, parcial), importar-doc (492, parcial), context-menu (298), auto-cleanup (379).
+- **Monólito (2501 linhas, 77 funções):** barra (`htmlButton`, `addButton`), colar/soltar imagens, salvamento automático, `setParamEditor`/`getIframeEditorPro`, certidão e documento automático, estilos CK4.
+- **`sei-functions-pro.js`:** ~19 funções do editor, que vão sendo substituídas por equivalentes de `sei-comum`.
+
+## 6. Desenho da abordagem A
+
+### 6.1 Pacote e build
+
+Pasta `editor/` na raiz, como `comparador-documentos/`:
+
+```
+editor/
+  package.json  build.mjs  tsconfig.json  biome.json
+  src/
+    pagina/main.ts          entrada do bundle do mundo da pagina
+    adaptador/              CK4 e CK5 tipados (espelha o contrato do SeiProEditorAdapter)
+    recursos/<id>.ts        uma feature por arquivo; cada uma exporta {id, globais, iniciar?}
+    ui/                     dialogo e botoes por DOM API (usa @comum/ui, sem innerHTML)
+    opcoes.ts               leitura de localStorage.configBasePro (regras check/verify)
+    contrato.ts             ids, marcador de cedencia, nomes globais
+    ponte/init.ts           content script isolado minimo (init_editor.js)
+  tests/                    verificar.ts + fixtures; linkedom; CKEditor 4 e 5 falsos
+```
+
+Saídas (todas ASCII, com portão de bytes como o `comparador-documentos/build.mjs`):
+- `dist/js/init_editor.js`: content script isolado (IIFE).
+- `dist/js/editor/pagina.js`: bundle do mundo da página (IIFE), `web_accessible_resources`.
+
+### 6.2 Ligação ao CKEditor
+
+1. `init_editor.js` entra no manifest com os mesmos `matches` do bloco 8 (`editor_montar`, `texto_padrao_interno_*`, `secao_modelo_alterar`), `run_at: document_end`, frame topo.
+2. Ele (a) grava no `<html>` o atributo `data-seipro-editor-ts="id1,id2,..."` (lista gerada pelo build), de forma síncrona, e (b) injeta `<script src="js/editor/pagina.js" data-base="<URL da extensao>">`.
+3. `pagina.js` espera o editor ficar pronto (mesma regra de `detectVersion`: `.ck-editor__editable` => CK5; `CKEDITOR.instances` => CK4; indeterminado => aguardar) e então instala os globais de cada recurso.
+
+O atributo do `<html>` é visível aos dois mundos, então o `init.js` legado não precisa ser editado para saber o que ceder.
+
+### 6.3 Cedência do legado
+
+`SeiProEditorAdapter.loadModules` (legado) passa a **pular** todo módulo cujo id esteja em `data-seipro-editor-ts`. É uma edição ASCII em `sei-pro-editor-adapter.js` (poucas linhas), e a cedência é reversível: tirar o id da lista do build devolve o legado. O módulo legado só é apagado depois da prova de limpeza (seção 9).
+
+Se o atributo faltar (por exemplo, `init_editor.js` não carregou), o legado carrega normalmente: falha segura.
+
+### 6.4 Contrato com o legado
+
+Cada recurso TS define `window.<nome>` com **os mesmos nomes e assinaturas** que o módulo legado exportava e que o monólito ou outros arquivos chamam (inventário da seção 5, colunas monólito e fora). Um teste de contrato percorre o monólito com `acorn`, lista os globais chamados e confere que cada um existe após o carregamento do bundle (TS ou legado).
+
+Convivência dos dois adaptadores na transição: o adaptador TS é usado só pelos recursos TS; o monólito e os módulos não portados seguem no adapter legado. O estado compartilhado precisa ser comum, e por isso:
+- `SeiProGhs` (ghs-unlock) é portado **primeiro** e continua em `window.SeiProGhs`; todos os módulos legados o usam.
+- Menu de contexto: o registro de construtores (`bodyEl.__seiProCtxBuilders`) é o mesmo objeto nos dois lados; o adaptador TS o reutiliza em vez de criar outro.
+- Contador de marcadores de seleção do CK5 (`markerSeq`): o adaptador TS usa um prefixo próprio, sem colisão.
+
+### 6.5 Regras de código dos recursos
+
+- Operar no editor só pelo adaptador TS. Nada de `CKEDITOR.*` solto, `iframe.contents()` ou `editor.getSelection()` cru fora do ramo CK4 do adaptador.
+- No CK5, classes, estilos e atributos só pelo model (General HTML Support, via `SeiProGhs`), nunca por mutação de DOM.
+- Diálogos por DOM API, sem `innerHTML`, sem `onclick` (usar `data-spro-click` quando houver HTML estático), **sem botão "Cancelar"** (X e Esc fecham).
+- Sem jQuery e sem DOMPurify nos recursos novos; o que o legado sanitizava vira construção por DOM.
+- Nada em tempo de avaliação que dependa do monólito; helpers de `sei-functions-pro.js` são substituídos por equivalentes locais ou de `@comum`.
+
+## 7. Ordem do primeiro plano
+
+0. **Fundação:** pacote, build, adaptador TS (CK4 e CK5), opções, marcador de cedência, edição do adapter legado, sonda ao vivo (item 8), harness de testes com CKEditor falso.
+1. **Grupo 0**, nesta ordem: ghs-unlock, page-break, session-break, checkbox, cap-letter, align, font-size, style-editor, quick-table, folha-papel.
+2. **Grupo 1**, dos menos acoplados: tiny-url, latex, ref-interna, table-styles, sumario, link-pro, nota-rodape, copy-style, qr-code, legis.
+
+Cada recurso: teste automatizado primeiro, port, validação ao vivo em CK4 (SP) e CK5 (ANTAQ), commit. Depois do grupo 0 e do grupo 1, rodar a prova de limpeza antes de apagar qualquer módulo legado.
+
+## 8. Pontos a confirmar ao vivo na Fundação (ainda não verificados)
+
+- **Em que frame o editor roda.** Pelo manifest (bloco 8 sem `all_frames`) o `init.js` só roda no frame topo, o que sugere que `editor_montar` é uma janela própria; uma anotação antiga fala em iframe `editor_montar` no SEI 5 (provavelmente do DevTools). A sonda confirma no SP (CK4) e na ANTAQ (CK5) se o content script e o bundle chegam ao frame certo, e em quais frames o CK4 cria os iframes de seção (`iframe.cke_wysiwyg_frame`).
+- Se `document_end` basta para o `data-seipro-editor-ts` estar no `<html>` antes de o `loadModules` do legado decidir (hoje ele espera ~500 ms e faz poll de até ~10 s; o atributo é síncrono, então deve bastar, mas é a primeira coisa a provar).
+
+## 9. Prova antes de apagar legado (todo módulo)
+
+1. Busca de símbolos de cada nome global exportado em `dist/js`, `dist/html`, `*/src` e nas strings `data-spro-click`/`parent.xxx`, com o `acorn` de `tests/` separando código vivo de comentário.
+2. `node tools/check-dom-injection.mjs`
+3. `node tools/conferir-modos.mjs <arquivo> <ref>`
+4. `node tools/escape-nonascii.mjs --check`
+5. Retirar o id do módulo da lista `MODULES` e do diretório só depois dos itens acima e da validação ao vivo.
+
+## 10. Validação ao vivo
+
+- **SEI SP treinamento** (4.1.5, CK4): login da memória (feito por mim); se vier "404 Not Found", apagar cookies do domínio (Incapsula) e logar de novo. Criar documentos novos no processo de teste da unidade; nunca escrever em processo real.
+- **SEI ANTAQ** (5, CK5): o login Microsoft é do autor (peço quando precisar); só leitura em documentos públicos. Para escrita em CK5 usar o SEI MJ homologação quando o autor logar, ou documento de teste em ambiente liberado por ele.
+- Chrome de teste por CDP (Chrome for Testing, `Extensions.uninstall` + `Extensions.loadUnpacked` para recarregar). Nunca mexer em Chromes de outras sessões; nunca duas cópias do SEI Pro no mesmo navegador.
+
+## 11. Fica para quem constrói
+
+- Forma exata de cada recurso (assinaturas, estados internos) desde que o contrato de nomes do inventário seja mantido.
+- Estrutura interna de `adaptador/` e dos falsos de CKEditor para os testes.
+- Escolha de componentes de `@comum/ui` para os diálogos.
+- Textos de ajuda e mensagens já existentes nas páginas `pages/` são mantidos; mudança de texto fica registrada em `pages/HISTORICO.md` (só no release, que este plano não faz).
+
+## 12. Riscos
+
+- **Dois adaptadores em convivência** (6.4): estado compartilhado mal alinhado gera bug só visível em CK5. Mitigação: portar `ghs-unlock` e o registro de menu de contexto primeiro, e testes de contrato.
+- **`tryRun` mascarando falha**: o monólito engole erros "esperados" em CK5. A sonda e a validação ao vivo precisam olhar o console, não só a tela.
+- **Cache do content script no Chrome de teste** (memória `reference_chrome_teste_porta_9555`): reinstalar a extensão (mesmo id) depois de cada build.
+- **Cobertura dos manifests de marca**: só `dist/manifest.json` é versionado; os de marca ficam defasados até serem regenerados antes de empacotar (regra de empacotamento do mapa, seção 4.1).
