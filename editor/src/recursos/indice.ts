@@ -4,9 +4,20 @@ import { recurso as checkbox } from "./checkbox";
 import { recurso as fontSize } from "./font-size";
 import { recurso as ghsUnlock } from "./ghs-unlock";
 import { recurso as pageBreak } from "./page-break";
+import { recurso as quickTable } from "./quick-table";
 import { recurso as sessionBreak } from "./session-break";
 import { recurso as styleEditor } from "./style-editor";
 import type { Recurso } from "./tipos";
 
 /** Recursos portados, na ordem de `ids.ts`. Cada tarefa de recurso acrescenta o seu aqui e la. */
-export const RECURSOS: readonly Recurso[] = [ghsUnlock, pageBreak, sessionBreak, checkbox, capLetter, align, fontSize, styleEditor];
+export const RECURSOS: readonly Recurso[] = [
+  ghsUnlock,
+  pageBreak,
+  sessionBreak,
+  checkbox,
+  capLetter,
+  align,
+  fontSize,
+  styleEditor,
+  quickTable,
+];

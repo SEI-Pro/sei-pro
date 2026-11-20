@@ -22,6 +22,18 @@ export async function verificarAdaptadorCk4(): Promise<void> {
     const corpo = f.instancia("txaEditor_4");
     const dentro = f.doc.querySelector("#cke_txaEditor_4 .cke_toolbox") as Element;
     checar("getInstance(ref) acha a instancia pelo wrapper div.cke, nao pelo title", a.getInstance(dentro) === corpo);
+    // barra compartilhada: o botao esta no wrapper do Cabecalho (somente leitura) e o cursor no Corpo
+    const barraDoCabecalho = f.doc.querySelector("#cke_txaEditor_1 .cke_toolbox") as Element;
+    f.focar("txaEditor_4");
+    checar(
+      "barra compartilhada: ref dentro do Cabecalho (RO) com o foco no Corpo devolve o Corpo",
+      a.getInstance(barraDoCabecalho) === corpo,
+    );
+    f.focar(null);
+    checar(
+      "sem foco, ref dentro do Cabecalho (RO) cai na primeira editavel",
+      a.getInstance(barraDoCabecalho) === f.instancia("txaEditor_2"),
+    );
     checar("getInstance() sem foco devolve a primeira EDITAVEL, nao o Cabecalho", a.getInstance() === f.instancia("txaEditor_2"));
     f.focar("txaEditor_4");
     checar("getInstance() com foco devolve a instancia com foco", a.getInstance() === corpo);

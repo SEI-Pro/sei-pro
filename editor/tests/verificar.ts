@@ -4,6 +4,7 @@ import { verificarCheckboxCapLetter } from "./recursos/checkbox-cap-letter";
 import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarQuebras } from "./recursos/quebras";
+import { verificarQuickTable } from "./recursos/quick-table";
 import { igual, resumo, secao } from "./util";
 import { verificarAdaptadorCk4 } from "./verificar-adaptador-ck4";
 import { verificarAdaptadorCk5 } from "./verificar-adaptador-ck5";
@@ -29,5 +30,6 @@ await verificarQuebras();
 await verificarCheckboxCapLetter();
 verificarAlign();
 await verificarFontSizeStyleEditor();
+verificarQuickTable();
 
 resumo();

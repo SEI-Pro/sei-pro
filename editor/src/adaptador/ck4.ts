@@ -61,20 +61,19 @@ export function criarBackendCk4(win: Janela): Adaptador {
     versao: 4,
 
     /**
-     * Dado um elemento dentro do wrapper `div.cke` devolve a instancia dele (pelo id do contenedor, NAO
-     * pelo title do iframe: no SEI 4.1 com secoes o title e o nome da secao). Sem argumento: a instancia
-     * em edicao (com foco, ou fixada em `oEditor` pelo monolito), senao a primeira EDITAVEL. A primeira da
-     * pagina costuma ser o Cabecalho, somente leitura.
+     * Qual instancia recebe a acao. Ordem: (1) a que tem o FOCO, se editavel — com a barra compartilhada do SEI
+     * 4.1 (`#divComandos`, uma so para todas as secoes) o botao mora dentro do wrapper da PRIMEIRA instancia (o
+     * Cabecalho, somente leitura), entao o wrapper do botao nao diz onde esta o cursor; (2) a do wrapper `div.cke`
+     * do elemento `ref`, se editavel (barras proprias por instancia); (3) a fixada em `oEditor` pelo monolito;
+     * (4) a primeira EDITAVEL; (5) a primeira.
      */
     getInstance(ref) {
       const g = global();
       if (!g?.instances) return null;
-      const wrapper = ref?.closest?.("div.cke");
-      if (wrapper) {
-        const inst = g.instances[wrapper.id.replace("cke_", "")];
-        if (inst) return inst;
-      }
       if (editavel(g.currentInstance)) return g.currentInstance;
+      const wrapper = ref?.closest?.("div.cke");
+      const doWrapper = wrapper ? g.instances[wrapper.id.replace("cke_", "")] : undefined;
+      if (editavel(doWrapper)) return doWrapper;
       if (editavel(win.oEditor)) return win.oEditor;
       const todas = Object.values(g.instances);
       return todas.find((i) => editavel(i)) ?? todas[0] ?? null;

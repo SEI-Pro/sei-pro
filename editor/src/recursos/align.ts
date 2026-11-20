@@ -1,3 +1,4 @@
+import { esconder, mostrar } from "../util/dom";
 import { operacoesDeParagrafo } from "../util/paragrafos";
 import type { Contexto, Recurso } from "./tipos";
 
@@ -28,12 +29,6 @@ const FAMILIAS: Array<Record<Modo, string>> = [
 function classeAlvo(atual: string, modo: Modo): string | null {
   const familia = FAMILIAS.find((f) => Object.values(f).includes(atual));
   return familia ? familia[modo] : null;
-}
-
-/** `jQuery.show()`: tira o `display:none` inline; se o CSS ainda esconder, usa `block`. */
-function mostrar(el: HTMLElement): void {
-  el.style.display = "";
-  if (el.ownerDocument.defaultView?.getComputedStyle?.(el)?.display === "none") el.style.display = "block";
 }
 
 /** Acha o dropdown `.divAlignText` do botao: pelo `.cke_top` (CK4), por um ancestral que o contenha (CK5) ou pelo documento. */
@@ -72,7 +67,7 @@ export const recurso: Recurso = {
         const dropdown = acharDropdown(this_, c.doc);
         if (this_.classList.contains("cke_button_on")) {
           this_.classList.replace("cke_button_on", "cke_button_off");
-          if (dropdown) dropdown.style.display = "none";
+          if (dropdown) esconder(dropdown);
         } else {
           this_.classList.remove("cke_button_off");
           this_.classList.add("cke_button_on");
