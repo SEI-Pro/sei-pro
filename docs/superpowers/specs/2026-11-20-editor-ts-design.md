@@ -152,10 +152,19 @@ Convivência dos dois adaptadores na transição: o adaptador TS é usado só pe
 
 Cada recurso: teste automatizado primeiro, port, validação ao vivo em CK4 (SP) e CK5 (ANTAQ), commit. Depois do grupo 0 e do grupo 1, rodar a prova de limpeza antes de apagar qualquer módulo legado.
 
-## 8. Pontos a confirmar ao vivo na Fundação (ainda não verificados)
+## 8. Achados da sonda ao vivo (Task 10)
 
-- **Em que frame o editor roda.** Pelo manifest (bloco 8 sem `all_frames`) o `init.js` só roda no frame topo, o que sugere que `editor_montar` é uma janela própria; uma anotação antiga fala em iframe `editor_montar` no SEI 5 (provavelmente do DevTools). A sonda confirma no SP (CK4) e na ANTAQ (CK5) se o content script e o bundle chegam ao frame certo, e em quais frames o CK4 cria os iframes de seção (`iframe.cke_wysiwyg_frame`).
-- Se `document_end` basta para o `data-seipro-editor-ts` estar no `<html>` antes de o `loadModules` do legado decidir (hoje ele espera ~500 ms e faz poll de até ~10 s; o atributo é síncrono, então deve bastar, mas é a primeira coisa a provar).
+Medidos em 20/11/2026 no SEI SP treinamento (4.1.5, CKEditor 4), Chrome for Testing 157, com `init_editor.js` e o bundle construídos a partir desta branch. O lado CK5 ainda não foi sondado (falta o ambiente, ver abaixo).
+
+**CK4 (SP):**
+- `editor_montar` abre como **janela própria** (alvo `page` de topo, `window.name` = `janelaEditor_<unidade>_<documento>`), não como iframe. O bloco do manifest sem `all_frames` (frame topo) basta: `init_editor.js` e `js/editor/pagina.js` rodaram na janela do editor e em nenhum outro frame.
+- O frame topo traz 4 instâncias `CKEDITOR.instances` (`txaEditor_776` "Cabeçalho" e `txaEditor_777` "Título do Documento", somente leitura; `txaEditor_778` "Processo e Interessado" e `txaEditor_779` "Corpo do Texto", editáveis) e 4 iframes `iframe.cke_wysiwyg_frame` **titulados pelo nome da seção**, nunca `txaEditor_N`. Confirma o motivo de `getInstance` achar a instância pelo contêiner `div.cke`, e de a primeira instância ser somente leitura.
+- Os iframes das seções são `about:srcdoc` (same-origin). Além deles, na janela há `ifrEditorSalvar` (`about:blank`), `ifrPasta` e o `frmCheckerProcessoPro` (iframe oculto do `dadosProcessoPro`).
+- **Cedência provada funcionalmente, em 2 recarregamentos:** com `IDS_RECURSOS=["page-break"]`, o `<html>` recebeu `data-seipro-editor-ts="page-break"`, o `<script data-seipro-editor="pagina">` foi injetado e o bundle rodou (`window.__seiProEditorTs`). O adapter legado então **não** carregou `page-break.js` (`typeof getPageBreak === "undefined"`, ausente de `getFeatures()`) e carregou os outros 35 módulos (`getSessionBreak` e `getInsertCheckboxButtom` definidas). Sem o id (linha de base), `getPageBreak` volta a existir. O `loadModules` do legado só roda depois de a cadeia `setTimeout(500)` + `ready` + `$.getScript` do adapter, bem depois de `document_end`, o que dá folga ao atributo síncrono; não foi medida em milissegundos (o buffer de resource timing da janela está cheio de plugins do CK4).
+- Ruído preexistente, igual com e sem as mudanças desta branch: `pageerror: TypeError: Cannot read properties of null (reading 'contentWindow')` ao carregar a janela (duas vezes por carga).
+- Não deixar o mundo da página cair em `Page.reload`: a recarga da janela do editor funciona, mas o Chrome de teste guarda o content script em cache (reinstalar a extensão com o mesmo id antes de recarregar, como nas memórias de teste).
+
+**Pendente (CK5):** sondar a ANTAQ (SEI 5) para confirmar o frame do editor, a detecção `ckeditorInstance`/`INFRA_EDITOR_CONFIG` com o bundle e a cedência; e definir **o ambiente onde se pode escrever em CK5** (a ANTAQ é só leitura). Até lá os recursos fecham a parte CK5 por teste automatizado.
 
 ## 9. Prova antes de apagar legado (todo módulo)
 
