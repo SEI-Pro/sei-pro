@@ -164,7 +164,12 @@ Medidos em 20/11/2026 no SEI SP treinamento (4.1.5, CKEditor 4), Chrome for Test
 - Ruído preexistente, igual com e sem as mudanças desta branch: `pageerror: TypeError: Cannot read properties of null (reading 'contentWindow')` ao carregar a janela (duas vezes por carga).
 - Não deixar o mundo da página cair em `Page.reload`: a recarga da janela do editor funciona, mas o Chrome de teste guarda o content script em cache (reinstalar a extensão com o mesmo id antes de recarregar, como nas memórias de teste).
 
-**Pendente (CK5):** sondar a ANTAQ (SEI 5) para confirmar o frame do editor, a detecção `ckeditorInstance`/`INFRA_EDITOR_CONFIG` com o bundle e a cedência; e definir **o ambiente onde se pode escrever em CK5** (a ANTAQ é só leitura). Até lá os recursos fecham a parte CK5 por teste automatizado.
+**CK5 (ANTAQ, SEI 5.0.4), medido no mesmo dia:**
+- `editor_montar` também é **janela própria** (`janelaEditor_<unidade>_<documento>`), e o mesmo bloco do manifest basta: `init_editor.js` e o bundle rodaram nela (atributo `data-seipro-editor-ts`, `<script data-seipro-editor="pagina">`, `window.__seiProEditorTs`). O `window.CKEDITOR.instances` **não existe** (`ckGlobalInstances: false`); a detecção é `.ck-editor__editable` e `ckeditorInstance`.
+- Documento "Despacho-MINUTA": 7 raízes em `INFRA_EDITOR_CONFIG.rootsAttributes` (`txaEditor_1768` Cabeçalho, `1769` Título do Documento, `1771` Separador de Seções e `1775` Rodapé somente leitura; `1770` Endereçamento, `1772` **Corpo do Texto (`principal: true`)** e `1773` Assinatura_Signatario_Cargo editáveis), todas como `.ck-editor__editable_inline` na janela de topo (sem iframe de seção). O adapter legado se declara versão 5.
+- **Cedência provada também no CK5:** com `page-break` no atributo, `getPageBreak` ficou `undefined` e os outros 34 módulos carregaram (35 features, com o `ghs-unlock` ativo).
+- Ruído preexistente na ANTAQ: `pageerror` de `contentWindow` e de `parent.infraIsBreakpointBootstrap is not a function` (dois de cada por carga), que independem desta branch.
+- **Ambiente de escrita em CK5:** processo de testes da ANTAQ `50300.018905/2018-67` (`id_procedimento=683589`), liberado pelo autor para escrita; documento de teste "Despacho-MINUTA" `id_documento=3385255`. Há também um Despacho de teste no SP (processo 148265, `id_documento=162824`).
 
 ## 9. Prova antes de apagar legado (todo módulo)
 
