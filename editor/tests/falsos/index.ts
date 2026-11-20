@@ -27,3 +27,26 @@ export async function nosDoisEditores(nome: string, fn: (c: CasoEditor) => void 
     }
   }
 }
+
+/** Primeiro <p> do corpo do caso (CK4: do corpo da secao; CK5: da editavel da raiz principal). */
+export function primeiroP(c: CasoEditor, raiz = "main"): Element {
+  const corpo = c.versao === 4 ? (c.ed as FalsoCk4).instancia("txaEditor_1").corpo : (c.ed as FalsoCk5).elemento(raiz);
+  return corpo.querySelector("p") as Element;
+}
+
+/** Poe o cursor no elemento `el` (e, no CK5, na raiz `raiz`). */
+export function cursorEm(c: CasoEditor, el: Element | null, raiz = "main"): void {
+  if (c.versao === 4) (c.ed as FalsoCk4).selecionar("txaEditor_1", { elemento: el });
+  else (c.ed as FalsoCk5).selecionar({ raiz, elemento: el });
+}
+
+/**
+ * O HTML inserido IMEDIATAMENTE antes de `p` pela ultima operacao, ou null se nada foi inserido ali.
+ * CK4: o no irmao anterior no DOM do iframe; CK5: a insercao registrada com a posicao "antes de p".
+ */
+export function inseridoAntes(c: CasoEditor, p: Element): string | null {
+  if (c.versao === 4) return p.previousElementSibling?.outerHTML ?? null;
+  const ins = (c.ed as FalsoCk5).instancia().insercoes.at(-1);
+  const pos = ins?.posicao as { antes?: { elemento?: Element } } | undefined;
+  return ins && pos?.antes?.elemento === p ? ins.html : null;
+}
