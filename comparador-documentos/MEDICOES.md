@@ -6,22 +6,22 @@ Data: 2026-11-20. Chrome com a extensão carregada do `dist/` (branch `feat/comp
 
 Processo `99906.713-630.000032/2025-82`; A = Despacho E1 Descartar (0105060), B = Despacho Maria Souza (0103948), documentos pequenos (~36 KB de HTML).
 
-| | Legado | Novo |
-|---|---|---|
-| Do clique no B até o resultado | 2.402 ms | ~1.150 ms (uma requisição; A já lido ao abrir) |
-| Cálculo (blocos + diff + montagem) | dentro dos 2.402 ms | ~7 ms (2,7 + 4,0 + 0,6) |
-| Inverter | refaz tudo | 0 ms de leitura (cache), ~3 ms de cálculo |
-| Onde roda o diff | thread da página | Web Worker (`js/comparador/worker.js` aparece como alvo `worker` no Chrome) |
+|                                    | Legado              | Novo                                                                        |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------- |
+| Do clique no B até o resultado     | 2.402 ms            | ~1.150 ms (uma requisição; A já lido ao abrir)                              |
+| Cálculo (blocos + diff + montagem) | dentro dos 2.402 ms | ~7 ms (2,7 + 4,0 + 0,6)                                                     |
+| Inverter                           | refaz tudo          | 0 ms de leitura (cache), ~3 ms de cálculo                                   |
+| Onde roda o diff                   | thread da página    | Web Worker (`js/comparador/worker.js` aparece como alvo `worker` no Chrome) |
 
 O ganho nesses documentos pequenos vem das requisições (o legado faz três em série para achar o endereço do B). O custo do diff só aparece em documento maior:
 
 ## Algoritmo em escala (Node, documentos sintéticos, 5% dos parágrafos alterados)
 
-| Parágrafos (tamanho) | `htmldiff` do legado | Diff novo (blocos + palavras) |
-|---|---|---|
-| 100 (39 KB) | 3.420 ms | 17 ms |
-| 300 (117 KB) | 98.694 ms | 16 ms |
-| 600 e 1.200 | não terminou (interrompido) | — |
+| Parágrafos (tamanho) | `htmldiff` do legado        | Diff novo (blocos + palavras) |
+| -------------------- | --------------------------- | ----------------------------- |
+| 100 (39 KB)          | 3.420 ms                    | 17 ms                         |
+| 300 (117 KB)         | 98.694 ms                   | 16 ms                         |
+| 600 e 1.200          | não terminou (interrompido) | —                             |
 
 Provas unitárias do diff novo: 5.000 blocos com 5% alterados < 1 s; 3.000 blocos totalmente diferentes < 2 s.
 

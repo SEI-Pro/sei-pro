@@ -65,6 +65,18 @@ export function verificarResultado(): void {
     corpoMau.html,
   );
 
+  // O diff por tokens pode partir uma tag cujo atributo tem ">" e, ao reler, recriar marcacao viva: a higiene roda de novo no fim.
+  const reabre = comparar(
+    doc('<p><a title="x> AAA <img src=x onerror=alert(1)>">link texto aqui</a> e mais texto antigo</p>'),
+    doc('<p><a title="x> BBB <img src=x onerror=alert(1)>">link texto aqui</a> e mais texto novo</p>'),
+  );
+  checar("atributo com > partido pelo diff nao recria onerror", !/onerror/i.test(reabre.html), reabre.html);
+  checar(
+    "resultado traz a CSP que bloqueia script, frame e carga externa de estilo",
+    /http-equiv="Content-Security-Policy"[^>]*default-src 'none'/.test(mau.html),
+    mau.html,
+  );
+
   const imgs = comparar(
     doc("<p>x</p>"),
     doc('<p><img src="a.png"></p><p>texto no meio</p><p><img src="a.png"></p><p><img src="b.png"></p>'),

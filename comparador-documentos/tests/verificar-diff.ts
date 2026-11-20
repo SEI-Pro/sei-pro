@@ -65,6 +65,36 @@ export function verificarDiff(): void {
   const volta = compararBlocos(blocos("um", "tres"), blocos("um", "dois novo", "tres"));
   checar("inverter troca del por ins", ida.removidos.length === 1 && volta.depois[1]!.includes("<ins"), { ida, volta });
 
+  // Trechos editados com o mesmo numero de blocos dos dois lados sao edicoes: pareia posicao a posicao (blocos curtos
+  // como "R$ 1.000,00" -> "R$ 1.200,00" nao passam do limiar de semelhanca).
+  const num = compararBlocos(blocos("a", "R$ 1.000,00", "R$ 20,00", "z"), blocos("a", "R$ 1.200,00", "R$ 25,00", "z"));
+  checar(
+    "celulas curtas editadas: diff de palavras no proprio bloco, nada removido a parte",
+    num.removidos.length === 0 && num.depois[1]!.includes("<del") && num.depois[1]!.includes("<ins") && num.depois[2]!.includes("<del"),
+    num,
+  );
+  const emp = compararBlocos(blocos("Deferido"), blocos("Indeferido"));
+  checar(
+    "palavra trocada: o del vem antes do ins",
+    emp.depois[0]!.indexOf("<del") >= 0 && emp.depois[0]!.indexOf("<del") < emp.depois[0]!.indexOf("<ins"),
+    emp,
+  );
+  const emp2 = compararBlocos(blocos("clausula primeira", "clausula segunda"), blocos("clausula terceira", "clausula quarta"));
+  checar(
+    "empate de semelhanca: cada bloco vira diff de palavras (sem del/ins de bloco inteiro)",
+    emp2.removidos.length === 0 && emp2.depois.every((h) => !h.startsWith('<ins style="') && /<del[^>]*>(primeira|segunda)<\/del>/.test(h)),
+    emp2,
+  );
+  const sobra = compararBlocos(
+    blocos("um", "sai este paragrafo inteiro", "sai tambem este outro paragrafo", "fim"),
+    blocos("um", "texto totalmente novo aqui", "fim"),
+  );
+  checar(
+    "remocao no trecho com inserido: o removido entra antes do inserido",
+    sobra.removidos.length >= 1 && sobra.removidos.every((r) => r.antesDe <= 1) && sobra.depois[1]!.includes("<ins"),
+    sobra,
+  );
+
   igual("vazios nos dois lados", compararBlocos([], []), { depois: [], removidos: [] });
   const soDepois = compararBlocos([], blocos("a", "b"));
   checar("so o depois: tudo ins", soDepois.depois.every((h) => h.includes("<ins")) && soDepois.removidos.length === 0, soDepois);

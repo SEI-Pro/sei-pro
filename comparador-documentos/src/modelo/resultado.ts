@@ -8,6 +8,7 @@
 import type { DocumentoBlocos } from "./blocos";
 import { COR_ACRESCENTADO, COR_REMOVIDO } from "./constantes";
 import type { Edicao } from "./diff";
+import { higienizar } from "./sanitizar";
 
 const MARCAS = [`style="${COR_ACRESCENTADO}"`, `style="${COR_REMOVIDO}"`];
 
@@ -57,10 +58,15 @@ export function montarResultado(depois: DocumentoBlocos, ed: Edicao, parser: DOM
     else vistos.add(src);
   }
 
+  // O diff por tokens pode partir uma tag (atributo com ">") e, ao reler, recriar marcação viva: higiene de novo no fim.
+  higienizar(corpo);
+
   // Só o texto dos <style> do cabeçalho (sem @import): scripts e folhas externas do documento não vêm.
   const estilos = Array.from(d.querySelectorAll("head style"))
     .map((s) => (s.textContent ?? "").replace(/@import[^;]*;?/gi, ""))
     .filter((t) => t.trim())
     .map((t) => `<style>${t}</style>`);
-  return `<html><head><meta charset="utf-8">${estilos.join("")}</head>${corpo.outerHTML}</html>`;
+  // A CSP vale também para o arquivo baixado (aberto sem o sandbox do iframe): nada de script, frame ou estilo externo.
+  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: http: https:; style-src 'unsafe-inline'">`;
+  return `<html><head><meta charset="utf-8">${csp}${estilos.join("")}</head>${corpo.outerHTML}</html>`;
 }

@@ -46,14 +46,22 @@ export function compararBlocos(antes: Bloco[], depois: Bloco[]): Edicao {
   };
 
   const trecho = (a0: number, a1: number, d0: number, d1: number): void => {
+    // Mesmo número de blocos dos dois lados, entre blocos iguais: são edições, pareadas posição a posição (blocos curtos,
+    // como "R$ 1.000,00" -> "R$ 1.200,00" ou "Deferido" -> "Indeferido", nunca passam do limiar de semelhança).
+    if (a1 > a0 && a1 - a0 === d1 - d0) {
+      for (let k = 0; k < a1 - a0; k++) saida.depois[d0 + k] = diffPalavras(antes[a0 + k]!.html, depois[d0 + k]!.html);
+      return;
+    }
     let cursor = a0;
+    let ultimoPar = d0 - 1;
     for (let d = d0; d < d1; d++) {
       const conjD = palavras(depois[d]!.texto);
       let melhor = -1;
       let nota = LIMIAR_PAREAMENTO;
       for (let a = cursor; a < Math.min(a1, cursor + JANELA); a++) {
         const n = jaccard(conjA(a), conjD);
-        if (n >= nota) {
+        // O primeiro entre os de mesma nota fica (o ">=" sozinho escolheria o último e deslocaria os pares seguintes).
+        if (melhor < 0 ? n >= nota : n > nota) {
           nota = n;
           melhor = a;
         }
@@ -62,9 +70,11 @@ export function compararBlocos(antes: Bloco[], depois: Bloco[]): Edicao {
         for (let a = cursor; a < melhor; a++) saida.removidos.push({ antesDe: d, html: removido(antes[a]!.html) });
         saida.depois[d] = diffPalavras(antes[melhor]!.html, depois[d]!.html);
         cursor = melhor + 1;
+        ultimoPar = d;
       } else saida.depois[d] = novo(depois[d]!.html);
     }
-    for (let a = cursor; a < a1; a++) saida.removidos.push({ antesDe: d1, html: removido(antes[a]!.html) });
+    // O que sobrou do "antes" entra antes dos blocos inseridos que vêm depois do último par (retirado antes do acrescentado).
+    for (let a = cursor; a < a1; a++) saida.removidos.push({ antesDe: ultimoPar + 1, html: removido(antes[a]!.html) });
   };
 
   let a = 0;

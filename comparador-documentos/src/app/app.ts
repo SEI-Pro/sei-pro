@@ -49,6 +49,8 @@ export interface Tempos {
   montar: number;
 }
 
+/** Prazo das leituras ao SEI (lista de documentos, conteúdo, tipos): um SEI lento ou um documento grande passa dos 15 s padrão da ponte. */
+const PRAZO_SEI_MS = 60_000;
 const ROTULO_INVERTER = "Inverter (A/B → B/A)";
 const MSG_SEM_A = "Nenhum documento selecionado na árvore do processo";
 const MSG_A_ILEGIVEL =
@@ -148,7 +150,7 @@ export class AppComparador {
         return;
       }
       // O A e a lista vêm juntos: quando o usuário escolher o B, o A já está lido.
-      const lista = await this.chamar<{ candidatos: Candidato[]; aLegivel: boolean }>("candidatos");
+      const lista = await this.chamar<{ candidatos: Candidato[]; aLegivel: boolean }>("candidatos", undefined, PRAZO_SEI_MS);
       this.candidatos = lista.candidatos;
       if (!lista.aLegivel) {
         this.estado = { tipo: "erro", mensagem: MSG_A_ILEGIVEL };
@@ -183,7 +185,7 @@ export class AppComparador {
   private html(id: string): Promise<string> {
     let p = this.cache.get(id);
     if (!p) {
-      p = this.chamar<{ html: string }>("conteudo", { id }).then((r) => r.html);
+      p = this.chamar<{ html: string }>("conteudo", { id }, PRAZO_SEI_MS).then((r) => r.html);
       p.catch(() => this.cache.delete(id));
       this.cache.set(id, p);
     }
@@ -309,7 +311,7 @@ export class AppComparador {
     const idB = this.idB;
     let tipos: Array<{ id: string; nome: string }>;
     try {
-      tipos = (await this.chamar<{ tipos: Array<{ id: string; nome: string }> }>("tipos")).tipos;
+      tipos = (await this.chamar<{ tipos: Array<{ id: string; nome: string }> }>("tipos", undefined, PRAZO_SEI_MS)).tipos;
     } catch (e) {
       this.mostrarStatus(mensagemDe(e));
       return;

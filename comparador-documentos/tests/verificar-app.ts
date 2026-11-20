@@ -23,7 +23,7 @@ function montar(r: Roteiro = {}) {
   const raiz = document.createElement("div");
   document.body.append(raiz);
   const reg = {
-    chamadas: [] as Array<{ op: string; args: unknown }>,
+    chamadas: [] as Array<{ op: string; args: unknown; prazo?: number }>,
     fechou: 0,
     baixados: [] as Array<[string, string, string]>,
     modais: [] as string[],
@@ -31,8 +31,8 @@ function montar(r: Roteiro = {}) {
   };
   const idA = r.idA === undefined ? "1" : r.idA;
   const rpc: DepsApp["rpc"] = {
-    chamar: (async (op: string, args?: unknown) => {
-      reg.chamadas.push({ op, args });
+    chamar: (async (op: string, args?: unknown, prazo?: number) => {
+      reg.chamadas.push({ op, args, prazo });
       await tique(0);
       if (op === "contexto") return { ok: true, idA, tituloA: idA ? `Doc ${idA}` : "", host: "sei.x" };
       if (op === "candidatos")
@@ -102,6 +102,12 @@ export async function verificarApp(): Promise<void> {
     );
     escolherCombo(raiz, "Documento B", "2");
     await tique(30);
+    const lentas = reg.chamadas.filter((c) => ["candidatos", "conteudo"].includes(c.op));
+    checar(
+      "leituras do SEI (lista e conteudo) com prazo de 60 s, nao os 15 s padrao",
+      lentas.length >= 2 && lentas.every((c) => (c.prazo ?? 0) >= 60_000),
+      lentas.map((c) => `${c.op}:${c.prazo}`),
+    );
     const s = srcdoc(raiz);
     checar("B escolhido gera resultado com ins e del", /<ins/.test(s) && /<del/.test(s), s);
     checar("iframe do resultado e sandbox sem scripts", raiz.querySelector("iframe.cmp-resultado")?.getAttribute("sandbox") === "", "");
