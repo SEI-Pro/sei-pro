@@ -101,3 +101,26 @@ export function verificarCedencia(): void {
     d2.documentElement.getAttribute(ATRIBUTO_CEDENCIA) === null && !d2.querySelector("script"),
   );
 }
+
+export function verificarManifest(): void {
+  secao("manifest: bloco do init_editor.js");
+  const m = JSON.parse(readFileSync(fileURLToPath(new URL("../../dist/manifest.json", import.meta.url)), "utf8")) as {
+    content_scripts: Array<{ matches: string[]; js: string[]; exclude_matches?: string[]; run_at?: string }>;
+    web_accessible_resources: Array<{ resources: string[]; exclude_matches?: string[] }>;
+  };
+  const bloco = (js: string) => m.content_scripts.find((c) => c.js.includes(js));
+  const editor = bloco("js/init_editor.js");
+  const legado = m.content_scripts.find((c) => c.js.includes("js/init.js") && c.matches.some((x) => /acao=editor_montar/.test(x)));
+  checar("existe o bloco do init_editor.js e o do editor legado", !!editor && !!legado);
+  igual("o bloco novo tem os mesmos matches do editor legado", editor?.matches, legado?.matches);
+  igual(
+    "o bloco novo tem os mesmos exclude_matches do editor legado (nao carrega no host de outra variante)",
+    editor?.exclude_matches,
+    legado?.exclude_matches,
+  );
+  checar("o legado de fato exclui algum host (a comparacao acima nao e vazia)", (legado?.exclude_matches?.length ?? 0) > 0);
+  checar(
+    "o bundle da pagina e recurso acessivel",
+    m.web_accessible_resources.some((r) => r.resources.includes("js/editor/pagina.js")),
+  );
+}

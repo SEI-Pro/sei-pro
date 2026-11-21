@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RECURSOS } from "../src/recursos/indice";
 import type { Contexto } from "../src/recursos/tipos";
-import { contratoDoModulo } from "./contrato";
+import { contratoDoModulo, nomesReferenciados } from "./contrato";
 import { paginaFalsa } from "./falsos";
 import { checar, igual, secao } from "./util";
 
@@ -45,6 +45,15 @@ export function verificarContrato(): void {
     "table-styles (real): inclui o que o context-menu legado chama",
     ["getSyleSelectedTable", "openDialogSyleTable"].every((n) => modulo("table-styles").necessarios.includes(n)),
   );
+
+  secao("monolito: nenhuma chamada direta a global do TS em caminho de boot, clique ou blur do editor");
+  // Sem o bundle (falha de carga, manifest de marca sem o bloco), uma chamada DIRETA lancaria ReferenceError e
+  // abortaria o handler/initFunctions inteiro do editor legado. Por isso o monolito chama por window[nome] com guarda.
+  const chamadasDiretas = nomesReferenciados(
+    `${DIST_REAL}/js/sei-pro-editor.js`,
+    new Set(["hideQuickTable", "closeAlignText", "initFolhaEditorPro"]),
+  );
+  igual("hideQuickTable, closeAlignText e initFolhaEditorPro so via chamarRecursoTsPro", [...chamadasDiretas], []);
 
   secao("contrato de nomes globais (recursos TS)");
   const { doc, win } = paginaFalsa();

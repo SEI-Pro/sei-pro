@@ -66,6 +66,14 @@ export async function verificarAdaptadorCk5(): Promise<void> {
   }
 
   {
+    // appendToBody: se a raiz do corpo for somente leitura (documento sem secao editavel principal), nao escreve
+    const f = criarCk5({ secoes: [{ raiz: "corpo", label: "Corpo do Texto", html: "<p>x</p>", principal: true, somenteLeitura: true }] });
+    const a = criarBackendCk5(f.win);
+    a.appendToBody(f.instancia(), "<p>novo</p>");
+    checar("appendToBody em raiz somente leitura nao escreve", f.instancia().insercoes.length === 0);
+  }
+
+  {
     const { f, a, ed } = novo();
     const p1 = f.elemento("corpo").querySelector("#p1") as Element;
     f.selecionar({ raiz: "corpo", elemento: p1, texto: "um", html: "<b>um</b>" });

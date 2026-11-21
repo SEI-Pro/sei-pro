@@ -47,7 +47,7 @@ interface Ck5Instancia {
       document: { getRoot(nome: string): unknown };
       domConverter: { mapViewToDom(v: unknown): Element | null; mapDomToView(el: Element): unknown };
     };
-    mapper: { toModelElement(view: unknown): { rootName?: string } | null };
+    mapper: { toModelElement(view: unknown): { root?: { rootName: string } } | null };
   };
   ui?: { view?: { toolbar?: { element?: HTMLElement } } };
 }
@@ -150,7 +150,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
       const visao = ed.editing.view.domConverter.mapDomToView(ref);
       const el = visao ? ed.editing.mapper.toModelElement(visao) : null;
       if (el) {
-        if (raizSomenteLeitura(el.rootName)) return;
+        if (raizSomenteLeitura(el.root?.rootName)) return;
         ed.model.change((w) => ed.model.insertContent(modelo(ed, html), w.createPositionBefore(el)));
         return;
       }
@@ -170,6 +170,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
       const ed = ck(e);
       const raiz = raizDoCorpo(ed);
       if (!raiz) return insere(e, html);
+      if (raizSomenteLeitura(raiz.rootName)) return;
       ed.model.change((w) => ed.model.insertContent(modelo(ed, html), w.createPositionAt(raiz, "end")));
     },
     /** Nao chamar dentro de `model.change`. `seiProInterno`: e um vai-e-volta, nao o HTML gravado. */

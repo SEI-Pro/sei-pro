@@ -61,7 +61,7 @@ export function criarBackendCk4(win: Janela): Adaptador {
     versao: 4,
 
     /**
-     * Qual instancia recebe a acao. Ordem: (1) a que tem o FOCO, se editavel — com a barra compartilhada do SEI
+     * Qual instancia recebe a acao. Ordem: (1) a que tem o FOCO (mesmo somente leitura) — com a barra compartilhada do SEI
      * 4.1 (`#divComandos`, uma so para todas as secoes) o botao mora dentro do wrapper da PRIMEIRA instancia (o
      * Cabecalho, somente leitura), entao o wrapper do botao nao diz onde esta o cursor; (2) a do wrapper `div.cke`
      * do elemento `ref`, se editavel (barras proprias por instancia); (3) a fixada em `oEditor` pelo monolito;
@@ -70,7 +70,8 @@ export function criarBackendCk4(win: Janela): Adaptador {
     getInstance(ref) {
       const g = global();
       if (!g?.instances) return null;
-      if (editavel(g.currentInstance)) return g.currentInstance;
+      // com FOCO numa secao somente leitura devolve ELA: as escritas viram no-op. Nunca trocar de secao em silencio.
+      if (registrada(g.currentInstance)) return g.currentInstance;
       const wrapper = ref?.closest?.("div.cke");
       const doWrapper = wrapper ? g.instances[wrapper.id.replace("cke_", "")] : undefined;
       if (editavel(doWrapper)) return doWrapper;

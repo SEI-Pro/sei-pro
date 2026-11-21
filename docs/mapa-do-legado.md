@@ -124,6 +124,8 @@ Resta um resíduo:
 
 Sem os arquivos legados, **nenhum pacote pode sair sem os três content scripts TS** `js/init_favoritos.js`, `js/init_processos_lote.js` e `js/init_documentos_lote.js`: sem eles, o botão Documentos em lote e o item Processos em lote só mostram "Recarregue a página (F5)", e o Favoritos desaparece. O último zip oficial do Chrome em `release/` (3.4) e os manifests de marca locais (`dist/manifest_*.json`) **não** têm esses scripts: regenere-os a partir de `dist/manifest.json` e ajuste a receita do Chrome oficial (que tratava o Processos em lote como "só do Lab") antes de qualquer build que não seja o Lab.
 
+**Editor em TS (20/11/2026):** além dos três content scripts acima, todo pacote precisa do bloco de content script `js/init_editor.js` (mesmos `matches` e `exclude_matches` do bloco do editor legado, `run_at: document_end`) e de `js/editor/pagina.js` em `web_accessible_resources`. Sem eles os 12 recursos portados somem (o monólito legado só ignora a falta, via `chamarRecursoTsPro`). `dist/manifest_*.json` e a receita de empacotamento (`tools/gerar-pacote-firefox.mjs` só copia blocos que já têm `exclude_matches`) não foram atualizados.
+
 ## 5. Atualizações de documentação pendentes
 
 - `processo/README.md` ("O que sobra no legado") ainda cita `getNewDocCompareDocs` como consumidor de `dadosProcessoPro`; a função foi removida com o comparador legado (20/11/2026).

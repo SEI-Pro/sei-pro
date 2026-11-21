@@ -11,7 +11,8 @@ export interface SecaoCk5 {
 
 interface ModeloFalso {
   elemento: Element;
-  rootName: string | null;
+  /** Como no CK5 real: elemento do model tem `root` (RootElement); so a raiz tem `rootName`. */
+  root: { rootName: string | null };
   is(tipo: string): boolean;
   getAttribute(nome: string): string | undefined;
 }
@@ -47,7 +48,7 @@ export class InstanciaCk5 {
     if (!m) {
       m = {
         elemento: el,
-        rootName: this.raizDoElemento(el),
+        root: { rootName: this.raizDoElemento(el) },
         is: (t: string) => t === "element",
         getAttribute: (n: string) => this.atributos.get(el)?.[n],
       };

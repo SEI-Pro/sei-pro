@@ -38,7 +38,10 @@ export async function verificarAdaptadorCk4(): Promise<void> {
     f.focar("txaEditor_4");
     checar("getInstance() com foco devolve a instancia com foco", a.getInstance() === corpo);
     f.focar("txaEditor_1");
-    checar("foco numa secao somente leitura e ignorado", a.getInstance() === f.instancia("txaEditor_2"));
+    checar(
+      "foco numa secao somente leitura: devolve ELA (as escritas viram no-op), nunca outra secao",
+      a.getInstance() === f.instancia("txaEditor_1"),
+    );
     igual("getAllInstances lista as 4 secoes", a.getAllInstances().length, 4);
     checar("somenteLeitura(Cabecalho) e true", a.somenteLeitura(f.instancia("txaEditor_1")) === true);
     checar("somenteLeitura(Corpo) e false", a.somenteLeitura(corpo) === false);

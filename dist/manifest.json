@@ -371,7 +371,10 @@
       "js": [
         "js/init_editor.js"
       ],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "exclude_matches": [
+        "*://sei.antaq1.gov.br/*"
+      ]
     },
     {
       "js": [

@@ -147,9 +147,16 @@ export function verificarAlign(): void {
     ],
   });
   const pCab = ck4.instancia("txaEditor_1").corpo.querySelector("p") as Element;
+  const pCorpo = ck4.instancia("txaEditor_2").corpo.querySelector("p") as Element;
+  ck4.selecionar("txaEditor_2", { elemento: pCorpo });
   ck4.selecionar("txaEditor_1", { elemento: pCab });
+  ck4.focar("txaEditor_1");
   globais(ck4).setAlignText(null, "center");
-  igual("CK4: cursor no Cabecalho (somente leitura) nao muda a classe", pCab.getAttribute("class"), "Texto_Justificado");
+  igual(
+    "CK4: foco no Cabecalho (somente leitura) nao muda a classe dele nem a do Corpo",
+    [pCab.getAttribute("class"), pCorpo.getAttribute("style"), pCorpo.getAttribute("class") || null],
+    ["Texto_Justificado", null, null],
+  );
 
   const ck5 = criarCk5({
     secoes: [

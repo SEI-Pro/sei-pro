@@ -30,6 +30,11 @@ var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('
     qualidadeImagens = (qualidadeImagens > 100) ? 100 : qualidadeImagens;
     qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
 
+// Recursos portados para TS (pacote editor/, bundle js/editor/pagina.js) definem seus globais no mundo da pagina.
+// Chamada por nome e com guarda: se o bundle faltar, o handler/boot do editor legado segue em vez de lancar ReferenceError.
+function chamarRecursoTsPro(nome) {
+    if (typeof window[nome] === 'function') return window[nome].apply(window, Array.prototype.slice.call(arguments, 1));
+}
 function setParamEditor(this_) {
     if (!isNewEditor) {
         idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
@@ -799,7 +804,7 @@ function setOnBodyActs(iframe) {
             hideReviewTips(iframe);
         }
         removeDataCkeSavedImg();
-        hideQuickTable();
+        chamarRecursoTsPro('hideQuickTable');
         setActionCheckbox(iframe);
         setTimeout(() => {
             setOnKeyEditor();
@@ -809,9 +814,9 @@ function setOnBodyActs(iframe) {
     }).on('blur.bodyActsPro', function(e) {
         hideLinkTips(iframe);
         hideReviewTips(iframe);
-        hideQuickTable();
+        chamarRecursoTsPro('hideQuickTable');
         removeCopyStyle();
-        closeAlignText();
+        chamarRecursoTsPro('closeAlignText');
     });
 }
 function initCKEDITOR_SEIPRO(e, TimeOut = 9000) {
@@ -819,7 +824,7 @@ function initCKEDITOR_SEIPRO(e, TimeOut = 9000) {
     if (typeof oEditor !== 'undefined') { 
         applyCopyStyle();
         activeIconsSelectedText();
-        closeAlignText();
+        chamarRecursoTsPro('closeAlignText');
     } else {
         if (TimeOut == 9000) {
             var force = CKEDITOR.instances[$(e.currentTarget).attr('data-editor')];
@@ -2427,7 +2432,7 @@ function initFunctions() {
         }
     };
     tryRun(initContextMenuPro, 'initContextMenuPro');
-    tryRun(initFolhaEditorPro, 'initFolhaEditorPro');
+    tryRun(function () { chamarRecursoTsPro('initFolhaEditorPro'); }, 'initFolhaEditorPro');
     tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
     tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
     tryRun(getDialogSyleTable, 'getDialogSyleTable');

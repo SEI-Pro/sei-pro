@@ -58,11 +58,19 @@ export async function verificarQuebras(): Promise<void> {
     ],
   });
   const pCab = ck4.instancia("txaEditor_1").corpo.querySelector("p") as Element;
+  const pCorpo = ck4.instancia("txaEditor_2").corpo.querySelector("p") as Element;
+  // o foco esta no Cabecalho (somente leitura) e o Corpo TEM um cursor antigo: nada pode ser escrito em lugar nenhum
+  ck4.selecionar("txaEditor_2", { elemento: pCorpo });
   ck4.selecionar("txaEditor_1", { elemento: pCab });
+  ck4.focar("txaEditor_1");
   aciona(pageBreak, ck4, "getPageBreak");
+  aciona(sessionBreak, ck4, "getSessionBreak");
   checar(
-    "CK4: cursor no Cabecalho (somente leitura) nao insere a quebra",
-    pCab.previousElementSibling === null && ck4.instancia("txaEditor_1").inseridos.length === 0,
+    "CK4: foco no Cabecalho (somente leitura) nao insere a quebra nem la nem em outra secao",
+    pCab.previousElementSibling === null &&
+      pCorpo.previousElementSibling === null &&
+      ck4.instancia("txaEditor_1").inseridos.length === 0 &&
+      ck4.instancia("txaEditor_2").snapshots === 0,
   );
 
   const ck5: FalsoCk5 = criarCk5({
