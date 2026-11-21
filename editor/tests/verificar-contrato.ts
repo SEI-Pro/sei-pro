@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,11 +35,11 @@ export function verificarContrato(): void {
   );
 
   const modulo = (id: string) => contratoDoModulo(DIST_REAL, id);
-  igual("page-break (real): o monolito chama getPageBreak", modulo("page-break").necessarios, ["getPageBreak"]);
-  igual("align (real): setAlignText, openAlignText e closeAlignText", modulo("align").necessarios.sort(), [
-    "closeAlignText",
-    "openAlignText",
-    "setAlignText",
+  igual("ref-interna (real): o monolito chama getRefInterna", modulo("ref-interna").necessarios, ["getRefInterna"]);
+  igual("link-pro (real): getDialogLinkPro, hideLinkTips e showLinkTips", modulo("link-pro").necessarios.sort(), [
+    "getDialogLinkPro",
+    "hideLinkTips",
+    "showLinkTips",
   ]);
   checar(
     "table-styles (real): inclui o que o context-menu legado chama",
@@ -49,8 +49,15 @@ export function verificarContrato(): void {
   secao("contrato de nomes globais (recursos TS)");
   const { doc, win } = paginaFalsa();
   const ctx: Contexto = { adaptador: {} as Contexto["adaptador"], doc, win, base: "", checkOpcao: () => true, verifyOpcao: () => false };
+  // Os modulos legados portados foram APAGADOS (Task 28): o contrato deles fica congelado em
+  // tests/contrato-legado.json (gerado antes da remocao, com o detector acima). Modulo que ainda existe e usa o detector ao vivo.
+  const congelado = JSON.parse(readFileSync(fileURLToPath(new URL("./contrato-legado.json", import.meta.url)), "utf8")) as Record<
+    string,
+    { necessarios: string[] }
+  >;
+  igual("o contrato congelado cobre exatamente os recursos portados", Object.keys(congelado).sort(), RECURSOS.map((r) => r.id).sort());
   for (const r of RECURSOS) {
-    const { necessarios } = contratoDoModulo(DIST_REAL, r.id);
+    const { necessarios } = congelado[r.id] ?? contratoDoModulo(DIST_REAL, r.id);
     const globais = Object.keys(r.globais(ctx));
     igual(
       `recurso ${r.id}: exporta todo global que o legado ainda chama`,

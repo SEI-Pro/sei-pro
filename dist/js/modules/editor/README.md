@@ -1,5 +1,11 @@
 # Módulos do Editor SEI Pro (`js/modules/editor/`)
 
+> **Aviso (20/11/2026):** os recursos ghs-unlock, page-break, session-break, checkbox, cap-letter, align, font-size,
+> style-editor, quick-table, folha-papel, tiny-url e latex foram portados para TypeScript (pacote `editor/` na raiz,
+> bundle `js/editor/pagina.js`) e seus modulos apagados desta pasta. Os demais seguem aqui ate serem portados.
+> Veja `editor/README.md`.
+
+
 Cada arquivo aqui é **uma feature** das ferramentas de produtividade do editor do SEI.
 Esta pasta faz parte da portabilidade do editor de **CKEditor 4** (SEI 3.1/4) para
 **CKEditor 5** (SEI 5) e da quebra do monólito `js/sei-pro-editor.js` (8472 linhas)

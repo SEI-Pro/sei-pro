@@ -772,7 +772,7 @@ function toggleCheckboxSEI(el) {
     $(el).toggleClass('checked', marcar);
     if (editor) editor.fire('saveSnapshot');
 }
-// getInsertCheckboxButtom() foi extraido para js/modules/editor/checkbox.js
+// getInsertCheckboxButtom() foi extraido para editor/ (TS)
 // (carregado antes deste monolito via SeiProEditorAdapter.loadModules).
 function repairBugChrome116(iframe) {
     if (!!window.chrome) {
@@ -1090,8 +1090,8 @@ function getAutoSave(this_) {
     */
 }
 // Adiciona quebra de pagina
-// getPageBreak() -> js/modules/editor/page-break.js
-// getSessionBreak() -> js/modules/editor/session-break.js
+// getPageBreak() -> editor/ (TS)
+// getSessionBreak() -> editor/ (TS)
 // (extraidos; carregados antes deste monolito via loadModules)
 function setNextElemEditor(element, callback = false) {
     var editorIfm = $('iframe[title*="'+idEditor+'"]');
@@ -1102,12 +1102,12 @@ function setNextElemEditor(element, callback = false) {
     if (selEnd[0] != element[0]) setNextElemEditor(element.next(), callback);
 }
 // Altera o alinhamento do texto
-// setAlignText() -> js/modules/editor/ (extraido para modulo)
-// openAlignText() -> js/modules/editor/ (extraido para modulo)
-// closeAlignText() -> js/modules/editor/ (extraido para modulo)
+// setAlignText() -> editor/ (TS)
+// openAlignText() -> editor/ (TS)
+// closeAlignText() -> editor/ (TS)
 
 // Modifica o tamanho da fonte
-// changeFontSize() -> js/modules/editor/ (extraido para modulo)
+// changeFontSize() -> editor/ (TS)
 // Adiciona/Remove marca de sigilo
 // getMarkSigilo() -> js/modules/editor/ (extraido para modulo)
 // getTarjaSigilo() -> js/modules/editor/ (extraido para modulo)
@@ -1315,11 +1315,11 @@ function editImgPro( editor ) {
 }
 
 // Adiciona tabela rapida
-// hideQuickTable() -> js/modules/editor/ (extraido para modulo)
-// quickTableOver() -> js/modules/editor/ (extraido para modulo)
-// getQuickTable() -> js/modules/editor/ (extraido para modulo)
+// hideQuickTable() -> editor/ (TS)
+// quickTableOver() -> editor/ (TS)
+// getQuickTable() -> editor/ (TS)
 
-// quickTableClick() -> js/modules/editor/ (extraido para modulo)
+// quickTableClick() -> editor/ (TS)
 
 //// Insere estilo clean a tabela selecionada do documento
 function detectSyleSelectedTable(editor) {
@@ -1806,37 +1806,8 @@ function arrayDadosEditor() {
 // insertSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
 
 // GERA LINK CURTO
-// getTinyUrl() -> js/modules/editor/ (extraido para modulo)
-function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
-	var url = "https://tinyurl.com/api-create.php";
-	var data = ( alias_Tiny != '' ) ? { url: url_Tiny, alias: alias_Tiny } : { url: url_Tiny };	
-	$.ajax({
-		type: "GET",
-		url: url,
-		data: data,
-		success: function(dataUrl, textStatus, xhr){
-			console.log(xhr.status);
-            if (  dataUrl != '' && xhr.status == 200 ) {
-				if ( mode == 'insert' ) {
-					var htmlUrl = '<a href="'+dataUrl+'" class="ancoraSei" target="_blank">'+dataUrl+'</a>';
-                        var ed = SeiProEditorAdapter.getInstance();
-                        if (ed) {
-                            SeiProEditorAdapter.withEdit(ed, function () { SeiProEditorAdapter.insertHtml(ed, htmlUrl); });
-                        }
-				} else if ( mode == 'setinput' ) {
-					setInputTinyUrl(dataUrl);
-				}
-            }
-		},
-		complete: function(xhr, textStatus) {
-			if ( xhr.status == 400 ) {
-				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: Nenhuma link gerado');
-			} else if ( xhr.status == 422 ) {
-				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: O nome personalizado j\u00E1 existe. Insira outro.');
-			}
-		}
-	});
-}
+// getTinyUrl() -> editor/ (TS)
+// ajaxTinyUrl() -> editor/ (TS)
 
 // GERA QR CODE
 // getQrCode() -> js/modules/editor/ (extraido para modulo)
@@ -2147,9 +2118,9 @@ function loadPasteImgToBase64() {
 		}
 	});
 }
-// updatePreviewLatex() -> js/modules/editor/ (extraido para modulo)
-// openDialogLatex() -> js/modules/editor/ (extraido para modulo)
-// getDialogLatex() -> js/modules/editor/ (extraido para modulo)
+// updatePreviewLatex() -> editor/ (TS)
+// openDialogLatex() -> editor/ (TS)
+// getDialogLatex() -> editor/ (TS)
 // tableSorterPro() -> js/modules/editor/ (extraido para modulo)
 // initContextMenuPro() -> js/modules/editor/ (extraido para modulo)
 // INSERE FUNCAO ARRASTA E SOLTA PARA IMAGENS
@@ -2436,8 +2407,8 @@ function clickScroolToRef() {
 // getBoxCtrDitado() -> js/modules/editor/ (extraido para modulo)
 // initDitadoPro() -> js/modules/editor/ (extraido para modulo)
 // getDialogDitado() -> js/modules/editor/ (extraido para modulo)
-// getBoxStyleEditor() -> js/modules/editor/ (extraido para modulo)
-// updateStyleEditor() -> js/modules/editor/ (extraido para modulo)
+// getBoxStyleEditor() -> editor/ (TS)
+// updateStyleEditor() -> editor/ (TS)
 function initFunctions() {
     // Cada initializer eh envolvido para que uma falha (ex: CKEDITOR.dialog.add
     // em CK5) nao interrompa as demais. Util durante a migracao para CK5, onde

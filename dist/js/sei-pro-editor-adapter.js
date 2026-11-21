@@ -295,29 +295,18 @@
     // de initFunctions/cliques do monolito.
     // ----------------------------------------------------------------
     var MODULES = [
-        // Infra: libera classes/estilos/atributos no CK5. Primeiro da lista
-        // porque as demais features dependem do GHS liberado.
-        'ghs-unlock.js',
-        'checkbox.js',
-        'page-break.js',
-        'folha-papel.js',
-        'session-break.js',
-        'cap-letter.js',
+        // O GHS (window.SeiProGhs) e os recursos ja portados para TS vem do bundle
+        // js/editor/pagina.js (pacote editor/), que roda ANTES deste adapter.
         'qr-code.js',
         'nota-rodape.js',
-        'tiny-url.js',
         'ref-interna.js',
         'citacao.js',
         'sumario.js',
         'sigilo.js',
         'dados-processo.js',
         'escrita-interativa.js',
-        'latex.js',
         'legis.js',
         'table-styles.js',
-        'quick-table.js',
-        'align.js',
-        'font-size.js',
         'copy-style.js',
         'link-pro.js',
         'link-sei-lote.js',
@@ -330,7 +319,6 @@
         'image-editor.js',
         'context-menu.js',
         'auto-cleanup.js',
-        'style-editor.js',
         'review.js',
         'ditado.js'
     ];

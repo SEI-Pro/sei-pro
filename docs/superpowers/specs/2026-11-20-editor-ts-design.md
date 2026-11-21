@@ -1,6 +1,6 @@
 # Editor de documentos em TS: desenho
 
-Data: 20/11/2026. Branch: `feat/editor-ts`. Status: desenho aprovado na conversa (abordagem A, primeiro plano = Fundação + grupos 0 e 1); este documento aguarda a aprovação final antes do plano.
+Data: 20/11/2026. Branch: `feat/editor-ts`. Status: aprovado. Plano 1 executado em 20/11/2026: Fundação + grupo 0 + tiny-url e latex (12 recursos); os 8 recursos restantes do grupo 1 (ref-interna, table-styles, sumario, link-pro, nota-rodape, copy-style, qr-code, legis) passaram para o plano 2 por decisão do autor.
 
 ## 1. Intenção
 

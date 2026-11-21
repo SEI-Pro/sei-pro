@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import * as acorn from "acorn";
 import { parseHTML } from "linkedom";
 import { ATRIBUTO_CEDENCIA } from "../src/contrato";
@@ -58,14 +59,19 @@ export function verificarCedencia(): void {
   checar("achou loadModules e MODULES no adapter legado", fonteLoad.length > 0 && modulos.length > 20);
 
   igual("sem atributo: pede todos os modulos", rodar(fonteLoad, modulos, null), modulos);
-  const sem = rodar(fonteLoad, modulos, "page-break,checkbox");
-  checar("com 'page-break,checkbox': nao pede esses dois", !sem.includes("page-break.js") && !sem.includes("checkbox.js"));
-  igual("com 'page-break,checkbox': pede os demais", sem.length, modulos.length - 2);
+  const sem = rodar(fonteLoad, modulos, "qr-code,legis");
+  checar("com 'qr-code,legis': nao pede esses dois", !sem.includes("qr-code.js") && !sem.includes("legis.js"));
+  igual("com 'qr-code,legis': pede os demais", sem.length, modulos.length - 2);
   igual("atributo vazio: pede todos", rodar(fonteLoad, modulos, ""), modulos);
   igual("id desconhecido: pede todos", rodar(fonteLoad, modulos, "inexistente"), modulos);
   checar(
-    "todo id de IDS_RECURSOS e um modulo legado de MODULES",
-    IDS_RECURSOS.every((id) => modulos.includes(`${id}.js`)),
+    "nenhum id de IDS_RECURSOS e mais carregado como modulo legado (saiu de MODULES)",
+    IDS_RECURSOS.every((id) => !modulos.includes(`${id}.js`)),
+  );
+  const raiz = fileURLToPath(new URL("../../dist/js/modules/editor/", import.meta.url));
+  checar(
+    "e o arquivo legado de cada um nao existe mais",
+    IDS_RECURSOS.every((id) => !existsSync(`${raiz}${id}.js`)),
   );
 
   secao("cedencia: init_editor.js");

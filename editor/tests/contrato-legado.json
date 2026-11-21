@@ -1,0 +1,50 @@
+{
+  "ghs-unlock": {
+    "exportados": ["SeiProGhs"],
+    "necessarios": ["SeiProGhs"]
+  },
+  "page-break": {
+    "exportados": ["getPageBreak"],
+    "necessarios": ["getPageBreak"]
+  },
+  "session-break": {
+    "exportados": ["getSessionBreak"],
+    "necessarios": ["getSessionBreak"]
+  },
+  "checkbox": {
+    "exportados": ["getInsertCheckboxButtom"],
+    "necessarios": ["getInsertCheckboxButtom"]
+  },
+  "cap-letter": {
+    "exportados": ["convertFirstLetter"],
+    "necessarios": ["convertFirstLetter"]
+  },
+  "align": {
+    "exportados": ["closeAlignText", "openAlignText", "setAlignText"],
+    "necessarios": ["closeAlignText", "openAlignText", "setAlignText"]
+  },
+  "font-size": {
+    "exportados": ["changeFontSize"],
+    "necessarios": ["changeFontSize"]
+  },
+  "style-editor": {
+    "exportados": ["getBoxStyleEditor", "updateStyleEditor"],
+    "necessarios": ["getBoxStyleEditor"]
+  },
+  "quick-table": {
+    "exportados": ["getQuickTable", "hideQuickTable", "quickTableClick", "quickTableOver"],
+    "necessarios": ["getQuickTable", "hideQuickTable"]
+  },
+  "folha-papel": {
+    "exportados": ["aplicarFolhaEditorPro", "getPaperViewButtom", "initFolhaEditorPro"],
+    "necessarios": ["getPaperViewButtom", "initFolhaEditorPro"]
+  },
+  "tiny-url": {
+    "exportados": ["getTinyUrl"],
+    "necessarios": ["getTinyUrl"]
+  },
+  "latex": {
+    "exportados": ["getDialogLatex", "openDialogLatex", "updatePreviewLatex"],
+    "necessarios": ["openDialogLatex"]
+  }
+}
