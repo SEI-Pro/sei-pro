@@ -1,5 +1,7 @@
 import { mostrarAviso } from "@comum/ui/aviso";
 import { h } from "@comum/ui/dom";
+import { definirCssBase } from "../src/ui/abrir";
+import { avisarEditor } from "../src/ui/avisar";
 import { criarAbridorDeDialogo } from "../src/ui/dialogo";
 import { textoAleatorio } from "../src/util/aleatorio";
 import { checar, igual, instalarDom, secao } from "./util";
@@ -60,6 +62,23 @@ export function verificarUi(): void {
 
   const av = mostrarAviso(doc, "<b>oi</b>", undefined, 50);
   checar("aviso mostra o texto como texto", av.textContent?.includes("<b>oi</b>") === true && !av.querySelector("b"));
+
+  // aviso sem nenhum dialogo aberto: tambem leva o CSS base (uma vez, sem duplicar com o dialogo)
+  definirCssBase(".spro-aviso{color:blue}");
+  const limpa = instalarDom();
+  fingirDialogos(limpa);
+  avisarEditor(limpa, "oi");
+  igual(
+    "avisarEditor sem dialogo injeta um <style data-seipro-editor=base> com o CSS",
+    [
+      limpa.querySelectorAll('style[data-seipro-editor="base"]').length,
+      limpa.querySelector('style[data-seipro-editor="base"]')?.textContent,
+    ],
+    [1, ".spro-aviso{color:blue}"],
+  );
+  avisarEditor(limpa, "de novo");
+  igual("avisar de novo nao duplica o estilo", limpa.querySelectorAll('style[data-seipro-editor="base"]').length, 1);
+  definirCssBase("");
 
   const a = textoAleatorio(16);
   checar("textoAleatorio(16): 16 caracteres do alfabeto", /^[0-9a-zA-Z]{16}$/.test(a));

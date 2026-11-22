@@ -116,6 +116,20 @@ export function verificarAlign(): void {
       ["Texto_Alinhado_Direita", "Tabela_Texto_Alinhado_Direita", "Texto_Alinhado_Direita_Maiusc"],
     );
 
+    if (versao === 5) {
+      // trocar a classe de estilo tambem limpa o text-align inline (no CK4 o removeAttribute("style") ja faz isso)
+      const t = montar(5, ["Texto_Justificado"]);
+      const chamadas: unknown[][] = [];
+      (t.f.win as unknown as Record<string, unknown>).SeiProGhs = { setEstilos: (...a: unknown[]) => chamadas.push(a) };
+      t.selecionar(0);
+      globais(t.f).setAlignText(null, "center");
+      igual(
+        "CK5: trocar a classe limpa o text-align inline",
+        [t.classe(0), chamadas.length, chamadas[0]?.[0] === t.ps[0], chamadas[0]?.[1]],
+        ["Texto_Centralizado", 1, true, { "text-align": null }],
+      );
+    }
+
     const sem = montar(versao, [null]);
     sem.selecionar(0);
     const antes = sem.classe(0);

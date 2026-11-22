@@ -17,6 +17,8 @@ const GUIA = "https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%
 const EDITOR_VISUAL = "https://editor.codecogs.com/";
 
 interface Aberto {
+  /** Instancia do editor onde o dialogo foi aberto: o <dialog> tira o foco, entao o Inserir nao pode adivinhar de novo. */
+  ed: object;
   texto: HTMLTextAreaElement;
   previa: HTMLElement;
   geracao: number;
@@ -65,15 +67,15 @@ export const recurso: Recurso = {
       if (a.falhou) return (avisar("Não foi possível carregar a imagem da equação"), false);
       const imagem = a.previa.querySelector("img");
       if (!a.pronta || !imagem) return (avisar("Aguarde a equação carregar e tente de novo"), false);
-      const ed = c.adaptador.getInstance();
-      if (!ed) return false;
+      const ed = a.ed;
       const html = `<img class="img-base64" src="${escaparHtml(imagem.getAttribute("src") ?? "")}" alt="${escaparHtml(formula)}">`;
       c.adaptador.withEdit(ed, () => c.adaptador.insertHtml(ed, html));
       return true;
     }
 
     function openDialogLatex(this_: Element | null): void {
-      if (!c.adaptador.getInstance(this_)) return;
+      const ed = c.adaptador.getInstance(this_);
+      if (!ed) return;
       const texto = h("textarea", { id: "MathText", rows: "5" });
       texto.addEventListener("input", updatePreviewLatex);
       const previa = h("div", { id: "latexPreview", style: "text-align:center;margin:12px;min-height:24px;" });
@@ -111,7 +113,7 @@ export const recurso: Recurso = {
           ),
         ),
       });
-      aberto = { texto, previa, geracao: 0, pronta: false, falhou: false };
+      aberto = { ed, texto, previa, geracao: 0, pronta: false, falhou: false };
       const selecionado = String(c.win.getSelection?.() ?? "").trim();
       if (selecionado !== "") {
         texto.value = selecionado;

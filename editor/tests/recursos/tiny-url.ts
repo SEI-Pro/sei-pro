@@ -2,7 +2,7 @@ import { criarAdaptador } from "../../src/adaptador";
 import { recurso as tinyUrl } from "../../src/recursos/tiny-url";
 import type { Contexto } from "../../src/recursos/tipos";
 import { clicar, dialogoAberto, digitar, tique, usarDocumento } from "../dialogo";
-import { type CasoEditor, nosDoisEditores, primeiroP, selecionarTexto, ultimoInserido } from "../falsos";
+import { type CasoEditor, criarCk4, nosDoisEditores, primeiroP, selecionarTexto, ultimoInserido } from "../falsos";
 import { checar, igual, secao } from "../util";
 
 interface Chamada {
@@ -144,4 +144,31 @@ export async function verificarTinyUrl(): Promise<void> {
     await g.ajaxTinyUrl("https://sei.antaq.gov.br/z", "", "setinput");
     igual(`tiny-url ${v}: modo setinput entrega ao setInputTinyUrl`, recebido, ["https://tinyurl.com/qr-1"]);
   });
+
+  // o "Inserir" usa a instancia capturada ao ABRIR o dialogo, mesmo que o foco mude depois
+  {
+    const f = criarCk4({
+      secoes: [
+        { nome: "txaEditor_1", titulo: "Corpo do Texto", html: "<p>a</p>" },
+        { nome: "txaEditor_2", titulo: "Processo e Interessado", html: "<p>b</p>" },
+      ],
+    });
+    usarDocumento(f.doc);
+    const caso = { versao: 4, doc: f.doc, win: f.win, ed: f } as unknown as CasoEditor;
+    const g = tinyUrl.globais(contexto(caso, [{ status: 200, corpo: "https://tinyurl.com/abc12" }], [])) as Record<
+      string,
+      (...a: unknown[]) => unknown
+    >;
+    f.focar("txaEditor_1");
+    (f.win as unknown as Record<string, unknown>).getSelection = () => "https://sei.antaq.gov.br/x";
+    g.getTinyUrl(null);
+    f.focar("txaEditor_2");
+    clicar(dialogoAberto(f.doc) as HTMLElement, "Inserir");
+    await tique(20);
+    igual(
+      "tiny-url: o link vai para a secao onde o dialogo foi aberto",
+      [f.instancia("txaEditor_1").inseridos.length, f.instancia("txaEditor_2").inseridos.length],
+      [1, 0],
+    );
+  }
 }

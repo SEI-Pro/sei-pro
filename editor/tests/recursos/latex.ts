@@ -2,7 +2,7 @@ import { criarAdaptador } from "../../src/adaptador";
 import { recurso as latex } from "../../src/recursos/latex";
 import type { Contexto } from "../../src/recursos/tipos";
 import { clicar, dialogoAberto, digitar, tique, usarDocumento } from "../dialogo";
-import { type CasoEditor, nosDoisEditores, primeiroP, selecionarTexto, ultimoInserido } from "../falsos";
+import { type CasoEditor, criarCk4, nosDoisEditores, primeiroP, selecionarTexto, ultimoInserido } from "../falsos";
 import { checar, igual, secao } from "../util";
 
 const BASE = "https://latex.codecogs.com/png.latex?";
@@ -139,4 +139,39 @@ export async function verificarLatex(): Promise<void> {
       ultimoInserido(c) === antes3 && /não foi possível/i.test(c.doc.body.textContent ?? ""),
     );
   });
+
+  // o "Inserir" usa a instancia capturada ao ABRIR o dialogo, mesmo que o foco mude depois (o <dialog> tira o foco do editor)
+  {
+    const f = criarCk4({
+      secoes: [
+        { nome: "txaEditor_1", titulo: "Corpo do Texto", html: "<p>a</p>" },
+        { nome: "txaEditor_2", titulo: "Processo e Interessado", html: "<p>b</p>" },
+      ],
+    });
+    usarDocumento(f.doc);
+    const conv: Conversao[] = [];
+    const ctx: Contexto = {
+      adaptador: criarAdaptador(f.win),
+      doc: f.doc,
+      win: f.win,
+      base: "",
+      checkOpcao: () => true,
+      verifyOpcao: () => false,
+      imagemParaDataUri: (src) => new Promise((resolve, reject) => conv.push({ src, resolve, reject })),
+    };
+    const g = latex.globais(ctx) as Record<string, (...a: unknown[]) => unknown>;
+    f.focar("txaEditor_1");
+    (f.win as unknown as Record<string, unknown>).getSelection = () => "x";
+    g.openDialogLatex(null);
+    f.focar("txaEditor_2"); // o foco foi para outra secao editavel
+    conv[0]?.resolve("data:image/png;base64,Z");
+    await tique();
+    clicar(dialogoAberto(f.doc) as HTMLElement, "Inserir");
+    await tique();
+    igual(
+      "latex: a equacao vai para a secao onde o dialogo foi aberto",
+      [f.instancia("txaEditor_1").inseridos.length, f.instancia("txaEditor_2").inseridos.length],
+      [1, 0],
+    );
+  }
 }

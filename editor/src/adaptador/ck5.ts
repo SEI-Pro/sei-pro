@@ -75,7 +75,7 @@ const POR_ELEMENTO: Record<string, string> = {
 let marcador = 0;
 
 /** Backend do CKEditor 5 (SEI 5): uma instancia multi-root, sem iframe. */
-export function criarBackendCk5(win: Janela): Adaptador {
+export function criarBackendCk5(win: Janela, recusa: { fn?: () => void } = {}): Adaptador {
   const doc = win.document;
   const roots = (ed: Ck5Instancia): Ck5Raiz[] =>
     Array.from(ed.model.document.roots ?? []).filter((r) => r.isAttached() && r.rootName !== "$graveyard");
@@ -109,7 +109,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
 
   const insere = (e: Editor, html: string) => {
     const ed = ck(e);
-    if (raizSomenteLeitura(raizDaSelecao(ed))) return;
+    if (raizSomenteLeitura(raizDaSelecao(ed))) return recusa.fn?.();
     ed.model.change(() => ed.model.insertContent(modelo(ed, html), ed.model.document.selection));
   };
 
@@ -135,7 +135,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
     insertHtml: insere,
     insertText(e, texto) {
       const ed = ck(e);
-      if (raizSomenteLeitura(raizDaSelecao(ed))) return;
+      if (raizSomenteLeitura(raizDaSelecao(ed))) return recusa.fn?.();
       ed.model.change((w) => ed.model.insertContent(w.createText(texto)));
     },
     getSelectionElement() {
@@ -150,7 +150,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
       const visao = ed.editing.view.domConverter.mapDomToView(ref);
       const el = visao ? ed.editing.mapper.toModelElement(visao) : null;
       if (el) {
-        if (raizSomenteLeitura(el.root?.rootName)) return;
+        if (raizSomenteLeitura(el.root?.rootName)) return recusa.fn?.();
         ed.model.change((w) => ed.model.insertContent(modelo(ed, html), w.createPositionBefore(el)));
         return;
       }
@@ -170,7 +170,7 @@ export function criarBackendCk5(win: Janela): Adaptador {
       const ed = ck(e);
       const raiz = raizDoCorpo(ed);
       if (!raiz) return insere(e, html);
-      if (raizSomenteLeitura(raiz.rootName)) return;
+      if (raizSomenteLeitura(raiz.rootName)) return recusa.fn?.();
       ed.model.change((w) => ed.model.insertContent(modelo(ed, html), w.createPositionAt(raiz, "end")));
     },
     /** Nao chamar dentro de `model.change`. `seiProInterno`: e um vai-e-volta, nao o HTML gravado. */
@@ -279,6 +279,9 @@ export function criarBackendCk5(win: Janela): Adaptador {
       });
     },
     somenteLeitura: (e) => raizSomenteLeitura(raizDaSelecao(ck(e))),
+    aoRecusarEscrita(fn) {
+      recusa.fn = fn;
+    },
   };
   return a;
 }

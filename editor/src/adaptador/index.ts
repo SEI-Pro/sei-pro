@@ -13,11 +13,12 @@ export { detectarVersao } from "./versao";
 export function criarAdaptador(win: Window): Adaptador {
   type Janela = Parameters<typeof criarBackendCk4>[0];
   let escolhido: Adaptador | null = null;
+  const recusa: { fn?: () => void } = {};
   const backend = (): Adaptador | null => {
     if (escolhido) return escolhido;
     const v = detectarVersao(win);
-    if (v === 5) escolhido = criarBackendCk5(win as Janela);
-    else if (v === 4) escolhido = criarBackendCk4(win as Janela);
+    if (v === 5) escolhido = criarBackendCk5(win as Janela, recusa);
+    else if (v === 4) escolhido = criarBackendCk4(win as Janela, recusa);
     return escolhido;
   };
   const exige = (): Adaptador => {
@@ -61,6 +62,9 @@ export function criarAdaptador(win: Window): Adaptador {
     fire: delega("fire"),
     addContextMenu: delega("addContextMenu"),
     somenteLeitura: delega("somenteLeitura"),
+    aoRecusarEscrita(fn) {
+      recusa.fn = fn;
+    },
     waitReady(ms: number): Promise<Editor> {
       const inicio = Date.now();
       return new Promise((resolve, reject) => {

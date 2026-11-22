@@ -44,7 +44,7 @@ type Janela = Window & typeof globalThis & { CKEDITOR?: Ck4Global; oEditor?: Ck4
 const ck = (e: Editor): Ck4Instancia => e as Ck4Instancia;
 
 /** Backend do CKEditor 4 (SEI 3.1/4.x): uma instancia por secao, cada uma num iframe. */
-export function criarBackendCk4(win: Janela): Adaptador {
+export function criarBackendCk4(win: Janela, recusa: { fn?: () => void } = {}): Adaptador {
   const global = (): Ck4Global | undefined => win.CKEDITOR;
   const registrada = (ed?: Ck4Instancia): ed is Ck4Instancia => !!ed?.name && global()?.instances[ed.name] === ed;
   const editavel = (ed?: Ck4Instancia): ed is Ck4Instancia => registrada(ed) && !ed.readOnly;
@@ -53,7 +53,10 @@ export function criarBackendCk4(win: Janela): Adaptador {
   const escreve = (e: Editor | null | undefined, fn: (ed: Ck4Instancia) => void): void => {
     if (!e) return;
     const ed = ck(e);
-    if (ed.readOnly) return;
+    if (ed.readOnly) {
+      recusa.fn?.();
+      return;
+    }
     fn(ed);
   };
 
@@ -173,6 +176,9 @@ export function criarBackendCk4(win: Janela): Adaptador {
       });
     },
     somenteLeitura: (e) => !!ck(e).readOnly,
+    aoRecusarEscrita(fn) {
+      recusa.fn = fn;
+    },
   };
   return a;
 }

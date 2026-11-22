@@ -87,6 +87,8 @@ export function operacoesDeParagrafo(c: Contexto): OperacoesParagrafo {
         const e = ed as Qualquer;
         const m = modelDe(e, p);
         if (m) e.model.change((w: Qualquer) => w.setAttribute("estilo", classe, m));
+        // o `text-align` inline venceria a classe: limpa (o CK4 faz `removeAttribute("style")`)
+        (c.win as Qualquer).SeiProGhs?.setEstilos(p, { "text-align": null }, ed);
         return;
       }
       p.removeAttribute("style");

@@ -66,6 +66,31 @@ export async function verificarAdaptadorCk5(): Promise<void> {
   }
 
   {
+    // escrita recusada na raiz somente leitura avisa; na editavel nao
+    const f = criarCk5({
+      secoes: [
+        { raiz: "cab", label: "Cabeçalho", html: "<p>cab</p>", somenteLeitura: true },
+        { raiz: "corpo", label: "Corpo do Texto", html: "<p>corpo</p>", principal: true },
+      ],
+    });
+    const a = criarBackendCk5(f.win);
+    const ed = f.instancia();
+    let recusas = 0;
+    a.aoRecusarEscrita(() => {
+      recusas += 1;
+    });
+    const pCab = f.elemento("cab").querySelector("p") as Element;
+    f.selecionar({ raiz: "cab", elemento: pCab });
+    a.insertHtml(ed, "<b>x</b>");
+    a.insertText(ed, "t");
+    a.insertHtmlBefore(ed, pCab, "<hr>");
+    igual("CK5: cada escrita recusada na raiz somente leitura chama aoRecusarEscrita", recusas, 3);
+    f.selecionar({ raiz: "corpo", elemento: f.elemento("corpo").querySelector("p") });
+    a.insertHtml(ed, "<b>y</b>");
+    igual("CK5: escrita na raiz editavel nao chama o callback", recusas, 3);
+  }
+
+  {
     // appendToBody: se a raiz do corpo for somente leitura (documento sem secao editavel principal), nao escreve
     const f = criarCk5({ secoes: [{ raiz: "corpo", label: "Corpo do Texto", html: "<p>x</p>", principal: true, somenteLeitura: true }] });
     const a = criarBackendCk5(f.win);

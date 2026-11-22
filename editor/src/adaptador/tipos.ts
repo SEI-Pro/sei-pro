@@ -53,6 +53,8 @@ export interface Adaptador {
   addContextMenu(e: Editor, construtor: (alvo: Element | null) => ItemMenu[]): void;
   /** Resolve quando o editor esta pronto; rejeita no tempo limite. */
   waitReady(ms: number): Promise<Editor>;
+  /** Registra quem e avisado quando uma escrita e IGNORADA por cair em secao somente leitura (uma chamada por tentativa). */
+  aoRecusarEscrita(fn: () => void): void;
   /** A secao/instancia e somente leitura (CK4 `readOnly`; CK5 raiz com `somenteLeitura`). */
   somenteLeitura(e: Editor): boolean;
 }

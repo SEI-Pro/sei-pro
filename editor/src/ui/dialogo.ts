@@ -18,12 +18,16 @@ export type AbrirDialogo = (doc: Document, o: OpcoesDialogo) => { fechar(): void
 export function criarAbridorDeDialogo(css: string): AbrirDialogo {
   const abrirModal = criarAbrirModal();
   return (doc, o) => {
-    if (!doc.querySelector('style[data-seipro-editor="base"]')) {
-      const estilo = doc.createElement("style");
-      estilo.setAttribute("data-seipro-editor", "base");
-      estilo.textContent = css;
-      (doc.head ?? doc.documentElement).append(estilo);
-    }
+    injetarEstiloBase(doc, css);
     return abrirModal(o);
   };
+}
+
+/** Poe o `<style data-seipro-editor="base">` no documento, uma unica vez. */
+export function injetarEstiloBase(doc: Document, css: string): void {
+  if (doc.querySelector('style[data-seipro-editor="base"]')) return;
+  const estilo = doc.createElement("style");
+  estilo.setAttribute("data-seipro-editor", "base");
+  estilo.textContent = css;
+  (doc.head ?? doc.documentElement).append(estilo);
 }

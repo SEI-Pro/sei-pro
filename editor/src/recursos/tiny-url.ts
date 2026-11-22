@@ -22,7 +22,7 @@ export const recurso: Recurso = {
     const rede = (url: string) => (c.fetch ?? c.win.fetch.bind(c.win))(url);
 
     /** Pede o link curto; `modo` "insert" poe no documento, "setinput" entrega ao campo do QR Code. */
-    async function ajaxTinyUrl(urlLonga: string, alias: string, modo: "insert" | "setinput"): Promise<boolean> {
+    async function encurtar(urlLonga: string, alias: string, modo: "insert" | "setinput", editor?: object): Promise<boolean> {
       const params = new URLSearchParams({ url: urlLonga });
       if (alias !== "") params.set("alias", alias);
       let resposta: Response;
@@ -40,7 +40,7 @@ export const recurso: Recurso = {
         (c.win as unknown as { setInputTinyUrl?(u: string): void }).setInputTinyUrl?.(curto);
         return true;
       }
-      const ed = c.adaptador.getInstance();
+      const ed = editor ?? c.adaptador.getInstance();
       if (!ed) return false;
       const html = `<a href="${escaparHtml(curto)}" class="ancoraSei" target="_blank">${escaparHtml(curto)}</a>`;
       c.adaptador.withEdit(ed, () => c.adaptador.insertHtml(ed, html));
@@ -48,7 +48,8 @@ export const recurso: Recurso = {
     }
 
     function getTinyUrl(this_: Element | null): void {
-      if (!c.adaptador.getInstance(this_)) return;
+      const edAberto = c.adaptador.getInstance(this_);
+      if (!edAberto) return;
       const campoUrl = h("input", { type: "text", id: "urlTiny" });
       const campoAlias = h("input", { type: "text", id: "aliasTiny" });
       const resultado = h("div", { id: "tinyResult" });
@@ -84,7 +85,7 @@ export const recurso: Recurso = {
                   if (url === "" || !urlHttpValida(url)) return avisar("Digite um link válido!");
                   if (alias !== "" && !ALIAS_VALIDO.test(alias)) return avisar(MSG_ALIAS_FORMATO);
                   if (alias !== "" && alias.length < 5) return avisar("O nome personalizado deve ter mais de 4 (quatro) caracteres");
-                  if (await ajaxTinyUrl(url, alias, "insert")) dialogo.fechar();
+                  if (await encurtar(url, alias, "insert", edAberto)) dialogo.fechar();
                 },
               },
               "Inserir",
@@ -93,6 +94,9 @@ export const recurso: Recurso = {
         ),
       });
     }
+
+    /** O global do legado: sem instancia, usa a que tem o foco. */
+    const ajaxTinyUrl = (urlLonga: string, alias: string, modo: "insert" | "setinput") => encurtar(urlLonga, alias, modo);
 
     return { getTinyUrl, ajaxTinyUrl };
   },

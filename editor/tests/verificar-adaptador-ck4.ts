@@ -116,6 +116,25 @@ export async function verificarAdaptadorCk4(): Promise<void> {
   }
 
   {
+    // escrita recusada em secao somente leitura avisa quem registrou (uma vez por tentativa); em secao editavel nao
+    const { f, a } = novo();
+    let recusas = 0;
+    a.aoRecusarEscrita(() => {
+      recusas += 1;
+    });
+    const cab = f.instancia("txaEditor_1");
+    const corpo = f.instancia("txaEditor_4");
+    a.insertHtml(cab, "<b>x</b>");
+    a.insertText(cab, "t");
+    a.appendToBody(cab, "<p>x</p>");
+    a.insertHtmlBefore(cab, cab.corpo.querySelector("p") as Element, "<hr>");
+    igual("CK4: cada escrita recusada em secao somente leitura chama aoRecusarEscrita", recusas, 4);
+    a.insertHtml(corpo, "<b>y</b>");
+    a.appendToBody(corpo, "<p>y</p>");
+    igual("CK4: escrita em secao editavel nao chama o callback", recusas, 4);
+  }
+
+  {
     const { f, a } = novo();
     const corpo = f.instancia("txaEditor_4");
     const p1 = corpo.corpo.querySelector("#p1") as Element;
