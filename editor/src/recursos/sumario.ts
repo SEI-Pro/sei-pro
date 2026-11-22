@@ -81,7 +81,10 @@ export const recurso: Recurso = {
       const ed = editor ?? ADAPTADOR.getInstance();
       if (!ed) return;
       const estilos = estilosDoDocumento(ed);
-      if (!estilos.length) return avisar("O documento não tem parágrafos com estilo para montar o sumário.");
+      if (!estilos.length) {
+        avisar("O documento não tem parágrafos com estilo para montar o sumário.");
+        return;
+      }
       const campo = (id: string, vazia: boolean, padrao: string | undefined) => {
         return h("select", { id }, ...opcoes(estilos, vazia, padrao));
       };
@@ -105,7 +108,10 @@ export const recurso: Recurso = {
                 class: "spro-botao primario",
                 onclick: () => {
                   const escolhidos = [s1.value, s2.value, s3.value].filter((v) => v !== "");
-                  if (!escolhidos.length) return avisar("Escolha o estilo do Título 1.");
+                  if (!escolhidos.length) {
+                    avisar("Escolha o estilo do Título 1.");
+                    return;
+                  }
                   if (insertSumarioDocumento(null, [...new Set(escolhidos)], ed)) dialogo.fechar();
                 },
               },

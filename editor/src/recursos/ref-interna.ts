@@ -110,7 +110,10 @@ export const recurso: Recurso = {
       const ed = ADAPTADOR.getInstance(this_);
       if (!ed) return;
       const lista = getNiveisParagrafos(ed);
-      if (!lista || !lista.length) return avisar("O documento não tem parágrafos numerados para referenciar.");
+      if (!lista || lista.length === 0) {
+        avisar("O documento não tem parágrafos numerados para referenciar.");
+        return;
+      }
 
       const prefixo = h("input", { type: "text", id: "prefixo", style: "width:70%" });
       const ocultar = h("input", { type: "checkbox", id: "hidePrefix" });
@@ -161,7 +164,10 @@ export const recurso: Recurso = {
                   const escolhidos = lista.filter((p) =>
                     [...select.querySelectorAll("option")].some((o) => o.value === `${p.ref}-${p.item}` && o.selected),
                   );
-                  if (!escolhidos.length) return avisar("Selecione ao menos um parágrafo numerado.");
+                  if (!escolhidos.length) {
+                    avisar("Selecione ao menos um parágrafo numerado.");
+                    return;
+                  }
                   if (inserir(ed, escolhidos, prefixo.value, ocultarPrefixo())) dialogo.fechar();
                 },
               },

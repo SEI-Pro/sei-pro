@@ -251,7 +251,7 @@ export const recurso: Recurso = {
       if (!area) return;
       const filhos: Node[] = [];
       if (avisoTopo) filhos.push(aviso(avisoTopo));
-      normas.forEach((n, i) => filhos.push(linhaDeResultado(n, i)));
+      filhos.push(...normas.map((n, i) => linhaDeResultado(n, i)));
       if (total > normas.length) filhos.push(aviso(`Mostrando ${normas.length} de ${total} resultados. Restrinja sua pesquisa.`));
       else if (!normas.length) filhos.push(aviso("Nenhum resultado encontrado :("));
       area.replaceChildren(...filhos);
@@ -280,7 +280,8 @@ export const recurso: Recurso = {
       carregando(raiz, true);
       const area = raiz.querySelector<HTMLElement>("#searchLegis_result");
       if (area) area.style.display = "none";
-      const minha = (buscaAtual += 1);
+      buscaAtual += 1;
+      const minha = buscaAtual;
       buscarNormas(rede, URL_LEGIS_API, {
         q: valor(raiz, "legis_termoNorma").trim(),
         tipo: valor(raiz, "legis_tipoNorma"),
@@ -296,7 +297,8 @@ export const recurso: Recurso = {
     /** "Inserir" na aba Federal: uma norma so entra direto; numero repetido vira lista para escolher. */
     function inserirFederal(raiz: ParentNode, tipo: string, numero: number, ano: string, periodo: string, ed: object): void {
       carregando(raiz, true);
-      const minha = (buscaAtual += 1);
+      buscaAtual += 1;
+      const minha = buscaAtual;
       buscarNormas(rede, URL_LEGIS_API, { tipo, numero, ano, periodo: ano ? periodoDaApi(periodo) : "" }).then(
         ({ normas, total }) => {
           if (minha !== buscaAtual) return;

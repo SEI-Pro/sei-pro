@@ -237,7 +237,10 @@ export const recurso: Recurso = {
     function convertTinyURL(): void {
       const url = valor("qrCodeText").trim();
       const ajax = (c.win as unknown as { ajaxTinyUrl?: (u: string, a: string, m: string) => unknown }).ajaxTinyUrl;
-      if (typeof ajax !== "function") return avisar("O serviço de link curto não está disponível.");
+      if (typeof ajax !== "function") {
+        avisar("O serviço de link curto não está disponível.");
+        return;
+      }
       void Promise.resolve(ajax(url, "", "setinput")).catch(() => avisar("Erro: não foi possível gerar o link curto"));
     }
 
@@ -290,7 +293,10 @@ export const recurso: Recurso = {
       const ed = editor ?? A.getInstance();
       if (!ed) return;
       const src = q<HTMLImageElement>("#qrCodeResult img")?.getAttribute("src") ?? "";
-      if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(src)) return avisar("Não foi possível gerar o QR Code para este texto.");
+      if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(src)) {
+        avisar("Não foi possível gerar o QR Code para este texto.");
+        return;
+      }
       A.withEdit(ed, () => A.insertHtml(ed, `<img src="${escaparHtml(src)}" alt="${escaparHtml(texto)}">`));
     }
 
@@ -310,7 +316,10 @@ export const recurso: Recurso = {
         const leitor = new FileReader();
         leitor.onload = () => {
           const url = String(leitor.result ?? "");
-          if (!/^data:image\//i.test(url)) return avisar("Escolha um arquivo de imagem.");
+          if (!/^data:image\//i.test(url)) {
+            avisar("Escolha um arquivo de imagem.");
+            return;
+          }
           q<HTMLImageElement>("#QrPro-img-buffer")?.setAttribute("src", url);
           const modo = q<HTMLSelectElement>("#QrPro-mode");
           if (modo) modo.value = "4";
@@ -336,7 +345,10 @@ export const recurso: Recurso = {
                 class: "spro-botao primario",
                 onclick: () => {
                   const texto = campo.value.trim();
-                  if (!texto) return avisar("Digite o texto a codificar");
+                  if (!texto) {
+                    avisar("Digite o texto a codificar");
+                    return;
+                  }
                   setQrCode(texto, ed);
                   dialogo.fechar();
                 },

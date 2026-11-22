@@ -85,7 +85,10 @@ export const recurso: Recurso = {
     function updateNtRodape(editor?: object): void {
       const ed = editor ?? A.getInstance();
       if (!ed) return;
-      if (!temNotas(ed)) return avisar("O documento não tem notas de rodapé.");
+      if (!temNotas(ed)) {
+        avisar("O documento não tem notas de rodapé.");
+        return;
+      }
       reorderNtRodape(ed);
       ligarRolagem(c);
       avisar("Notas de rodapé atualizadas com sucesso");
@@ -94,7 +97,10 @@ export const recurso: Recurso = {
     function removeNtRodape(_this: Element | null, editor?: object): void {
       const ed = editor ?? A.getInstance();
       if (!ed) return;
-      if (!temNotas(ed)) return avisar("O documento não tem notas de rodapé.");
+      if (!temNotas(ed)) {
+        avisar("O documento não tem notas de rodapé.");
+        return;
+      }
       const raiz = A.versao === 5 ? raizDoCorpoCk5(ed, corpoDe(ed)) : null;
       if (recusado(ed, raiz)) return;
       A.withEdit(ed, () => {
@@ -272,7 +278,10 @@ export const recurso: Recurso = {
             const abntHtml = (previa.textContent ?? "").trim() ? montarAbnt(lerCampos(abnt)) : "";
             const livre = texto.value.trim();
             const html = abntHtml || escaparHtml(livre).replace(/\r?\n/g, "<br>");
-            if (!html) return avisar("Digite o texto da nota de rodapé.");
+            if (!html) {
+              avisar("Digite o texto da nota de rodapé.");
+              return;
+            }
             insertNtRodape(html, ed);
             dialogo.fechar();
           },

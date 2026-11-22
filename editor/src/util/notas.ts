@@ -49,7 +49,11 @@ export interface PlanoDeNotas {
 export function planejarNotas(entradas: Entrada[], outrasRefs: ReadonlySet<string> = new Set()): PlanoDeNotas {
   const numeroDe = new Map<string, number>();
   let n = 0;
-  for (const e of entradas) if (e.tipo === "item") numeroDe.set(e.ref, (n += 1));
+  for (const e of entradas) {
+    if (e.tipo !== "item") continue;
+    n += 1;
+    numeroDe.set(e.ref, n);
+  }
   const mantidos: Array<{ ref: string; chave: number }> = [];
   const orfaos: string[] = [];
   for (const e of entradas) {
@@ -184,8 +188,10 @@ export function renumerarNotasCk5(ed: Qualquer, raiz: Qualquer, outrasRefs: Read
     const trocas: Array<{ no: Qualquer; n: number }> = [];
     let proximo = 0;
     for (const t of marcas.textos) {
-      if (t.tipo === "item") trocas.push({ no: t.no, n: (proximo += 1) });
-      else {
+      if (t.tipo === "item") {
+        proximo += 1;
+        trocas.push({ no: t.no, n: proximo });
+      } else {
         const n = plano.numeroDe.get(refDeItem(t.no));
         if (n !== undefined) trocas.push({ no: t.no, n });
       }
