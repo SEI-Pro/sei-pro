@@ -217,3 +217,7 @@ Medidos na ANTAQ (SEI 5.0.4, CKEditor 5) com `editor/vivo/sondas/ck5-ancoras.cjs
 
 **Decisão (regra da Task 2, caminho (i) adaptado):** no CK5 a "âncora" de uma referência é o **`id` do próprio elemento** (parágrafo ou título), posto pelo model (`SeiProGhs`), e os links são `<a href="#id">`. No CK4 continua a âncora do legado, `<a name>` no início do elemento (o CK4 grava o DOM). As referências no CK5 se identificam por `a[href^="#<prefixo>"]` (a classe do link não sobrevive). Documentos criados no CK4 com `<a name>` perdem a âncora ao abrir no CK5 (o CK5 a descarta no carregamento): as referências para elas ficam "perdidas", e `updateRefsInternas` precisa tratar isso. Risco a conferir ao gravar no SEI real: o servidor aceitar `id` em parágrafos (o CK5 já o emite).
 
+
+### Sonda da API de legislacao (plano 2, Task 12, 22/11/2026)
+
+`fetch` a partir da pagina do editor (SP treinamento e ANTAQ): GET `https://legis.seipro.app/v1/normas?...` e POST `/v1/normas/resolver` (JSON, com preflight) respondem 200 com CORS liberado nos dois ambientes. Nada a pedir ao autor; o recurso `legis` fala direto com a API.

@@ -6,6 +6,7 @@ import { recurso as folhaPapel } from "./folha-papel";
 import { recurso as fontSize } from "./font-size";
 import { recurso as ghsUnlock } from "./ghs-unlock";
 import { recurso as latex } from "./latex";
+import { recurso as legis } from "./legis";
 import { recurso as linkPro } from "./link-pro";
 import { recurso as notaRodape } from "./nota-rodape";
 import { recurso as pageBreak } from "./page-break";
@@ -40,4 +41,5 @@ export const RECURSOS: readonly Recurso[] = [
   refInterna,
   notaRodape,
   qrCode,
+  legis,
 ];

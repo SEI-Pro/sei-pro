@@ -23,4 +23,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "ref-interna",
   "nota-rodape",
   "qr-code",
+  "legis",
 ];

@@ -1,0 +1,121 @@
+[
+  {
+    "api": {
+      "tipo": "lei",
+      "numero": 14133,
+      "titulo": "Lei nº 14.133, de 1º de abril de 2021",
+      "titulo_curto": "Lei nº 14.133, de 2021",
+      "apelido": "Lei de Licitações e Contratos Administrativos (LLCA)",
+      "url": "https://normas.leg.br/?urn=urn:lex:br:federal:lei:2021-04-01;14133",
+      "ementa": "Lei de Licitações.",
+      "situacao": "vigente"
+    },
+    "norma": {
+      "sigla": "Lei14133",
+      "titulo": "Lei nº 14.133, de 1º de abril de 2021",
+      "curto": "Lei nº 14.133, de 2021",
+      "apelido": "Lei de Licitações e Contratos Administrativos",
+      "url": "https://normas.leg.br/?urn=urn:lex:br:federal:lei:2021-04-01;14133",
+      "ementa": "Lei de Licitações.",
+      "revogada": false
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Lei14133\" data-normafull=\"Lei nº 14.133, de 1º de abril de 2021\" data-index=\"0\" href=\"https://normas.leg.br/?urn=urn:lex:br:federal:lei:2021-04-01;14133\" target=\"_blank\">Lei nº 14.133, de 1º de abril de 2021&nbsp;(Lei de Licitações e Contratos Administrativos)</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Lei14133\" data-normafull=\"Lei nº 14.133, de 1º de abril de 2021\" data-index=\"0\" href=\"https://normas.leg.br/?urn=urn:lex:br:federal:lei:2021-04-01;14133\" target=\"_blank\">Lei nº 14.133, de 2021</a>"
+  },
+  {
+    "api": {
+      "tipo": "lei.complementar",
+      "numero": "101",
+      "titulo": "Lei Complementar nº 101, de 4 de maio de 2000",
+      "apelido": "LEI DE RESPONSABILIDADE FISCAL",
+      "urn": "urn:lex:br:federal:lei.complementar:2000-05-04;101"
+    },
+    "norma": {
+      "sigla": "LC101",
+      "titulo": "Lei Complementar nº 101, de 4 de maio de 2000",
+      "curto": "Lei Complementar nº 101, de 2000",
+      "apelido": "",
+      "url": "https://normas.leg.br/?urn=urn:lex:br:federal:lei.complementar:2000-05-04;101",
+      "ementa": "",
+      "revogada": false
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"LC101\" data-normafull=\"Lei Complementar nº 101, de 4 de maio de 2000\" data-index=\"0\" href=\"https://normas.leg.br/?urn=urn:lex:br:federal:lei.complementar:2000-05-04;101\" target=\"_blank\">Lei Complementar nº 101, de 4 de maio de 2000</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"LC101\" data-normafull=\"Lei Complementar nº 101, de 4 de maio de 2000\" data-index=\"0\" href=\"https://normas.leg.br/?urn=urn:lex:br:federal:lei.complementar:2000-05-04;101\" target=\"_blank\">Lei Complementar nº 101, de 2000</a>"
+  },
+  {
+    "api": {
+      "tipo": "constituicao",
+      "numero": 1988,
+      "titulo": "Constituição da República Federativa do Brasil de 1988",
+      "apelido": "Constituição Federal (CF)"
+    },
+    "norma": {
+      "sigla": "Cf",
+      "titulo": "Constituição da República Federativa do Brasil de 1988",
+      "curto": "Constituição da República Federativa do Brasil de 1988",
+      "apelido": "Constituição Federal",
+      "url": "",
+      "ementa": "",
+      "revogada": false
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Cf\" data-normafull=\"Constituição da República Federativa do Brasil de 1988\" data-index=\"0\" href=\"\" target=\"_blank\">Constituição da República Federativa do Brasil de 1988&nbsp;(Constituição Federal)</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Cf\" data-normafull=\"Constituição da República Federativa do Brasil de 1988\" data-index=\"0\" href=\"\" target=\"_blank\">Constituição da República Federativa do Brasil de 1988</a>"
+  },
+  {
+    "api": {
+      "tipo": "decreto.lei",
+      "numero": "2.848",
+      "titulo": "Decreto-Lei nº 2.848, de 7 de dezembro de 1940",
+      "situacao": "revogada",
+      "url": "https://x.gov.br/a?b=1&c=\"2\""
+    },
+    "norma": {
+      "sigla": "DecLei2848",
+      "titulo": "Decreto-Lei nº 2.848, de 7 de dezembro de 1940",
+      "curto": "Decreto-Lei nº 2.848, de 1940",
+      "apelido": "",
+      "url": "https://x.gov.br/a?b=1&c=\"2\"",
+      "ementa": "",
+      "revogada": true
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"DecLei2848\" data-normafull=\"Decreto-Lei nº 2.848, de 7 de dezembro de 1940\" data-index=\"0\" href=\"https://x.gov.br/a?b=1&amp;c=&quot;2&quot;\" target=\"_blank\">Decreto-Lei nº 2.848, de 7 de dezembro de 1940</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"DecLei2848\" data-normafull=\"Decreto-Lei nº 2.848, de 7 de dezembro de 1940\" data-index=\"0\" href=\"https://x.gov.br/a?b=1&amp;c=&quot;2&quot;\" target=\"_blank\">Decreto-Lei nº 2.848, de 1940</a>"
+  },
+  {
+    "api": {
+      "tipo": "portaria.xyz",
+      "numero": "a1-2b",
+      "titulo": "Titulo <b>com</b> & marcas",
+      "apelido": "Apelido \"aspas\" (A)"
+    },
+    "norma": {
+      "sigla": "portariaxyz1-2",
+      "titulo": "Titulo <b>com</b> & marcas",
+      "curto": "Titulo <b>com</b> & marcas",
+      "apelido": "Apelido \"aspas\"",
+      "url": "",
+      "ementa": "",
+      "revogada": false
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"portariaxyz1-2\" data-normafull=\"Titulo &lt;b&gt;com&lt;/b&gt; &amp; marcas\" data-index=\"0\" href=\"\" target=\"_blank\">Titulo &lt;b&gt;com&lt;/b&gt; &amp; marcas&nbsp;(Apelido &quot;aspas&quot;)</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"portariaxyz1-2\" data-normafull=\"Titulo &lt;b&gt;com&lt;/b&gt; &amp; marcas\" data-index=\"0\" href=\"\" target=\"_blank\">Titulo &lt;b&gt;com&lt;/b&gt; &amp; marcas</a>"
+  },
+  {
+    "api": {
+      "tipo": "lei",
+      "numero": 556,
+      "titulo": "Lei nº 556, de 25 de junho de 1850"
+    },
+    "norma": {
+      "sigla": "Lei556",
+      "titulo": "Lei nº 556, de 25 de junho de 1850",
+      "curto": "Lei nº 556, de 1850",
+      "apelido": "",
+      "url": "",
+      "ementa": "",
+      "revogada": false
+    },
+    "ancora": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Lei556\" data-normafull=\"Lei nº 556, de 25 de junho de 1850\" data-index=\"0\" href=\"\" target=\"_blank\">Lei nº 556, de 25 de junho de 1850</a>",
+    "ancoraRepetida": "<a class=\"ancoraSei legisSeiPro\" data-norma=\"Lei556\" data-normafull=\"Lei nº 556, de 25 de junho de 1850\" data-index=\"0\" href=\"\" target=\"_blank\">Lei nº 556, de 1850</a>"
+  }
+]
