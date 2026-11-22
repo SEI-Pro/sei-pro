@@ -9,6 +9,7 @@ import { recurso as latex } from "./latex";
 import { recurso as linkPro } from "./link-pro";
 import { recurso as notaRodape } from "./nota-rodape";
 import { recurso as pageBreak } from "./page-break";
+import { recurso as qrCode } from "./qr-code";
 import { recurso as quickTable } from "./quick-table";
 import { recurso as refInterna } from "./ref-interna";
 import { recurso as sessionBreak } from "./session-break";
@@ -38,4 +39,5 @@ export const RECURSOS: readonly Recurso[] = [
   sumario,
   refInterna,
   notaRodape,
+  qrCode,
 ];

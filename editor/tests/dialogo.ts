@@ -15,6 +15,20 @@ export function usarDocumento(doc: Document): void {
     this.removeAttribute("open");
     this.dispatchEvent(new Ev("close"));
   };
+  // o linkedom nao tem `select.value`: a opcao com `selected` (ou a 1a) responde por ele, e atribuir marca a opcao
+  const selProto = Object.getPrototypeOf(doc.createElement("select")) as Proto;
+  Object.defineProperty(selProto, "value", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return (this.querySelector("option[selected]") ?? this.querySelector("option"))?.getAttribute("value") ?? "";
+    },
+    set(this: HTMLElement, v: string) {
+      for (const o of this.querySelectorAll("option")) {
+        if (o.getAttribute("value") === String(v)) o.setAttribute("selected", "selected");
+        else o.removeAttribute("selected");
+      }
+    },
+  });
   Object.defineProperty(proto, "open", {
     configurable: true,
     get(this: HTMLElement) {
