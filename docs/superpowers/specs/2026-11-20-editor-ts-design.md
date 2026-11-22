@@ -198,3 +198,22 @@ Medidos em 20/11/2026 no SEI SP treinamento (4.1.5, CKEditor 4), Chrome for Test
 - **`tryRun` mascarando falha**: o monólito engole erros "esperados" em CK5. A sonda e a validação ao vivo precisam olhar o console, não só a tela.
 - **Cache do content script no Chrome de teste** (memória `reference_chrome_teste_porta_9555`): reinstalar a extensão (mesmo id) depois de cada build.
 - **Cobertura dos manifests de marca**: só `dist/manifest.json` é versionado; os de marca ficam defasados até serem regenerados antes de empacotar (regra de empacotamento do mapa, seção 4.1).
+
+## 9. Achados da sonda do CK5 para o plano 2 (22/11/2026)
+
+Medidos na ANTAQ (SEI 5.0.4, CKEditor 5) com `editor/vivo/sondas/ck5-ancoras.cjs` e `ck5-tabela-id.cjs`; só edição em memória.
+
+| Pergunta | Resposta |
+|---|---|
+| `<a name="x" class="seipro-bookmark"></a>` (âncora nomeada, vazia ou com `&#8203;`) sobrevive em `data.get`, por `insertContent` ou por `data.set`? | **Não.** O `<a>` sem `href` é descartado nas duas rotas (com `&#8203;` sobra só o caractere). |
+| `id` num parágrafo, posto por `SeiProGhs.setAtributos(p, {id})`? | **Sim**, sai em `data.get` e sobrevive a reler com `data.set`. |
+| `<a href="#id">` (link interno) sobrevive? | **Sim**, mas a classe `ancoraSei`/`refInternaPro` do link é descartada (só `href`). |
+| `editor.data.set({raiz: html})` é desfazível? | **Não**: o comando `undo` continua desabilitado e o conteúdo não volta. O fallback "reescrever o corpo" **perde o desfazer** e fica descartado. |
+| Estilo/atributo em `tr` e `td` por `SeiProGhs` (célula a célula)? | **Sim** (`style`, `data-*`). |
+| Estilo na `<table>`? | **Sim, pelo elemento de model `table`** (GHS `setModelHtmlStyles("table", …)`/`setModelHtmlAttributes("table", …)`), obtido do `figure.table` do DOM: `style="border-collapse:…;width:80%;…" border cellspacing cellpadding` saem em `<table class="table">`. O `SeiProGhs.setEstilos` NÃO serve para a tabela (mapeia o DOM `<table>` interno, que não tem elemento de model, e devolve false). |
+| Várias chamadas de GHS num mesmo `model.change` externo são um passo de desfazer? | **Sim** (chamadas isoladas são um passo cada). |
+| `counter-reset` por `SeiProGhs.setEstilos` num parágrafo já inserido? | **Sim**: `style="counter-reset:paragrafo-n1 …;"` sai em `data.get` (a importação por `insertContent` o descartava). |
+| Cabeçalho da primeira linha: `data.set` com `<thead>` volta como `<thead><tr><th>`; o comando `setTableRowHeader` estava desabilitado com o cursor numa célula. | Usar o atributo `headingRows` do model `table` (a medir na implementação). |
+
+**Decisão (regra da Task 2, caminho (i) adaptado):** no CK5 a "âncora" de uma referência é o **`id` do próprio elemento** (parágrafo ou título), posto pelo model (`SeiProGhs`), e os links são `<a href="#id">`. No CK4 continua a âncora do legado, `<a name>` no início do elemento (o CK4 grava o DOM). As referências no CK5 se identificam por `a[href^="#<prefixo>"]` (a classe do link não sobrevive). Documentos criados no CK4 com `<a name>` perdem a âncora ao abrir no CK5 (o CK5 a descarta no carregamento): as referências para elas ficam "perdidas", e `updateRefsInternas` precisa tratar isso. Risco a conferir ao gravar no SEI real: o servidor aceitar `id` em parágrafos (o CK5 já o emite).
+
