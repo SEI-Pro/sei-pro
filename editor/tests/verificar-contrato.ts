@@ -34,16 +34,24 @@ export function verificarContrato(): void {
     ["foo", "viaWindow"],
   );
 
-  const modulo = (id: string) => contratoDoModulo(DIST_REAL, id);
-  igual("ref-interna (real): o monolito chama getRefInterna", modulo("ref-interna").necessarios, ["getRefInterna"]);
-  igual("link-pro (real): getDialogLinkPro, hideLinkTips e showLinkTips", modulo("link-pro").necessarios.sort(), [
+  // os modulos portados foram apagados: o contrato deles vem do JSON congelado (gerado com este detector antes da remocao)
+  const congeladoReal = JSON.parse(readFileSync(fileURLToPath(new URL("./contrato-legado.json", import.meta.url)), "utf8")) as Record<
+    string,
+    { exportados: string[]; necessarios: string[] }
+  >;
+  igual("ref-interna (congelado): o monolito chamava getRefInterna", congeladoReal["ref-interna"]?.necessarios, ["getRefInterna"]);
+  igual("link-pro (congelado): getDialogLinkPro, hideLinkTips e showLinkTips", [...(congeladoReal["link-pro"]?.necessarios ?? [])].sort(), [
     "getDialogLinkPro",
     "hideLinkTips",
     "showLinkTips",
   ]);
   checar(
-    "table-styles (real): inclui o que o context-menu legado chama",
-    ["getSyleSelectedTable", "openDialogSyleTable"].every((n) => modulo("table-styles").necessarios.includes(n)),
+    "table-styles (congelado): inclui o que o context-menu legado chama",
+    ["getSyleSelectedTable", "openDialogSyleTable"].every((n) => congeladoReal["table-styles"]?.necessarios.includes(n)),
+  );
+  checar(
+    "legis (congelado): sei-legis.js chama resolverNormasLegisPro",
+    congeladoReal.legis?.necessarios.includes("resolverNormasLegisPro") === true,
   );
 
   secao("monolito: nenhuma chamada direta a global do TS em caminho de boot, clique ou blur do editor");

@@ -1,7 +1,8 @@
 # Módulos do Editor SEI Pro (`js/modules/editor/`)
 
-> **Aviso (20/11/2026):** os recursos ghs-unlock, page-break, session-break, checkbox, cap-letter, align, font-size,
-> style-editor, quick-table, folha-papel, tiny-url e latex foram portados para TypeScript (pacote `editor/` na raiz,
+> **Aviso (22/11/2026):** os recursos ghs-unlock, page-break, session-break, checkbox, cap-letter, align, font-size,
+> style-editor, quick-table, folha-papel, tiny-url, latex, copy-style, link-pro, table-styles, sumario, ref-interna,
+> nota-rodape, qr-code e legis foram portados para TypeScript (pacote `editor/` na raiz,
 > bundle `js/editor/pagina.js`) e seus modulos apagados desta pasta. Os demais seguem aqui ate serem portados.
 > Veja `editor/README.md`.
 

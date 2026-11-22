@@ -46,5 +46,90 @@
   "latex": {
     "exportados": ["getDialogLatex", "openDialogLatex", "updatePreviewLatex"],
     "necessarios": ["openDialogLatex"]
+  },
+  "copy-style": {
+    "exportados": ["setCopyStyle", "actionCopyStyle", "getCopyStyle", "applyCopyStyle", "removeCopyStyle", "menuCopyStyle"],
+    "necessarios": ["setCopyStyle", "applyCopyStyle", "removeCopyStyle", "menuCopyStyle"]
+  },
+  "link-pro": {
+    "exportados": [
+      "openLinkPro",
+      "removeLinkPro",
+      "copyLinkPro",
+      "editLinkPro",
+      "getDialogLinkPro",
+      "openDialogLinkPro",
+      "hideLinkTips",
+      "showLinkTips"
+    ],
+    "necessarios": ["getDialogLinkPro", "hideLinkTips", "showLinkTips"]
+  },
+  "table-styles": {
+    "exportados": [
+      "getSyleSelectedTable",
+      "changeColorTable",
+      "getDialogSyleTable",
+      "buildHtmlSyleTable",
+      "openDialogSyleTable",
+      "getSyleTable",
+      "setSyleTable"
+    ],
+    "necessarios": ["getSyleSelectedTable", "getDialogSyleTable", "openDialogSyleTable"]
+  },
+  "sumario": {
+    "exportados": [
+      "getSumarioDocumento",
+      "getListStylesDocumento",
+      "updateSelectDialog",
+      "getDialogSumarioDocumento",
+      "getDialogSumarioDocumento_",
+      "insertSumarioDocumento"
+    ],
+    "necessarios": ["getSumarioDocumento"]
+  },
+  "ref-interna": {
+    "exportados": ["getRefInterna", "updateRefsInternas", "getNiveisParagrafos"],
+    "necessarios": ["getRefInterna"]
+  },
+  "nota-rodape": {
+    "exportados": [
+      "getNotaRodape",
+      "getDialogNotaRodape",
+      "openDialogNotaRodape",
+      "removeNtRodape",
+      "updateNrABNT",
+      "insertNtRodape",
+      "updateNtRodape",
+      "reorderNtRodape"
+    ],
+    "necessarios": ["getNotaRodape", "getDialogNotaRodape"]
+  },
+  "qr-code": {
+    "exportados": [
+      "getQrCode",
+      "getDialogQrCode",
+      "openDialogQrCode",
+      "buildHtmlQrCodeLab",
+      "resetOptionsQR",
+      "toggleOptionsQR",
+      "tipQrCodeUrl",
+      "setInputTinyUrl",
+      "convertTinyURL",
+      "updateQrCode",
+      "setQrCode"
+    ],
+    "necessarios": ["getQrCode", "getDialogQrCode"]
+  },
+  "legis": {
+    "exportados": [
+      "resolverNormasLegisPro",
+      "sendLegisSEI",
+      "insertLegisSEI",
+      "getLegisSEI",
+      "getSearchLegisMore",
+      "getSearchLegis",
+      "getDialogLegisSEI"
+    ],
+    "necessarios": ["resolverNormasLegisPro", "getLegisSEI", "getDialogLegisSEI"]
   }
 }

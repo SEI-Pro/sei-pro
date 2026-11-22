@@ -1176,12 +1176,12 @@ function getElementStyleSelected(element) {
     var superscript = (element.closest('sup').length) ? true : false;
     return {fontSize: fontSize, color: color, backgroundColor: backgroundColor, bold: bold, underline: underline, italic: italic, strike: strike, subscript: subscript, superscript: superscript}
 }
-// setCopyStyle() -> js/modules/editor/ (extraido para modulo)
-// actionCopyStyle() -> js/modules/editor/ (extraido para modulo)
-// getCopyStyle() -> js/modules/editor/ (extraido para modulo)
-// applyCopyStyle() -> js/modules/editor/ (extraido para modulo)
-// removeCopyStyle() -> js/modules/editor/ (extraido para modulo)
-// menuCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// setCopyStyle() -> editor/ (TS)
+// actionCopyStyle() -> editor/ (TS)
+// getCopyStyle() -> editor/ (TS)
+// applyCopyStyle() -> editor/ (TS)
+// removeCopyStyle() -> editor/ (TS)
+// menuCopyStyle() -> editor/ (TS)
 // menuBlockEdition() -> js/modules/editor/ (extraido para modulo)
 function stylesEditorKeystroke() {
     if (getOptionsPro('stylesEditor')) {
@@ -1349,24 +1349,24 @@ function activeIconsSelectedText() {
         $('#cke_'+idEditor).find('.getCapLetterButtom').addClass('cke_button_disabled');
     }
 }
-// getSyleSelectedTable() -> js/modules/editor/ (extraido para modulo)
-// changeColorTable() -> js/modules/editor/ (extraido para modulo)
+// getSyleSelectedTable() -> editor/ (TS)
+// changeColorTable() -> editor/ (TS)
 // Mantido por compat com initFunctions(); di\u00E1logo jQuery UI em openDialogSyleTable().
-// getDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
+// getDialogSyleTable() -> editor/ (TS)
 
-// buildHtmlSyleTable() -> js/modules/editor/ (extraido para modulo)
+// buildHtmlSyleTable() -> editor/ (TS)
 
-// openDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
-// getSyleTable() -> js/modules/editor/ (extraido para modulo)
-// setSyleTable() -> js/modules/editor/ (extraido para modulo)
+// openDialogSyleTable() -> editor/ (TS)
+// getSyleTable() -> editor/ (TS)
+// setSyleTable() -> editor/ (TS)
 
 //// INSERE LINK DE NORMAS
-// sendLegisSEI() -> js/modules/editor/ (extraido para modulo)
-// insertLegisSEI() -> js/modules/editor/ (extraido para modulo)
-// getLegisSEI() -> js/modules/editor/ (extraido para modulo)
-// getSearchLegisMore() -> js/modules/editor/ (extraido para modulo)
-// getSearchLegis() -> js/modules/editor/ (extraido para modulo)
-// getDialogLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// sendLegisSEI() -> editor/ (TS)
+// insertLegisSEI() -> editor/ (TS)
+// getLegisSEI() -> editor/ (TS)
+// getSearchLegisMore() -> editor/ (TS)
+// getSearchLegis() -> editor/ (TS)
+// getDialogLegisSEI() -> editor/ (TS)
 // convertFirstLetter() -> js/modules/editor/cap-letter.js (PORTADO p/ CK5)
 
 // getCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
@@ -1374,24 +1374,24 @@ function activeIconsSelectedText() {
 // insertCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
 
 // INSERE NOTAS DE RODAPE
-// getNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// getNotaRodape() -> editor/ (TS)
 // Mantemos o nome antigo para compatibilidade com initFunctions() -- em CK4/CK5
 // o di\u00E1logo agora eh jQuery UI, registrado sob demanda ao clicar no bot\u00E3o.
-// getDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// getDialogNotaRodape() -> editor/ (TS)
 
 /**
  * Abre o di\u00E1logo de inser\u00E7\u00E3o de nota de rodap\u00E9 (jQuery UI). Substitui o antigo
  * CKEDITOR.dialog -- compat\u00EDvel com CK4 e CK5 via adapter.
  */
-// openDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
-// removeNtRodape() -> js/modules/editor/ (extraido para modulo)
-// updateNrABNT() -> js/modules/editor/ (extraido para modulo)
-// insertNtRodape() -> js/modules/editor/ (extraido para modulo)
-// updateNtRodape() -> js/modules/editor/ (extraido para modulo)
+// openDialogNotaRodape() -> editor/ (TS)
+// removeNtRodape() -> editor/ (TS)
+// updateNrABNT() -> editor/ (TS)
+// insertNtRodape() -> editor/ (TS)
+// updateNtRodape() -> editor/ (TS)
 // reorderNtRodape funciona em CK4 (DOM iframe direto) e CK5 (transformBodyHtml,
 // que serializa para HTML, manipula via DOMParser e re-seta a root do corpo).
 // Aceita compat: assinatura antiga era reorderNtRodape(iframeEditor).
-// reorderNtRodape() -> js/modules/editor/ (extraido para modulo)
+// reorderNtRodape() -> editor/ (TS)
 function initAddButtonTarjaSigilo(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if ($('.getMarkSigiloButton').length) { 
@@ -1803,38 +1803,38 @@ function arrayDadosEditor() {
 // updateDynamicField() -> js/modules/editor/ (extraido para modulo)
 // getDialogDadosEditor_htmlListTag() -> js/modules/editor/ (extraido para modulo)
 // insertDadosEditor() -> js/modules/editor/ (extraido para modulo)
-// getSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
-// getListStylesDocumento() -> js/modules/editor/ (extraido para modulo)
-// updateSelectDialog() -> js/modules/editor/ (extraido para modulo)
-// getDialogSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
-// getDialogSumarioDocumento_() -> js/modules/editor/ (extraido para modulo)
-// insertSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+// getSumarioDocumento() -> editor/ (TS)
+// getListStylesDocumento() -> editor/ (TS)
+// updateSelectDialog() -> editor/ (TS)
+// getDialogSumarioDocumento() -> editor/ (TS)
+// getDialogSumarioDocumento_() -> editor/ (TS)
+// insertSumarioDocumento() -> editor/ (TS)
 
 // GERA LINK CURTO
 // getTinyUrl() -> editor/ (TS)
 // ajaxTinyUrl() -> editor/ (TS)
 
 // GERA QR CODE
-// getQrCode() -> js/modules/editor/ (extraido para modulo)
+// getQrCode() -> editor/ (TS)
 // Mantido por compatibilidade com initFunctions(); di\u00E1logo jQuery UI
 // constru\u00EDdo on-demand em openDialogQrCode().
-// getDialogQrCode() -> js/modules/editor/ (extraido para modulo)
+// getDialogQrCode() -> editor/ (TS)
 
 /**
  * Abre o di\u00E1logo de gera\u00E7\u00E3o de QR Code (jQuery UI). Reaproveita todo o
  * painel de op\u00E7\u00F5es avan\u00E7adas (#qrCodeLab) e as fun\u00E7\u00F5es auxiliares
  * updateQrCode()/toggleOptionsQR()/resetOptionsQR().
  */
-// openDialogQrCode() -> js/modules/editor/ (extraido para modulo)
+// openDialogQrCode() -> editor/ (TS)
 
-// buildHtmlQrCodeLab() -> js/modules/editor/ (extraido para modulo)
-// resetOptionsQR() -> js/modules/editor/ (extraido para modulo)
-// toggleOptionsQR() -> js/modules/editor/ (extraido para modulo)
-// tipQrCodeUrl() -> js/modules/editor/ (extraido para modulo)
-// setInputTinyUrl() -> js/modules/editor/ (extraido para modulo)
-// convertTinyURL() -> js/modules/editor/ (extraido para modulo)
-// updateQrCode() -> js/modules/editor/ (extraido para modulo)
-// setQrCode() -> js/modules/editor/ (extraido para modulo)
+// buildHtmlQrCodeLab() -> editor/ (TS)
+// resetOptionsQR() -> editor/ (TS)
+// toggleOptionsQR() -> editor/ (TS)
+// tipQrCodeUrl() -> editor/ (TS)
+// setInputTinyUrl() -> editor/ (TS)
+// convertTinyURL() -> editor/ (TS)
+// updateQrCode() -> editor/ (TS)
+// setQrCode() -> editor/ (TS)
 // Chamado no boot e a cada focus (setCKEDITOR_SEIPRO): initResizeImg e idempotente por instancia.
 // O iframe sai do container da instancia (getIframeEditorPro): no SEI 4.1 com secoes o title e o nome da secao.
 // Com a barra compartilhada do 4.1 o txaEditor casa dois elementos por instancia (barra e container).
@@ -1901,27 +1901,27 @@ function insertProtocoloOnBox(idEditor) {
     }, 100);
 }
 
-// openLinkPro() -> js/modules/editor/ (extraido para modulo)
-// removeLinkPro() -> js/modules/editor/ (extraido para modulo)
-// copyLinkPro() -> js/modules/editor/ (extraido para modulo)
-// editLinkPro() -> js/modules/editor/ (extraido para modulo)
+// openLinkPro() -> editor/ (TS)
+// removeLinkPro() -> editor/ (TS)
+// copyLinkPro() -> editor/ (TS)
+// editLinkPro() -> editor/ (TS)
 // Mantido por compatibilidade com initFunctions(); di\u00E1logo agora eh jQuery UI
 // constru\u00EDdo on-demand em openDialogLinkPro().
-// getDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
+// getDialogLinkPro() -> editor/ (TS)
 
 /**
  * Abre o di\u00E1logo de edi\u00E7\u00E3o de link (jQuery UI). Substitui o CKEDITOR.dialog
  * 'editLinkPro'. Preenche os campos a partir do link em foco (a[data-reflinkpro]).
  */
-// openDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
+// openDialogLinkPro() -> editor/ (TS)
 // openDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
 // Mantido por compat; dialogo em openDialogBatchImgQuality().
 // getDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
 // initDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
 // openDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
 // getDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
-// hideLinkTips() -> js/modules/editor/ (extraido para modulo)
-// showLinkTips() -> js/modules/editor/ (extraido para modulo)
+// hideLinkTips() -> editor/ (TS)
+// showLinkTips() -> editor/ (TS)
 // openImageEditorPro() -> js/modules/editor/ (extraido para modulo)
 // initDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
 // getDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
@@ -2350,40 +2350,10 @@ function keyActionEditor(evt, self) {
     }
     return false;
 }
-function restoreIframeDisplayLink() {
-    if (typeof oEditor !== 'undefined' && typeof oEditor.name !== 'undefined') {
-        var elemBody = getIframeEditorPro(oEditor.name).contents().find('body');
-        var ckeContent = getIframeEditorPro(oEditor.name).closest('.cke_contents');
-        if (ckeContent.hasClass('resizeDisplayLink')) {
-            elemBody.css({'margin-bottom': '0'});
-            ckeContent.removeClass('resizeDisplayLink');
-        }
-    }
-}
 // INSERE REFERENCIA INTERNA
-// getRefInterna() -> js/modules/editor/ (extraido para modulo)
-// updateRefsInternas() -> js/modules/editor/ (extraido para modulo)
-// getNiveisParagrafos() -> js/modules/editor/ (extraido para modulo)
-function clickScroolToRef() {
-    $('iframe.cke_wysiwyg_frame').each(function(index){
-        var iframe_ = $(this).contents();
-        if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-            iframe_.find('.anchorRefInternaPro').unbind().on('click', function(){
-                var _this = $(this);
-                var ref = _this.attr('href');
-                    ref = (typeof ref !== 'undefined') ? ref.replace('#','') : false;
-                if (ref) {
-                    var container = $('#divEditores');
-                    var element = iframe_.find('a[name="'+ref+'"]').closest('p');
-                    var position = element.offset().top + 270;
-                    container.animate({
-                        scrollTop: position
-                    });
-                }
-            });
-        }
-    });
-}
+// getRefInterna() -> editor/ (TS)
+// updateRefsInternas() -> editor/ (TS)
+// getNiveisParagrafos() -> editor/ (TS)
 
 // getCharOnCursor() -> js/modules/editor/ (extraido para modulo)
 // setStyleReview() -> js/modules/editor/ (extraido para modulo)
@@ -2433,11 +2403,6 @@ function initFunctions() {
     };
     tryRun(initContextMenuPro, 'initContextMenuPro');
     tryRun(function () { chamarRecursoTsPro('initFolhaEditorPro'); }, 'initFolhaEditorPro');
-    tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
-    tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
-    tryRun(getDialogSyleTable, 'getDialogSyleTable');
-    tryRun(getDialogQrCode, 'getDialogQrCode');
-    tryRun(getDialogLinkPro, 'getDialogLinkPro');
     tryRun(getDialogPageImageBackground, 'getDialogPageImageBackground');
     tryRun(initDialogUploadImgBase64, 'initDialogUploadImgBase64');
     tryRun(getDialogSigilo, 'getDialogSigilo');
@@ -2456,7 +2421,6 @@ function initFunctions() {
     tryRun(initDropImages, 'initDropImages');
     tryRun(getStylesOnEditor, 'getStylesOnEditor');
     tryRun(repairSaveButtonBug, 'repairSaveButtonBug');
-    tryRun(clickScroolToRef, 'clickScroolToRef');
     tryRun(checkLoadJqueryUI, 'checkLoadJqueryUI');
 
     // RETORNA DADOS DO PROCESSO

@@ -56,12 +56,12 @@ function rodar(fonteLoad: string, modulos: string[], atributo: string | null): s
 export function verificarCedencia(): void {
   secao("cedencia: loadModules do adapter legado");
   const { fonteLoad, modulos } = extrairDoAdapter();
-  checar("achou loadModules e MODULES no adapter legado", fonteLoad.length > 0 && modulos.length > 20);
+  checar("achou loadModules e MODULES no adapter legado", fonteLoad.length > 0 && modulos.length > 10);
 
   igual("sem atributo: pede todos os modulos", rodar(fonteLoad, modulos, null), modulos);
-  const sem = rodar(fonteLoad, modulos, "qr-code,legis");
-  checar("com 'qr-code,legis': nao pede esses dois", !sem.includes("qr-code.js") && !sem.includes("legis.js"));
-  igual("com 'qr-code,legis': pede os demais", sem.length, modulos.length - 2);
+  const sem = rodar(fonteLoad, modulos, "citacao,sigilo");
+  checar("com 'citacao,sigilo': nao pede esses dois", !sem.includes("citacao.js") && !sem.includes("sigilo.js"));
+  igual("com 'citacao,sigilo': pede os demais", sem.length, modulos.length - 2);
   igual("atributo vazio: pede todos", rodar(fonteLoad, modulos, ""), modulos);
   igual("id desconhecido: pede todos", rodar(fonteLoad, modulos, "inexistente"), modulos);
   // Um recurso portado cujo modulo legado AINDA existe fica em MODULES (cedido pelo atributo); so sai de MODULES, junto com o
