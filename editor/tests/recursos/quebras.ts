@@ -50,6 +50,33 @@ export async function verificarQuebras(): Promise<void> {
     });
   }
 
+  // CK5: o `counter-reset` nao sobrevive a importacao por HTML; vai pelo GHS no elemento inserido, no MESMO model.change
+  {
+    const f = criarCk5({ secoes: [{ raiz: "main", label: "Corpo do Texto", html: "<p>alvo</p>", principal: true }] });
+    const ed = f.instancia();
+    const chamadas: unknown[][] = [];
+    Object.assign(ed, {
+      plugins: {
+        has: (n: string) => n === "GeneralHtmlSupport",
+        get: () => ({ setModelHtmlStyles: (...a: unknown[]) => chamadas.push([...a, ed.profundidade]) }),
+      },
+    });
+    const p = f.elemento("main").querySelector("p") as Element;
+    f.selecionar({ raiz: "main", elemento: p });
+    aciona(sessionBreak, f, "getSessionBreak");
+    const novo = ed.modeloDe(p).previousSibling;
+    igual(
+      "session-break [CK5]: aplica counter-reset ao elemento inserido pelo GHS (view 'p')",
+      [chamadas.length, chamadas[0]?.[0], chamadas[0]?.[2] === novo],
+      [1, "p", true],
+    );
+    igual("session-break [CK5]: o valor e o do legado (com o espaco final)", chamadas[0]?.[1], {
+      "counter-reset":
+        "paragrafo-n1 paragrafo-n2 paragrafo-n3 paragrafo-n4 romano_maiusculo letra_minuscula item-n1 item-n2 item-n3 item-n4 ",
+    });
+    igual("session-break [CK5]: dentro de um model.change (um passo de desfazer)", (chamadas[0]?.at(-1) as number) >= 1, true);
+  }
+
   // Review Focus 3: cursor numa secao somente leitura => nada e inserido
   const ck4 = criarCk4({
     secoes: [

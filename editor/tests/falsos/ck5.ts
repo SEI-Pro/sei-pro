@@ -14,6 +14,8 @@ interface ModeloFalso {
   /** Como no CK5 real: elemento do model tem `root` (RootElement); so a raiz tem `rootName`. */
   root: { rootName: string | null };
   name: string;
+  /** O elemento inserido imediatamente antes (por `insertContent` com posicao `createPositionBefore`), ou null. */
+  readonly previousSibling: ModeloFalso | null;
   getChildren(): Iterable<ModeloFalso>;
   is(tipo: string): boolean;
   getAttribute(nome: string): string | undefined;
@@ -45,15 +47,22 @@ export class InstanciaCk5 {
   /** Atributos do model por elemento DOM (o que `writer.setAttribute` grava), p.ex. `estilo`. */
   readonly atributos = new Map<Element, Record<string, string>>();
   private readonly modelos = new Map<Element, ModeloFalso>();
+  /** Elemento inserido antes de cada elemento (o `previousSibling` do model). */
+  readonly inseridoAntes = new Map<Element, ModeloFalso>();
+  private readonly doc: Document;
 
   /** Elemento do model de um elemento DOM (sempre o mesmo objeto). */
   modeloDe(el: Element): ModeloFalso {
     let m = this.modelos.get(el);
     if (!m) {
+      const mapa = this.inseridoAntes;
       m = {
         elemento: el,
         root: { rootName: this.raizDoElemento(el) },
         name: el.tagName === "P" ? "paragraph" : el.tagName.toLowerCase(),
+        get previousSibling() {
+          return mapa.get(el) ?? null;
+        },
         getChildren: () => [...el.querySelectorAll(":scope > p")].map((x) => this.modeloDe(x)),
         is: (t: string) => t === "element",
         getAttribute: (n: string) => this.atributos.get(el)?.[n],
@@ -64,6 +73,8 @@ export class InstanciaCk5 {
   }
 
   constructor(secoes: SecaoCk5[], doc: Document) {
+    this.doc = doc;
+    this.doc = doc;
     this.roots = [...secoes.map((s) => ({ rootName: s.raiz, isAttached: () => true })), { rootName: "$graveyard", isAttached: () => true }];
     for (const s of secoes) {
       const el = doc.createElement("div");
@@ -120,6 +131,9 @@ export class InstanciaCk5 {
       }
     },
     insertContent: (conteudo: { html?: string; texto?: string; atributos?: Record<string, string> }, posicao?: unknown) => {
+      const alvo = (posicao as { antes?: ModeloFalso } | undefined)?.antes;
+      // o elemento novo, como o model o teria: irmao anterior do alvo
+      if (alvo) this.inseridoAntes.set(alvo.elemento, this.modeloDe(this.doc.createElement("p")));
       this.insercoes.push({
         html: conteudo.html ?? `texto:${conteudo.texto}${conteudo.atributos ? `|${JSON.stringify(conteudo.atributos)}` : ""}`,
         posicao,

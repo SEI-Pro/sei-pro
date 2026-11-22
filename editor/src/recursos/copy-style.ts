@@ -36,10 +36,10 @@ export function lerEstiloDoElemento(el: Element): EstiloCapturado {
     fontSize: Number.isNaN(tamanho) || (tamanho === 16 && emSubSup) ? false : tamanho,
     color: !cs?.color || cs.color === "rgb(0, 0, 0)" ? false : cs.color,
     backgroundColor: !cs?.backgroundColor || cs.backgroundColor === "rgba(0, 0, 0, 0)" ? false : cs.backgroundColor,
-    bold: !!el.closest("strong"),
+    bold: !!el.closest("strong, b"),
     underline: !!el.closest("u"),
-    italic: !!el.closest("em"),
-    strike: !!el.closest("s"),
+    italic: !!el.closest("em, i"),
+    strike: !!el.closest("s, strike, del"),
     subscript: !!el.closest("sub"),
     superscript: !!el.closest("sup"),
   };

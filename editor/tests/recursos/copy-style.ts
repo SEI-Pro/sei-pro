@@ -77,6 +77,19 @@ export async function verificarCopyStyle(): Promise<void> {
     [lerEstiloDoElemento(b).fontSize, lerEstiloDoElemento(b).subscript],
     [false, true],
   );
+  // o CK5 renderiza negrito como <strong>/<b>, italico como <i>, tachado como <s>/<strike>/<del>
+  const { doc: doc5 } = paginaFalsa("<p><b><i><span id='x'>x</span></i></b></p><p><del id='d'>d</del></p><p><strike id='k'>k</strike></p>");
+  computado(doc5.querySelector("#x") as Element, {});
+  igual(
+    "CK5: <b> e <i> contam como negrito e italico",
+    [lerEstiloDoElemento(doc5.querySelector("#x") as Element).bold, lerEstiloDoElemento(doc5.querySelector("#x") as Element).italic],
+    [true, true],
+  );
+  igual(
+    "CK5: <del> e <strike> contam como tachado",
+    [lerEstiloDoElemento(doc5.querySelector("#d") as Element).strike, lerEstiloDoElemento(doc5.querySelector("#k") as Element).strike],
+    [true, true],
+  );
   computado(doc.querySelector("#u") as Element, {});
   igual(
     "sublinhado, tachado e sobrescrito",
