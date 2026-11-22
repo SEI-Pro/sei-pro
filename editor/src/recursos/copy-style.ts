@@ -27,14 +27,18 @@ const CLASSE_ATIVO = "cke_copyformatting_active";
 /** Cor segura para um atributo style: #hex, rgb()/rgba() numerico ou nome simples. */
 const COR_VALIDA = /^(?:#[0-9a-f]{3,8}|rgba?\(\s*\d{1,3}(?:\.\d+)?\s*(?:,\s*\d{1,3}(?:\.\d+)?\s*){2,3}\)|[a-z]{3,30})$/i;
 
+/** Cor do texto que o modo escuro do SEI Pro impoe a todo o documento: nao e escolha do autor e nao pode ir para o arquivo. */
+const COR_TEMA_ESCURO = "rgb(251, 251, 254)";
+
 /** O estilo do elemento do cursor (o `getElementStyleSelected` do monolito, sem jQuery). */
 export function lerEstiloDoElemento(el: Element): EstiloCapturado {
   const cs = el.ownerDocument.defaultView?.getComputedStyle?.(el);
   const tamanho = Number.parseFloat(cs?.fontSize ?? "");
+  const emModoEscuro = !!el.ownerDocument.documentElement.classList.contains("dark-mode");
   const emSubSup = !!el.closest("sub") || !!el.closest("sup");
   return {
     fontSize: Number.isNaN(tamanho) || (tamanho === 16 && emSubSup) ? false : tamanho,
-    color: !cs?.color || cs.color === "rgb(0, 0, 0)" ? false : cs.color,
+    color: !cs?.color || cs.color === "rgb(0, 0, 0)" || (cs.color === COR_TEMA_ESCURO && emModoEscuro) ? false : cs.color,
     backgroundColor: !cs?.backgroundColor || cs.backgroundColor === "rgba(0, 0, 0, 0)" ? false : cs.backgroundColor,
     bold: !!el.closest("strong, b"),
     underline: !!el.closest("u"),

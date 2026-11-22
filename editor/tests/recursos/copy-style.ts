@@ -63,6 +63,14 @@ export async function verificarCopyStyle(): Promise<void> {
   const s = doc.querySelector("#s") as Element;
   computado(s, { fontSize: "18px", color: "rgb(255, 0, 0)", backgroundColor: "rgb(255, 255, 0)" });
   igual("negrito e italico pelo ancestral, fonte, cor e fundo pelo estilo computado", lerEstiloDoElemento(s), ESTILO);
+  doc.documentElement.classList.add("dark-mode");
+  computado(s, { color: "rgb(251, 251, 254)" });
+  igual("modo escuro: a cor do tema (#fbfbfe) nao e capturada", lerEstiloDoElemento(s).color, false);
+  computado(s, { color: "rgb(255, 0, 0)" });
+  igual("modo escuro: cor escolhida pelo autor continua capturada", lerEstiloDoElemento(s).color, "rgb(255, 0, 0)");
+  doc.documentElement.classList.remove("dark-mode");
+  computado(s, { color: "rgb(251, 251, 254)" });
+  igual("modo claro: #fbfbfe escolhido pelo autor e capturado", lerEstiloDoElemento(s).color, "rgb(251, 251, 254)");
   computado(s, {});
   igual("cor preta, fundo transparente e 16px => false (como o legado)", lerEstiloDoElemento(s), {
     ...ESTILO,
