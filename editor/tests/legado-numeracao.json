@@ -1,0 +1,51 @@
+[
+  {
+    "classes": [
+      "Paragrafo_Numerado_Nivel1",
+      "Paragrafo_Numerado_Nivel2",
+      "Paragrafo_Numerado_Nivel2",
+      "Paragrafo_Numerado_Nivel1",
+      "Paragrafo_Numerado_Nivel3"
+    ],
+    "itens": ["1", "1.1", "1.2", "2", "2.0.1"]
+  },
+  {
+    "classes": ["Item_Nivel1", "Item_Nivel2", "Item_Nivel3", "Item_Nivel4", "Item_Nivel4", "Item_Nivel2", "Item_Nivel1"],
+    "itens": ["1", "1.1", "1.1.1", "1.1.1.1", "1.1.1.2", "1.2", "2"]
+  },
+  {
+    "classes": [
+      "Paragrafo_Numerado_Nivel1",
+      "Item_Nivel1",
+      "Paragrafo_Numerado_Nivel2",
+      "Item_Nivel2",
+      "Texto_Justificado",
+      "Paragrafo_Numerado_Nivel2"
+    ],
+    "itens": ["1", "1", "1.1", "1.1", "1.2"]
+  },
+  {
+    "classes": [
+      "Paragrafo_Numerado_Nivel1",
+      "Paragrafo_Numerado_Nivel2",
+      "sessionBreakPro",
+      "Paragrafo_Numerado_Nivel1",
+      "Item_Nivel1",
+      "sessionBreakPro",
+      "Item_Nivel1"
+    ],
+    "itens": ["1", "1.1", "1", "1", "1"]
+  },
+  {
+    "classes": ["Paragrafo_Numerado_Nivel3", "Paragrafo_Numerado_Nivel4", "Paragrafo_Numerado_Nivel2"],
+    "itens": ["0.0.1", "0.0.1.1", "0.1"]
+  },
+  {
+    "classes": ["Item_Nivel1 extra", "Paragrafo_Numerado_Nivel1", "", null],
+    "itens": ["1"]
+  },
+  {
+    "classes": [],
+    "itens": false
+  }
+]

@@ -20,4 +20,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "link-pro",
   "table-styles",
   "sumario",
+  "ref-interna",
 ];

@@ -42,6 +42,9 @@ export class InstanciaCk5 {
   readonly roots: RaizFalsa[];
   readonly elementos = new Map<string, HTMLElement>();
   readonly selecoesDefinidas: unknown[] = [];
+  /** Intervalos (elemento DOM do link) removidos por `writer.remove` e textos reinseridos por `writer.insertText`. */
+  readonly removidos: Array<Element | null> = [];
+  readonly textosInseridos: Array<{ texto: string; atributos: Record<string, string>; posicao: unknown; profundidade: number }> = [];
   /** Paragrafos (DOM) que `getSelectedBlocks()` devolve. */
   blocos: Element[] = [];
   /** Atributos do model por elemento DOM (o que `writer.setAttribute` grava), p.ex. `estilo`. */
@@ -118,6 +121,13 @@ export class InstanciaCk5 {
     setSelection: (r: unknown) => {
       this.selecoesDefinidas.push(r);
     },
+    /** `remove(intervalo)` + `insertText(texto, atributos, posicao)`: o que o CK5 faz ao trocar o texto de um link. */
+    remove: (intervalo: { intervaloDe?: Element }) => {
+      this.removidos.push(intervalo.intervaloDe ?? null);
+    },
+    insertText: (texto: string, atributos: Record<string, string>, posicao: unknown) => {
+      this.textosInseridos.push({ texto, atributos, posicao, profundidade: this.profundidade });
+    },
   };
 
   model = ((self: InstanciaCk5) => ({
@@ -183,7 +193,11 @@ export class InstanciaCk5 {
     },
     mapper: {
       toModelElement: (v: { dom: Element }) => this.modeloDe(v.dom),
-      toModelRange: (r: { visao: { dom?: Element } }) => ({ root: this.modeloDe(r.visao.dom as Element).root, intervaloDe: r.visao.dom }),
+      toModelRange: (r: { visao: { dom?: Element } }) => ({
+        root: this.modeloDe(r.visao.dom as Element).root,
+        intervaloDe: r.visao.dom,
+        start: { intervaloDe: r.visao.dom },
+      }),
       toViewElement: (m: ModeloFalso) => ({ dom: m.elemento, name: "p" }),
     },
   };

@@ -66,3 +66,38 @@ export function editarLink(c: Contexto, a: Element, texto: string, url: string):
   });
   return true;
 }
+
+/**
+ * Troca o TEXTO de varios links (o href fica), SEM abrir o proprio passo de desfazer: chame dentro de `withEdit`.
+ * CK4: `textContent` no DOM do iframe. CK5: remove o intervalo de cada link e reinsere o texto com `linkHref` (de tras
+ * para a frente, para os intervalos anteriores nao se deslocarem), sem mexer na selecao do usuario.
+ * Links em secao somente leitura sao pulados (e a recusa avisada). Devolve quantos foram trocados.
+ */
+export function rotularLinks(c: Contexto, itens: Array<{ a: Element; texto: string }>): number {
+  let feitos = 0;
+  const ck5: Array<{ a: Element; texto: string; intervalo: Qualquer; ed: Qualquer }> = [];
+  for (const { a, texto } of itens) {
+    const ed = instanciaDoElemento(c, a);
+    if (!ed) continue;
+    if (c.adaptador.versao === 5) {
+      const intervalo = intervaloCk5(ed, a);
+      if (!intervalo || recusado(c, ed, a, intervalo)) continue;
+      ck5.push({ a, texto, intervalo, ed });
+    } else {
+      if (recusado(c, ed, a, null)) continue;
+      a.textContent = texto;
+      feitos += 1;
+    }
+  }
+  const e = ck5[0]?.ed;
+  if (e) {
+    e.model.change((w: Qualquer) => {
+      for (const { a, texto, intervalo } of [...ck5].reverse()) {
+        w.remove(intervalo);
+        w.insertText(texto, { linkHref: a.getAttribute("href") ?? "" }, intervalo.start);
+        feitos += 1;
+      }
+    });
+  }
+  return feitos;
+}

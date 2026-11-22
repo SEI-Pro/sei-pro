@@ -9,6 +9,7 @@ import { recurso as latex } from "./latex";
 import { recurso as linkPro } from "./link-pro";
 import { recurso as pageBreak } from "./page-break";
 import { recurso as quickTable } from "./quick-table";
+import { recurso as refInterna } from "./ref-interna";
 import { recurso as sessionBreak } from "./session-break";
 import { recurso as styleEditor } from "./style-editor";
 import { recurso as sumario } from "./sumario";
@@ -34,4 +35,5 @@ export const RECURSOS: readonly Recurso[] = [
   linkPro,
   tableStyles,
   sumario,
+  refInterna,
 ];
