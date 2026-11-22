@@ -182,6 +182,9 @@ export function criarBackendCk4(win: Janela, recusa: { fn?: () => void } = {}): 
     aoRecusarEscrita(fn) {
       recusa.fn = fn;
     },
+    recusarEscrita() {
+      recusa.fn?.();
+    },
   };
   return a;
 }

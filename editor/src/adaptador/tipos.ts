@@ -55,6 +55,8 @@ export interface Adaptador {
   waitReady(ms: number): Promise<Editor>;
   /** Registra quem e avisado quando uma escrita e IGNORADA por cair em secao somente leitura (uma chamada por tentativa). */
   aoRecusarEscrita(fn: () => void): void;
+  /** Avisa que uma escrita foi recusada (para recursos que escrevem por conta propria, fora do adaptador). */
+  recusarEscrita(): void;
   /** A secao/instancia e somente leitura (CK4 `readOnly`; CK5 raiz com `somenteLeitura`). */
   somenteLeitura(e: Editor): boolean;
 }

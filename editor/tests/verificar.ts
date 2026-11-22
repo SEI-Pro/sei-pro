@@ -6,6 +6,7 @@ import { verificarFolhaPapel } from "./recursos/folha-papel";
 import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor";
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarLatex } from "./recursos/latex";
+import { verificarLinkPro } from "./recursos/link-pro";
 import { verificarQuebras } from "./recursos/quebras";
 import { verificarQuickTable } from "./recursos/quick-table";
 import { verificarTinyUrl } from "./recursos/tiny-url";
@@ -39,6 +40,7 @@ verificarQuickTable();
 verificarFolhaPapel();
 await verificarTinyUrl();
 await verificarCopyStyle();
+await verificarLinkPro();
 await verificarLatex();
 
 resumo();

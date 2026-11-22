@@ -87,7 +87,7 @@ export class InstanciaCk5 {
   readonly writer = {
     createPositionBefore: (el: unknown) => ({ antes: el }),
     createPositionAt: (raiz: RaizFalsa, onde: string) => ({ em: raiz.rootName, onde }),
-    createText: (texto: string) => ({ texto }),
+    createText: (texto: string, atributos?: Record<string, string>) => ({ texto, atributos }),
     createRange: (a: unknown, b: unknown) => ({ a, b }),
     addMarker: (nome: string, o: unknown) => {
       this.marcadores.set(nome, o);
@@ -108,8 +108,11 @@ export class InstanciaCk5 {
       this.mudancas += 1;
       return fn(this.writer);
     },
-    insertContent: (conteudo: { html?: string; texto?: string }, posicao?: unknown) => {
-      this.insercoes.push({ html: conteudo.html ?? `texto:${conteudo.texto}`, posicao });
+    insertContent: (conteudo: { html?: string; texto?: string; atributos?: Record<string, string> }, posicao?: unknown) => {
+      this.insercoes.push({
+        html: conteudo.html ?? `texto:${conteudo.texto}${conteudo.atributos ? `|${JSON.stringify(conteudo.atributos)}` : ""}`,
+        posicao,
+      });
     },
     createPositionFromPath: (raiz: RaizFalsa, caminho: number[]) => ({ raiz: raiz.rootName, caminho }),
     markers: {
@@ -146,6 +149,7 @@ export class InstanciaCk5 {
   editing = {
     view: {
       document: { getRoot: (nome: string) => ({ viewRoot: nome }) },
+      createRangeOn: (v: { dom?: Element }) => ({ visao: v }),
       domConverter: {
         mapViewToDom: (v: { viewRoot?: string; dom?: Element }) =>
           v.viewRoot ? (this.elementos.get(v.viewRoot) ?? null) : (v.dom ?? null),
@@ -154,6 +158,7 @@ export class InstanciaCk5 {
     },
     mapper: {
       toModelElement: (v: { dom: Element }) => this.modeloDe(v.dom),
+      toModelRange: (r: { visao: { dom?: Element } }) => ({ root: this.modeloDe(r.visao.dom as Element).root, intervaloDe: r.visao.dom }),
       toViewElement: (m: ModeloFalso) => ({ dom: m.elemento, name: "p" }),
     },
   };

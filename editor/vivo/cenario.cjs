@@ -28,9 +28,11 @@ function definir() {
     S.corpo = () => ed.document.getBody().$;
     S.botao = () => document.querySelector(`#cke_${nome} .cke_toolbox`) || document.body;
     S.obterHtml = () => ed.getData();
+    // `editable().setHtml` (e nao `setData`): o setData do CK4 REESCREVE o documento do iframe e some com os handlers que o
+    // monolito liga no corpo (mousedown do balao de link etc.).
     S.definirHtml = async (h) => {
       ed.focus();
-      ed.setData(h);
+      ed.editable().setHtml(h);
       await espera(500);
     };
     S.cursorEm = async (sel) => {

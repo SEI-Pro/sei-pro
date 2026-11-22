@@ -65,6 +65,9 @@ export function criarAdaptador(win: Window): Adaptador {
     aoRecusarEscrita(fn) {
       recusa.fn = fn;
     },
+    recusarEscrita() {
+      recusa.fn?.();
+    },
     waitReady(ms: number): Promise<Editor> {
       const inicio = Date.now();
       return new Promise((resolve, reject) => {

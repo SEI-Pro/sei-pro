@@ -14,6 +14,8 @@ export interface Contexto {
   /** Rede, injetavel nos testes; o padrao e o `fetch` da pagina. */
   fetch?: typeof fetch;
   /** Baixa uma imagem e a devolve como data URI (canvas); injetavel nos testes. */
+  /** Area de transferencia, injetavel nos testes; o padrao e `navigator.clipboard`. */
+  areaDeTransferencia?: { writeText(texto: string): Promise<void> };
   imagemParaDataUri?: (src: string) => Promise<string>;
 }
 

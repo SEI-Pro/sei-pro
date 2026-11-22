@@ -17,4 +17,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "tiny-url",
   "latex",
   "copy-style",
+  "link-pro",
 ];
