@@ -11,6 +11,7 @@ import { recurso as pageBreak } from "./page-break";
 import { recurso as quickTable } from "./quick-table";
 import { recurso as sessionBreak } from "./session-break";
 import { recurso as styleEditor } from "./style-editor";
+import { recurso as tableStyles } from "./table-styles";
 import { recurso as tinyUrl } from "./tiny-url";
 import type { Recurso } from "./tipos";
 
@@ -30,4 +31,5 @@ export const RECURSOS: readonly Recurso[] = [
   latex,
   copyStyle,
   linkPro,
+  tableStyles,
 ];

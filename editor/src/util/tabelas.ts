@@ -58,7 +58,13 @@ const celulasDe = (tr: Element): Element[] => Array.from(tr.querySelectorAll("td
  * CK5: pelo model, via GHS direto (`table`, `tr`, `td`) e o atributo `estilo` dos paragrafos das celulas; o
  * cabecalho e `headingRows`. O elemento de model da tabela e o do `figure.table` (o `<table>` interno do DOM nao tem).
  */
-export function estilizarTabela(c: Contexto, ed: object, tabela: Element, estilos: EstiloDeTabela): boolean {
+export function estilizarTabela(
+  c: Contexto,
+  ed: object,
+  tabela: Element,
+  estilos: EstiloDeTabela,
+  extras?: { /** Roda dentro do mesmo passo de desfazer, so no CK4 (DOM do iframe). */ aoFinalCk4?(tabela: Element): void },
+): boolean {
   const a = c.adaptador;
   const linhas = Array.from(tabela.querySelectorAll("tr"));
   const plano = planoDaTabela(estilos, linhas.length, Math.max(0, ...linhas.map((tr) => celulasDe(tr).length)));
@@ -121,6 +127,7 @@ export function estilizarTabela(c: Contexto, ed: object, tabela: Element, estilo
       thead.append(linhas[0]);
       tabela.prepend(thead);
     }
+    extras?.aoFinalCk4?.(tabela);
   });
   return true;
 }

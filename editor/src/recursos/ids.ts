@@ -18,4 +18,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "latex",
   "copy-style",
   "link-pro",
+  "table-styles",
 ];
