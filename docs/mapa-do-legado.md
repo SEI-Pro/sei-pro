@@ -45,6 +45,7 @@ Tamanho = linhas do arquivo em `dist/js/`; "restantes" = funções que **não** 
 - Arquivos: `sei-pro-editor.js` (2,5 mil linhas, 77 funções), `sei-pro-editor-adapter.js` (1,1 mil), CKEditor em `lib/ckeditor` e `modules/editor/`, mais ~19 funções em `sei-functions-pro.js`.
 - Opções que ele lê: teclas de atalho (`teclasatalho`, `combinacaoteclas`), ditado, editar imagens, qualidade de imagens, editar links, revisão de texto, salvamento automático, substituir seleção.
 - Funcionalidades (páginas de ajuda): Revisar documento, Ditado, Teclas de atalho, Escrita interativa **(confirmar)**, Equações **(confirmar)**, Tabela rápida e Estilo de tabela **(confirmar)**, Parágrafos numerados **(confirmar)**, Quebra de página e de seção **(confirmar)**, Sumário **(confirmar)**, Referências, Referência interna e Citações **(confirmar)**, Nota de rodapé, Editar imagens, Qualidade das imagens, Redimensionar imagens, Substituir seleção, Salvamento automático, Copiar formatação **(confirmar)**, Alinhar texto **(confirmar)**, Letra maiúscula **(confirmar)**, Link curto **(confirmar)**, Campos dinâmicos.
+- **Em andamento (branch `feat/editor-ts`, 20/11/2026):** pacote `editor/` (TS, mundo da página) com adaptador CK4/CK5 e 20 recursos já portados, com os módulos legados apagados: ghs-unlock, page-break, session-break, checkbox, cap-letter, align, font-size, style-editor, quick-table, folha-papel, tiny-url e latex (plano 1) e copy-style, link-pro, table-styles, sumario, ref-interna, nota-rodape, qr-code e legis (plano 2, 22/11/2026). **Próximos:** imagens (grupo 2), `dadosProcessoPro` (grupo 3), review/ditado/importar-doc/context-menu/auto-cleanup (grupo 4) e o monólito. Link curto (tiny-url e QR Code com link curto) está quebrado por CORS do TinyURL; o autor fará um encurtador próprio no seipro.app.
 - Observação: o port para CK5 está em andamento (falta, por exemplo, `setParamEditor`); a cadeia `dadosProcessoPro` ainda é lida por `arrayDadosEditor`/`replaceDadosEditor` (ver 2.9).
 
 ### 2.2 Atividades (modo servidor)
@@ -122,6 +123,8 @@ Resta um resíduo:
 ## 4.1. Regra de empacotamento depois da limpeza (20/11/2026)
 
 Sem os arquivos legados, **nenhum pacote pode sair sem os três content scripts TS** `js/init_favoritos.js`, `js/init_processos_lote.js` e `js/init_documentos_lote.js`: sem eles, o botão Documentos em lote e o item Processos em lote só mostram "Recarregue a página (F5)", e o Favoritos desaparece. O último zip oficial do Chrome em `release/` (3.4) e os manifests de marca locais (`dist/manifest_*.json`) **não** têm esses scripts: regenere-os a partir de `dist/manifest.json` e ajuste a receita do Chrome oficial (que tratava o Processos em lote como "só do Lab") antes de qualquer build que não seja o Lab.
+
+**Editor em TS (20/11/2026):** além dos três content scripts acima, todo pacote precisa do bloco de content script `js/init_editor.js` (mesmos `matches` e `exclude_matches` do bloco do editor legado, `run_at: document_end`) e de `js/editor/pagina.js` em `web_accessible_resources`. Sem eles os 12 recursos portados somem (o monólito legado só ignora a falta, via `chamarRecursoTsPro`). `dist/manifest_*.json` e a receita de empacotamento (`tools/gerar-pacote-firefox.mjs` só copia blocos que já têm `exclude_matches`) não foram atualizados.
 
 ## 5. Atualizações de documentação pendentes
 

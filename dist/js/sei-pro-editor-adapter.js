@@ -295,31 +295,12 @@
     // de initFunctions/cliques do monolito.
     // ----------------------------------------------------------------
     var MODULES = [
-        // Infra: libera classes/estilos/atributos no CK5. Primeiro da lista
-        // porque as demais features dependem do GHS liberado.
-        'ghs-unlock.js',
-        'checkbox.js',
-        'page-break.js',
-        'folha-papel.js',
-        'session-break.js',
-        'cap-letter.js',
-        'qr-code.js',
-        'nota-rodape.js',
-        'tiny-url.js',
-        'ref-interna.js',
+        // O GHS (window.SeiProGhs) e os recursos ja portados para TS vem do bundle
+        // js/editor/pagina.js (pacote editor/), que roda ANTES deste adapter.
         'citacao.js',
-        'sumario.js',
         'sigilo.js',
         'dados-processo.js',
         'escrita-interativa.js',
-        'latex.js',
-        'legis.js',
-        'table-styles.js',
-        'quick-table.js',
-        'align.js',
-        'font-size.js',
-        'copy-style.js',
-        'link-pro.js',
         'link-sei-lote.js',
         'importar-doc.js',
         'minuta-watermark.js',
@@ -330,7 +311,6 @@
         'image-editor.js',
         'context-menu.js',
         'auto-cleanup.js',
-        'style-editor.js',
         'review.js',
         'ditado.js'
     ];
@@ -370,7 +350,10 @@
         if (!base || !jq || typeof jq.getScript !== 'function') return false;
         if (loadModules._done) return true;
         loadModules._done = true;
+        // Recursos que o pacote TS (js/editor/pagina.js) assumiu: init_editor.js grava os ids no <html>.
+        var cedidos = (document.documentElement.getAttribute('data-seipro-editor-ts') || '').split(',');
         MODULES.forEach(function (name) {
+            if (cedidos.indexOf(name.replace(/\.js$/, '')) !== -1) return;
             try { jq.getScript(base + 'js/modules/editor/' + name); } catch (e) {}
         });
         return true;

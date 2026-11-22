@@ -350,6 +350,33 @@
       ]
     },
     {
+      "matches": [
+        "*://*.br/*controlador.php?acao=editor_montar*",
+        "*://*.br/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.br/*controlador.php?acao=secao_modelo_alterar*",
+        "*://*.br/*controlador.php?acao=texto_padrao_interno_cadastrar*",
+        "*://*.org/*controlador.php?acao=editor_montar*",
+        "*://*.rio/*controlador.php?acao=editor_montar*",
+        "*://*.org/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.rio/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.org/*controlador.php?acao=secao_modelo_alterar*",
+        "*://*.rio/*controlador.php?acao=secao_modelo_alterar*",
+        "*://*.org/*controlador.php?acao=texto_padrao_interno_cadastrar*",
+        "*://*.rio/*controlador.php?acao=texto_padrao_interno_cadastrar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=editor_montar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=secao_modelo_alterar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_cadastrar*"
+      ],
+      "js": [
+        "js/init_editor.js"
+      ],
+      "run_at": "document_end",
+      "exclude_matches": [
+        "*://sei.antaq1.gov.br/*"
+      ]
+    },
+    {
       "js": [
         "js/init_agente.js"
       ],
@@ -1360,7 +1387,8 @@
         "icons/menu/table.png",
         "icons/menu/legis.png",
         "icons/menu/openai.png",
-        "js/sei-pro-agente-editor.js"
+        "js/sei-pro-agente-editor.js",
+        "js/editor/pagina.js"
       ],
       "matches": [
         "*://*.br/*",
