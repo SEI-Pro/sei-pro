@@ -11,6 +11,7 @@ import { verificarQuebras } from "./recursos/quebras";
 import { verificarQuickTable } from "./recursos/quick-table";
 import { verificarTinyUrl } from "./recursos/tiny-url";
 import { igual, resumo, secao } from "./util";
+import { verificarUtilAncorasETabelas } from "./util-ancoras";
 import { verificarAdaptadorCk4 } from "./verificar-adaptador-ck4";
 import { verificarAdaptadorCk5 } from "./verificar-adaptador-ck5";
 import { verificarVersao } from "./verificar-adaptador-versao";
@@ -41,6 +42,7 @@ verificarFolhaPapel();
 await verificarTinyUrl();
 await verificarCopyStyle();
 await verificarLinkPro();
+await verificarUtilAncorasETabelas();
 await verificarLatex();
 
 resumo();

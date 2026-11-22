@@ -13,6 +13,8 @@ interface ModeloFalso {
   elemento: Element;
   /** Como no CK5 real: elemento do model tem `root` (RootElement); so a raiz tem `rootName`. */
   root: { rootName: string | null };
+  name: string;
+  getChildren(): Iterable<ModeloFalso>;
   is(tipo: string): boolean;
   getAttribute(nome: string): string | undefined;
 }
@@ -27,6 +29,8 @@ export class InstanciaCk5 {
   state = "ready";
   focos = 0;
   mudancas = 0;
+  /** Quantos `model.change` estao abertos agora (para provar que uma acao inteira roda num so batch). */
+  profundidade = 0;
   insercoes: Array<{ html: string; posicao: unknown }> = [];
   executados: Array<[string, unknown]> = [];
   dadosPorRaiz: Record<string, string> = {};
@@ -49,6 +53,8 @@ export class InstanciaCk5 {
       m = {
         elemento: el,
         root: { rootName: this.raizDoElemento(el) },
+        name: el.tagName === "P" ? "paragraph" : el.tagName.toLowerCase(),
+        getChildren: () => [...el.querySelectorAll(":scope > p")].map((x) => this.modeloDe(x)),
         is: (t: string) => t === "element",
         getAttribute: (n: string) => this.atributos.get(el)?.[n],
       };
@@ -106,7 +112,12 @@ export class InstanciaCk5 {
   model = ((self: InstanciaCk5) => ({
     change: <T>(fn: (w: InstanciaCk5["writer"]) => T): T => {
       this.mudancas += 1;
-      return fn(this.writer);
+      self.profundidade += 1;
+      try {
+        return fn(self.writer);
+      } finally {
+        self.profundidade -= 1;
+      }
     },
     insertContent: (conteudo: { html?: string; texto?: string; atributos?: Record<string, string> }, posicao?: unknown) => {
       this.insercoes.push({
