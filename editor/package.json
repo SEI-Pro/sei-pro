@@ -15,10 +15,11 @@
     "@biomejs/biome": "^2.2.0",
     "@types/chrome": "^0.0.300",
     "@types/node": "^22.20.4",
+    "acorn": "^8.19.0",
     "esbuild": "^0.25.0",
     "linkedom": "^0.18.13",
+    "puppeteer-core": "^24.43.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
-    "acorn": "^8.19.0"
+    "typescript": "^5.9.3"
   }
 }
