@@ -109,6 +109,8 @@ export class InstanciaCk5 {
     createPositionAt: (raiz: RaizFalsa, onde: string) => ({ em: raiz.rootName, onde }),
     createText: (texto: string, atributos?: Record<string, string>) => ({ texto, atributos }),
     createRange: (a: unknown, b: unknown) => ({ a, b }),
+    /** Sem marcas no model do falso: os executores de notas veem um corpo vazio (a logica e testada em `nota-rodape.ts` com um model proprio). */
+    createRangeIn: () => ({ getItems: () => [] as unknown[] }),
     addMarker: (nome: string, o: unknown) => {
       this.marcadores.set(nome, o);
     },
@@ -120,6 +122,9 @@ export class InstanciaCk5 {
     },
     setSelection: (r: unknown) => {
       this.selecoesDefinidas.push(r);
+      // `setSelection(raiz, "end")` leva a selecao para aquela raiz (o que o CK5 faz de verdade)
+      const nome = (r as { rootName?: string } | null)?.rootName;
+      if (nome) this.selecaoRaiz = nome;
     },
     /** `remove(intervalo)` + `insertText(texto, atributos, posicao)`: o que o CK5 faz ao trocar o texto de um link. */
     remove: (intervalo: { intervaloDe?: Element }) => {

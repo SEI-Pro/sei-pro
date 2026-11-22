@@ -7,6 +7,7 @@ import { recurso as fontSize } from "./font-size";
 import { recurso as ghsUnlock } from "./ghs-unlock";
 import { recurso as latex } from "./latex";
 import { recurso as linkPro } from "./link-pro";
+import { recurso as notaRodape } from "./nota-rodape";
 import { recurso as pageBreak } from "./page-break";
 import { recurso as quickTable } from "./quick-table";
 import { recurso as refInterna } from "./ref-interna";
@@ -36,4 +37,5 @@ export const RECURSOS: readonly Recurso[] = [
   tableStyles,
   sumario,
   refInterna,
+  notaRodape,
 ];

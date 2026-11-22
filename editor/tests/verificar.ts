@@ -7,6 +7,7 @@ import { verificarFontSizeStyleEditor } from "./recursos/font-size-style-editor"
 import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarLatex } from "./recursos/latex";
 import { verificarLinkPro } from "./recursos/link-pro";
+import { verificarNotaRodape } from "./recursos/nota-rodape";
 import { verificarQuebras } from "./recursos/quebras";
 import { verificarQuickTable } from "./recursos/quick-table";
 import { verificarRefInterna } from "./recursos/ref-interna";
@@ -44,6 +45,7 @@ verificarQuickTable();
 await verificarTableStyles();
 await verificarSumario();
 await verificarRefInterna();
+await verificarNotaRodape();
 verificarFolhaPapel();
 await verificarTinyUrl();
 await verificarCopyStyle();

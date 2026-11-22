@@ -21,4 +21,5 @@ export const IDS_RECURSOS: readonly string[] = [
   "table-styles",
   "sumario",
   "ref-interna",
+  "nota-rodape",
 ];

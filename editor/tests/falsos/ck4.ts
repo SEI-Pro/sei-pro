@@ -63,9 +63,17 @@ export class InstanciaCk4 {
       (this.escutas.get(evento) ?? []).filter((f) => f !== fn),
     );
   }
+  /** Liga a escrita REAL no DOM do `insertHtml` (como o CK4): o html entra no fim do elemento do cursor (ou do corpo). */
+  inserirNoDom = false;
   insertHtml(html: string) {
     if (this.readOnly) throw new TypeError("checkReadOnly");
     this.inseridos.push(html);
+    if (this.inserirNoDom) {
+      const alvo = this.selecao.elemento ?? this.corpo;
+      const Parser = (this.corpo.ownerDocument.defaultView as unknown as { DOMParser: typeof DOMParser }).DOMParser;
+      const inerte = new Parser().parseFromString(`<!doctype html><html><body>${html}</body></html>`, "text/html");
+      alvo.append(...Array.from(inerte.body.childNodes).map((n) => this.corpo.ownerDocument.importNode(n, true)));
+    }
   }
   insertText(texto: string) {
     if (this.readOnly) throw new TypeError("checkReadOnly");

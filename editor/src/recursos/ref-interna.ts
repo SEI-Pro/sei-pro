@@ -6,6 +6,7 @@ import { ancorarNoInicio, nomeDaAncora } from "../util/ancoras";
 import { escaparHtml } from "../util/html";
 import { rotularLinks } from "../util/links";
 import { numerar } from "../util/numeracao";
+import { ligarRolagem } from "../util/rolagem";
 import type { Contexto, Recurso } from "./tipos";
 
 /**
@@ -30,24 +31,6 @@ export interface ParagrafoNumerado {
 
 const rotulo = (prefixo: string, ocultar: boolean, item: string): string =>
   `[${ocultar || prefixo.trim() === "" ? "" : `${prefixo.trim()} `}${item}]`;
-
-/** Liga o clique das referencias a rolagem ate o paragrafo-alvo (uma vez por documento de editor). */
-const ligados = new WeakSet<Document>();
-function ligarRolagem(c: Contexto): void {
-  const docs =
-    c.adaptador.versao === 5 ? [c.doc] : c.adaptador.getAllInstances().map((i) => c.adaptador.getBodyContainer(i)?.ownerDocument);
-  for (const doc of docs) {
-    if (!doc || ligados.has(doc)) continue;
-    ligados.add(doc);
-    doc.addEventListener("click", (ev) => {
-      const link = (ev.target as Element | null)?.closest?.(LINKS);
-      if (!link) return;
-      const nome = (link.getAttribute("href") ?? "").slice(1);
-      const alvo = doc.querySelector(`[name="${nome}"], [id="${nome}"]`);
-      (alvo?.closest("p") ?? alvo)?.scrollIntoView?.({ behavior: "smooth", block: "center" });
-    });
-  }
-}
 
 export const recurso: Recurso = {
   id: "ref-interna",
