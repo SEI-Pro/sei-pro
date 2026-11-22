@@ -99,11 +99,11 @@ export const recurso: Recurso = {
     }
 
     /** Renumera os rotulos das referencias ja inseridas (um passo de desfazer, so se algo mudou). Uma referencia a paragrafo removido fica como esta. */
-    function atualizar(ed: object, prefixo: string, ocultar: boolean): { atualizadas: number; perdidas: number } {
+    function atualizar(ed: object, prefixo: string, ocultar: boolean): { atualizadas: number; perdidas: number; recusadas: number } {
       const { mudar, perdidas } = planejar(ed, prefixo, ocultar);
       let atualizadas = 0;
       if (mudar.length) ADAPTADOR.withEdit(ed, () => (atualizadas = rotularLinks(c, mudar)));
-      return { atualizadas, perdidas };
+      return { atualizadas, perdidas, recusadas: mudar.length - atualizadas };
     }
 
     /** `updateRefsInternas(editor, prefixo, ocultar)` ou, na assinatura antiga, `updateRefsInternas(prefixo, ocultar)`. */
@@ -161,8 +161,10 @@ export const recurso: Recurso = {
                 type: "button",
                 class: "spro-botao",
                 onclick: () => {
-                  const { perdidas } = atualizar(ed, prefixo.value, ocultarPrefixo());
+                  const { perdidas, recusadas } = atualizar(ed, prefixo.value, ocultarPrefixo());
                   ligarRolagem(c);
+                  // referencia em secao somente leitura: a propria recusa ja avisou; dizer "com sucesso" por cima seria mentira
+                  if (recusadas) return;
                   avisar(
                     perdidas
                       ? `Referências atualizadas. ${perdidas} apontam para parágrafos que não existem mais.`

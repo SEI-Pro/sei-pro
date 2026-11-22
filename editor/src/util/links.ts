@@ -1,4 +1,5 @@
 import type { Contexto } from "../recursos/tipos";
+import { avisarEditor } from "../ui/avisar";
 
 // biome-ignore lint/suspicious/noExplicitAny: o CKEditor 5 do SEI nao tem tipos; so os membros usados abaixo importam
 type Qualquer = any;
@@ -27,14 +28,26 @@ function recusado(c: Contexto, ed: object, a: Element, intervalo: Qualquer): boo
   return somenteLeitura;
 }
 
+/** O `<a>` ainda esta no documento? (o editor reescreve o DOM; um balao ou dialogo antigo pode guardar um `<a>` solto). Avisa se nao. */
+function linkVivo(c: Contexto, a: Element): boolean {
+  if (a.isConnected) return true;
+  avisarEditor(c.doc, "O link não está mais no documento.");
+  return false;
+}
+
 /** Troca `<a>texto</a>` pelo texto. Um passo de desfazer. */
 export function removerLink(c: Contexto, a: Element): boolean {
+  if (!linkVivo(c, a)) return false;
   const ed = instanciaDoElemento(c, a);
   if (!ed) return false;
   if (c.adaptador.versao === 5) {
     const e = ed as Qualquer;
     const intervalo = intervaloCk5(e, a);
-    if (!intervalo || recusado(c, ed, a, intervalo)) return false;
+    if (!intervalo) {
+      avisarEditor(c.doc, "Não foi possível localizar o link no editor.");
+      return false;
+    }
+    if (recusado(c, ed, a, intervalo)) return false;
     e.model.change((w: Qualquer) => w.setSelection(intervalo));
     e.execute("unlink");
     return true;
@@ -46,12 +59,17 @@ export function removerLink(c: Contexto, a: Element): boolean {
 
 /** Atualiza texto e URL do link. Um passo de desfazer. */
 export function editarLink(c: Contexto, a: Element, texto: string, url: string): boolean {
+  if (!linkVivo(c, a)) return false;
   const ed = instanciaDoElemento(c, a);
   if (!ed) return false;
   if (c.adaptador.versao === 5) {
     const e = ed as Qualquer;
     const intervalo = intervaloCk5(e, a);
-    if (!intervalo || recusado(c, ed, a, intervalo)) return false;
+    if (!intervalo) {
+      avisarEditor(c.doc, "Não foi possível localizar o link no editor.");
+      return false;
+    }
+    if (recusado(c, ed, a, intervalo)) return false;
     e.model.change((w: Qualquer) => {
       w.setSelection(intervalo);
       e.model.insertContent(w.createText(texto, { linkHref: url }));
@@ -65,6 +83,25 @@ export function editarLink(c: Contexto, a: Element, texto: string, url: string):
     a.textContent = texto;
   });
   return true;
+}
+
+/** Troca o texto de um `<a>` mantendo a formatacao de dentro (`<a><strong>[1]</strong></a>`): o 1o trecho de texto recebe o novo, os demais saem. */
+function trocarTexto(a: Element, texto: string): void {
+  const trechos: Node[] = [];
+  const percorrer = (no: Node) => {
+    for (const f of Array.from(no.childNodes)) {
+      if (f.nodeType === 3) trechos.push(f);
+      else percorrer(f);
+    }
+  };
+  percorrer(a);
+  const [primeiro, ...resto] = trechos;
+  if (!primeiro) {
+    a.textContent = texto;
+    return;
+  }
+  primeiro.textContent = texto;
+  for (const t of resto) t.parentNode?.removeChild(t);
 }
 
 /**
@@ -85,7 +122,7 @@ export function rotularLinks(c: Contexto, itens: Array<{ a: Element; texto: stri
       ck5.push({ a, texto, intervalo, ed });
     } else {
       if (recusado(c, ed, a, null)) continue;
-      a.textContent = texto;
+      trocarTexto(a, texto);
       feitos += 1;
     }
   }
@@ -93,8 +130,13 @@ export function rotularLinks(c: Contexto, itens: Array<{ a: Element; texto: stri
   if (e) {
     e.model.change((w: Qualquer) => {
       for (const { a, texto, intervalo } of [...ck5].reverse()) {
+        // o rotulo novo herda a formatacao do antigo (negrito, italico, cor...): le os atributos do 1o trecho de texto antes de remove-lo
+        const atributos: Record<string, unknown> = {};
+        const primeiro = [...(intervalo.getItems?.() ?? [])].find((i: Qualquer) => typeof i.getAttributes === "function");
+        if (primeiro) for (const [k, v] of primeiro.getAttributes()) atributos[k] = v;
+        atributos.linkHref = a.getAttribute("href") ?? "";
         w.remove(intervalo);
-        w.insertText(texto, { linkHref: a.getAttribute("href") ?? "" }, intervalo.start);
+        w.insertText(texto, atributos, intervalo.start);
         feitos += 1;
       }
     });

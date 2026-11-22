@@ -115,8 +115,11 @@ export async function buscarNormas(rede: Rede, base: string, filtros: Filtros): 
   return { total: corpo?.total ?? normas.length, normas };
 }
 
-/** POST /normas/resolver: sigla pedida -> norma. Sigla sem norma (ou API fora do ar) fica de fora do mapa. */
-export async function resolverSiglas(rede: Rede, base: string, siglas: string[]): Promise<Record<string, Norma>> {
+/**
+ * POST /normas/resolver: sigla pedida -> norma. Sigla sem norma fica de fora do mapa. API fora do ar tambem, A NAO SER
+ * que `estrito` (quem precisa dizer "o servico caiu" em vez de "nao achei": rejeita em rede ou HTTP != 2xx).
+ */
+export async function resolverSiglas(rede: Rede, base: string, siglas: string[], estrito = false): Promise<Record<string, Norma>> {
   const pedidas: string[] = [];
   for (const s of siglas) {
     const ref = String(s ?? "")
@@ -132,10 +135,14 @@ export async function resolverSiglas(rede: Rede, base: string, siglas: string[])
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refs: pedidas.slice(0, 200) }),
     });
-    if (!resposta.ok) return achadas;
+    if (!resposta.ok) {
+      if (estrito) throw new Error(`HTTP ${resposta.status}`);
+      return achadas;
+    }
     const corpo = (await resposta.json()) as { resultados?: Record<string, NormaApi | null> } | null;
     for (const [ref, n] of Object.entries(corpo?.resultados ?? {})) if (n) achadas[ref] = normaDaApi(n);
-  } catch {
+  } catch (e) {
+    if (estrito) throw e;
     /* API fora do ar: ninguem achado */
   }
   return achadas;

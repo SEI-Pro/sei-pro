@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,6 +75,12 @@ export function verificarContrato(): void {
   checar(
     "todo modulo com contrato congelado e um recurso portado",
     Object.keys(congelado).every((id) => RECURSOS.some((r) => r.id === id)),
+  );
+  // o outro sentido: todo recurso portado tem o contrato do legado (congelado) ou ainda tem o modulo legado para ler ao vivo
+  igual(
+    "todo recurso tem contrato congelado ou modulo legado vivo",
+    RECURSOS.filter((r) => !congelado[r.id] && !existsSync(`${DIST_REAL}/js/modules/editor/${r.id}.js`)).map((r) => r.id),
+    [],
   );
   for (const r of RECURSOS) {
     const { necessarios } = congelado[r.id] ?? contratoDoModulo(DIST_REAL, r.id);

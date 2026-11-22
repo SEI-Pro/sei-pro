@@ -3991,9 +3991,6 @@ div#dialogBoxDocLote p {
 #tabChartAtivPanel .chartAtivPanelDiv {
     padding: 20px 0;
 }
-.cke_contents.resizeDisplayLink {
-    min-height: 280px;
-}
 #checkNaoAssinados {
     font-size: 10pt;
     display: inline;

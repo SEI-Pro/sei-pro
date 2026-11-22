@@ -44,7 +44,7 @@ export class InstanciaCk5 {
   readonly selecoesDefinidas: unknown[] = [];
   /** Intervalos (elemento DOM do link) removidos por `writer.remove` e textos reinseridos por `writer.insertText`. */
   readonly removidos: Array<Element | null> = [];
-  readonly textosInseridos: Array<{ texto: string; atributos: Record<string, string>; posicao: unknown; profundidade: number }> = [];
+  readonly textosInseridos: Array<{ texto: string; atributos: Record<string, unknown>; posicao: unknown; profundidade: number }> = [];
   /** Paragrafos (DOM) que `getSelectedBlocks()` devolve. */
   blocos: Element[] = [];
   /** Atributos do model por elemento DOM (o que `writer.setAttribute` grava), p.ex. `estilo`. */
@@ -133,7 +133,7 @@ export class InstanciaCk5 {
     remove: (intervalo: { intervaloDe?: Element }) => {
       this.removidos.push(intervalo.intervaloDe ?? null);
     },
-    insertText: (texto: string, atributos: Record<string, string>, posicao: unknown) => {
+    insertText: (texto: string, atributos: Record<string, unknown>, posicao: unknown) => {
       this.textosInseridos.push({ texto, atributos, posicao, profundidade: this.profundidade });
     },
   };
@@ -205,6 +205,15 @@ export class InstanciaCk5 {
         root: this.modeloDe(r.visao.dom as Element).root,
         intervaloDe: r.visao.dom,
         start: { intervaloDe: r.visao.dom },
+        /** O texto do link, com os atributos que o model teria (negrito/italico pelas marcas do DOM, e o `linkHref`). */
+        getItems: function* () {
+          const el = r.visao.dom as Element;
+          const atributos: Array<[string, unknown]> = [];
+          if (el.querySelector("strong, b")) atributos.push(["bold", true]);
+          if (el.querySelector("i, em")) atributos.push(["italic", true]);
+          atributos.push(["linkHref", el.getAttribute("href")]);
+          yield { getAttributes: () => atributos };
+        },
       }),
       toViewElement: (m: ModeloFalso) => ({ dom: m.elemento, name: "p" }),
     },

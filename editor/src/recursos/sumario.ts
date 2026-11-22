@@ -63,17 +63,25 @@ export const recurso: Recurso = {
         return false;
       }
       let html = '<p class="Texto_Alinhado_Esquerda"><strong>SUMÁRIO</strong></p>';
+      let links = 0;
       ADAPTADOR.withEdit(ed, () => {
         for (const titulo of titulos) {
           const nome = nomeDaAncora(titulo, PREFIXO, ADAPTADOR.versao === 5) ?? `${PREFIXO}${textoAleatorio(16)}`;
           if (!ancorarNoInicio(c, ed, titulo, nome, CLASSE_ANCORA)) continue;
           html += `<p class="Texto_Alinhado_Esquerda"><a href="#${escaparHtml(nome)}">${escaparHtml((titulo.textContent ?? "").trim())}</a></p>`;
+          links += 1;
         }
+        // todas as ancoras recusadas (secao somente leitura, titulo sumido): um "SUMARIO" sem itens nao serve a ninguem
+        if (!links) return;
         // CK5: insertContent no meio de um paragrafo funde o ultimo bloco com o texto dele; antes do paragrafo do cursor nao
         const alvo = ADAPTADOR.versao === 5 ? ADAPTADOR.getSelectionParagraph(ed) : null;
         if (alvo) ADAPTADOR.insertHtmlBefore(ed, alvo, html);
         else ADAPTADOR.insertHtml(ed, html);
       });
+      if (!links) {
+        avisar("Não foi possível criar o sumário: nenhum título aceitou a âncora.");
+        return false;
+      }
       return true;
     }
 

@@ -453,6 +453,29 @@ export async function verificarLegis(): Promise<void> {
     );
     c.doc.body.querySelector(".spro-aviso")?.remove();
 
+    // API fora do ar (HTTP 500 e rede caida): "indisponivel", nunca "Nenhuma legislacao encontrada" (a norma pode existir)
+    for (const [rotulo, falha] of [
+      ["HTTP 500", () => ({ ok: false, status: 500, json: async () => ({}) }) as unknown],
+      [
+        "rede caida",
+        () => {
+          throw new TypeError("Failed to fetch");
+        },
+      ],
+    ] as Array<[string, () => unknown]>) {
+      const fx = redeFalsa(falha as never);
+      const gx = legis.globais(ctxDe(c, fx.rede)) as Record<string, Fn>;
+      gx.sendLegisSEI("Antaqres5");
+      await tique();
+      const texto = c.doc.body.textContent ?? "";
+      checar(
+        `legis ${v}: infralegal/lista com ${rotulo} avisa servico indisponivel (e nao 'nenhuma encontrada')`,
+        /Serviço de legislação indisponível/.test(texto) && !/Nenhuma legislação encontrada/.test(texto),
+        texto.slice(-120),
+      );
+      c.doc.body.querySelector(".spro-aviso")?.remove();
+    }
+
     // resolverNormasLegisPro (global usado pelo sei-legis.js): callback SEMPRE, mesmo com a API caida
     let achadas: Record<string, unknown> | null = null;
     g.resolverNormasLegisPro(["Lei14133/2021"], (a: unknown) => {

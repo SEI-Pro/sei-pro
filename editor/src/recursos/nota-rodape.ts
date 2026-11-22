@@ -73,17 +73,23 @@ export const recurso: Recurso = {
       }
     }
 
-    function reorderNtRodape(editorOuIframe?: unknown): void {
+    /** Devolve `false` quando a escrita foi recusada (secao somente leitura) ou nao ha editor. */
+    function reorderNtRodape(editorOuIframe?: unknown): boolean {
       // aceita a instancia do CK5 (`model`) ou uma das secoes do CK4; qualquer outra coisa (o iframe da assinatura antiga) cai na atual
       const ehInstancia =
         typeof editorOuIframe === "object" &&
         editorOuIframe !== null &&
         ("model" in editorOuIframe || A.getAllInstances().includes(editorOuIframe as never));
       const ed = ehInstancia ? (editorOuIframe as object) : A.getInstance();
-      if (!ed) return;
+      if (!ed) return false;
       const raiz = A.versao === 5 ? raizDoCorpoCk5(ed, corpoDe(ed)) : null;
-      if (recusado(ed, raiz)) return;
+      if (A.versao === 5 && !raiz) {
+        avisar("Não foi possível localizar o corpo do documento para atualizar as notas.");
+        return false;
+      }
+      if (recusado(ed, raiz)) return false;
       A.withEdit(ed, () => renumerar(ed));
+      return true;
     }
 
     function updateNtRodape(editor?: object): void {
@@ -93,7 +99,8 @@ export const recurso: Recurso = {
         avisar("O documento não tem notas de rodapé.");
         return;
       }
-      reorderNtRodape(ed);
+      // so anuncia sucesso se escreveu: a recusa (somente leitura) ou a falta do corpo ja avisaram por conta propria
+      if (!reorderNtRodape(ed)) return;
       ligarRolagem(c);
       avisar("Notas de rodapé atualizadas com sucesso");
     }
@@ -106,6 +113,10 @@ export const recurso: Recurso = {
         return;
       }
       const raiz = A.versao === 5 ? raizDoCorpoCk5(ed, corpoDe(ed)) : null;
+      if (A.versao === 5 && !raiz) {
+        avisar("Não foi possível localizar o corpo do documento para remover as notas.");
+        return;
+      }
       if (recusado(ed, raiz)) return;
       A.withEdit(ed, () => {
         if (A.versao === 5) removerNotasCk5(ed, raiz);
@@ -122,7 +133,10 @@ export const recurso: Recurso = {
       const ed = editor ?? A.getInstance();
       if (!ed || textoHtml.trim() === "") return;
       const raiz = A.versao === 5 ? raizDoCorpoCk5(ed, corpoDe(ed)) : null;
-      if (A.versao === 5 && !raiz) return;
+      if (A.versao === 5 && !raiz) {
+        avisar("Não foi possível localizar o corpo do documento para inserir a nota.");
+        return;
+      }
       if (recusado(ed, raiz)) return;
       const ref = textoAleatorio(16);
       A.withEdit(ed, () => {

@@ -10,16 +10,28 @@ import type { Contexto } from "../recursos/tipos";
 export const SELETOR_LINKS_ROLAGEM = 'a[href^="#RefPro_"], a[href^="#footer_"], a[href^="#item_"]';
 
 const ligados = new WeakSet<Document>();
+const vigiadas = new WeakSet<object>();
+
+/** Valor entre aspas de um seletor de atributo: so `"` e `\` precisam de escape (dispensa `CSS.escape`, que o proprio nome ja nao traz). */
+const aspas = (v: string) => v.replace(/["\\]/g, "\\$&");
 
 function destino(doc: Document, nome: string): Element | null {
-  const direto = doc.querySelector(`[name="${nome}"], [id="${nome}"]`);
+  const direto = doc.querySelector(`[name="${aspas(nome)}"], [id="${aspas(nome)}"]`);
   if (direto) return direto;
   const nota = /^(item|footer)_(.+)$/.exec(nome);
   if (!nota) return null;
-  return doc.querySelector(`.ntRodape_${nota[1]}[data-ntrodape-ref="${nota[2]}"]`);
+  return doc.querySelector(`.ntRodape_${nota[1]}[data-ntrodape-ref="${aspas(nota[2] ?? "")}"]`);
 }
 
 export function ligarRolagem(c: Contexto): void {
+  // CK4: ao reescrever o iframe (modo codigo-fonte, setData) o documento e outro e o ouvinte se perde; religa sozinho
+  if (c.adaptador.versao !== 5) {
+    for (const ed of c.adaptador.getAllInstances()) {
+      if (vigiadas.has(ed)) continue;
+      vigiadas.add(ed);
+      c.adaptador.on(ed, "contentDom", () => ligarRolagem(c));
+    }
+  }
   const docs =
     c.adaptador.versao === 5 ? [c.doc] : c.adaptador.getAllInstances().map((i) => c.adaptador.getBodyContainer(i)?.ownerDocument);
   for (const doc of docs) {

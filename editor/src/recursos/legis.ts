@@ -1,6 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
+import { comoBotao } from "../ui/teclado";
 import {
   buscarNormas,
   htmlDaAncora,
@@ -163,11 +164,15 @@ export const recurso: Recurso = {
     function sendLegisSEI(nome: string, editor?: object): void {
       const ed = editor ?? edDoDialogo ?? A.getInstance();
       if (!ed) return;
-      resolverNormasLegisPro([nome], (achadas) => {
-        const norma = achadas[String(nome ?? "").trim()];
-        if (!norma) return avisar(MSG_NAO_ACHADA);
-        inserirNorma(norma, ed);
-      });
+      // estrito: servico fora do ar e "indisponivel", nao "nenhuma legislacao encontrada" (a norma pode existir)
+      resolverSiglas(rede, URL_LEGIS_API, [nome], true).then(
+        (achadas) => {
+          const norma = achadas[String(nome ?? "").trim()];
+          if (!norma) return avisar(MSG_NAO_ACHADA);
+          inserirNorma(norma, ed);
+        },
+        () => avisar(MSG_FALHA),
+      );
     }
 
     /** Linha de resultado: titulo (link externo), apelido, "Revogada", "Adicionar" e a ementa com mais/menos. */
@@ -217,7 +222,7 @@ export const recurso: Recurso = {
                     role: "button",
                     tabindex: "0",
                     style: "cursor:pointer;",
-                    onclick: (ev: Event) => getSearchLegisMore(ev.currentTarget as Element),
+                    ...comoBotao((ev: Event) => getSearchLegisMore(ev.currentTarget as Element)),
                   },
                   "mais",
                 )
@@ -234,7 +239,7 @@ export const recurso: Recurso = {
                 role: "button",
                 tabindex: "0",
                 style: "cursor:pointer;",
-                onclick: (ev: Event) => getSearchLegisMore(ev.currentTarget as Element),
+                ...comoBotao((ev: Event) => getSearchLegisMore(ev.currentTarget as Element)),
               },
               "menos",
             ),

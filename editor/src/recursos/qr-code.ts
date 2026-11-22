@@ -1,6 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
+import { comoBotao } from "../ui/teclado";
 import { escaparHtml } from "../util/html";
 import { gerarQr, type OpcoesQr } from "../util/qr";
 import { urlHttpValida } from "../util/url";
@@ -143,7 +144,7 @@ export const recurso: Recurso = {
             role: "button",
             tabindex: "0",
             style: "margin-top:14px;display:block;cursor:pointer;",
-            onclick: () => resetOptionsQR(),
+            ...comoBotao(() => resetOptionsQR()),
           },
           "Resetar configurações",
         ),
@@ -162,7 +163,7 @@ export const recurso: Recurso = {
               role: "button",
               tabindex: "0",
               style: "cursor:pointer;color:inherit;text-decoration:underline;",
-              onclick: () => toggleOptionsQR(),
+              ...comoBotao(() => toggleOptionsQR()),
             },
             "Opções avançadas ",
           ),
@@ -218,7 +219,7 @@ export const recurso: Recurso = {
             role: "button",
             tabindex: "0",
             style: "cursor:pointer;color:inherit;text-decoration:underline;",
-            onclick: () => convertTinyURL(),
+            ...comoBotao(() => convertTinyURL()),
           },
           h("span", { style: `width:16px;height:16px;display:inline-block;${estiloDoIcone}` }),
           "Gerar link curto do TinyURL",
@@ -289,22 +290,29 @@ export const recurso: Recurso = {
     }
 
     /** Insere no documento a imagem que a previa gerou (data URI), com o texto no `alt`. */
-    function setQrCode(texto: string, editor?: object): void {
+    function setQrCode(texto: string, editor?: object): boolean {
       const ed = editor ?? A.getInstance();
-      if (!ed) return;
+      if (!ed) return false;
       const src = q<HTMLImageElement>("#qrCodeResult img")?.getAttribute("src") ?? "";
       if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(src)) {
         avisar("Não foi possível gerar o QR Code para este texto.");
-        return;
+        return false;
+      }
+      // secao somente leitura: o adaptador recusa (e avisa); o dialogo continua aberto para o texto nao se perder
+      if (A.somenteLeitura(ed)) {
+        A.recusarEscrita();
+        return false;
       }
       A.withEdit(ed, () => A.insertHtml(ed, `<img src="${escaparHtml(src)}" alt="${escaparHtml(texto)}">`));
+      return true;
     }
 
     function openDialogQrCode(editor?: object): void {
       const ed = editor ?? A.getInstance();
       if (!ed) return;
       const campo = h("input", { type: "text", id: "qrCodeText", style: "width:100%;box-sizing:border-box;margin:6px 0 10px 0;" });
-      const selecionado = String(c.win.getSelection?.() ?? "").trim();
+      // CK4: a selecao do texto esta no iframe da secao, nao na janela da pagina
+      const selecionado = (A.getSelectedText(ed) || String(c.win.getSelection?.() ?? "")).trim();
       if (selecionado) campo.value = selecionado;
       campo.addEventListener("input", () => updateQrCode());
       campo.addEventListener("change", () => updateQrCode());
@@ -349,8 +357,7 @@ export const recurso: Recurso = {
                     avisar("Digite o texto a codificar");
                     return;
                   }
-                  setQrCode(texto, ed);
-                  dialogo.fechar();
+                  if (setQrCode(texto, ed)) dialogo.fechar();
                 },
               },
               "Inserir",

@@ -8,6 +8,7 @@ import { verificarGhsUnlock } from "./recursos/ghs-unlock";
 import { verificarLatex } from "./recursos/latex";
 import { verificarLegis } from "./recursos/legis";
 import { verificarLinkPro } from "./recursos/link-pro";
+import { verificarMenores } from "./recursos/menores";
 import { verificarNotaRodape } from "./recursos/nota-rodape";
 import { verificarQrCode } from "./recursos/qr-code";
 import { verificarQuebras } from "./recursos/quebras";
@@ -56,5 +57,6 @@ await verificarCopyStyle();
 await verificarLinkPro();
 await verificarUtilAncorasETabelas();
 await verificarLatex();
+await verificarMenores();
 
 resumo();

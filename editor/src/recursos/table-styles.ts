@@ -59,7 +59,11 @@ export const recurso: Recurso = {
       const estilo = cor && Number.isFinite(larguraNum) ? estilosDaTabela(cor, larguraNum)[estiloId] : undefined;
       // `alvo` e a tabela capturada na abertura do dialogo: la a selecao nativa do CK5 ja saiu do editor
       const tabela = alvo?.isConnected ? alvo : alvo ? null : tabelaSobCursor(ed);
-      if (!estilo || !tabela) return;
+      if (!estilo) return;
+      if (!tabela) {
+        avisarEditor(c.doc, "A tabela não está mais no documento.");
+        return;
+      }
       estilizarTabela(c, ed, tabela, { ...estilo, cabecalho }, { aoFinalCk4: marcarContraste });
     }
 

@@ -1,4 +1,5 @@
 import type { Contexto } from "../recursos/tipos";
+import { avisarEditor } from "../ui/avisar";
 import { modeloDe, somenteLeituraDoModelo } from "./ck5";
 
 // biome-ignore lint/suspicious/noExplicitAny: o CKEditor 5 do SEI nao tem tipos; so os membros usados abaixo importam
@@ -51,7 +52,10 @@ export function planoDaTabela(e: EstiloDeTabela, nLinhas: number, nColunas: numb
   return { linhas };
 }
 
-const celulasDe = (tr: Element): Element[] => Array.from(tr.querySelectorAll("td, th"));
+/** As celulas da PROPRIA linha (uma tabela aninhada numa celula tem as suas; nao sao desta). */
+const celulasDe = (tr: Element): Element[] => Array.from(tr.children).filter((f) => f.tagName === "TD" || f.tagName === "TH");
+/** As linhas da PROPRIA tabela, sem as das tabelas aninhadas. */
+const linhasDe = (tabela: Element): Element[] => Array.from(tabela.querySelectorAll("tr")).filter((tr) => tr.closest("table") === tabela);
 
 /**
  * Aplica o estilo a uma tabela, num unico passo de desfazer. CK4: `style`/`class` no DOM do iframe (como o legado).
@@ -66,14 +70,17 @@ export function estilizarTabela(
   extras?: { /** Roda dentro do mesmo passo de desfazer, so no CK4 (DOM do iframe). */ aoFinalCk4?(tabela: Element): void },
 ): boolean {
   const a = c.adaptador;
-  const linhas = Array.from(tabela.querySelectorAll("tr"));
+  const linhas = linhasDe(tabela);
   const plano = planoDaTabela(estilos, linhas.length, Math.max(0, ...linhas.map((tr) => celulasDe(tr).length)));
 
   if (a.versao === 5) {
     const e = ed as Qualquer;
     const ghs = e.plugins?.has("GeneralHtmlSupport") ? e.plugins.get("GeneralHtmlSupport") : null;
     const mTabela = modeloDe(e, tabela.closest("figure") ?? tabela);
-    if (!ghs || !mTabela) return false;
+    if (!ghs || !mTabela) {
+      avisarEditor(c.doc, "Não foi possível aplicar o estilo: a tabela não foi reconhecida pelo editor.");
+      return false;
+    }
     if (somenteLeituraDoModelo(c, mTabela)) {
       a.recusarEscrita();
       return false;
@@ -120,7 +127,7 @@ export function estilizarTabela(
       celulasDe(tr).forEach((td, j) => {
         td.setAttribute("style", l.celulas[j]?.td ?? "");
         const classe = l.celulas[j]?.p ?? "";
-        const ps = td.querySelectorAll("p");
+        const ps = Array.from(td.querySelectorAll("p")).filter((p) => p.closest("td, th") === td);
         if (ps.length) for (const p of ps) p.setAttribute("class", classe);
         else {
           const p = doc.createElement("p");
