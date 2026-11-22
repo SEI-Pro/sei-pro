@@ -89,9 +89,12 @@ export function criarBackendCk4(win: Janela, recusa: { fn?: () => void } = {}): 
       const ed = ck(e);
       ed.focus();
       ed.fire("saveSnapshot");
+      // cada `execCommand` do CK4 cria o proprio snapshot: travados, a acao inteira vira UM passo de desfazer
+      ed.fire("lockSnapshot", { dontUpdate: true });
       try {
         fn();
       } finally {
+        ed.fire("unlockSnapshot");
         ed.fire("saveSnapshot");
       }
     },

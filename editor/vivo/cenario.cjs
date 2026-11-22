@@ -100,6 +100,7 @@ function definir() {
 
 /** Injeta o cenario e roda `fn(...args)` na pagina; `fn` usa `window.__spro` (e so pode referenciar o que recebe em `args`). */
 async function rodarEm(pagina, fn, ...args) {
+  await pagina.bringToFront(); // o foco do CK4 (CKEDITOR.currentInstance) depende de a aba/janela estar em primeiro plano
   await pagina.evaluate(definir);
   return pagina.evaluate(fn, ...args);
 }

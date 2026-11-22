@@ -64,14 +64,12 @@ export function verificarCedencia(): void {
   igual("com 'qr-code,legis': pede os demais", sem.length, modulos.length - 2);
   igual("atributo vazio: pede todos", rodar(fonteLoad, modulos, ""), modulos);
   igual("id desconhecido: pede todos", rodar(fonteLoad, modulos, "inexistente"), modulos);
-  checar(
-    "nenhum id de IDS_RECURSOS e mais carregado como modulo legado (saiu de MODULES)",
-    IDS_RECURSOS.every((id) => !modulos.includes(`${id}.js`)),
-  );
+  // Um recurso portado cujo modulo legado AINDA existe fica em MODULES (cedido pelo atributo); so sai de MODULES, junto com o
+  // arquivo, na tarefa de limpeza. Os dois estados precisam andar juntos: nunca em MODULES sem arquivo, nunca arquivo orfao.
   const raiz = fileURLToPath(new URL("../../dist/js/modules/editor/", import.meta.url));
   checar(
-    "e o arquivo legado de cada um nao existe mais",
-    IDS_RECURSOS.every((id) => !existsSync(`${raiz}${id}.js`)),
+    "para cada id de IDS_RECURSOS: esta em MODULES se e somente se o arquivo legado ainda existe",
+    IDS_RECURSOS.every((id) => modulos.includes(`${id}.js`) === existsSync(`${raiz}${id}.js`)),
   );
 
   secao("cedencia: init_editor.js");

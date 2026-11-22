@@ -63,6 +63,11 @@ export async function verificarAdaptadorCk4(): Promise<void> {
       checar("withEdit: um snapshot antes de fn", corpo.snapshots === 1);
     });
     igual("withEdit chama fn uma vez", rodou, 1);
+    igual(
+      "withEdit trava os snapshots durante a acao (cada execCommand do CK4 faria o proprio: o Ctrl+Z desfaria so o ultimo)",
+      corpo.eventosDisparados.filter((e) => /Snapshot/.test(e)),
+      ["saveSnapshot", "lockSnapshot", "unlockSnapshot", "saveSnapshot"],
+    );
     igual("withEdit: exatamente 2 snapshots ao redor de fn", corpo.snapshots, 2);
     checar("withEdit foca a instancia", corpo.focos === 1);
     let lancou = false;

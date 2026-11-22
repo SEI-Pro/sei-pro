@@ -1,6 +1,7 @@
 import { recurso as align } from "./align";
 import { recurso as capLetter } from "./cap-letter";
 import { recurso as checkbox } from "./checkbox";
+import { recurso as copyStyle } from "./copy-style";
 import { recurso as folhaPapel } from "./folha-papel";
 import { recurso as fontSize } from "./font-size";
 import { recurso as ghsUnlock } from "./ghs-unlock";
@@ -26,4 +27,5 @@ export const RECURSOS: readonly Recurso[] = [
   folhaPapel,
   tinyUrl,
   latex,
+  copyStyle,
 ];

@@ -15,6 +15,8 @@ export class InstanciaCk4 {
   readonly corpo: HTMLElement;
   status = "ready";
   snapshots = 0;
+  /** Todo evento disparado por `fire`, na ordem. */
+  eventosDisparados: string[] = [];
   inseridos: string[] = [];
   textos: string[] = [];
   comandos: Array<[string, unknown]> = [];
@@ -48,6 +50,7 @@ export class InstanciaCk4 {
     this.focos += 1;
   }
   fire(evento: string, dados?: unknown) {
+    this.eventosDisparados.push(evento);
     if (evento === "saveSnapshot") this.snapshots += 1;
     for (const fn of this.escutas.get(evento) ?? []) fn(dados);
   }

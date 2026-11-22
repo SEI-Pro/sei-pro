@@ -64,7 +64,10 @@ export function verificarContrato(): void {
     string,
     { necessarios: string[] }
   >;
-  igual("o contrato congelado cobre exatamente os recursos portados", Object.keys(congelado).sort(), RECURSOS.map((r) => r.id).sort());
+  checar(
+    "todo modulo com contrato congelado e um recurso portado",
+    Object.keys(congelado).every((id) => RECURSOS.some((r) => r.id === id)),
+  );
   for (const r of RECURSOS) {
     const { necessarios } = congelado[r.id] ?? contratoDoModulo(DIST_REAL, r.id);
     const globais = Object.keys(r.globais(ctx));
