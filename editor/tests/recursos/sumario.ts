@@ -173,6 +173,37 @@ export async function verificarSumario(): Promise<void> {
     );
   });
 
+  // CK5: titulo que ja e ancora da REFERENCIA INTERNA (id RefPro_) e reaproveitado pelo sumario
+  {
+    const f = criarCk5({ secoes: [{ raiz: "main", label: "Corpo do Texto", html: "<p>x</p>", principal: true }] });
+    usarDocumento(f.doc);
+    const ed = f.instancia();
+    const ghs: string[] = [];
+    (f.win as unknown as Record<string, unknown>).SeiProGhs = {
+      setAtributos: (_el: Element, v: Record<string, string>) => {
+        ghs.push(v.id ?? "");
+        return true;
+      },
+    };
+    const g = sumario.globais(ctxDe(f)) as Record<string, Fn>;
+    const corpo = f.elemento("main");
+    corpo.replaceChildren(
+      ...htmlParaNos(
+        corpo.ownerDocument,
+        '<p class="Item_Nivel1" id="RefPro_ZZZZZZZZZZZZZZZZ">Titulo</p><p class="Texto_Justificado">fim</p>',
+      ),
+    );
+    f.selecionar({ raiz: "main", elemento: corpo.querySelector("p.Texto_Justificado") });
+    g.insertSumarioDocumento([".Item_Nivel1"]);
+    const html = ed.insercoes.at(-1)?.html ?? "";
+    checar(
+      "sumario [CK5]: titulo que ja e ancora da referencia interna: o link usa o id existente",
+      html.includes('href="#RefPro_ZZZZZZZZZZZZZZZZ"'),
+      html,
+    );
+    igual("sumario [CK5]: e o id dele NAO e trocado (as referencias continuam vivas)", ghs, []);
+  }
+
   // CK5: cursor numa secao somente leitura nao escreve nada e avisa
   {
     const f = criarCk5({

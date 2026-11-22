@@ -14,6 +14,11 @@ export function inserirAntesDoParagrafo(
   if (!ed) return;
   const p = c.adaptador.getSelectionParagraph(ed);
   if (!p) return;
+  // secao somente leitura: avisa e NAO roda o callback (ele escreve por conta propria, p.ex. no irmao anterior de `p`)
+  if (c.adaptador.somenteLeitura(ed)) {
+    c.adaptador.recusarEscrita();
+    return;
+  }
   c.adaptador.withEdit(ed, () => {
     c.adaptador.insertHtmlBefore(ed, p, html);
     aposInserir?.(ed, p);

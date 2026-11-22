@@ -18,10 +18,11 @@ import type { Contexto, Recurso } from "./tipos";
  */
 const PREFIXO_ANCORA = "RefPro_";
 const CLASSE_ANCORA = "refpro";
-const LINKS = `a[href^="#${PREFIXO_ANCORA}"]`;
 
 export interface ParagrafoNumerado {
   ref: string;
+  /** O nome da ancora do paragrafo (`RefPro_<ref>`; no CK5, o `id` que ele ja tem, de qualquer recurso). */
+  nome: string;
   item: string;
   text: string;
   /** O paragrafo ja tem a ancora no documento (senao `ref` e um nome sorteado, gravado so se for referenciado). */
@@ -49,9 +50,11 @@ export const recurso: Recurso = {
       ps.forEach((p, i) => {
         const item = itens[i]?.item;
         if (!item) return;
-        const nome = nomeDaAncora(p, PREFIXO_ANCORA);
+        const nome = nomeDaAncora(p, PREFIXO_ANCORA, ADAPTADOR.versao === 5);
+        const ref = nome?.startsWith(PREFIXO_ANCORA) ? nome.slice(PREFIXO_ANCORA.length) : (nome ?? textoAleatorio(16));
         lista.push({
-          ref: nome ? nome.slice(PREFIXO_ANCORA.length) : textoAleatorio(16),
+          ref,
+          nome: nome ?? `${PREFIXO_ANCORA}${ref}`,
           item,
           text: p.textContent ?? "",
           ancorado: !!nome,
@@ -61,16 +64,30 @@ export const recurso: Recurso = {
       return lista;
     }
 
+    /**
+     * As referencias do documento: `a[href^="#RefPro_"]` e, no CK5, os links para um paragrafo numerado que ja era ancora de
+     * outro recurso (o sumario: um `id` so por elemento), desde que o texto tenha o formato de rotulo `[... 1.2]`.
+     */
+    function referencias(ed: object, lista: ParagrafoNumerado[]): Element[] {
+      const nomes = new Set(lista.filter((p) => p.ancorado && !p.nome.startsWith(PREFIXO_ANCORA)).map((p) => p.nome));
+      return ADAPTADOR.findInBody(ed, 'a[href^="#"]').filter(
+        (a) =>
+          (a.getAttribute("href") ?? "").startsWith(`#${PREFIXO_ANCORA}`) ||
+          (nomes.has((a.getAttribute("href") ?? "").slice(1)) && /^\[[^\]]*\d[^\]]*\]$/.test((a.textContent ?? "").trim())),
+      );
+    }
+
     /** Quais rotulos mudam (e quantas referencias apontam para um paragrafo que nao existe mais). So le. */
     function planejar(ed: object, prefixo: string, ocultar: boolean): { mudar: Array<{ a: Element; texto: string }>; perdidas: number } {
       const lista = getNiveisParagrafos(ed);
-      const refs = ADAPTADOR.findInBody(ed, LINKS);
       const mudar: Array<{ a: Element; texto: string }> = [];
-      if (!lista || !refs.length) return { mudar, perdidas: 0 };
-      const itemDe = new Map(lista.filter((p) => p.ancorado).map((p) => [p.ref, p.item]));
+      if (!lista) return { mudar, perdidas: 0 };
+      const refs = referencias(ed, lista);
+      if (!refs.length) return { mudar, perdidas: 0 };
+      const itemDe = new Map(lista.filter((p) => p.ancorado).map((p) => [p.nome, p.item]));
       let perdidas = 0;
       for (const a of refs) {
-        const item = itemDe.get((a.getAttribute("href") ?? "").slice(1 + PREFIXO_ANCORA.length));
+        const item = itemDe.get((a.getAttribute("href") ?? "").slice(1));
         if (item === undefined) {
           perdidas += 1;
           continue;
@@ -188,14 +205,14 @@ export const recurso: Recurso = {
       if (!prontos.length) return (avisar("Os parágrafos escolhidos não existem mais no documento."), false);
       const partes = prontos.map(
         (p) =>
-          `<a href="#${PREFIXO_ANCORA}${escaparHtml(p.ref)}" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">${escaparHtml(rotulo(prefixo, ocultar, p.item))}</a>`,
+          `<a href="#${escaparHtml(p.nome)}" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">${escaparHtml(rotulo(prefixo, ocultar, p.item))}</a>`,
       );
       const texto = partes.length > 1 ? `${partes.slice(0, -1).join(", ")} e ${partes.at(-1)}` : (partes[0] ?? "");
       let inserido = false;
       ADAPTADOR.withEdit(ed, () => {
         const { mudar } = planejar(ed, prefixo, ocultar);
         if (mudar.length) rotularLinks(c, mudar);
-        for (const p of prontos) if (!p.ancorado && !ancorarNoInicio(c, ed, p.el, `${PREFIXO_ANCORA}${p.ref}`, CLASSE_ANCORA)) return;
+        for (const p of prontos) if (!p.ancorado && !ancorarNoInicio(c, ed, p.el, p.nome, CLASSE_ANCORA)) return;
         ADAPTADOR.insertHtml(ed, ` ${texto} `);
         inserido = true;
       });

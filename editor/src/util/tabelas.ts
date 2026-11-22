@@ -78,16 +78,24 @@ export function estilizarTabela(
       a.recusarEscrita();
       return false;
     }
+    // o GHS MESCLA estilos (nao substitui, como o `setAttribute("style")` do CK4): tira antes o que a tabela ja tinha
+    const limpar = (nome: string, el: Element, modelo: Qualquer) => {
+      const antigos = Object.keys(estiloParaObjeto(el.getAttribute("style") ?? ""));
+      if (antigos.length && modelo && typeof ghs.removeModelHtmlStyles === "function") ghs.removeModelHtmlStyles(nome, antigos, modelo);
+    };
     a.withEdit(ed, () => {
+      limpar("table", tabela, mTabela);
       ghs.setModelHtmlStyles("table", estiloParaObjeto(estilos.table), mTabela);
       linhas.forEach((tr, i) => {
         const l = plano.linhas[i];
         if (!l) return;
         const mTr = modeloDe(e, tr);
+        limpar("tr", tr, mTr);
         if (mTr) ghs.setModelHtmlStyles("tr", estiloParaObjeto(l.tr), mTr);
         celulasDe(tr).forEach((td, j) => {
           const mTd = modeloDe(e, td);
           if (!mTd) return;
+          limpar("td", td, mTd);
           ghs.setModelHtmlStyles("td", estiloParaObjeto(l.celulas[j]?.td ?? ""), mTd);
           for (const filho of mTd.getChildren())
             if (filho.name === "paragraph") e.model.change((w: Qualquer) => w.setAttribute("estilo", l.celulas[j]?.p, filho));

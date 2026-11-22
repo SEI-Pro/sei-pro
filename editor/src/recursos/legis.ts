@@ -135,6 +135,8 @@ export const recurso: Recurso = {
     let resultados: Norma[] = [];
     let fecharDialogo: (() => void) | null = null;
     let buscaAtual = 0;
+    /** A instancia do editor que abriu o dialogo: com o foco no dialogo o CK4 nao tem "instancia atual", entao as acoes dele usam esta. */
+    let edDoDialogo: object | null = null;
 
     /** `refs` -> mapa sigla -> norma, chamado SEMPRE (vazio se a API falhar). Global: `sei-legis.js` o usa. */
     function resolverNormasLegisPro(refs: string[], callback: (achadas: Record<string, Norma>) => void): void {
@@ -158,8 +160,8 @@ export const recurso: Recurso = {
       });
     }
 
-    function sendLegisSEI(nome: string): void {
-      const ed = A.getInstance();
+    function sendLegisSEI(nome: string, editor?: object): void {
+      const ed = editor ?? edDoDialogo ?? A.getInstance();
       if (!ed) return;
       resolverNormasLegisPro([nome], (achadas) => {
         const norma = achadas[String(nome ?? "").trim()];
@@ -323,8 +325,9 @@ export const recurso: Recurso = {
     function insertLegisSEI(this_: Element | null): void {
       const norma = resultados[Number.parseInt(this_?.getAttribute("data-legis-idx") ?? "", 10)];
       if (!norma) return;
+      const ed = edDoDialogo ?? undefined;
       fecharDialogo?.();
-      inserirNorma(norma);
+      inserirNorma(norma, ed);
     }
 
     /** Ementa resumida <-> completa na linha do resultado. */
@@ -412,7 +415,7 @@ export const recurso: Recurso = {
         lista: h("div", {}, campoSelect("Nome da Legislação", "legis_nomeNorma", SELECT_LISTA)),
       };
       const lista = h("div", { role: "tablist", style: "display:flex;gap:4px;border-bottom:1px solid #ccc;margin-bottom:10px;" });
-      abas.forEach(([id, rotulo]) => {
+      abas.forEach(([id, rotulo], i) => {
         const b = h(
           "button",
           {
@@ -423,6 +426,14 @@ export const recurso: Recurso = {
             "aria-selected": "false",
             class: "spro-botao",
             onclick: () => selecionar(id),
+            // setas movem entre as abas (a inativa tem tabindex -1: so por aqui o teclado a alcanca)
+            onkeydown: (evento: Event) => {
+              const passo = (evento as KeyboardEvent).key === "ArrowRight" ? 1 : (evento as KeyboardEvent).key === "ArrowLeft" ? -1 : 0;
+              const destino = abas[(i + passo + abas.length) % abas.length]?.[0];
+              if (!passo || !destino) return;
+              selecionar(destino);
+              botoes.get(destino)?.focus();
+            },
           },
           rotulo,
         );
@@ -461,8 +472,8 @@ export const recurso: Recurso = {
                   return inserirFederal(raiz, tipo, numero, valor(raiz, "legis_anoNorma").trim(), valor(raiz, "legis_periodoNorma"), ed);
                 if (tipoInfra !== "" && numeroInfra !== "") {
                   const nr = (numeroInfra.includes("/") ? (numeroInfra.split("/")[0] ?? "") : numeroInfra).replace(/[^0-9-]+/g, "");
-                  sendLegisSEI(valor(raiz, "legis_orgaoInfraNorma") + tipoInfra + nr);
-                } else if (nome !== "") sendLegisSEI(nome);
+                  sendLegisSEI(valor(raiz, "legis_orgaoInfraNorma") + tipoInfra + nr, ed);
+                } else if (nome !== "") sendLegisSEI(nome, ed);
                 else return avisar("Informe o tipo e o número da norma, ou escolha uma norma da lista.");
                 fecharDialogo?.();
               },
@@ -471,7 +482,16 @@ export const recurso: Recurso = {
           ),
         ),
       );
-      const dialogo = abrirDialogo(c.doc, { titulo: "Adicionar Link de Legislação", conteudo: raiz });
+      edDoDialogo = ed;
+      const dialogo = abrirDialogo(c.doc, {
+        titulo: "Adicionar Link de Legislação",
+        conteudo: raiz,
+        // fechar (X, Esc) invalida a busca em andamento: a resposta que chegar depois nao insere nada
+        aoFechar: () => {
+          buscaAtual += 1;
+          edDoDialogo = null;
+        },
+      });
       fecharDialogo = () => dialogo.fechar();
       selecionar("federal");
 

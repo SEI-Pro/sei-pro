@@ -13,11 +13,13 @@ import { modeloDe, somenteLeituraDoModelo } from "./ck5";
 export function ancorarNoInicio(c: Contexto, ed: object, el: Element, nome: string, classe?: string): boolean {
   const a = c.adaptador;
   if (a.versao === 5) {
+    // um unico `id` por elemento: se o titulo ja e ancora de outro recurso (sumario x referencia interna), o `id` fica e vale como destino
     const m = modeloDe(ed, el);
     if (m && somenteLeituraDoModelo(c, m)) {
       a.recusarEscrita();
       return false;
     }
+    if (el.id) return true;
     return !!(
       c.win as unknown as { SeiProGhs?: { setAtributos(el: Element, v: Record<string, string>, ed?: object): boolean } }
     ).SeiProGhs?.setAtributos(el, { id: nome }, ed);
@@ -34,8 +36,9 @@ export function ancorarNoInicio(c: Contexto, ed: object, el: Element, nome: stri
   return true;
 }
 
-/** O nome (do `<a name>` do CK4 ou do `id` do CK5) que comeca com `prefixo`, ou null. */
-export function nomeDaAncora(el: Element, prefixo: string): string | null {
+/** O nome (do `<a name>` do CK4 ou do `id` do CK5) que comeca com `prefixo`, ou null. `qualquerId` (CK5): aceita o `id` do elemento seja qual for o prefixo. */
+export function nomeDaAncora(el: Element, prefixo: string, qualquerId = false): string | null {
+  if (qualquerId && el.id) return el.id;
   const ancora = el.querySelector(`a[name^="${prefixo}"]`);
   if (ancora) return ancora.getAttribute("name");
   return el.id?.startsWith(prefixo) ? el.id : null;

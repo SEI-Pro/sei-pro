@@ -71,8 +71,8 @@ export async function verificarUtilAncorasETabelas(): Promise<void> {
     const v = `[CK${c.versao}]`;
     const ctx = ctxDe(c);
     const corpo = corpoDe(c);
-    corpo.replaceChildren(...htmlParaNos(corpo.ownerDocument, '<p id="t">titulo</p><p>texto</p>'));
-    const p = corpo.querySelector("#t") as HTMLElement;
+    corpo.replaceChildren(...htmlParaNos(corpo.ownerDocument, '<p class="tt">titulo</p><p>texto</p>'));
+    const p = corpo.querySelector(".tt") as HTMLElement;
     const ed = ctx.adaptador.getInstance() as object;
     const chamadas: unknown[][] = [];
     (c.win as unknown as Record<string, unknown>).SeiProGhs = { setAtributos: (...a: unknown[]) => (chamadas.push(a), true) };
@@ -229,5 +229,34 @@ export async function verificarUtilAncorasETabelas(): Promise<void> {
       "tabela [CK5]: todas as chamadas do GHS rodam DENTRO de um model.change (um passo de desfazer)",
       chamadas.length > 0 && chamadas.every((x) => (x.at(-1) as number) >= 1),
     );
+  }
+  {
+    // trocar o estilo de uma tabela JA estilizada: o GHS mescla, entao o que havia sai antes (senao sobram restos do estilo velho)
+    const ck5 = criarCk5({ secoes: [{ raiz: "main", label: "Corpo do Texto", html: "<p>x</p>", principal: true }] });
+    const ctx = ctxDe(ck5);
+    const ed = ck5.instancia();
+    const corpo = ck5.elemento("main");
+    corpo.replaceChildren(
+      ...htmlParaNos(
+        corpo.ownerDocument,
+        '<figure class="table"><table style="width:50%;border:1px solid red"><tbody><tr style="background-color:#eee"><td style="color:blue"><p>a</p></td></tr></tbody></table></figure>',
+      ),
+    );
+    const chamadas: string[] = [];
+    const ghs = {
+      setModelHtmlStyles: (nome: string) => chamadas.push(`pos:${nome}`),
+      removeModelHtmlStyles: (nome: string, props: string[]) => chamadas.push(`tira:${nome}:${props.join(",")}`),
+      setModelHtmlAttributes: () => {},
+    };
+    Object.assign(ed, { plugins: { has: (n: string) => n === "GeneralHtmlSupport", get: () => ghs } });
+    estilizarTabela(ctx, ed, corpo.querySelector("table") as HTMLElement, { ...ESTILO, cabecalho: false });
+    igual("tabela [CK5]: os estilos que a tabela, a linha e a celula ja tinham saem ANTES de aplicar os novos", chamadas, [
+      "tira:table:width,border",
+      "pos:table",
+      "tira:tr:background-color",
+      "pos:tr",
+      "tira:td:color",
+      "pos:td",
+    ]);
   }
 }

@@ -74,8 +74,12 @@ export const recurso: Recurso = {
     }
 
     function reorderNtRodape(editorOuIframe?: unknown): void {
-      const ed =
-        typeof editorOuIframe === "object" && editorOuIframe && "model" in editorOuIframe ? (editorOuIframe as object) : A.getInstance();
+      // aceita a instancia do CK5 (`model`) ou uma das secoes do CK4; qualquer outra coisa (o iframe da assinatura antiga) cai na atual
+      const ehInstancia =
+        typeof editorOuIframe === "object" &&
+        editorOuIframe !== null &&
+        ("model" in editorOuIframe || A.getAllInstances().includes(editorOuIframe as never));
+      const ed = ehInstancia ? (editorOuIframe as object) : A.getInstance();
       if (!ed) return;
       const raiz = A.versao === 5 ? raizDoCorpoCk5(ed, corpoDe(ed)) : null;
       if (recusado(ed, raiz)) return;

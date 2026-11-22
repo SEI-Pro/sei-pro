@@ -59,12 +59,15 @@ export class InstanciaCk5 {
     let m = this.modelos.get(el);
     if (!m) {
       const mapa = this.inseridoAntes;
+      const modeloDe = (x: Element) => this.modeloDe(x);
       m = {
         elemento: el,
         root: { rootName: this.raizDoElemento(el) },
         name: el.tagName === "P" ? "paragraph" : el.tagName.toLowerCase(),
+        // o inserido antes (se houve) ou, como no model de verdade, o irmao anterior que ja existia
         get previousSibling() {
-          return mapa.get(el) ?? null;
+          const anterior = el.previousElementSibling;
+          return mapa.get(el) ?? (anterior ? modeloDe(anterior) : null);
         },
         getChildren: () => [...el.querySelectorAll(":scope > p")].map((x) => this.modeloDe(x)),
         is: (t: string) => t === "element",

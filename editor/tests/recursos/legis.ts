@@ -119,6 +119,48 @@ export async function verificarLegis(): Promise<void> {
   );
   igual("ementaLegivel: caixa alta vira normal", ementaLegivel("DISPÕE SOBRE ALGO").completa, "Dispõe sobre algo");
 
+  secao("recurso legis: instancia capturada (CK4 com varias secoes)");
+  {
+    const f = (await import("../falsos")).criarCk4({
+      secoes: [
+        { nome: "txaEditor_1", titulo: "Cabeçalho", html: "<p>cab</p>", somenteLeitura: true },
+        { nome: "txaEditor_2", titulo: "Processo e Interessado", html: "<p>proc</p>" },
+        { nome: "txaEditor_3", titulo: "Corpo do Texto", html: "<p>corpo</p>" },
+      ],
+    });
+    usarDocumento(f.doc);
+    const rede = redeFalsa((x) => {
+      if (x.url.includes("/normas/resolver")) return resposta({ resultados: { Cf: lei(1988, { tipo: "constituicao", titulo: "CF" }) } });
+      return resposta({ total: 2, itens: [lei(1), lei(2)] });
+    });
+    const g = legis.globais(ctxDe(f, rede.rede)) as Record<string, Fn>;
+    const botao = f.doc.createElement("a");
+    f.doc.querySelector("#cke_txaEditor_3")?.append(botao);
+    const dentro = (nome: string) => f.instancia(nome).inseridos.length;
+
+    g.getLegisSEI(botao);
+    let d = dialogoAberto(f.doc) as HTMLElement;
+    (d.querySelector("#legis_nomeNorma") as unknown as HTMLSelectElement).value = "Cf";
+    clicar(d, "Inserir");
+    await tique();
+    igual(
+      "legis [CK4]: a aba Lista insere na secao do botao (Corpo), nao na primeira editavel",
+      [dentro("txaEditor_3"), dentro("txaEditor_2")],
+      [1, 0],
+    );
+
+    g.getLegisSEI(botao);
+    d = dialogoAberto(f.doc) as HTMLElement;
+    (d.querySelector("#legis_tipoNorma") as unknown as HTMLSelectElement).value = "lei";
+    digitar(d.querySelector("#legis_numeroNorma") as HTMLInputElement, "1");
+    clicar(d, "Inserir");
+    await tique();
+    [...d.querySelectorAll("button")]
+      .find((b) => b.textContent === "Adicionar")
+      ?.dispatchEvent(new (f.doc.defaultView as unknown as { Event: typeof Event }).Event("click", { bubbles: true }));
+    igual("legis [CK4]: Adicionar de um resultado tambem insere no Corpo", [dentro("txaEditor_3"), dentro("txaEditor_2")], [2, 0]);
+  }
+
   secao("util legis-api: rede");
   {
     const f = redeFalsa(() => resposta({ total: 1, itens: [lei(14133)] }));
@@ -226,6 +268,28 @@ export async function verificarLegis(): Promise<void> {
       [...d.querySelectorAll('[role="tab"]')].map((t) => t.textContent),
       ["Legislação Federal", "Norma Infralegal", "Lista de Normas"],
     );
+    // abas por teclado: setas movem a selecao (a aba inativa tem tabindex -1, so as setas a alcancam)
+    const abas = [...d.querySelectorAll('[role="tab"]')];
+    const Tecla = (c.doc.defaultView as unknown as { Event: typeof Event }).Event;
+    const seta = (alvo: Element, key: string) => {
+      const ev = new Tecla("keydown", { bubbles: true });
+      Object.assign(ev, { key });
+      alvo.dispatchEvent(ev);
+    };
+    seta(abas[0] as Element, "ArrowRight");
+    igual(
+      `legis ${v}: seta direita seleciona a aba Norma Infralegal`,
+      abas.map((a) => a.getAttribute("aria-selected")),
+      ["false", "true", "false"],
+    );
+    seta(abas[1] as Element, "ArrowLeft");
+    seta(abas[0] as Element, "ArrowLeft");
+    igual(
+      `legis ${v}: seta esquerda na primeira volta para a ultima (circular)`,
+      abas.map((a) => a.getAttribute("aria-selected")),
+      ["false", "false", "true"],
+    );
+    seta(abas[2] as Element, "ArrowRight");
     checar(`legis ${v}: sem Cancelar`, ![...d.querySelectorAll("button")].some((b) => /cancelar/i.test(b.textContent ?? "")));
     // nada informado
     clicar(d, "Inserir");

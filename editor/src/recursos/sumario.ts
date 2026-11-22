@@ -65,7 +65,7 @@ export const recurso: Recurso = {
       let html = '<p class="Texto_Alinhado_Esquerda"><strong>SUMÁRIO</strong></p>';
       ADAPTADOR.withEdit(ed, () => {
         for (const titulo of titulos) {
-          const nome = nomeDaAncora(titulo, PREFIXO) ?? `${PREFIXO}${textoAleatorio(16)}`;
+          const nome = nomeDaAncora(titulo, PREFIXO, ADAPTADOR.versao === 5) ?? `${PREFIXO}${textoAleatorio(16)}`;
           if (!ancorarNoInicio(c, ed, titulo, nome, CLASSE_ANCORA)) continue;
           html += `<p class="Texto_Alinhado_Esquerda"><a href="#${escaparHtml(nome)}">${escaparHtml((titulo.textContent ?? "").trim())}</a></p>`;
         }

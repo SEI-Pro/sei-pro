@@ -401,6 +401,34 @@ export async function verificarNotaRodape(): Promise<void> {
     );
   }
   {
+    // CK4 com varias secoes e a instancia fora de foco (o dialogo tem o foco): as acoes usam a instancia CAPTURADA, nao a "primeira editavel"
+    const f = (await import("../falsos")).criarCk4({
+      secoes: [
+        { nome: "txaEditor_1", titulo: "Cabeçalho", html: "<p>cab</p>", somenteLeitura: true },
+        { nome: "txaEditor_2", titulo: "Processo e Interessado", html: "<p>proc</p>" },
+        { nome: "txaEditor_3", titulo: "Corpo do Texto", html: "<p>corpo</p>" },
+      ],
+    });
+    usarDocumento(f.doc);
+    const corpoSec = f.instancia("txaEditor_3");
+    corpoSec.corpo.replaceChildren(...htmlParaNos(corpoSec.corpo.ownerDocument, `${corpoHtml(1)}${SEP}${rodapeHtml(1, "nota")}`));
+    const g = notaRodape.globais(ctxDe(f)) as Record<string, Fn>;
+    g.reorderNtRodape(corpoSec);
+    igual(
+      "nota-rodape [CK4]: reorderNtRodape(instancia do Corpo) renumera o Corpo (nao a 'primeira editavel')",
+      [corpoSec.corpo.querySelector(".ntRodape_item")?.textContent, f.instancia("txaEditor_2").snapshots],
+      ["[1]", 0],
+    );
+    corpoSec.corpo.querySelector(".ntRodape_item")?.setAttribute("data-ntrodape", "9");
+    (corpoSec.corpo.querySelector(".ntRodape_item") as Element).textContent = "[9]";
+    g.updateNtRodape(corpoSec);
+    igual(
+      "nota-rodape [CK4]: updateNtRodape(instancia do Corpo) tambem",
+      corpoSec.corpo.querySelector(".ntRodape_item")?.textContent,
+      "[1]",
+    );
+  }
+  {
     const f5 = criarCk5({
       secoes: [
         { raiz: "cab", label: "Cabeçalho", html: "<p>cab</p>", somenteLeitura: true },

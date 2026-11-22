@@ -110,5 +110,33 @@ export async function verificarQuebras(): Promise<void> {
   ck5.selecionar({ raiz: "cab", elemento: pCab5 });
   aciona(pageBreak, ck5, "getPageBreak");
   checar("CK5: cursor na raiz somente leitura nao insere a quebra", ck5.instancia().insercoes.length === 0);
+  // CK5: a recusa tambem NAO deixa o callback aplicar `counter-reset` no paragrafo anterior (que ja existia na secao RO)
+  {
+    const f = criarCk5({
+      secoes: [
+        { raiz: "cab", label: "Cabeçalho", html: "<p>um</p><p>dois</p>", somenteLeitura: true },
+        { raiz: "corpo", label: "Corpo do Texto", html: "<p>corpo</p>", principal: true },
+      ],
+    });
+    const estilos: unknown[] = [];
+    Object.assign(f.instancia(), {
+      plugins: {
+        has: (n: string) => n === "GeneralHtmlSupport",
+        get: () => ({ setModelHtmlStyles: (...a: unknown[]) => estilos.push(a) }),
+      },
+    });
+    f.selecionar({ raiz: "cab", elemento: f.elemento("cab").querySelectorAll("p")[1] as Element });
+    let recusas = 0;
+    const ctxF = ctx(f);
+    ctxF.adaptador.aoRecusarEscrita(() => {
+      recusas += 1;
+    });
+    (sessionBreak.globais(ctxF).getSessionBreak as (el: Element | null) => void)(null);
+    igual(
+      "session-break [CK5]: secao somente leitura: nada inserido, nenhum estilo no paragrafo anterior, uma recusa",
+      [f.instancia().insercoes.length, estilos.length, recusas],
+      [0, 0, 1],
+    );
+  }
   void (null as unknown as FalsoCk4);
 }

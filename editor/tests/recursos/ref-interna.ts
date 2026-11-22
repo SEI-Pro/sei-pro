@@ -232,6 +232,52 @@ export async function verificarRefInterna(): Promise<void> {
     igual(`ref-interna ${v}: clickScroolToRef repetido nao duplica o ouvinte`, rolou, 2);
   });
 
+  // CK5: um paragrafo que ja e ancora do SUMARIO (id bookmark-) serve de destino da referencia sem trocar o id
+  {
+    const f = criarCk5({ secoes: [{ raiz: "main", label: "Corpo do Texto", html: "<p>x</p>", principal: true }] });
+    usarDocumento(f.doc);
+    const ed = f.instancia();
+    const ghs: string[] = [];
+    (f.win as unknown as Record<string, unknown>).SeiProGhs = {
+      setAtributos: (_el: Element, v: Record<string, string>) => {
+        ghs.push(v.id ?? "");
+        return true;
+      },
+    };
+    const g = refInterna.globais(ctxDe(f)) as Record<string, Fn>;
+    const corpo = f.elemento("main");
+    corpo.replaceChildren(
+      ...htmlParaNos(
+        corpo.ownerDocument,
+        '<p class="Paragrafo_Numerado_Nivel1" id="bookmark-AAAAAAAAAAAAAAAA">um</p><p class="Texto_Justificado">fim</p>',
+      ),
+    );
+    f.selecionar({ raiz: "main", elemento: corpo.querySelector("p.Texto_Justificado") });
+    g.getRefInterna(null);
+    const d = dialogoAberto(f.doc) as HTMLElement;
+    marcar(d.querySelector("#selectRef option"));
+    clicar(d, "Inserir");
+    const html = ed.insercoes.at(-1)?.html ?? "";
+    checar(
+      "ref-interna [CK5]: paragrafo que ja e ancora do sumario: o link usa o id existente",
+      html.includes('href="#bookmark-AAAAAAAAAAAAAAAA"'),
+      html,
+    );
+    igual("ref-interna [CK5]: e o id dele NAO e trocado (o link do sumario continua vivo)", ghs, []);
+    corpo.replaceChildren(
+      ...htmlParaNos(
+        corpo.ownerDocument,
+        '<p class="Paragrafo_Numerado_Nivel1">novo</p><p class="Paragrafo_Numerado_Nivel1" id="bookmark-AAAAAAAAAAAAAAAA">um</p><p>veja <a href="#bookmark-AAAAAAAAAAAAAAAA">[item 1]</a> e o titulo <a href="#bookmark-AAAAAAAAAAAAAAAA">Titulo do sumario</a></p>',
+      ),
+    );
+    g.updateRefsInternas(ed, "item", false);
+    igual(
+      "ref-interna [CK5]: atualizar renumera o rotulo [item 1] -> [item 2] e nao mexe no link de texto livre do sumario",
+      ed.textosInseridos.map((t) => t.texto),
+      ["[item 2]"],
+    );
+  }
+
   // CK5: cursor em secao somente leitura nao escreve
   {
     const f = criarCk5({
