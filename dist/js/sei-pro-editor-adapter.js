@@ -312,7 +312,9 @@
         'context-menu.js',
         'auto-cleanup.js',
         'review.js',
-        'ditado.js'
+        'ditado.js',
+        // Gerado por tabela-colunas/ (TypeScript): tabela com colunas em %, so no CK5.
+        'tabela-colunas.js'
     ];
 
     /**

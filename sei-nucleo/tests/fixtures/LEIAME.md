@@ -9,6 +9,7 @@ do SEI 5, todas com hashes de sessão zerados. A primeira linha de cada arquivo
 | Arquivo | Origem | Anonimização |
 |---|---|---|
 | `sei5/documento_alterar.html` | Tela `documento_alterar` de um Termo de Compromisso de Manutenção de Sigilo, capturada no SEI MJ de homologação (hmlsei.mj.gov.br, CK5), em 16/10/2026. Mantida em Latin-1, como o servidor entrega. | Todo hash de sessão de 64 hexadecimais virou 64 zeros; o login do usuário (`usuario.teste`, inclusive no prefixo do cookie `MJ_SEI_usuario_teste`) e o nome de pessoa no conteúdo (`Fulano de Tal`) foram trocados. Ids de unidade e de processo ficaram. |
+| `sei5/editor_pmm505.html` | Tela `editor_montar` (CK5) de uma Minuta de Projeto de Lei Complementar recém-gerada (documento 10000001), salva no navegador em 17/11/2026 num SEI 5.0.5 municipal. É a primeira captura com a lista de estilos em `infra.estilo` (e não na raiz do `INFRA_EDITOR_CONFIG`). Convertida para UTF-8. | Hashes de 64 hexadecimais zerados; nome do autor dos comentários trocado por `Usuario Teste`; id da extensão no caminho `chrome-extension://` trocado por `x`; URL trocada por `sei.exemplo.gov.br`; número do processo zerado (`00.00.00000000/0000.00`); ids trocados (documento 10000001 e 10000002, processo 7000001, unidade 110000000); token do agente do SEI Pro zerado. |
 
 ## Capturas do SEI SP Treinamento (4.1.5) para o módulo Processo, 24/10/2026
 

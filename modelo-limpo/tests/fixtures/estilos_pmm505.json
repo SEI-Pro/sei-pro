@@ -1,0 +1,55 @@
+{
+ "corpo": {
+  "estilos": [
+   "Citacao",
+   "Tabela_Texto_8",
+   "Tabela_Texto_Alinhado_Direita",
+   "Tabela_Texto_Alinhado_Esquerda",
+   "Tabela_Texto_Centralizado",
+   "Texto_Alinhado_Direita",
+   "Texto_Alinhado_Esquerda",
+   "Texto_Alinhado_Esquerda_Espacamento_Simples",
+   "Texto_Alinhado_Esquerda_Espacamento_Simples_Maiusc",
+   "Texto_Centralizado",
+   "Texto_Centralizado_Maiusculas",
+   "Texto_Centralizado_Maiusculas_Negrito",
+   "Texto_Espaco_Duplo_Recuo_Primeira_Linha",
+   "Texto_Justificado",
+   "Texto_Justificado_Recuo_Primeira_Linha"
+  ],
+  "estiloPadrao": "Texto_Justificado_Recuo_Primeira_Linha"
+ },
+ "anexos": {
+  "estilos": [
+   "Citacao",
+   "Item_Alinea_Letra",
+   "Item_Inciso_Romano",
+   "Item_Nivel1",
+   "Item_Nivel2",
+   "Item_Nivel3",
+   "Item_Nivel4",
+   "Paragrafo_Numerado_Nivel1",
+   "Paragrafo_Numerado_Nivel2",
+   "Paragrafo_Numerado_Nivel3",
+   "Paragrafo_Numerado_Nivel4",
+   "Tabela_Texto_8",
+   "Tabela_Texto_Alinhado_Direita",
+   "Tabela_Texto_Alinhado_Esquerda",
+   "Tabela_Texto_Centralizado",
+   "Texto_Alinhado_Direita",
+   "Texto_Alinhado_Esquerda",
+   "Texto_Alinhado_Esquerda_Espacamento_Simples",
+   "Texto_Alinhado_Esquerda_Espacamento_Simples_Maiusc",
+   "Texto_Centralizado",
+   "Texto_Centralizado_Maiusculas",
+   "Texto_Centralizado_Maiusculas_Negrito",
+   "Texto_Fundo_Cinza_Maiusculas_Negrito",
+   "Texto_Fundo_Cinza_Negrito",
+   "Texto_Justificado",
+   "Texto_Justificado_Maiusculas",
+   "Texto_Justificado_Recuo_Primeira_Linha",
+   "Texto_Justificado_Recuo_Primeira_Linha_Esp_Simples"
+  ],
+  "estiloPadrao": "Texto_Justificado"
+ }
+}

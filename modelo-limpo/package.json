@@ -1,0 +1,20 @@
+{
+  "name": "sei-pro-modelo-limpo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Gerar documento a partir de modelo sem herdar a formatacao quebrada (Google Docs, CK4) no CKEditor 5",
+  "scripts": {
+    "build": "npm run verificar && node build.mjs",
+    "tipos": "tsc --noEmit",
+    "verificar": "tsx tests/verificar.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

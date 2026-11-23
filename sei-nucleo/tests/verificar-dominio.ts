@@ -60,6 +60,19 @@ export async function verificarDominio(): Promise<void> {
   checar("ck5 com chaves dentro de string", ed5.tipo === "ck5" && ed5.secoes.length === 2 && ed5.ck5?.versao === 3);
   checar("ck5 principal pelo rootsAttributes", ed5.secoes[1].principal && ed5.secoes[0].somenteLeitura);
 
+  secao("editor ck5 real (SEI 5.0.5, estilos em infra.estilo)");
+  const ed505 = lerEditor(fixture("sei5/editor_pmm505.html"));
+  const porNome505 = (rotulo: string) => ed505.secoes.find((s) => s.titulo === rotulo);
+  checar("5.0.5: cinco secoes", ed505.tipo === "ck5" && ed505.secoes.length === 5, ed505.secoes.map((s) => s.titulo));
+  checar("5.0.5: corpo do texto e o principal", ed505.secoes.find((s) => s.principal)?.titulo === "Corpo do Texto");
+  checar("5.0.5: cabecalho, titulo e rodape somente leitura", ed505.secoes.filter((s) => s.somenteLeitura).length === 3);
+  const corpo505 = porNome505("Corpo do Texto");
+  const anexos505 = porNome505("Anexos");
+  checar("5.0.5: estilos do corpo lidos de infra.estilo", corpo505?.estilos.length === 15, corpo505?.estilos.length);
+  checar("5.0.5: anexos aceitam os estilos de dispositivo", anexos505?.estilos.length === 28 && anexos505.estilos.some((e) => e.classe === "Item_Inciso_Romano"), anexos505?.estilos.length);
+  checar("5.0.5: corpo nao aceita Item_Inciso_Romano", !corpo505?.estilos.some((e) => e.classe === "Item_Inciso_Romano"));
+  checar("5.0.5: estilo padrao por secao", corpo505?.estiloPadrao === "Texto_Justificado_Recuo_Primeira_Linha" && anexos505?.estiloPadrao === "Texto_Justificado", [corpo505?.estiloPadrao, anexos505?.estiloPadrao]);
+
   secao("editor ck5: gravacao fora do Latin-1 (N1 do SEI MJ 5.0.4)");
   // O SEI decodifica o JSON e grava em ISO-8859-1: o que passa de U+00FF chegava como "?".
   const novoCk5 = "<p>Coordena\u00E7\u00E3o \u2014 \u201CAspas\u201D 10\u20AC &amp; \u00C1gua</p>";
