@@ -107,6 +107,8 @@ export function lerProcessoDaLinha(tr: Element, ctx: ContextoLinha): Processo | 
   }
   const href = tr.querySelector('a[href*="acao=procedimento_trabalhar"]')?.getAttribute('href');
   if (href) processo.link = decodificarEntidades(href);
+  const hrefMarc = tr.querySelector('a[href*="acao=andamento_marcador_gerenciar"]')?.getAttribute('href');
+  if (hrefMarc && !base.sigiloso) processo.linkMarcadores = decodificarEntidades(hrefMarc);
   const atribuicao = lerAtribuicao(tr);
   if (atribuicao) processo.atribuicao = atribuicao;
   if (!base.sigiloso) {

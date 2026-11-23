@@ -91,4 +91,13 @@ await teste('leitura: detalhada traz última movimentação, prioridade, interes
 await teste('leitura: link do processo vem do próprio SEI (assinado), sem inventar', () => {
   const p = lerTabelas(docFixture('caixa_prazos.html')).processos.find((x) => x.id === '148265')!;
   assert.match(p.link!, /^controlador\.php\?acao=procedimento_trabalhar&acao_origem=procedimento_controlar.*id_procedimento=148265/);
+  assert.match(p.linkMarcadores!, /^controlador\.php\?acao=andamento_marcador_gerenciar.*id_procedimento=148265/);
+});
+await teste('leitura: datasMarcadores extrai data/hora real de cada marcador da tela andamento_marcador_gerenciar', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { resolve } = await import('node:path');
+  const { lerDatasMarcadores } = await import('../src/leitura/datasMarcadores');
+  const html = readFileSync(resolve(import.meta.dirname, '../../sei-nucleo/tests/fixtures/sei41/p_andamento_marcador_gerenciar.html'), 'latin1');
+  const datas = lerDatasMarcadores(docDe(html));
+  assert.ok(datas['para bruna assinar']! > datas['teste']!, 'Para Bruna assinar (04:32) deve ser mais recente que teste (03:53)');
 });

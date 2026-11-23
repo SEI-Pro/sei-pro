@@ -169,10 +169,10 @@ await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o a
   const { app, chamadas } = await montar();
   app.definirVisao({ modo: 'quadro' });
   const col = (chave: string) => qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === chave)!;
-  // Processo 148265 tem [Para Pessoa assinar, teste] -> aparece apenas no ultimo marcador (Para Pessoa assinar), sem duplicar.
-  assert.ok(col('sem') && col('m:Para Pessoa assinar'));
-  assert.equal(col('m:teste'), undefined);
-  const cartao = [...col('m:Para Pessoa assinar').querySelectorAll<HTMLElement>('.spro-cartao')][0]!;
+  // Processo 148265 tem [Para Pessoa assinar, teste]; sem consultarDatasMarcadores usa o ultimo da lista (teste), sem duplicar.
+  assert.ok(col('sem') && col('m:teste'));
+  assert.equal(col('m:Para Pessoa assinar'), undefined);
+  const cartao = [...col('m:teste').querySelectorAll<HTMLElement>('.spro-cartao')][0]!;
   const id = cartao.getAttribute('data-id')!;
   const dt = new Map<string, string>();
   const transfer = { types: ['application/x-spro-cartao'], setData: (k: string, v: string) => dt.set(k, v), getData: (k: string) => dt.get(k) ?? '', effectAllowed: '' };
@@ -181,9 +181,28 @@ await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o a
   cartao.dispatchEvent(ev('dragstart'));
   col('sem').dispatchEvent(ev('drop'));
   await tick(); await tick();
-  assert.deepEqual(chamadas, ['99906.713-630.000032/2025-82 -Para Pessoa assinar']);
+  assert.deepEqual(chamadas, ['99906.713-630.000032/2025-82 -teste']);
   assert.equal(id, '148265');
   assert.ok(qa(app, '.spro-aviso').length >= 1);
+  app.fechar();
+});
+await teste('app: quadro consulta data/hora real dos marcadores quando processo tem 2+ marcadores e posiciona no mais recente', async () => {
+  const consultados: string[] = [];
+  const { app } = await montar({
+    consultarDatasMarcadores: async (p) => {
+      consultados.push(p.id);
+      return {
+        'para pessoa assinar': Date.parse('2026-09-14T04:32:00Z'),
+        teste: Date.parse('2026-09-14T03:53:00Z'),
+      };
+    },
+  });
+  app.definirVisao({ modo: 'quadro' });
+  await tick(); await tick();
+  assert.deepEqual(consultados, ['148265']);
+  const col = (chave: string) => qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === chave);
+  assert.ok(col('m:Para Pessoa assinar'), 'moveu para o marcador com data/hora mais recente');
+  assert.equal(col('m:teste'), undefined, 'nao duplica no marcador mais antigo');
   app.fechar();
 });
 await teste('app: coluna só de leitura (prazo) não aceita soltar', async () => {
@@ -203,9 +222,9 @@ await teste('app: mover que o SEI recusa reverte e avisa', async () => {
   app.definirVisao({ modo: 'quadro' });
   const ids = () => qa(app, '.spro-col').map((c) => `${c.getAttribute('data-chave')}:${c.querySelectorAll('.spro-cartao').length}`).join();
   const antes = ids();
-  const cartao = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'm:Para Pessoa assinar')!.querySelector<HTMLElement>('.spro-cartao')!;
+  const cartao = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'm:teste')!.querySelector<HTMLElement>('.spro-cartao')!;
   const Ev = (cartao.ownerDocument.defaultView as any).Event;
-  const transfer = { types: ['application/x-spro-cartao'], setData: () => undefined, getData: () => JSON.stringify({ id: cartao.getAttribute('data-id'), de: 'm:Para Pessoa assinar' }) };
+  const transfer = { types: ['application/x-spro-cartao'], setData: () => undefined, getData: () => JSON.stringify({ id: cartao.getAttribute('data-id'), de: 'm:teste' }) };
   qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'sem')!.dispatchEvent(Object.assign(new Ev('drop', { bubbles: true, cancelable: true }), { dataTransfer: transfer }));
   await tick(); await tick(); await tick();
   assert.equal(ids(), antes);

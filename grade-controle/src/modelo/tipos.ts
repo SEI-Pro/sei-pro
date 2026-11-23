@@ -45,6 +45,8 @@ export interface Processo {
   atribuicao?: { sigla: string; nome: string };
   /** Endereço (relativo ao SEI, assinado) que abre o processo. */
   link?: string;
+  /** Endereço assinado da tela de gerenciar marcadores (para consultar data/hora quando há mais de um). */
+  linkMarcadores?: string;
   marcadores: MarcadorLinha[];
   anotacao?: AnotacaoLinha;
   prazo?: PrazoProcesso;

@@ -149,14 +149,14 @@ await teste('grupos: por responsável, sem responsável por último', () => {
   const g = agrupar([proc(), proc({ atribuicao: beto }), proc({ atribuicao: ana })], 'responsavel', CTX);
   assert.deepEqual(g.map((x) => x.chave), ['u:ana', 'u:beto', 'sem']);
 });
-await teste('grupos: processo com 2 marcadores aparece apenas no último marcador (dataHora ou ordem do SEI)', () => {
+await teste('grupos: processo com 2 marcadores aparece apenas no último marcador (dataHora ou último da lista)', () => {
   const p = proc({ marcadores: [mk('A'), mk('B')] });
   const g = agrupar([p, proc()], 'marcador', CTX);
-  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:A', 1], ['sem', 1]]);
+  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:B', 1], ['sem', 1]]);
   const comData = proc({
     marcadores: [
-      { nome: 'Antigo', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-01T10:00:00Z') },
       { nome: 'Recente', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-14T15:30:00Z') },
+      { nome: 'Antigo', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-01T10:00:00Z') },
     ],
   });
   assert.deepEqual(agrupar([comData], 'marcador', CTX).map((x) => x.chave), ['m:Recente']);

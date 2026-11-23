@@ -3,6 +3,7 @@
  * intenções; quem fala com o SEI são as dependências recebidas (`DepsApp`), que os testes substituem.
  */
 import { gerarCsv } from '../../../sei-comum/src/csv';
+import { normalizarTexto } from '../../../sei-comum/src/texto';
 import { type Combo, criarCombo } from '../../../sei-comum/src/ui/combobox';
 import { h, icone as iconeComum, type NomeIcone } from '../../../sei-comum/src/ui/dom';
 import { aplicarSelecao, lerSelecao, observarSelecao } from '../acoes/selecao';
@@ -63,6 +64,8 @@ export interface DepsApp {
   anotar(protocolo: string, a: { texto: string; prioridade: boolean }): Promise<void>;
   /** Consulta o andamento de um processo (datas e unidade de envio). Sem isso, os agrupamentos por andamento não existem. */
   consultarAndamento?(p: Processo, sinal: AbortSignal): Promise<DadosColeta | null>;
+  /** Consulta a data/hora de atribuição dos marcadores de um processo (só usado quando há 2+ marcadores). */
+  consultarDatasMarcadores?(p: Processo, sinal: AbortSignal): Promise<Record<string, number> | null>;
   /** Para os testes. */
   andamentoSimultaneas?: number;
   andamentoPausaMs?: number;
@@ -480,6 +483,45 @@ export function criarApp(d: DepsApp) {
   const observadorTamanho = ObsTamanho ? new ObsTamanho(() => ajustarFaixa()) : null;
   observadorTamanho?.observe(faixa);
 
+  const datasMarcadoresCache = new Map<string, Record<string, number>>();
+  const datasMarcadoresConsultados = new Set<string>();
+  const assinaturaMarcadores = (p: Processo) => `${p.id}|${p.marcadores.map((m) => m.nome).join('|')}`;
+  function aplicarDatasMarcadores(p: Processo): Processo {
+    if (p.marcadores.length <= 1) return p;
+    const datas = datasMarcadoresCache.get(p.id);
+    if (!datas) return p;
+    let mudou = false;
+    const marcadores = p.marcadores.map((m) => {
+      if (m.dataHora !== undefined) return m;
+      const dt = datas[normalizarTexto(m.nome)];
+      if (dt === undefined) return m;
+      mudou = true;
+      return { ...m, dataHora: dt };
+    });
+    return mudou ? { ...p, marcadores } : p;
+  }
+  function enriquecerDatasMarcadores() {
+    if (!d.consultarDatasMarcadores || encerrado) return;
+    const precisa = (visao.modo === 'quadro' && visao.quadro.colunas === 'marcador') || (visao.modo === 'tabela' && visao.agrupar === 'marcador');
+    if (!precisa) return;
+    const pendentes = todos.filter((p) => p.marcadores.length > 1 && p.linkMarcadores && !datasMarcadoresConsultados.has(assinaturaMarcadores(p)));
+    if (!pendentes.length) return;
+    for (const p of pendentes) datasMarcadoresConsultados.add(assinaturaMarcadores(p));
+    const filaPendentes = [...pendentes];
+    const trabalhadores = Math.min(4, filaPendentes.length);
+    const rodar = async () => {
+      while (filaPendentes.length && !encerrado && !ctl.signal.aborted) {
+        const p = filaPendentes.shift()!;
+        const datas = await d.consultarDatasMarcadores!(p, ctl.signal).catch(() => null);
+        if (!datas || encerrado) continue;
+        datasMarcadoresCache.set(p.id, datas);
+        todos = todos.map((x) => (x.id === p.id ? aplicarDatasMarcadores(x) : x));
+        render();
+      }
+    };
+    for (let i = 0; i < trabalhadores; i++) void rodar();
+  }
+
   function render() {
     if (encerrado) return;
     const f = facetasDe(comId(), ctx());
@@ -497,6 +539,7 @@ export function criarApp(d: DepsApp) {
     renderConteudo();
     renderStatus(filtrados().length);
     renderLote();
+    enriquecerDatasMarcadores();
     if (visao.modo === 'quadro' && !extrasPedido && d.extras) {
       extrasPedido = true;
       void d.extras().then((e) => { extras = e; if (!encerrado) renderConteudo(); }).catch(() => undefined);
@@ -674,7 +717,7 @@ export function criarApp(d: DepsApp) {
       const assinatura = assinaturaIcones(doc, p.id);
       const assinaturaAntes = assinaturas.get(p.id);
       assinaturas.set(p.id, assinatura);
-      let resultado = n;
+      let resultado = aplicarDatasMarcadores(n);
       if (local) {
         // A linha nativa ja concorda com o que a grade mudou? Entao o registro local cumpriu o papel.
         for (const k of Object.keys(local)) if (JSON.stringify((n as unknown as Record<string, unknown>)[k]) === JSON.stringify(local[k])) delete local[k];

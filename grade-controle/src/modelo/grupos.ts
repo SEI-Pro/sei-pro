@@ -74,16 +74,20 @@ function fixos(mapa: Map<string, GrupoLista>, tabela: ReadonlyArray<readonly [st
 }
 
 /**
- * Último marcador atribuído ao processo: usa a maior `dataHora` quando informada; caso contrário, o primeiro
- * da lista (o SEI ordena os marcadores da linha por `Execucao DESC`, mais recente primeiro).
+ * Último marcador atribuído ao processo: usa a maior `dataHora` quando informada; caso contrário, o último
+ * da lista (como fallback enquanto as datas reais ainda não foram consultadas no SEI).
  */
 export function ultimoMarcador(p: Processo) {
   if (!p.marcadores.length) return undefined;
   if (p.marcadores.length === 1) return p.marcadores[0];
-  let melhor = p.marcadores[0]!;
-  for (let i = 1; i < p.marcadores.length; i++) {
+  let melhor = p.marcadores[p.marcadores.length - 1]!;
+  let temData = melhor.dataHora !== undefined;
+  for (let i = 0; i < p.marcadores.length; i++) {
     const atual = p.marcadores[i]!;
-    if (atual.dataHora !== undefined && (melhor.dataHora === undefined || atual.dataHora > melhor.dataHora)) melhor = atual;
+    if (atual.dataHora !== undefined && (!temData || atual.dataHora > melhor.dataHora!)) {
+      melhor = atual;
+      temData = true;
+    }
   }
   return melhor;
 }

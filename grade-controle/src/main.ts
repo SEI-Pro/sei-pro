@@ -26,6 +26,7 @@ import { instalarDicas } from './ui/dica';
 import { ativarCedo, desativar, estaAtiva, gravarDica, lerDica, marcarPronta, vigiar } from './ativacao/inicio';
 import { ligarCliqueDoBotao, manterBotao } from './ativacao/botao';
 import { lerTabelas, SELETOR_TABELAS } from './leitura/tabela';
+import { consultarDatasMarcadores } from './leitura/datasMarcadores';
 import { criarFonteSei } from './paginas/carregar';
 import { criarArmazem } from './persistencia/armazem';
 import { criarApp, type App } from './ui/app';
@@ -141,6 +142,7 @@ function montar() {
     },
     anotar: async (protocolo, a) => void (await definirAnotacao(sei, protocolo, a, { aplicar: true })),
     consultarAndamento: (p, sinal) => consultarAndamento(sei, p, { sigla: contexto.unidade.sigla, nome: contexto.unidade.nome }, sinal),
+    consultarDatasMarcadores: (p, sinal) => consultarDatasMarcadores(sei, p, sinal),
   });
   app.definirNomesCompletos(nomesCompletos);
   acompanharPesquisaRapida(app);
