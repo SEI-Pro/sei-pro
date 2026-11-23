@@ -1457,6 +1457,8 @@ function loadStylePro(url, elementTo = $('head'), iframeTo = $('head')) {
             href: url
         }).appendTo(elementTo);
     }
+        // Tema escuro: o CSS escuro da barra e do documento depende de body.dark-mode (que o Estilo Avancado novo nao poe).
+        if (localStorage.getItem('darkModePro') || document.documentElement.getAttribute('data-spro-tema') === 'escuro') { $('body').addClass('dark-mode'); }
 }
 function checkLoadJqueryUI(callback = false) {
     if (typeof jQuery.ui === 'undefined')  {

@@ -4876,3 +4876,139 @@ strong.title-reviewtip {
     padding: 0 !important;
     line-height: 1 !important;
 }
+
+/* Editor CKEditor 5 (SEI 5) com o estilo avancado do editor (seiSlim_editor): a barra vira cartoes por grupo, como no
+   editor do SEI 4. Cada grupo e a sequencia de botoes entre dois separadores do CK5: os itens ficam colados com fundo
+   branco e a sombra (drop-shadow) acompanha a silhueta do grupo; o separador vira o vao entre cartoes. So visual:
+   nao mexe na estrutura da barra do CK5. Salvar e Assinar sao pilulas proprias. */
+.seiSlim.isSEI_5.seiEditor .infra-editor__toolbar {
+    padding: 10px 12px 6px;
+    background: #f3f4f7;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items {
+    gap: 8px 0;
+    align-items: stretch;
+    filter: drop-shadow(0 1px 1px rgba(16, 24, 40, 0.07)) drop-shadow(0 3px 8px rgba(16, 24, 40, 0.09));
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * {
+    background: #fff;
+    border-radius: 0;
+    margin: 0;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .ck-toolbar__separator {
+    background: transparent;
+    width: 10px;
+    min-width: 10px;
+    min-height: 0;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(3),
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .ck-toolbar__separator + * {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    padding-left: 6px;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :has(+ .ck-toolbar__separator),
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    padding-right: 6px;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :first-child,
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) {
+    border-radius: 999px;
+    padding: 0 14px;
+    margin-right: 8px;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) {
+    background: #1f2a44;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) .ck-button__label {
+    color: #fff;
+    font-weight: 600;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) .ck-icon {
+    filter: brightness(0) invert(1);
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .infra-editor__toolbar {
+    background: #141619;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * {
+    background: #202123;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .ck-toolbar__separator {
+    background: transparent;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) {
+    background: #3b4a78;
+}
+/* SEI 5: icones do SEI Pro (fonte) no mesmo tamanho visual dos icones nativos (SVG 20px) */
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .cke_iconPro {
+    width: 34px;
+    min-width: 34px;
+    justify-content: center;
+}
+.seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .cke_iconPro > i {
+    font-size: 17px;
+    line-height: 20px;
+    width: auto;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * {
+    color: #e6e8ee;
+    --ck-color-button-default-hover-background: #2c2f36;
+    --ck-color-button-on-background: #2c2f36;
+    --ck-color-text: #e6e8ee;
+    --ck-color-dropdown-panel-background: #202123;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * .ck-button__label,
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * .ck-dropdown__button .ck-button__label {
+    color: #e6e8ee;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) .ck-button__label {
+    color: #fff;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > * .ck-icon {
+    color: #e6e8ee;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > :nth-child(2) .ck-icon {
+    filter: brightness(0) invert(1);
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items > .cke_iconPro > i:not([class*="Color"]) {
+    color: #e6e8ee;
+}
+:is(html.dark-mode, html[data-spro-tema="escuro"]) .seiSlim.isSEI_5.seiEditor .ck.ck-toolbar .ck-toolbar__items .ck-icon [stroke="#000000"] {
+    stroke: currentColor;
+}
+/* SEI 5 com Estilo Avancado: sem a borda azul de foco da secao e sem o selo "Powered by CKEditor" */
+.seiSlim .ck.ck-editor__editable.ck-focused,
+.seiSlim .ck.ck-editor__editable.ck-editor__editable_inline.ck-focused,
+.seiSlim .ck.ck-editor__editable:not(.ck-editor__nested-editable):hover {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+.seiSlim .ck.ck-powered-by,
+.seiSlim .ck.ck-balloon-panel.ck-powered-by-balloon,
+.seiSlim .ck.ck-powered-by-balloon,
+.seiSlim ~ .ck.ck-powered-by-balloon,
+.seiSlim ~ .ck-body-wrapper .ck.ck-powered-by-balloon,
+.seiSlim .ck-body-wrapper .ck.ck-powered-by-balloon {
+    display: none !important;
+}

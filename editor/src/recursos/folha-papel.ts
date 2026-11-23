@@ -8,16 +8,21 @@ const CHAVE = "spro_editor_folha";
 const ID_ESTILO = "seipro-folha-editor";
 const ATRIBUTO = "data-spro-folha-editor";
 
-/** Fundo branco DENTRO do iframe do CK4, inclusive nas secoes somente leitura que o tema pinta de cinza; so cor, sem margem (a altura do iframe e fixa). */
-const CSS_BRANCO =
-  "html:root, html:root body, html:root body.cke_editable.cke_editable.cke_editable," +
-  " html:root body[contenteditable] { background-color: #ffffff !important; background-image: none !important; }\n";
+/** Fundo da folha DENTRO do iframe do CK4 (branco; escuro quando o tema deixa o texto claro), inclusive nas secoes somente leitura que o tema pinta de cinza; so cor, sem margem (a altura do iframe e fixa). */
+function cssFundoIframe(cor: string): string {
+  return (
+    "html:root, html:root body, html:root body.cke_editable.cke_editable.cke_editable," +
+    ` html:root body[contenteditable] { background-color: ${cor} !important; background-image: none !important; }\n`
+  );
+}
 
 /** CSS da pagina: folha de 940px (828 de texto + 2 x 56 de margem, a mesma largura da visualizacao). */
 export function cssPagina(escuro: boolean): string {
   const a = `html[${ATRIBUTO}]`;
+  const at = `[${ATRIBUTO}]`;
   const mesa = escuro ? "#141619" : "#f3f4f7";
   const borda = escuro ? "#2a2d33" : "#e3e6ee";
+  const folha = escuro ? "#202123" : "#ffffff";
   const sombra = "rgba(20, 25, 50, .13)";
   const lados = `14px 0 24px -14px ${sombra}, -14px 0 24px -14px ${sombra}`;
   const base = `0 14px 24px -14px ${sombra}`;
@@ -27,18 +32,26 @@ export function cssPagina(escuro: boolean): string {
     `${a} #divEditores, ${a} .cke_inner, ${a} .cke { background-color: ${mesa} !important; }\n` +
     `${a} #divEditores { padding-bottom: 28px; }\n` +
     // CK4: cada .cke_contents e um pedaco da folha
-    `${c} { max-width: 828px; margin: 0 auto; padding: 0 56px; background-color: #ffffff !important;` +
+    `${c} { max-width: 828px; margin: 0 auto; padding: 0 56px; background-color: ${folha} !important;` +
     ` border: 0 solid ${borda}; border-width: 0 1px; box-shadow: ${lados}; clip-path: inset(0 -30px); }\n` +
     `${c}[data-spro-folha~="primeira"] { margin-top: 24px; padding-top: 40px; border-top-width: 1px; border-radius: 12px 12px 0 0; }\n` +
     `${c}[data-spro-folha~="ultima"] { padding-bottom: 40px; border-bottom-width: 1px; border-radius: 0 0 12px 12px;` +
     ` box-shadow: ${lados}, ${base}; clip-path: inset(0 -30px -30px); }\n` +
     `${c}[data-spro-folha~="primeira"][data-spro-folha~="ultima"] { border-radius: 12px; }\n` +
     `@media (max-width: 1000px) { ${c} { padding-left: 20px; padding-right: 20px; } }\n` +
-    // CK5
-    `${a} .ck-editor__main { background-color: ${mesa}; padding: 28px 12px; }\n` +
-    `${a} .ck-editor__editable.ck-content { box-sizing: border-box; max-width: 940px; margin: 0 auto !important;` +
-    ` padding: 40px 56px !important; background-color: #ffffff !important;` +
-    ` border: 1px solid ${borda} !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgba(20, 25, 50, .08), 0 8px 28px rgba(20, 25, 50, .12) !important; }\n`
+    // CK5: as secoes sao editores irmaos dentro de um unico container; a folha e o container, as secoes ficam coladas dentro
+    `${a} .infra-editor__editor-completo { background-color: ${mesa} !important; }\n` +
+    `${a} .infra-editor__editable-inner-container { box-sizing: border-box; width: min(940px, calc(100% - 24px));` +
+    ` margin: 28px auto; padding: 0; background-color: ${folha} !important; border: 1px solid ${borda}; border-radius: 12px;` +
+    ` box-shadow: 0 1px 2px rgba(20, 25, 50, .08), 0 8px 28px rgba(20, 25, 50, .12); }\n` +
+    `${a} .infra-editor__editable-inner-container > .ck-content { box-sizing: border-box; width: 100%; max-width: none;` +
+    ` margin: 0 !important; padding: 12px 56px !important; background-color: transparent !important; border: 0 !important;` +
+    ` border-radius: 0 !important; box-shadow: none !important; }\n` +
+    `${a} .infra-editor__editable-inner-container > .ck-content:first-child { padding-top: 40px !important; }\n` +
+    `${a} .infra-editor__editable-inner-container > .ck-content:last-child { padding-bottom: 40px !important; }\n` +
+    // tema escuro do Estilo Avancado: texto claro, entao a folha escurece junto (acompanha a troca de tema sem religar)
+    `html[data-spro-tema="escuro"]${at} .infra-editor__editor-completo { background-color: #141619 !important; }\n` +
+    `html[data-spro-tema="escuro"]${at} .infra-editor__editable-inner-container { background-color: #202123 !important; border-color: #2a2d33; }\n`
   );
 }
 
@@ -54,7 +67,7 @@ function injetarEstilo(doc: Document, css: string | null): void {
 }
 
 /** Fundo branco inline `!important` (so ele vence regra `!important` alheia); guarda o original em `data-spro-folha-bg` para devolver. */
-function fundoInline(el: HTMLElement | null, ligar: boolean): void {
+function fundoInline(el: HTMLElement | null, ligar: boolean, cor = "#ffffff"): void {
   if (!el?.style) return;
   const guardado = el.getAttribute("data-spro-folha-bg");
   if (ligar) {
@@ -63,7 +76,7 @@ function fundoInline(el: HTMLElement | null, ligar: boolean): void {
         "data-spro-folha-bg",
         `${el.style.getPropertyValue("background-color")}|${el.style.getPropertyPriority("background-color")}`,
       );
-    el.style.setProperty("background-color", "#ffffff", "important");
+    el.style.setProperty("background-color", cor, "important");
   } else if (guardado !== null) {
     const [valor, prioridade] = guardado.split("|");
     el.removeAttribute("data-spro-folha-bg");
@@ -77,16 +90,18 @@ export const recurso: Recurso = {
   globais(c: Contexto) {
     const doc = c.doc;
     const ligada = () => !!c.win.localStorage?.getItem(CHAVE);
-    const modoEscuro = () => !!c.win.localStorage?.getItem("darkModePro");
+    const modoEscuro = () =>
+      !!c.win.localStorage?.getItem("darkModePro") || doc.documentElement.getAttribute("data-spro-tema") === "escuro";
     let ligouCk4 = false;
 
     function aplicarNosIframes(ligar: boolean): void {
       for (const f of doc.querySelectorAll<HTMLIFrameElement>("iframe.cke_wysiwyg_frame")) {
         const d = f.contentDocument;
         if (!d?.head) continue;
-        injetarEstilo(d, ligar ? CSS_BRANCO : null);
-        fundoInline(d.documentElement, ligar);
-        fundoInline(d.body, ligar);
+        const cor = modoEscuro() ? "#202123" : "#ffffff";
+        injetarEstilo(d, ligar ? cssFundoIframe(cor) : null);
+        fundoInline(d.documentElement, ligar, cor);
+        fundoInline(d.body, ligar, cor);
       }
     }
 

@@ -115,4 +115,31 @@ export async function verificarFontSizeStyleEditor(): Promise<void> {
     [guardado.has("seiSlim_editor"), botao.className, doc.body.className],
     [false, "getNewStyleButton cke_button_off", ""],
   );
+
+  // Estilo Avancado em outra aba muda a chave: o editor ABERTO acompanha pelo evento storage
+  (styleEditor.iniciar as (c: Contexto) => void)(ctxDe({ win, doc }));
+  const avisar = (newValue: string | null) => {
+    const ev = new win.Event("storage") as Event & { key?: string; newValue?: string | null };
+    ev.key = "seiSlim_editor";
+    ev.newValue = newValue;
+    win.dispatchEvent(ev);
+  };
+  avisar("true");
+  igual(
+    "storage de outra aba liga: classes slim, botao on e fonte de icones recarregada",
+    [doc.body.className, botao.className, icones.length],
+    ["seiSlim seiSlim_parent seiSlim_view", "getNewStyleButton cke_button_on", 2],
+  );
+  avisar(null);
+  igual(
+    "storage de outra aba desliga: tira as classes e o botao fica off",
+    [doc.body.className, botao.className],
+    ["", "getNewStyleButton cke_button_off"],
+  );
+  const antes = doc.body.className;
+  const ev2 = new win.Event("storage") as Event & { key?: string; newValue?: string | null };
+  ev2.key = "outra_chave";
+  ev2.newValue = "true";
+  win.dispatchEvent(ev2);
+  igual("storage de outra chave e ignorado", doc.body.className, antes);
 }
