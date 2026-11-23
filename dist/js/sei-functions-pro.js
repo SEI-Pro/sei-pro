@@ -1,4 +1,48 @@
 const loadFunctionsPro = true;
+// Chrome com o evento "unload" desativado (Permissions-Policy): o jQuery do SEI (3.7) registra um "unload" na janela do
+// iframe toda vez que a consulta alterna entre o documento da pagina e o de um iframe, o que o SEI Pro faz o tempo todo
+// (arvore, visualizacao, atividades) e enche o console de "Permissions policy violation: unload is not allowed".
+// Aqui so se descarta esse registro especifico (handler minusculo que apenas chama uma funcao, o `setDocument` do jQuery);
+// "unload" de qualquer outro codigo, inclusive do proprio SEI, segue intacto.
+(function silenciarUnloadDoJqueryPro() {
+    var ehHandlerDoJquery = function (fn) {
+        try { return /^function\s*\w*\s*\(\s*\)\s*\{\s*\w+\(\s*\)\s*;?\s*\}$/.test(Function.prototype.toString.call(fn)); } catch (e) { return false; }
+    };
+    var tratarJanela = function (win, nivel) {
+        try {
+            if (!win || nivel > 3) { return; }
+            if (!win.__sproUnloadJquery && typeof win.addEventListener === 'function') {
+                var original = win.addEventListener;
+                win.addEventListener = function (tipo, fn) {
+                    if (tipo === 'unload' && typeof fn === 'function' && ehHandlerDoJquery(fn)) { return; }
+                    return original.apply(this, arguments);
+                };
+                win.__sproUnloadJquery = true;
+                // iframes que carregam depois, dentro desta janela
+                win.document.addEventListener('load', function (ev) {
+                    var t = ev.target;
+                    if (t && (t.tagName === 'IFRAME' || t.tagName === 'FRAME')) { tratarJanela(t.contentWindow, nivel + 1); }
+                }, true);
+            }
+            var frames = win.document.querySelectorAll('iframe, frame');
+            for (var i = 0; i < frames.length; i++) { tratarJanela(frames[i].contentWindow, nivel + 1); }
+        } catch (e) { /* iframe de outra origem: nao se aplica */ }
+    };
+    try {
+        tratarJanela(window, 0);
+        if (window.__sproUnloadJqueryObs) { return; }
+        window.__sproUnloadJqueryObs = true;
+        new MutationObserver(function (mutacoes) {
+            // so quando entra um iframe: a pagina do SEI muda o tempo todo e o resto nao interessa
+            var novoFrame = mutacoes.some(function (m) {
+                return Array.prototype.some.call(m.addedNodes, function (n) {
+                    return n.nodeType === 1 && (n.tagName === 'IFRAME' || n.tagName === 'FRAME' || (n.querySelector && n.querySelector('iframe, frame')));
+                });
+            });
+            if (novoFrame) { tratarJanela(window, 0); }
+        }).observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e) { /* sem DOM ainda */ }
+})();
 var dadosProcessoPro = {};
 var dadosProjetosObj = [];
 var dadosEtapasObj = [];
@@ -1413,6 +1457,8 @@ function insertFontIcon(elementTo, target = $('html')) {
     }
     if (localStorage.getItem('seiSlim_editor')) {
         $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
+        // Tema escuro: o CSS escuro da barra e do documento depende de body.dark-mode (que o Estilo Avancado novo nao poe).
+        if (localStorage.getItem('darkModePro') || document.documentElement.getAttribute('data-spro-tema') === 'escuro') { $('body').addClass('dark-mode'); }
         if (target && target[0] === document.documentElement) { setAccentToolbarEditorPro(target); }
     }
 }
@@ -1457,8 +1503,6 @@ function loadStylePro(url, elementTo = $('head'), iframeTo = $('head')) {
             href: url
         }).appendTo(elementTo);
     }
-        // Tema escuro: o CSS escuro da barra e do documento depende de body.dark-mode (que o Estilo Avancado novo nao poe).
-        if (localStorage.getItem('darkModePro') || document.documentElement.getAttribute('data-spro-tema') === 'escuro') { $('body').addClass('dark-mode'); }
 }
 function checkLoadJqueryUI(callback = false) {
     if (typeof jQuery.ui === 'undefined')  {
