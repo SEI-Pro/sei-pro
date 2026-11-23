@@ -1,7 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
-import { colunaDeFormulario, linhaDeCampo } from "../ui/formulario";
+import { colunaDeFormulario, dica, linhaDeCampo, previa as previaDeFormulario } from "../ui/formulario";
 import { escaparHtml } from "../util/html";
 import { imagemParaDataUri } from "../util/imagem";
 import type { Contexto, Recurso } from "./tipos";
@@ -76,20 +76,19 @@ export const recurso: Recurso = {
     function openDialogLatex(this_: Element | null): void {
       const ed = c.adaptador.getInstance(this_);
       if (!ed) return;
-      const texto = h("textarea", { id: "MathText", rows: "5" });
+      const texto = h("textarea", { id: "MathText", rows: "4", placeholder: "\\frac{a}{b} + \\sqrt{x^2}", spellcheck: "false" });
       texto.addEventListener("input", updatePreviewLatex);
-      const previa = h("div", { id: "latexPreview", style: "text-align:center;margin:12px;min-height:24px;" });
+      const previa = previaDeFormulario({ id: "latexPreview" }, { vazio: "A equação aparece aqui" });
+      previa.classList.add("papel");
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Inserir Equação",
         aoFechar: () => {
           aberto = null;
         },
         conteudo: colunaDeFormulario(
-          linhaDeCampo("Digite a equação no formato LaTeX/Mathematics:", texto),
+          linhaDeCampo("Equação em LaTeX", texto),
           previa,
-          h(
-            "p",
-            { style: "font-style:italic;font-size:12px;margin:0;" },
+          dica(
             "Consulte o ",
             h("a", { href: GUIA, target: "_blank", rel: "noopener noreferrer" }, "Guia de edição/Fórmulas TeX"),
             " para utilizar a linguagem LaTeX. Se preferir, utilize um ",

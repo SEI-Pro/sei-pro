@@ -103,9 +103,9 @@ export const recurso: Recurso = {
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Inserir sumário",
         conteudo: colunaDeFormulario(
-          linhaDeCampo("Estilo do Título 1 (obrigatório):", s1),
-          linhaDeCampo("Estilo do Título 2:", s2),
-          linhaDeCampo("Estilo do Título 3:", s3),
+          linhaDeCampo("Estilo do Título 1", s1, { dica: "Obrigatório. Cada parágrafo com este estilo vira um item do sumário." }),
+          linhaDeCampo("Estilo do Título 2", s2, { opcional: true }),
+          linhaDeCampo("Estilo do Título 3", s3, { opcional: true }),
           h(
             "div",
             { class: "spro-dialogo-rodape" },
@@ -128,6 +128,7 @@ export const recurso: Recurso = {
           ),
         ),
       });
+      s1.focus({ preventScroll: true });
     }
 
     return {

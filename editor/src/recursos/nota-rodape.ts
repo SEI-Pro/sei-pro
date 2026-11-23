@@ -2,6 +2,7 @@ import { h } from "@comum/ui/dom";
 import { htmlParaNos } from "../adaptador/html";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
+import { criarAbas, dica, formulario, grade, grupo, previa as previaDeFormulario } from "../ui/formulario";
 import { type CamposAbnt, montarAbnt } from "../util/abnt";
 import { textoAleatorio } from "../util/aleatorio";
 import { somenteLeituraDoModelo } from "../util/ck5";
@@ -180,112 +181,69 @@ export const recurso: Recurso = {
         ["atualizar", "Atualizar notas"],
         ["remover", "Remover notas"],
       ] as const;
-      const paineis = new Map<string, HTMLElement>();
-      const botoes = new Map<string, HTMLElement>();
       let botaoInserir: HTMLElement | null = null;
-      const selecionar = (id: string) => {
-        for (const [aba] of abas) {
-          const ativa = aba === id;
-          botoes.get(aba)?.setAttribute("aria-selected", String(ativa));
-          botoes.get(aba)?.setAttribute("tabindex", ativa ? "0" : "-1");
-          if (ativa) paineis.get(aba)?.removeAttribute("hidden");
-          else paineis.get(aba)?.setAttribute("hidden", "");
-        }
-        if (botaoInserir) {
-          if (id === "livre" || id === "abnt") botaoInserir.removeAttribute("hidden");
-          else botaoInserir.setAttribute("hidden", "");
-        }
+      const aoSelecionar = (id: string) => {
+        if (!botaoInserir) return;
+        if (id === "livre" || id === "abnt") botaoInserir.removeAttribute("hidden");
+        else botaoInserir.setAttribute("hidden", "");
       };
 
-      const texto = h("textarea", { id: "textNotaRodape", rows: "3", style: "width:100%;" });
-      const campo = (rotulo: string, id: string, tipo = "text") =>
-        h(
-          "label",
-          { style: "display:grid;gap:2px;font-size:12px;color:#555;" },
-          h("span", {}, rotulo),
-          h("input", { type: tipo, id, style: "width:100%" }),
+      const texto = h("textarea", { id: "textNotaRodape", rows: "4", placeholder: "Digite o texto da nota de rodapé" });
+      const campo = (rotulo: string, id: string, tipo = "text", opcoes: { largo?: boolean; placeholder?: string } = {}) =>
+        grupo(
+          rotulo,
+          { para: id, largo: opcoes.largo },
+          h("input", { type: tipo, id, autocomplete: "off", ...(opcoes.placeholder ? { placeholder: opcoes.placeholder } : {}) }),
         );
-      const previa = h("div", {
-        id: "nrABNTResult",
-        style:
-          "margin-top:8px;padding:6px 8px;background:#f9f9dc;border-radius:4px;white-space:break-spaces;min-height:24px;font-size:12px;",
-      });
-      const abnt = h(
-        "div",
-        { style: "display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;" },
-        campo("Nome do autor", "nr_Nome"),
-        campo("Sobrenome do autor", "nr_Sobrenome"),
-        h("div", { style: "grid-column:1 / span 2;" }, campo("Título da publicação", "nr_Titulo")),
-        campo("Número da edição", "nr_Edicao", "number"),
-        campo("Ano da publicação", "nr_Ano", "number"),
-        campo("Local (cidade)", "nr_Local"),
-        campo("Nome da editora", "nr_Editora"),
-        campo("Número do volume", "nr_Volume", "number"),
-        campo("Páginas inicial-final", "nr_Paginas"),
-        campo("Link da publicação", "nr_Link"),
-        campo("Data do acesso", "nr_Data", "date"),
-        h("div", { style: "grid-column:1 / span 2;" }, previa),
+      const previa = previaDeFormulario({ id: "nrABNTResult" }, { vazio: "A nota formatada aparece aqui" });
+      previa.classList.add("texto");
+      const abnt = formulario(
+        grade("duas", campo("Nome do autor", "nr_Nome"), campo("Sobrenome do autor", "nr_Sobrenome")),
+        campo("Título da publicação", "nr_Titulo"),
+        grade("tres", campo("Edição", "nr_Edicao", "number"), campo("Ano", "nr_Ano", "number"), campo("Volume", "nr_Volume", "number")),
+        grade("duas", campo("Local (cidade)", "nr_Local"), campo("Editora", "nr_Editora")),
+        grade("duas", campo("Páginas (inicial-final)", "nr_Paginas"), campo("Data do acesso", "nr_Data", "date")),
+        campo("Link da publicação", "nr_Link", "text", { placeholder: "https://" }),
+        grupo("Nota formatada", {}, previa),
       );
+      abnt.classList.add("compacto");
       const conteudoPorAba: Record<string, HTMLElement> = {
-        livre: h("div", {}, h("label", { for: "textNotaRodape", style: "font-size:12px;color:#555;" }, "Texto da nota de rodapé:"), texto),
+        livre: grupo("Texto da nota de rodapé", { para: "textNotaRodape" }, texto),
         abnt,
         atualizar: h(
           "div",
-          { style: "padding:10px 0;display:grid;gap:10px;" },
-          h("p", {}, "Atualiza numerações e ordem das notas de rodapé já existentes no documento."),
-          h("button", { type: "button", id: "btnNrUpdate", class: "spro-botao", onclick: () => updateNtRodape(ed) }, "Atualizar"),
+          { class: "spro-form" },
+          dica("Atualiza a numeração e a ordem das notas de rodapé que já existem no documento."),
+          h(
+            "div",
+            {},
+            h("button", { type: "button", id: "btnNrUpdate", class: "spro-botao", onclick: () => updateNtRodape(ed) }, "Atualizar notas"),
+          ),
         ),
         remover: h(
           "div",
-          { style: "padding:10px 0;display:grid;gap:10px;" },
-          h("p", {}, "Remove todas as notas de rodapé do documento (Ctrl+Z desfaz)."),
+          { class: "spro-form" },
+          dica("Remove todas as notas de rodapé do documento. Ctrl+Z desfaz."),
           h(
-            "button",
-            {
-              type: "button",
-              id: "btnNrRemove",
-              class: "spro-botao",
-              onclick: () => {
-                removeNtRodape(null, ed);
-                dialogo.fechar();
+            "div",
+            {},
+            h(
+              "button",
+              {
+                type: "button",
+                id: "btnNrRemove",
+                class: "spro-botao perigo",
+                onclick: () => {
+                  removeNtRodape(null, ed);
+                  dialogo.fechar();
+                },
               },
-            },
-            "Remover todas",
+              "Remover todas",
+            ),
           ),
         ),
       };
-      const lista = h("div", { role: "tablist", style: "display:flex;gap:4px;border-bottom:1px solid #ccc;margin-bottom:10px;" });
-      abas.forEach(([id, rotulo], i) => {
-        const botao = h(
-          "button",
-          {
-            type: "button",
-            role: "tab",
-            id: `ntTab_${id}`,
-            "aria-controls": `ntPainel_${id}`,
-            "aria-selected": "false",
-            class: "spro-botao",
-            onclick: () => selecionar(id),
-            onkeydown: (evento: Event) => {
-              const ev = evento as KeyboardEvent;
-              const passo = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
-              const destino = abas[(i + passo + abas.length) % abas.length]?.[0];
-              if (!passo || !destino) return;
-              selecionar(destino);
-              botoes.get(destino)?.focus();
-            },
-          },
-          rotulo,
-        );
-        botoes.set(id, botao);
-        lista.append(botao);
-        const painel = h(
-          "div",
-          { role: "tabpanel", id: `ntPainel_${id}`, "aria-labelledby": `ntTab_${id}`, hidden: "" },
-          conteudoPorAba[id] as HTMLElement,
-        );
-        paineis.set(id, painel);
-      });
+      const controleAbas = criarAbas("nt", abas, conteudoPorAba, aoSelecionar);
 
       botaoInserir = h(
         "button",
@@ -312,15 +270,17 @@ export const recurso: Recurso = {
       }
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Inserir nota de rodapé",
+        largura: 640,
         conteudo: h(
           "div",
-          { style: "min-width:480px;font-size:13px;" },
-          lista,
-          ...paineis.values(),
+          { class: "spro-form" },
+          controleAbas.barra,
+          h("div", {}, ...controleAbas.paineis),
           h("div", { class: "spro-dialogo-rodape" }, botaoInserir),
         ),
       });
-      selecionar("livre");
+      controleAbas.selecionar("livre");
+      texto.focus({ preventScroll: true });
     }
 
     return {

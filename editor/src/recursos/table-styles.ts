@@ -1,6 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
+import { caixa, campoComSufixo, formulario, grade, grupo } from "../ui/formulario";
 import { CORES, estilosDaTabela } from "../util/estilos-tabela";
 import { estilizarTabela } from "../util/tabelas";
 import type { Contexto, Recurso } from "./tipos";
@@ -40,7 +41,7 @@ export const recurso: Recurso = {
     /** Troca a variacao de cor da previa (a classe `colorN` da grade de estilos). */
     function aplicarCorNaPrevia(raiz: ParentNode, id: string | null): void {
       const previa = raiz.querySelector("#addEstiloTabela");
-      if (previa && id && /^color\d+$/.test(id)) previa.className = id;
+      if (previa && id && /^color\d+$/.test(id)) previa.className = `spro-opcoes grade ${id}`;
     }
 
     /** Aplica o estilo a tabela sob o cursor. `valor` = [estilo, cor, largura%]; sem valor nao faz nada. */
@@ -70,20 +71,14 @@ export const recurso: Recurso = {
     function buildHtmlSyleTable(): HTMLElement {
       const ids = Object.keys(CORES);
       const estilos = Object.keys(estilosDaTabela(CORES[COR_PADRAO] as never));
+      // cada cor e uma amostra dupla (tom claro e tom escuro); o radio fica escondido dentro do cartao
       const cores = h(
         "div",
-        { id: "selectColorTabela", class: "listaCoresTabela" },
+        { id: "selectColorTabela", class: "spro-opcoes", role: "radiogroup", "aria-label": "Cor da tabela" },
         ...ids.map((id, i) =>
           h(
-            "span",
-            {},
-            h(
-              "label",
-              { for: `colorStyle${i + 1}` },
-              h("a", { class: "iconSelectColorTable", style: `background-color: ${CORES[id]?.light}` }),
-              h("a", { class: "iconSelectColorTable", style: `background-color: ${CORES[id]?.dark}` }),
-            ),
-            h("br"),
+            "label",
+            { class: "spro-opcao", for: `colorStyle${i + 1}`, title: `Variação ${i + 1}` },
             h("input", {
               type: "radio",
               name: "colorStyle",
@@ -92,24 +87,24 @@ export const recurso: Recurso = {
               value: `colorStyle${i + 1}`,
               ...(i === 0 ? { checked: "checked" } : {}),
             }),
+            h(
+              "span",
+              { class: "spro-amostra" },
+              h("span", { style: `background-color: ${CORES[id]?.light}` }),
+              h("span", { style: `background-color: ${CORES[id]?.dark}` }),
+            ),
           ),
         ),
       );
-      // sete modelos por fileira, como no legado
-      const fileiras: HTMLElement[] = [];
-      estilos.forEach((_, i) => {
-        if (i % 7 === 0) fileiras.push(h("div", { class: "listaEstiloTabela" }));
-        const id = i + 1;
-        fileiras[fileiras.length - 1]?.append(
-          h(
-            "span",
-            {},
-            h(
-              "label",
-              { for: `tableStyle${id}` },
-              h("a", { class: "iconSelectStyleTable", style: `background-position-y: -${id * 43}px` }),
-            ),
-            h("br"),
+      // as miniaturas vem do sprite do CSS legado; a classe `colorN` do contêiner troca o matiz delas
+      const modelos = h(
+        "div",
+        { id: "addEstiloTabela", class: `spro-opcoes grade ${COR_PADRAO}`, role: "radiogroup", "aria-label": "Estilo da tabela" },
+        ...estilos.map((_, i) => {
+          const id = i + 1;
+          return h(
+            "label",
+            { class: "spro-opcao", for: `tableStyle${id}`, title: `Estilo ${id}` },
             h("input", {
               type: "radio",
               name: "tableStyle",
@@ -117,36 +112,18 @@ export const recurso: Recurso = {
               value: `tableStyle${id}`,
               ...(i === 0 ? { checked: "checked" } : {}),
             }),
-          ),
-        );
-      });
-      return h(
-        "div",
-        { class: "dialogBoxDiv", style: "font-size:11pt;line-height:14pt;color:#616161;" },
-        h("div", { style: "padding-bottom: 10px;" }, "Selecione a variação de cores da tabela:"),
-        cores,
-        h("div", { style: "padding-bottom: 10px;" }, "Selecione o estilo da tabela:"),
-        h("div", { id: "addEstiloTabela", class: COR_PADRAO }, ...fileiras),
-        h(
-          "div",
-          { style: "padding: 10px 0;" },
-          "Selecione a largura da tabela: ",
-          h("input", {
-            type: "number",
-            id: "addEstiloTableWidth",
-            style: "background: #f5f5f5; padding: 5px; border-radius: 5px; width: 50px; border: 1px solid #ccc;",
-            max: "100",
-            step: "5",
-            min: "5",
-          }),
-          " %",
-        ),
-        h(
-          "div",
-          { style: "padding: 10px 0;" },
-          h("input", { type: "checkbox", id: "addEstiloTableHeader", checked: "checked" }),
-          " ",
-          h("label", { for: "addEstiloTableHeader" }, "Determinar a primeira linha como cabeçalho da tabela"),
+            h("a", { class: "iconSelectStyleTable", style: `background-position-y: -${id * 43}px` }),
+          );
+        }),
+      );
+      const largura = h("input", { type: "number", id: "addEstiloTableWidth", max: "100", step: "5", min: "5" });
+      return formulario(
+        grupo("Cor", {}, cores),
+        grupo("Estilo", {}, modelos),
+        grade(
+          "duas",
+          grupo("Largura da tabela", { para: "addEstiloTableWidth" }, campoComSufixo(largura, "%")),
+          grupo("Cabeçalho", {}, caixa({ id: "addEstiloTableHeader", checked: "checked" }, "Primeira linha como cabeçalho")),
         ),
       );
     }
@@ -174,9 +151,10 @@ export const recurso: Recurso = {
         radio.addEventListener("change", () => aplicarCorNaPrevia(corpo, radio.getAttribute("data-colorid")));
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Inserir estilo à tabela",
+        largura: 660,
         conteudo: h(
           "div",
-          {},
+          { class: "spro-form" },
           corpo,
           h(
             "div",

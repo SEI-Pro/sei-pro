@@ -1,0 +1,967 @@
+/*
+ * Kit de formulário dos diálogos do SEI Pro (editor e demais módulos): grupo com rótulo e dica, grade responsiva,
+ * seletor, controle deslizante, caixa, cor, botão de texto, painel recolhível, prévia e abas.
+ *
+ * Tudo usa os tokens do base.css (claro/escuro vêm de lá) e fica sob `dialog.spro-dialogo`, para vencer o CSS da
+ * página do SEI e do CKEditor, que estiliza `label`, `select`, `input` e `a` de forma genérica.
+ */
+
+/* ---------- Estrutura ---------- */
+dialog.spro-dialogo .spro-form {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-grupo {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  align-content: start;
+}
+dialog.spro-dialogo .spro-rotulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--spro-texto);
+}
+dialog.spro-dialogo .spro-rotulo .spro-opcional {
+  font-weight: 400;
+  color: var(--spro-fraco);
+}
+dialog.spro-dialogo .spro-valor {
+  flex: none;
+  padding: 1px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-3);
+  border-radius: 999px;
+}
+dialog.spro-dialogo .spro-dica {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--spro-suave);
+}
+dialog.spro-dialogo .spro-dica a,
+dialog.spro-dialogo a.spro-link {
+  color: var(--spro-destaque);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+dialog.spro-dialogo .spro-dica a:hover,
+dialog.spro-dialogo a.spro-link:hover {
+  text-decoration-thickness: 2px;
+}
+dialog.spro-dialogo .spro-erro {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--spro-perigo);
+}
+dialog.spro-dialogo .spro-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px 16px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-grade.duas {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+dialog.spro-dialogo .spro-grade.tres {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+dialog.spro-dialogo .spro-grade > .spro-largo {
+  grid-column: 1 / -1;
+}
+@media (max-width: 540px) {
+  dialog.spro-dialogo .spro-grade.duas,
+  dialog.spro-dialogo .spro-grade.tres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Campos ---------- */
+/* A página do SEI e o CKEditor estilizam input/select/textarea de forma genérica (margens, preenchimento, fonte):
+   o reset abaixo vale só dentro do diálogo e tem especificidade para vencê-los. */
+dialog.spro-dialogo :is(input, select, textarea).spro-campo {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 6px 11px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--spro-texto) !important;
+  background-color: var(--spro-fundo) !important;
+  background-image: none;
+  border: 1px solid var(--spro-borda-forte) !important;
+  border-radius: var(--spro-raio) !important;
+  box-shadow: none;
+}
+dialog.spro-dialogo :is(input, select, textarea).spro-campo:hover {
+  border-color: color-mix(in srgb, var(--spro-borda-forte) 70%, var(--spro-texto)) !important;
+}
+dialog.spro-dialogo :is(input, select, textarea).spro-campo:focus,
+dialog.spro-dialogo :is(input, select, textarea).spro-campo:focus-visible {
+  border-color: var(--spro-destaque) !important;
+  box-shadow: var(--spro-anel);
+}
+dialog.spro-dialogo textarea.spro-campo {
+  padding: 8px 11px;
+  line-height: 1.5;
+}
+dialog.spro-dialogo .spro-grupo > .spro-campo,
+dialog.spro-dialogo .spro-grupo > .spro-seletor,
+dialog.spro-dialogo textarea.spro-campo,
+dialog.spro-dialogo input.spro-campo {
+  width: 100%;
+}
+dialog.spro-dialogo input.spro-campo,
+dialog.spro-dialogo select.spro-campo {
+  min-height: 34px;
+}
+dialog.spro-dialogo textarea.spro-campo {
+  min-height: 84px;
+}
+dialog.spro-dialogo input[type="number"].spro-campo {
+  font-variant-numeric: tabular-nums;
+}
+dialog.spro-dialogo .spro-campo:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+dialog.spro-dialogo input[type="file"].spro-campo {
+  padding: 3px;
+  color: var(--spro-suave);
+}
+dialog.spro-dialogo input[type="file"].spro-campo::file-selector-button {
+  margin-right: 10px;
+  padding: 4px 11px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--spro-texto);
+  background: var(--spro-fundo-3);
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+dialog.spro-dialogo input[type="file"].spro-campo::file-selector-button:hover {
+  background: var(--spro-borda-forte);
+}
+
+/* ---------- Seletor (select) ---------- */
+dialog.spro-dialogo .spro-seletor {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-seletor > select.spro-campo {
+  width: 100%;
+  margin: 0 !important;
+  padding-right: 34px;
+  appearance: none;
+  -webkit-appearance: none;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+dialog.spro-dialogo .spro-seletor::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: var(--spro-suave);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 9.5l6.5 6.5 6.5-6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 9.5l6.5 6.5 6.5-6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+dialog.spro-dialogo .spro-seletor:hover::after {
+  background: var(--spro-texto);
+}
+dialog.spro-dialogo select[multiple].spro-campo {
+  width: 100%;
+  height: auto !important;
+  min-height: 132px;
+  padding: 4px;
+  cursor: default;
+}
+dialog.spro-dialogo select[multiple].spro-campo option {
+  padding: 6px 8px;
+  border-radius: var(--spro-raio-p);
+}
+dialog.spro-dialogo select[multiple].spro-campo option:checked {
+  color: var(--spro-texto);
+  background: var(--spro-destaque-medio) linear-gradient(0deg, var(--spro-destaque-medio), var(--spro-destaque-medio));
+}
+
+/* ---------- Controle deslizante ---------- */
+dialog.spro-dialogo input.spro-intervalo {
+  --p: 50%;
+  box-sizing: border-box;
+  width: 100%;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+dialog.spro-dialogo input.spro-intervalo:focus,
+dialog.spro-dialogo input.spro-intervalo:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+dialog.spro-dialogo input.spro-intervalo::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(to right, var(--spro-destaque) var(--p), var(--spro-fundo-3) var(--p));
+  border-radius: 999px;
+}
+dialog.spro-dialogo input.spro-intervalo::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  background: var(--spro-fundo);
+  border: 2px solid var(--spro-destaque);
+  border-radius: 50%;
+  box-shadow: var(--spro-sombra-1);
+  transition: box-shadow var(--spro-dur);
+}
+dialog.spro-dialogo input.spro-intervalo:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--spro-destaque-suave);
+}
+dialog.spro-dialogo input.spro-intervalo:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--spro-anel);
+}
+dialog.spro-dialogo input.spro-intervalo::-moz-range-track {
+  height: 6px;
+  background: var(--spro-fundo-3);
+  border-radius: 999px;
+}
+dialog.spro-dialogo input.spro-intervalo::-moz-range-progress {
+  height: 6px;
+  background: var(--spro-destaque);
+  border-radius: 999px;
+}
+dialog.spro-dialogo input.spro-intervalo::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--spro-fundo);
+  border: 2px solid var(--spro-destaque);
+  border-radius: 50%;
+}
+
+/* ---------- Caixa de marcação e opção ---------- */
+dialog.spro-dialogo label.spro-caixa {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--spro-texto);
+  cursor: pointer;
+}
+dialog.spro-dialogo .spro-caixa > input[type="checkbox"],
+dialog.spro-dialogo .spro-caixa > input[type="radio"] {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  background: var(--spro-fundo) !important;
+  border: 1.5px solid var(--spro-borda-forte) !important;
+  border-radius: 5px !important;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition:
+    background var(--spro-dur),
+    border-color var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+dialog.spro-dialogo .spro-caixa > input[type="radio"] {
+  border-radius: 50% !important;
+}
+dialog.spro-dialogo .spro-caixa > input:hover {
+  border-color: var(--spro-destaque) !important;
+}
+dialog.spro-dialogo .spro-caixa > input:checked {
+  background: var(--spro-destaque) !important;
+  border-color: var(--spro-destaque) !important;
+}
+dialog.spro-dialogo .spro-caixa > input[type="checkbox"]:checked::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  margin-top: -1px;
+  border-bottom: 2px solid var(--spro-destaque-texto);
+  border-left: 2px solid var(--spro-destaque-texto);
+  transform: rotate(-45deg);
+}
+dialog.spro-dialogo .spro-caixa > input[type="radio"]:checked::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--spro-destaque-texto);
+  border-radius: 50%;
+}
+dialog.spro-dialogo .spro-caixa > input:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+
+/* ---------- Cor ---------- */
+dialog.spro-dialogo label.spro-cor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 34px;
+  margin: 0;
+  padding: 3px 12px 3px 4px;
+  color: var(--spro-texto);
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda-forte);
+  border-radius: var(--spro-raio);
+  cursor: pointer;
+  transition: border-color var(--spro-dur);
+}
+dialog.spro-dialogo label.spro-cor:hover {
+  border-color: color-mix(in srgb, var(--spro-borda-forte) 70%, var(--spro-texto));
+}
+dialog.spro-dialogo label.spro-cor:focus-within {
+  border-color: var(--spro-destaque);
+  box-shadow: var(--spro-anel);
+}
+dialog.spro-dialogo .spro-cor > input[type="color"] {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: none;
+  border: 0 !important;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+dialog.spro-dialogo .spro-cor > input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+dialog.spro-dialogo .spro-cor > input[type="color"]::-webkit-color-swatch {
+  border: 1px solid color-mix(in srgb, var(--spro-texto) 24%, transparent);
+  border-radius: 6px;
+}
+dialog.spro-dialogo .spro-cor > input[type="color"]::-moz-color-swatch {
+  border: 1px solid color-mix(in srgb, var(--spro-texto) 24%, transparent);
+  border-radius: 6px;
+}
+dialog.spro-dialogo .spro-cor-hex {
+  font-family: var(--spro-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--spro-suave);
+}
+
+/* ---------- Botão de texto, painel recolhível e prévia ---------- */
+dialog.spro-dialogo .spro-botao-texto {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 3px 4px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--spro-destaque);
+  background: none;
+  border: 0;
+  border-radius: var(--spro-raio-p);
+  cursor: pointer;
+}
+dialog.spro-dialogo .spro-botao-texto:hover {
+  background: var(--spro-destaque-suave);
+}
+dialog.spro-dialogo .spro-botao-texto:focus-visible {
+  outline: none;
+  box-shadow: var(--spro-anel);
+}
+dialog.spro-dialogo .spro-botao-texto .spro-icone {
+  transition: transform var(--spro-dur) var(--spro-curva);
+}
+dialog.spro-dialogo .spro-botao-texto[aria-expanded="true"] .spro-icone {
+  transform: rotate(180deg);
+}
+dialog.spro-dialogo .spro-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-painel {
+  display: grid;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+}
+dialog.spro-dialogo .spro-previa {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 96px;
+  padding: 16px;
+  overflow: auto;
+  text-align: center;
+  background: var(--spro-fundo-2);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+}
+dialog.spro-dialogo .spro-previa:empty::before {
+  content: attr(data-vazio);
+  font-size: 12px;
+  color: var(--spro-fraco);
+}
+dialog.spro-dialogo .spro-previa img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+dialog.spro-dialogo .spro-previa.xadrez {
+  background-color: var(--spro-fundo-2);
+  background-image:
+    linear-gradient(45deg, var(--spro-fundo-3) 25%, transparent 25%, transparent 75%, var(--spro-fundo-3) 75%),
+    linear-gradient(45deg, var(--spro-fundo-3) 25%, transparent 25%, transparent 75%, var(--spro-fundo-3) 75%);
+  background-position:
+    0 0,
+    8px 8px;
+  background-size: 16px 16px;
+}
+
+/* ---------- Abas (no estilo do .spro-segmentado) ---------- */
+dialog.spro-dialogo .spro-segmentado.largo {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+dialog.spro-dialogo .spro-segmentado.largo button {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+dialog.spro-dialogo [role="tabpanel"] {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin-top: 14px;
+}
+dialog.spro-dialogo [role="tabpanel"][hidden] {
+  display: none;
+}
+
+/* Rodapé fixo: o botão principal fica sempre à vista, mesmo com o corpo rolando */
+dialog.spro-dialogo .spro-dialogo-rodape .spro-botao.primario {
+  min-width: 96px;
+  min-height: 34px;
+}
+
+/* ---------- Subtítulo de seção e aviso embutido ---------- */
+dialog.spro-dialogo .spro-subtitulo {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--spro-fraco);
+}
+dialog.spro-dialogo .spro-painel > .spro-subtitulo:not(:first-child) {
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--spro-borda);
+}
+dialog.spro-dialogo .spro-aviso-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--spro-texto);
+  background: color-mix(in srgb, var(--spro-aviso) 12%, var(--spro-fundo));
+  border: 1px solid color-mix(in srgb, var(--spro-aviso) 35%, var(--spro-fundo));
+  border-radius: var(--spro-raio);
+}
+dialog.spro-dialogo .spro-aviso-inline .spro-botao-texto {
+  flex: none;
+  color: var(--spro-texto);
+}
+
+/* ---------- Prévia ao lado das opções (QR): com as opções abertas, a prévia fica fixa à esquerda ---------- */
+dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] {
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 18px;
+}
+dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-aviso-inline {
+  grid-column: 1 / -1;
+}
+dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-previa {
+  position: sticky;
+  top: 0;
+  grid-column: 1;
+  grid-row: span 2;
+}
+dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-barra,
+dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-painel {
+  grid-column: 2;
+}
+@media (max-width: 640px) {
+  dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-previa,
+  dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-barra,
+  dialog.spro-dialogo .spro-form.spro-lateral[data-aberto] > .spro-painel {
+    position: static;
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* ---------- Opções selecionáveis (cartões e amostras com radio escondido) ---------- */
+dialog.spro-dialogo .spro-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-opcoes.grade {
+  display: grid;
+  grid-template-columns: repeat(var(--colunas, 7), minmax(0, 1fr));
+}
+@media (max-width: 720px) {
+  dialog.spro-dialogo .spro-opcoes.grade {
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  }
+}
+dialog.spro-dialogo label.spro-opcao {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px;
+  background: var(--spro-fundo);
+  border: 2px solid var(--spro-borda);
+  border-radius: var(--spro-raio);
+  cursor: pointer;
+  transition:
+    border-color var(--spro-dur),
+    background var(--spro-dur),
+    box-shadow var(--spro-dur);
+}
+dialog.spro-dialogo label.spro-opcao > input[type="radio"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+dialog.spro-dialogo label.spro-opcao:hover {
+  border-color: var(--spro-borda-forte);
+}
+dialog.spro-dialogo label.spro-opcao:has(> input:checked) {
+  background: var(--spro-destaque-suave);
+  border-color: var(--spro-destaque);
+}
+dialog.spro-dialogo label.spro-opcao:has(> input:focus-visible) {
+  box-shadow: var(--spro-anel);
+}
+dialog.spro-dialogo .spro-amostra {
+  display: inline-flex;
+  width: 36px;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--spro-texto) 16%, transparent);
+  border-radius: 6px;
+}
+dialog.spro-dialogo .spro-amostra > span {
+  flex: 1;
+}
+
+/* Campo com sufixo fixo ("80 %") */
+dialog.spro-dialogo .spro-sufixo {
+  position: relative;
+  display: block;
+}
+dialog.spro-dialogo .spro-sufixo > input.spro-campo {
+  padding-right: 34px;
+}
+dialog.spro-dialogo .spro-sufixo > span {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  font-size: 12.5px;
+  color: var(--spro-suave);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ---------- Prévia de texto e lista de resultados ---------- */
+dialog.spro-dialogo .spro-previa.texto {
+  place-items: start;
+  min-height: 56px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: break-spaces;
+  color: var(--spro-texto);
+}
+dialog.spro-dialogo .spro-resultados {
+  max-height: 300px;
+  overflow: auto;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+  scrollbar-width: thin;
+}
+dialog.spro-dialogo .spro-resultado {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--spro-borda);
+}
+dialog.spro-dialogo .spro-resultado:last-child {
+  border-bottom: 0;
+}
+dialog.spro-dialogo .spro-resultado-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+dialog.spro-dialogo .spro-resultado-titulo {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+dialog.spro-dialogo .spro-resultado-apelido {
+  font-weight: 400;
+  color: var(--spro-suave);
+}
+dialog.spro-dialogo .spro-selo {
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-3);
+  border-radius: 999px;
+}
+dialog.spro-dialogo .spro-ementa {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--spro-suave);
+  overflow-wrap: anywhere;
+  white-space: break-spaces;
+}
+dialog.spro-dialogo .spro-resultado.revogada .spro-ementa,
+dialog.spro-dialogo .spro-resultado.revogada .spro-resultado-titulo > a {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+dialog.spro-dialogo .spro-resultado-aviso {
+  margin: 8px;
+  justify-content: center;
+}
+dialog.spro-dialogo .spro-ementa .spro-botao-texto {
+  padding: 0 4px;
+  vertical-align: baseline;
+}
+
+/* ---------- Variantes de densidade e de barra ---------- */
+dialog.spro-dialogo .spro-form.compacto {
+  gap: 12px;
+}
+dialog.spro-dialogo .spro-form.compacto .spro-grade {
+  gap: 12px 14px;
+}
+dialog.spro-dialogo .spro-barra.fim {
+  justify-content: flex-end;
+}
+
+/* Prévia que mostra o resultado como ele entra no documento (equação: PNG escuro e transparente): sempre sobre papel branco */
+dialog.spro-dialogo .spro-previa.papel {
+  background: #fff;
+  border-color: var(--spro-borda);
+}
+
+/* O CSS escuro do estilo antigo inverte cores de checkbox/radio/color por `filter`: dentro do diálogo as cores são as do kit */
+dialog.spro-dialogo :is(input, select, textarea, label.spro-opcao, label.spro-cor) {
+  filter: none !important;
+}
+
+dialog.spro-dialogo .spro-prefixo > input.spro-campo {
+  padding-right: 11px;
+  padding-left: 28px;
+}
+dialog.spro-dialogo .spro-prefixo > span {
+  right: auto;
+  left: 12px;
+}
+
+/* ---------- Campos dinâmicos (lista com ações) e referência de hashtags ---------- */
+dialog.spro-dialogo .spro-lista-campos {
+  display: grid;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+  overflow: hidden;
+}
+dialog.spro-dialogo .spro-lista-campos:empty {
+  padding: 16px;
+  border-style: dashed;
+}
+dialog.spro-dialogo .spro-lista-campos:empty::before {
+  content: attr(data-vazio);
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--spro-fraco);
+}
+dialog.spro-dialogo .spro-linha-campo {
+  display: grid;
+  grid-template-columns: minmax(90px, 30%) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--spro-borda);
+}
+dialog.spro-dialogo .spro-linha-campo:last-child {
+  border-bottom: 0;
+}
+dialog.spro-dialogo .spro-hash {
+  font-family: var(--spro-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--spro-destaque);
+  overflow-wrap: anywhere;
+}
+dialog.spro-dialogo .spro-linha-valor {
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--spro-suave);
+  overflow-wrap: anywhere;
+}
+dialog.spro-dialogo .spro-linha-acoes {
+  display: flex;
+  gap: 2px;
+}
+dialog.spro-dialogo .spro-referencia .spro-linha-campo {
+  grid-template-columns: minmax(130px, 34%) minmax(0, 1fr);
+  align-items: baseline;
+  padding: 8px 12px;
+}
+dialog.spro-dialogo .spro-referencia .spro-linha-valor em {
+  color: var(--spro-fraco);
+}
+dialog.spro-dialogo .spro-nota label,
+dialog.spro-dialogo .spro-nota i {
+  font-size: 12.5px;
+  font-style: normal;
+}
+dialog.spro-dialogo .spro-nota label {
+  display: block;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--spro-suave);
+}
+
+/* ---------- Lista de marcação com filtro (documentos do processo) ---------- */
+dialog.spro-dialogo .spro-checklist {
+  display: grid;
+  align-content: start;
+  max-height: 300px;
+  overflow: auto;
+  background: var(--spro-fundo);
+  border: 1px solid var(--spro-borda);
+  border-radius: var(--spro-raio-g);
+  scrollbar-width: thin;
+}
+dialog.spro-dialogo .spro-checklist:empty {
+  display: none;
+}
+dialog.spro-dialogo .spro-checklist > label.spro-caixa {
+  display: flex;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--spro-borda);
+}
+dialog.spro-dialogo .spro-checklist > label.spro-caixa[hidden] {
+  display: none;
+}
+dialog.spro-dialogo .spro-checklist > label.spro-caixa:last-child {
+  border-bottom: 0;
+}
+dialog.spro-dialogo .spro-checklist > label.spro-caixa:hover {
+  background: var(--spro-destaque-suave);
+}
+
+dialog.spro-dialogo .spro-dica:empty {
+  display: none;
+}
+
+/* ---------- Campo e botão na mesma linha ---------- */
+dialog.spro-dialogo .spro-linha {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-linha > .spro-campo,
+dialog.spro-dialogo .spro-linha > .spro-seletor {
+  flex: 1;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-linha > .spro-botao {
+  flex: none;
+}
+
+/* ---------- Item de lista de marcação com título, etiqueta e trecho ---------- */
+dialog.spro-dialogo .spro-item-corpo {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+dialog.spro-dialogo .spro-item-corpo > b {
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+dialog.spro-dialogo .spro-item-corpo > small,
+dialog.spro-dialogo .spro-trecho {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--spro-suave);
+  overflow-wrap: anywhere;
+}
+dialog.spro-dialogo .spro-selo.aviso {
+  margin-left: 0;
+  color: var(--spro-aviso);
+  background: color-mix(in srgb, var(--spro-aviso) 14%, var(--spro-fundo));
+}
+
+/* ---------- Cartões de revisão (o mesmo markup do balão do editor), dentro do diálogo ---------- */
+dialog.spro-dialogo .reviewDisplayPro {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--spro-texto);
+  white-space: normal;
+  background: var(--spro-fundo) !important;
+  border: 1px solid var(--spro-borda) !important;
+  border-radius: var(--spro-raio-g) !important;
+}
+dialog.spro-dialogo #boxReviews {
+  max-height: 420px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+/* ---------- Zona de soltar arquivos e prévia de várias imagens ---------- */
+dialog.spro-dialogo .spro-zona {
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  padding: 22px 14px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--spro-suave);
+  background: var(--spro-fundo-2);
+  border: 1.5px dashed var(--spro-borda-forte);
+  border-radius: var(--spro-raio-g);
+  cursor: pointer;
+  transition:
+    border-color var(--spro-dur),
+    background var(--spro-dur);
+}
+dialog.spro-dialogo .spro-zona:hover {
+  background: var(--spro-destaque-suave);
+  border-color: var(--spro-destaque);
+}
+dialog.spro-dialogo .spro-zona strong {
+  color: var(--spro-texto);
+}
+dialog.spro-dialogo .spro-previa.lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  justify-content: center;
+}
+dialog.spro-dialogo .spro-previa.lista:empty {
+  display: grid;
+}
+dialog.spro-dialogo .spro-previa .previewImage {
+  float: none;
+  max-width: 220px;
+  max-height: 110px;
+  margin: 0;
+  cursor: move;
+  border: 1px solid var(--spro-borda);
+}
+
+/* ---------- Imagem de fundo: opções à esquerda, prévia da página à direita ---------- */
+dialog.spro-dialogo .spro-lateral-imgbg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+dialog.spro-dialogo .spro-lateral-imgbg > .spro-pagina-previa {
+  position: sticky;
+  top: 0;
+}
+dialog.spro-dialogo .spro-previa.papel {
+  min-height: 0;
+  overflow: auto;
+}
+@media (max-width: 860px) {
+  dialog.spro-dialogo .spro-lateral-imgbg {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  dialog.spro-dialogo .spro-lateral-imgbg > .spro-pagina-previa {
+    position: static;
+  }
+}

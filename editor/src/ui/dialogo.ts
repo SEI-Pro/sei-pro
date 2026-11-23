@@ -3,6 +3,8 @@ import { criarAbrirModal } from "@comum/ui/dialogo";
 export interface OpcoesDialogo {
   titulo: string;
   conteudo: HTMLElement;
+  /** Largura em px (padrao 580). */
+  largura?: number;
   aoFechar?: () => void;
 }
 
@@ -19,8 +21,23 @@ export function criarAbridorDeDialogo(css: string): AbrirDialogo {
   const abrirModal = criarAbrirModal();
   return (doc, o) => {
     injetarEstiloBase(doc, css);
+    marcarTema(doc);
     return abrirModal(o);
   };
+}
+
+/**
+ * Diz ao CSS base se o tema e claro ou escuro. Sem `data-tema` ele segue o modo escuro do SISTEMA, o que escurecia o
+ * dialogo com o Estilo Avancado claro. Escuro e o `darkModePro` (estilo antigo) ou o tema escuro do Estilo Avancado.
+ */
+export function marcarTema(doc: Document): void {
+  let escuro = doc.documentElement.getAttribute("data-spro-tema") === "escuro";
+  try {
+    escuro ||= !!doc.defaultView?.localStorage?.getItem("darkModePro");
+  } catch {
+    // sem localStorage (frame sem acesso): vale so o atributo
+  }
+  doc.documentElement.setAttribute("data-tema", escuro ? "escuro" : "claro");
 }
 
 /** Poe o `<style data-seipro-editor="base">` no documento, uma unica vez. */

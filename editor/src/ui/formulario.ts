@@ -1,13 +1,30 @@
-import { h } from "@comum/ui/dom";
+import type { Filho } from "@comum/ui/dom";
+import { formulario, grupo } from "@comum/ui/formulario";
 
-/** Coluna de campos do dialogo: um abaixo do outro, com espaco entre eles. */
-export function colunaDeFormulario(...filhos: Array<Node | null>): HTMLElement {
-  return h("div", { style: "display:grid;gap:12px;min-width:360px;" }, ...filhos);
+export {
+  atualizarValor,
+  botaoTexto,
+  caixa,
+  campoComPrefixo,
+  campoComSufixo,
+  corCampo,
+  criarAbas,
+  dica,
+  formulario,
+  grade,
+  grupo,
+  intervalo,
+  painel,
+  previa,
+  sincronizarControles,
+} from "@comum/ui/formulario";
+
+/** Coluna de grupos do dialogo (o espacamento e a largura vem do kit; o dialogo ja define a largura). */
+export function colunaDeFormulario(...filhos: Array<Filho | null>): HTMLElement {
+  return formulario(...filhos);
 }
 
-/** Rotulo em cima, campo embaixo, em largura total (o rotulo envolve o campo: clicar no texto foca o campo). */
-export function linhaDeCampo(rotulo: string, campo: HTMLElement): HTMLElement {
-  campo.classList.add("spro-campo");
-  campo.style.width = "100%";
-  return h("label", { style: "display:grid;gap:4px;font-size:13px;" }, h("span", {}, rotulo), campo);
+/** Rotulo em cima, campo embaixo, em largura total; o rotulo e ligado ao campo pelo `id` (clicar no texto foca o campo). */
+export function linhaDeCampo(rotulo: string, campo: HTMLElement, o: { dica?: Filho; opcional?: boolean } = {}): HTMLElement {
+  return grupo(rotulo, { para: campo.id || undefined, ...o }, campo);
 }

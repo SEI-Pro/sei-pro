@@ -85,8 +85,8 @@ export async function verificarQrCode(): Promise<void> {
     checar(`qr-code ${v}: sem botao Cancelar`, ![...d.querySelectorAll("button")].some((b) => /cancelar/i.test(b.textContent ?? "")));
     igual(
       `qr-code ${v}: os rotulos mostram o valor atual`,
-      [d.querySelector('label[for="QrPro-size"]')?.textContent, d.querySelector('label[for="QrPro-quiet"]')?.textContent],
-      ["Tamanho do QR: 140px", "Margens de folga: 1 módulos"],
+      [d.querySelector('[data-valor-de="QrPro-size"]')?.textContent, d.querySelector('[data-valor-de="QrPro-quiet"]')?.textContent],
+      ["140 px", "1 módulo"],
     );
 
     // digitar atualiza a previa
@@ -182,13 +182,13 @@ export async function verificarQrCode(): Promise<void> {
     digitar(campo, "https://curta.gov.br/x");
     checar(`qr-code ${v}: URL curta nao mostra a dica`, !d.querySelector("#tipQrCodeUrl"));
     digitar(campo, longa);
-    checar(`qr-code ${v}: URL longa mostra a dica do link curto`, !!d.querySelector("#tipQrCodeUrl a"));
+    checar(`qr-code ${v}: URL longa mostra a dica do link curto`, !!d.querySelector("#tipQrCodeUrl button"));
     const pedidos: unknown[][] = [];
     (c.win as unknown as Record<string, unknown>).ajaxTinyUrl = (...a: unknown[]) => {
       pedidos.push(a);
       return Promise.reject(new TypeError("Failed to fetch"));
     };
-    evento(d.querySelector("#tipQrCodeUrl a") as Element, "click");
+    evento(d.querySelector("#tipQrCodeUrl button") as Element, "click");
     await tique();
     igual(`qr-code ${v}: clicar na dica chama ajaxTinyUrl(url, "", "setinput")`, pedidos, [[longa, "", "setinput"]]);
     checar(

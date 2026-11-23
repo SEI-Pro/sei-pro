@@ -1,7 +1,19 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
-import { comoBotao } from "../ui/teclado";
+import {
+  atualizarValor,
+  botaoTexto,
+  caixa,
+  corCampo,
+  formulario,
+  grade,
+  grupo,
+  intervalo,
+  painel,
+  previa,
+  sincronizarControles,
+} from "../ui/formulario";
 import { escaparHtml } from "../util/html";
 import { gerarQr, type OpcoesQr } from "../util/qr";
 import { urlHttpValida } from "../util/url";
@@ -30,9 +42,9 @@ const PADROES: Record<string, string> = {
 };
 /** Campos cujo rotulo mostra o valor atual (`Tamanho do QR: 140px`). */
 const ROTULOS: Array<[string, string]> = [
-  ["QrPro-size", "px"],
+  ["QrPro-size", " px"],
   ["QrPro-minversion", ""],
-  ["QrPro-quiet", " módulos"],
+  ["QrPro-quiet", "módulo"],
   ["QrPro-radius", "%"],
   ["QrPro-msize", "%"],
   ["QrPro-mposx", "%"],
@@ -63,124 +75,107 @@ export const recurso: Recurso = {
     const nomeDaMarca = () => (c.win as unknown as { NAMESPACE_SPRO?: string }).NAMESPACE_SPRO ?? "SEI Pro";
     const iconePadrao = () => `${c.base}icons/menu/seipro.png`;
 
-    const rotulo = (texto: string, id: string, controle: HTMLElement) =>
-      h("div", { style: "display:grid;gap:2px;" }, h("label", { for: id }, texto), controle);
     const faixa = (id: string, min: number, max: number, passo: number) =>
-      h("input", { id, type: "range", value: PADROES[id] ?? "", min: String(min), max: String(max), step: String(passo) });
+      intervalo({ id, min, max, step: passo, value: PADROES[id] ?? "" });
+    const subtitulo = (texto: string) => h("p", { class: "spro-subtitulo" }, texto);
 
-    /** O painel de opcoes avancadas + a previa. Devolve o elemento (o legado devolvia o HTML). */
+    /** A previa, o botao das opcoes avancadas e o painel delas. Devolve o elemento (o legado devolvia o HTML). */
     function buildHtmlQrCodeLab(): HTMLElement {
-      const opcoes = h(
-        "div",
+      const opcoes = painel(
         { id: "optionsQrAdvanced", style: "display:none;" },
-        h(
-          "div",
-          { style: "display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;font-size:12px;" },
-          rotulo("Tamanho do QR: 140px", "QrPro-size", faixa("QrPro-size", 100, 500, 50)),
-          rotulo("Cor de Preenchimento", "QrPro-fill", h("input", { id: "QrPro-fill", type: "color", value: PADROES["QrPro-fill"] ?? "" })),
-          rotulo(
-            "Cor de Fundo",
-            "QrPro-background",
-            h(
-              "div",
-              {},
-              h("input", { id: "QrPro-background", type: "color", value: PADROES["QrPro-background"] ?? "" }),
-              h(
-                "label",
-                { style: "margin-left:12px;" },
-                h("input", { id: "QrPro-background-transparent", type: "checkbox" }),
-                " Transparente",
-              ),
-            ),
+        subtitulo("Tamanho e margens"),
+        grade(
+          "duas",
+          grupo("Tamanho do QR", { para: "QrPro-size", valor: "140 px" }, faixa("QrPro-size", 100, 500, 50)),
+          grupo("Versão", { para: "QrPro-minversion", valor: "6" }, faixa("QrPro-minversion", 1, 10, 1)),
+          grupo("Margem de folga", { para: "QrPro-quiet", valor: "1 módulo" }, faixa("QrPro-quiet", 0, 4, 1)),
+          grupo("Raio de canto", { para: "QrPro-radius", valor: "50%" }, faixa("QrPro-radius", 0, 50, 10)),
+        ),
+        subtitulo("Cores"),
+        grade(
+          "duas",
+          grupo("Preenchimento", { para: "QrPro-fill" }, corCampo({ id: "QrPro-fill", value: PADROES["QrPro-fill"] ?? "" })),
+          grupo(
+            "Fundo",
+            { para: "QrPro-background" },
+            corCampo({ id: "QrPro-background", value: PADROES["QrPro-background"] ?? "" }),
+            caixa({ id: "QrPro-background-transparent" }, "Fundo transparente"),
           ),
-          rotulo("Versão: 6", "QrPro-minversion", faixa("QrPro-minversion", 1, 10, 1)),
-          rotulo(
-            "Nível de correção de erros",
-            "QrPro-eclevel",
+        ),
+        subtitulo("Correção e modo"),
+        grade(
+          "duas",
+          grupo(
+            "Correção de erros",
+            { para: "QrPro-eclevel" },
             h("select", { id: "QrPro-eclevel" }, ...NIVEIS.map(([v, t]) => h("option", { value: v }, t))),
           ),
-          rotulo("Margens de folga: 1 módulos", "QrPro-quiet", faixa("QrPro-quiet", 0, 4, 1)),
-          rotulo("Raio de canto: 50%", "QrPro-radius", faixa("QrPro-radius", 0, 50, 10)),
-          rotulo("Modo", "QrPro-mode", h("select", { id: "QrPro-mode" }, ...MODOS.map(([v, t]) => h("option", { value: v }, t)))),
-          h("div"),
-          h(
-            "div",
-            { class: "QrMode-etiqueta QrMode-imagem", style: "display:none;grid-column:1 / span 3;" },
-            h(
-              "div",
-              { style: "display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;" },
-              rotulo("Tamanho da etiqueta: 20%", "QrPro-msize", faixa("QrPro-msize", 0, 40, 1)),
-              rotulo("Posição X: 50%", "QrPro-mposx", faixa("QrPro-mposx", 0, 100, 1)),
-              rotulo("Posição Y: 50%", "QrPro-mposy", faixa("QrPro-mposy", 0, 100, 1)),
-            ),
-          ),
-          h(
-            "div",
-            { class: "QrMode-etiqueta", style: "display:none;grid-column:1 / span 3;" },
-            h(
-              "div",
-              { style: "display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;" },
-              rotulo("Nome da fonte", "QrPro-font", h("select", { id: "QrPro-font" }, ...FONTES.map((f) => h("option", { value: f }, f)))),
-              rotulo(
-                "Cor da fonte",
-                "QrPro-fontcolor",
-                h("input", { id: "QrPro-fontcolor", type: "color", value: PADROES["QrPro-fontcolor"] ?? "" }),
-              ),
-              rotulo("Etiqueta", "QrPro-label", h("input", { id: "QrPro-label", type: "text", value: nomeDaMarca() })),
-            ),
-          ),
-          h(
-            "div",
-            { class: "QrMode-imagem", style: "display:none;grid-column:1 / span 3;" },
-            rotulo("Imagem", "QrPro-image", h("input", { id: "QrPro-image", type: "file", accept: "image/*" })),
-            h("img", { id: "QrPro-img-buffer", style: "display:none", src: iconePadrao(), alt: "" }),
+          grupo("Modo", { para: "QrPro-mode" }, h("select", { id: "QrPro-mode" }, ...MODOS.map(([v, t]) => h("option", { value: v }, t)))),
+        ),
+        h(
+          "div",
+          { class: "QrMode-etiqueta QrMode-imagem", style: "display:none;" },
+          grade(
+            "tres",
+            grupo("Tamanho da etiqueta", { para: "QrPro-msize", valor: "20%" }, faixa("QrPro-msize", 0, 40, 1)),
+            grupo("Posição X", { para: "QrPro-mposx", valor: "50%" }, faixa("QrPro-mposx", 0, 100, 1)),
+            grupo("Posição Y", { para: "QrPro-mposy", valor: "50%" }, faixa("QrPro-mposy", 0, 100, 1)),
           ),
         ),
         h(
-          "a",
-          {
-            id: "QrPro-reset",
-            class: "linkDialog",
-            role: "button",
-            tabindex: "0",
-            style: "margin-top:14px;display:block;cursor:pointer;",
-            ...comoBotao(() => resetOptionsQR()),
-          },
-          "Resetar configurações",
+          "div",
+          { class: "QrMode-etiqueta", style: "display:none;" },
+          grade(
+            "tres",
+            grupo(
+              "Nome da fonte",
+              { para: "QrPro-font" },
+              h("select", { id: "QrPro-font" }, ...FONTES.map((f) => h("option", { value: f }, f))),
+            ),
+            grupo(
+              "Cor da fonte",
+              { para: "QrPro-fontcolor" },
+              corCampo({ id: "QrPro-fontcolor", value: PADROES["QrPro-fontcolor"] ?? "" }),
+            ),
+            grupo("Etiqueta", { para: "QrPro-label" }, h("input", { id: "QrPro-label", type: "text", value: nomeDaMarca() })),
+          ),
+        ),
+        h(
+          "div",
+          { class: "QrMode-imagem", style: "display:none;" },
+          grupo(
+            "Imagem",
+            { para: "QrPro-image", dica: "A imagem entra no QR conforme o modo escolhido." },
+            h("input", { id: "QrPro-image", type: "file", accept: "image/*" }),
+          ),
+          h("img", { id: "QrPro-img-buffer", style: "display:none", src: iconePadrao(), alt: "" }),
         ),
       );
+      const reiniciar = botaoTexto("Restaurar padrões", () => resetOptionsQR(), { id: "QrPro-reset" });
+      reiniciar.style.display = "none";
       return h(
         "div",
-        { id: "qrCodeLab" },
+        { id: "qrCodeLab", class: "spro-form spro-lateral" },
+        previa({ id: "qrCodeResult" }, { vazio: "A prévia do QR aparece aqui", xadrez: false }),
         h(
           "div",
-          { style: "text-align:right;" },
-          h(
-            "a",
-            {
-              id: "toggleOptionsQR",
-              class: "linkDialog",
-              role: "button",
-              tabindex: "0",
-              style: "cursor:pointer;color:inherit;text-decoration:underline;",
-              ...comoBotao(() => toggleOptionsQR()),
-            },
-            "Opções avançadas ",
-          ),
+          { class: "spro-barra" },
+          botaoTexto("Opções avançadas", () => toggleOptionsQR(), { id: "toggleOptionsQR", expansivel: true }),
+          reiniciar,
         ),
-        h(
-          "div",
-          { style: "display:grid;gap:10px;" },
-          opcoes,
-          h("div", { id: "qrCodeResult", style: "text-align:center;margin:10px 0;min-width:180px;" }),
-        ),
+        opcoes,
       );
     }
 
     function toggleOptionsQR(): void {
-      const painel = q<HTMLElement>("#optionsQrAdvanced");
-      if (!painel) return;
-      painel.style.display = painel.style.display === "none" ? "" : "none";
+      const aberto = q<HTMLElement>("#optionsQrAdvanced");
+      if (!aberto) return;
+      aberto.style.display = aberto.style.display === "none" ? "" : "none";
+      const lab = q("#qrCodeLab");
+      if (aberto.style.display === "") lab?.setAttribute("data-aberto", "");
+      else lab?.removeAttribute("data-aberto");
+      const reiniciar = q<HTMLElement>("#QrPro-reset");
+      if (reiniciar) reiniciar.style.display = aberto.style.display;
     }
 
     function resetOptionsQR(): void {
@@ -196,36 +191,23 @@ export const recurso: Recurso = {
         transparente.removeAttribute("checked");
       }
       q<HTMLImageElement>("#QrPro-img-buffer")?.setAttribute("src", iconePadrao());
+      const lab = q("#qrCodeLab");
+      if (lab) sincronizarControles(lab);
       updateQrCode();
     }
 
     /** A dica do link curto: so para URL http(s) com mais de 50 caracteres. */
     function tipQrCodeUrl(texto: string): void {
       q("#tipQrCodeUrl")?.remove();
-      const ancora = q("#toggleOptionsQR");
+      const ancora = q("#qrCodeResult");
       if (texto === "" || !urlHttpValida(texto) || texto.length <= 50 || !ancora) return;
-      const estiloDoIcone = q(".getTinyUrlButtom span")?.getAttribute("style") ?? "";
       const dica = h(
-        "span",
-        {
-          id: "tipQrCodeUrl",
-          style: "display:block;margin-bottom:8px;padding:5px 8px 8px 8px;background:#f9f9dc;color:#333;border-radius:5px;",
-        },
-        "Dica: Experimente ",
-        h(
-          "a",
-          {
-            class: "linkDialog",
-            role: "button",
-            tabindex: "0",
-            style: "cursor:pointer;color:inherit;text-decoration:underline;",
-            ...comoBotao(() => convertTinyURL()),
-          },
-          h("span", { style: `width:16px;height:16px;display:inline-block;${estiloDoIcone}` }),
-          "Gerar link curto do TinyURL",
-        ),
+        "div",
+        { id: "tipQrCodeUrl", class: "spro-aviso-inline" },
+        h("span", {}, "Endereço longo deixa o QR denso e difícil de ler."),
+        botaoTexto("Gerar link curto", () => convertTinyURL()),
       );
-      (ancora.parentElement ?? ancora).before(dica);
+      ancora.before(dica);
     }
 
     function setInputTinyUrl(url: string): void {
@@ -246,9 +228,11 @@ export const recurso: Recurso = {
     }
 
     function atualizarRotulos(): void {
+      const raiz = q("#qrCodeLab");
+      if (!raiz) return;
       for (const [id, unidade] of ROTULOS) {
-        const r = q<HTMLElement>(`label[for="${id}"]`);
-        if (r) r.textContent = (r.textContent ?? "").replace(/:.*/, `: ${valor(id)}${unidade}`);
+        const v = valor(id);
+        atualizarValor(raiz, id, unidade === "módulo" ? `${v} ${v === "1" ? "módulo" : "módulos"}` : `${v}${unidade}`);
       }
     }
 
@@ -279,6 +263,7 @@ export const recurso: Recurso = {
       const resultado = q<HTMLElement>("#qrCodeResult");
       if (!resultado) return;
       resultado.replaceChildren();
+      resultado.classList.toggle("xadrez", q("#QrPro-background-transparent:checked") !== null);
       for (const el of c.doc.querySelectorAll<HTMLElement>(".QrMode-etiqueta, .QrMode-imagem")) el.style.display = "none";
       atualizarRotulos();
       const modo = valor("QrPro-mode");
@@ -310,7 +295,7 @@ export const recurso: Recurso = {
     function openDialogQrCode(editor?: object): void {
       const ed = editor ?? A.getInstance();
       if (!ed) return;
-      const campo = h("input", { type: "text", id: "qrCodeText", style: "width:100%;box-sizing:border-box;margin:6px 0 10px 0;" });
+      const campo = h("input", { type: "text", id: "qrCodeText", placeholder: "Endereço, texto ou qualquer dado", autocomplete: "off" });
       // CK4: a selecao do texto esta no iframe da secao, nao na janela da pagina
       const selecionado = (A.getSelectedText(ed) || String(c.win.getSelection?.() ?? "")).trim();
       if (selecionado) campo.value = selecionado;
@@ -337,11 +322,9 @@ export const recurso: Recurso = {
       });
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Gerar Código QR",
-        conteudo: h(
-          "div",
-          { style: "min-width:560px;max-width:100%;font-size:13px;" },
-          h("label", { for: "qrCodeText" }, "Insira o texto que deseja codificar:"),
-          campo,
+        largura: 760,
+        conteudo: formulario(
+          grupo("Texto a codificar", { para: "qrCodeText" }, campo),
           lab,
           h(
             "div",

@@ -57,6 +57,12 @@ export async function verificarDialogo(): Promise<void> {
   abrirModal({ titulo: "X", conteudo: h("p", {}, "oi") });
   botao(doc.body, "Fechar")!.click();
   checar("o X do cabecalho fecha", !doc.querySelector("dialog"));
+  const largo = abrirModal({ titulo: "Largo", conteudo: h("p", {}, "oi"), largura: 760 });
+  checar("largura: o dialogo usa a largura pedida, limitada a tela", /min\(760px,\s*calc\(100vw - 24px\)\)/.test(doc.querySelector("dialog")?.getAttribute("style") ?? ""));
+  largo.fechar();
+  abrirModal({ titulo: "Padrao", conteudo: h("p", {}, "oi") });
+  checar("sem largura pedida, o dialogo fica com a largura do CSS", !doc.querySelector("dialog")?.getAttribute("style"));
+  botao(doc.body, "Fechar")!.click();
 
   secao("dialogo: confirmar");
   const confirmar = criarConfirmar(abrirModal);

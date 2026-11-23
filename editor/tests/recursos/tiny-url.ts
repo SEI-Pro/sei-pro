@@ -61,8 +61,8 @@ export async function verificarTinyUrl(): Promise<void> {
     );
     digitar(campo(d, "aliasTiny"), "a b!");
     checar(
-      `tiny-url ${v}: alias invalido mostra o erro em vermelho`,
-      /apenas letras/.test(d.querySelector("#tinyResult strong")?.textContent ?? ""),
+      `tiny-url ${v}: alias invalido mostra o erro (cor de perigo)`,
+      /apenas letras/.test(d.querySelector("#tinyResult .spro-erro")?.textContent ?? ""),
     );
 
     // validacoes: nao chama a rede

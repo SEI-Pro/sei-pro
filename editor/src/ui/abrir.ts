@@ -1,4 +1,4 @@
-import { type AbrirDialogo, criarAbridorDeDialogo, injetarEstiloBase } from "./dialogo";
+import { type AbrirDialogo, criarAbridorDeDialogo, injetarEstiloBase, marcarTema } from "./dialogo";
 
 let css = "";
 
@@ -16,4 +16,5 @@ export const abrirDialogo: AbrirDialogo = (doc, o) => criarAbridorDeDialogo(css)
 /** Garante o CSS base no documento (o aviso aparece mesmo sem nenhum dialogo aberto). */
 export function garantirEstiloBase(doc: Document): void {
   injetarEstiloBase(doc, css);
+  marcarTema(doc);
 }

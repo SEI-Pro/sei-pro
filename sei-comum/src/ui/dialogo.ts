@@ -11,6 +11,8 @@ export interface OpcoesModal {
   titulo: string;
   conteudo: HTMLElement;
   icone?: NomeIcone;
+  /** Largura em px (a padrao do CSS e 580); em tela estreita o diálogo encolhe para caber. */
+  largura?: number;
   aoFechar?: () => void;
 }
 
@@ -25,8 +27,9 @@ const PRIMEIRO_CAMPO =
  * tela enquanto há diálogo (painel/sobreposicao.ts). O mais novo fica por cima (top layer).
  */
 export function criarAbrirModal(g: { aoAbrir?: () => void; aoFechar?: () => void } = {}): AbrirModal {
-  return ({ titulo, conteudo, icone: nome, aoFechar }) => {
+  return ({ titulo, conteudo, icone: nome, largura, aoFechar }) => {
     const dlg = h("dialog", { class: "spro-dialogo", "aria-label": titulo });
+    if (largura) dlg.style.width = `min(${largura}px, calc(100vw - 24px))`;
     const fechar = () => {
       if (dlg.open) dlg.close();
     };

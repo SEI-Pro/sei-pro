@@ -1,6 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
+import { formulario, grupo } from "../ui/formulario";
 import { textoAleatorio } from "../util/aleatorio";
 import { ancorarNoInicio, nomeDaAncora } from "../util/ancoras";
 import { escaparHtml } from "../util/html";
@@ -132,11 +133,12 @@ export const recurso: Recurso = {
         return;
       }
 
-      const prefixo = h("input", { type: "text", id: "prefixo", style: "width:70%" });
+      const prefixo = h("input", { type: "text", id: "prefixo", placeholder: "ex.: item, parágrafo, art.", autocomplete: "off" });
       const ocultar = h("input", { type: "checkbox", id: "hidePrefix" });
+      const caixaOcultar = h("label", { class: "spro-caixa" }, ocultar, h("span", {}, "Não utilizar prefixo"));
       const select = h(
         "select",
-        { id: "selectRef", multiple: "multiple", size: String(Math.min(10, lista.length)), style: "width:100%" },
+        { id: "selectRef", multiple: "multiple", size: String(Math.min(8, Math.max(4, lista.length))) },
         ...lista.map((p) => {
           const texto = p.text.trim();
           const curto = texto.replace(/^(.{50}[^\s]*)[\s\S]*/, "$1");
@@ -146,12 +148,10 @@ export const recurso: Recurso = {
       const ocultarPrefixo = () => ocultar.matches(":checked") || prefixo.value.trim() === "";
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Inserir referência interna",
-        conteudo: h(
-          "div",
-          { style: "display:grid;gap:12px;min-width:420px;font-size:13px;" },
-          h("label", { style: "display:grid;gap:4px;" }, h("span", {}, "Prefixo:"), prefixo),
-          h("label", {}, ocultar, " Não utilizar prefixo"),
-          h("label", { style: "display:grid;gap:4px;" }, h("span", {}, "Parágrafo numerado:"), select),
+        largura: 640,
+        conteudo: formulario(
+          grupo("Prefixo", { para: "prefixo" }, prefixo, caixaOcultar),
+          grupo("Parágrafos numerados", { para: "selectRef", dica: "Selecione um ou mais (Ctrl ou Shift para vários)." }, select),
           h(
             "div",
             { class: "spro-dialogo-rodape" },

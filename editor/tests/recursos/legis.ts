@@ -325,10 +325,10 @@ export async function verificarLegis(): Promise<void> {
     // ementa longa: mais / menos
     const curta = linhas[0]?.querySelector(".searchLegis_ementa") as HTMLElement;
     const cheia = linhas[0]?.querySelector(".searchLegis_ementafull") as HTMLElement;
-    const mais = curta.querySelector("a") as Element;
+    const mais = curta.querySelector("button") as Element;
     mais.dispatchEvent(new (c.doc.defaultView as unknown as { Event: typeof Event }).Event("click", { bubbles: true }));
     igual(`legis ${v}: "mais" mostra a ementa completa e esconde a curta`, [curta.style.display, cheia.style.display], ["none", ""]);
-    (cheia.querySelector("a") as Element).dispatchEvent(
+    (cheia.querySelector("button") as Element).dispatchEvent(
       new (c.doc.defaultView as unknown as { Event: typeof Event }).Event("click", { bubbles: true }),
     );
     igual(`legis ${v}: "menos" volta`, [curta.style.display, cheia.style.display], ["", "none"]);

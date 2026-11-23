@@ -193,20 +193,6 @@ a.iconSelectStyleTable {
 .color10 a.iconSelectStyleTable {
 	filter: hue-rotate(360deg);
 }
-#optionsQrAdvanced input[type="text"], #optionsQrAdvanced select {
-	background: #eaeaea;
-    padding: 4px 0px;
-    min-width: 150px;
-}
-#optionsQrAdvanced input[type="color"] {
-	width: 40px;
-    height: 20px;
-}
-#optionsQrAdvanced label {
-    display: block;
-    margin: 14px 0 3px 0;
-	min-width: 200px;
-}
 .linkDialog {
 	cursor: pointer !important; 
 	text-decoration: underline !important; 

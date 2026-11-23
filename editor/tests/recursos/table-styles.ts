@@ -140,12 +140,12 @@ export async function verificarTableStyles(): Promise<void> {
 
     // trocar a variacao de cor atualiza a previa ANTES do Aplicar (regressao de 11/09/2026: addEventListener, nao onchange)
     const previa = d.querySelector("#addEstiloTabela") as HTMLElement;
-    igual(`table-styles ${v}: previa comeca na cor 1`, previa.className, "color1");
+    igual(`table-styles ${v}: previa comeca na cor 1`, previa.classList.contains("color1"), true);
     const radio3 = d.querySelector("#colorStyle3") as HTMLInputElement;
     desmarcar(d.querySelector("#colorStyle1")); // o linkedom nao desmarca o grupo de radios
     marcar(radio3);
     evento(radio3, "change");
-    igual(`table-styles ${v}: trocar o radio de cor muda a classe da previa`, previa.className, "color3");
+    igual(`table-styles ${v}: trocar o radio de cor muda a classe da previa`, [previa.classList.contains("color3"), previa.classList.contains("color1")], [true, false]);
 
     // aplicar: estilo 2, cor 3, 50%
     desmarcar(d.querySelector("#tableStyle1"));

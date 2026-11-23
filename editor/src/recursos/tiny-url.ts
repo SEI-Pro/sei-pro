@@ -50,9 +50,14 @@ export const recurso: Recurso = {
     function getTinyUrl(this_: Element | null): void {
       const edAberto = c.adaptador.getInstance(this_);
       if (!edAberto) return;
-      const campoUrl = h("input", { type: "text", id: "urlTiny" });
-      const campoAlias = h("input", { type: "text", id: "aliasTiny" });
-      const resultado = h("div", { id: "tinyResult" });
+      const campoUrl = h("input", {
+        type: "text",
+        id: "urlTiny",
+        placeholder: "https://exemplo.gov.br/endereco-muito-longo",
+        autocomplete: "off",
+      });
+      const campoAlias = h("input", { type: "text", id: "aliasTiny", placeholder: "ex.: relatorio-2026", autocomplete: "off" });
+      const resultado = h("p", { id: "tinyResult", class: "spro-dica" });
       const selecionado = String(c.win.getSelection?.() ?? "").trim();
       if (selecionado !== "" && urlHttpValida(selecionado)) campoUrl.value = selecionado;
 
@@ -61,15 +66,17 @@ export const recurso: Recurso = {
         const alias = campoAlias.value;
         if (alias === "") return;
         if (ALIAS_VALIDO.test(alias)) resultado.append(`Resultado: https://tinyurl.com/${alias}`);
-        else
-          resultado.append(h("strong", { style: "color:red;" }, "O nome personalizado deve conter apenas letras, números e travessões."));
+        else resultado.append(h("span", { class: "spro-erro" }, "O nome personalizado deve conter apenas letras, números e travessões."));
       });
 
       const dialogo = abrirDialogo(c.doc, {
         titulo: "Gerar link curto do TinyURL",
         conteudo: colunaDeFormulario(
-          linhaDeCampo("Insira o link que deseja encurtar:", campoUrl),
-          linhaDeCampo("Insira um Nome Personalizado para o link (opcional):", campoAlias),
+          linhaDeCampo("Link que deseja encurtar", campoUrl),
+          linhaDeCampo("Nome personalizado", campoAlias, {
+            opcional: true,
+            dica: "Letras, números e travessões, com 5 caracteres ou mais.",
+          }),
           resultado,
           h(
             "div",

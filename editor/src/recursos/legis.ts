@@ -1,7 +1,7 @@
 import { h } from "@comum/ui/dom";
 import { abrirDialogo } from "../ui/abrir";
 import { avisarEditor } from "../ui/avisar";
-import { comoBotao } from "../ui/teclado";
+import { criarAbas, grade, grupo } from "../ui/formulario";
 import {
   buscarNormas,
   htmlDaAncora,
@@ -178,79 +178,46 @@ export const recurso: Recurso = {
     /** Linha de resultado: titulo (link externo), apelido, "Revogada", "Adicionar" e a ementa com mais/menos. */
     function linhaDeResultado(norma: Norma, i: number): HTMLElement {
       const em = ementaLegivel(norma.ementa);
-      const cor = norma.revogada ? "text-decoration:line-through;color:#adadad;" : "";
       const titulo = norma.url
-        ? h("a", { class: "linkDialog", href: norma.url, target: "_blank", rel: "noopener noreferrer" }, norma.titulo, " ↗")
+        ? h("a", { class: "spro-link", href: norma.url, target: "_blank", rel: "noopener noreferrer" }, norma.titulo, " ↗")
         : h("span", {}, norma.titulo);
       const adicionar = h(
         "button",
-        {
-          type: "button",
-          class: "spro-botao",
-          "data-legis-idx": String(i),
-          style: "float:right;margin-left:10px;",
-          onclick: () => insertLegisSEI(adicionar),
-        },
+        { type: "button", class: "spro-botao pequeno", "data-legis-idx": String(i), onclick: () => insertLegisSEI(adicionar) },
         "Adicionar",
       );
+      const alternar = (rotulo: string) =>
+        h(
+          "button",
+          { type: "button", class: "spro-botao-texto", onclick: (ev: Event) => getSearchLegisMore(ev.currentTarget as Element) },
+          rotulo,
+        );
       const linha = h(
         "div",
-        { class: "searchLegis_linha", style: "border-bottom:2px solid #efefef;padding:10px 0;" },
+        { class: norma.revogada ? "searchLegis_linha spro-resultado revogada" : "searchLegis_linha spro-resultado" },
         h(
-          "p",
-          {},
-          titulo,
-          norma.apelido ? h("span", { style: "opacity:.7;" }, ` (${norma.apelido})`) : null,
-          norma.revogada
-            ? h("span", { style: "background:#e0e0e0;padding:1px 5px;color:#444;border-radius:5px;margin-left:10px;" }, "Revogada")
-            : null,
+          "div",
+          { class: "spro-resultado-topo" },
+          h(
+            "div",
+            { class: "spro-resultado-titulo" },
+            titulo,
+            norma.apelido ? h("span", { class: "spro-resultado-apelido" }, ` (${norma.apelido})`) : null,
+            norma.revogada ? h("span", { class: "spro-selo" }, "Revogada") : null,
+          ),
           adicionar,
         ),
       );
       if (em.completa) {
-        const estiloEmenta = `font-style:italic;word-break:break-word;white-space:break-spaces;max-width:500px;padding:6px 0 0;${cor}`;
         linha.append(
-          h(
-            "p",
-            { class: "searchLegis_ementa", style: estiloEmenta },
-            `${em.curta} `,
-            em.longa
-              ? h(
-                  "a",
-                  {
-                    class: "linkDialog",
-                    role: "button",
-                    tabindex: "0",
-                    style: "cursor:pointer;",
-                    ...comoBotao((ev: Event) => getSearchLegisMore(ev.currentTarget as Element)),
-                  },
-                  "mais",
-                )
-              : null,
-          ),
-          h(
-            "p",
-            { class: "searchLegis_ementafull", style: `display:none;${estiloEmenta}` },
-            `${em.completa} `,
-            h(
-              "a",
-              {
-                class: "linkDialog",
-                role: "button",
-                tabindex: "0",
-                style: "cursor:pointer;",
-                ...comoBotao((ev: Event) => getSearchLegisMore(ev.currentTarget as Element)),
-              },
-              "menos",
-            ),
-          ),
+          h("p", { class: "searchLegis_ementa spro-ementa" }, `${em.curta} `, em.longa ? alternar("mais") : null),
+          h("p", { class: "searchLegis_ementafull spro-ementa", style: "display:none;" }, `${em.completa} `, alternar("menos")),
         );
       }
       return linha;
     }
 
-    const aviso = (texto: string) =>
-      h("p", { style: "margin:10px;text-align:center;background:#fdfbe4;color:#333;padding:5px;border-radius:5px;" }, texto);
+    const aviso = (texto: string) => h("div", { class: "spro-aviso-inline spro-resultado-aviso" }, texto);
 
     function exibirResultados(raiz: ParentNode, normas: Norma[], total: number, avisoTopo?: string): void {
       resultados = normas;
@@ -281,7 +248,7 @@ export const recurso: Recurso = {
 
     /** Pesquisa da aba Federal. Tudo em branco tambem vale (a API devolve as normas mais recentes). */
     function getSearchLegis(this_?: Element | null): void {
-      const raiz = (this_?.closest(".dialogBoxDiv") ?? c.doc.querySelector(".dialogBoxDiv")) as ParentNode | null;
+      const raiz = (this_?.closest(".spro-legis") ?? c.doc.querySelector(".spro-legis")) as ParentNode | null;
       if (!raiz) return;
       const ano = valor(raiz, "legis_anoNorma").trim();
       carregando(raiz, true);
@@ -346,21 +313,15 @@ export const recurso: Recurso = {
       cheia.style.display = mostrarCurta ? "none" : "";
     }
 
-    function campoSelect(rotulo: string, id: string, opcoes: Array<[string, string]>): HTMLElement {
-      return h(
-        "label",
-        { style: "display:grid;gap:2px;font-size:12px;margin-bottom:8px;" },
-        h("span", {}, rotulo),
-        h("select", { id, style: "width:100%;" }, ...opcoes.map(([t, v]) => h("option", { value: v }, t))),
+    function campoSelect(rotulo: string, id: string, opcoes: Array<[string, string]>, largo = false): HTMLElement {
+      return grupo(
+        rotulo,
+        { para: id, largo },
+        h("select", { id }, ...opcoes.map(([t, v]) => h("option", { value: v }, t === "" ? "Selecione…" : t))),
       );
     }
-    function campoTexto(rotulo: string, id: string, tipo = "text"): HTMLElement {
-      return h(
-        "label",
-        { style: "display:grid;gap:2px;font-size:12px;margin-bottom:8px;" },
-        h("span", {}, rotulo),
-        h("input", { type: tipo, id, style: "width:100%;" }),
-      );
+    function campoTexto(rotulo: string, id: string, tipo = "text", largo = false): HTMLElement {
+      return grupo(rotulo, { para: id, largo }, h("input", { type: tipo, id, autocomplete: "off" }));
     }
 
     function openDialogLegisSEI(editor?: object): void {
@@ -372,29 +333,23 @@ export const recurso: Recurso = {
         ["infra", "Norma Infralegal"],
         ["lista", "Lista de Normas"],
       ] as const;
-      const botoes = new Map<string, HTMLElement>();
-      const paineis = new Map<string, HTMLElement>();
-      const selecionar = (id: string) => {
-        for (const [aba] of abas) {
-          botoes.get(aba)?.setAttribute("aria-selected", String(aba === id));
-          botoes.get(aba)?.setAttribute("tabindex", aba === id ? "0" : "-1");
-          if (aba === id) paineis.get(aba)?.removeAttribute("hidden");
-          else paineis.get(aba)?.setAttribute("hidden", "");
-        }
-      };
-      const carga = h("span", { id: "searchLegis_load", style: "margin-left:10px;display:none;" }, "Pesquisando...");
+      const carga = h("span", { id: "searchLegis_load", class: "spro-dica", style: "display:none;" }, "Pesquisando…");
       const conteudo: Record<string, HTMLElement> = {
         federal: h(
           "div",
-          {},
-          campoSelect("Tipo de Legislação", "legis_tipoNorma", SELECT_TIPO_FEDERAL),
-          campoTexto("Número da Legislação", "legis_numeroNorma", "number"),
-          campoSelect("Período da Publicação", "legis_periodoNorma", SELECT_PERIODO),
-          campoTexto("Ano da Publicação", "legis_anoNorma", "number"),
-          campoTexto("Conteúdo da Legislação (palavras-chave)", "legis_termoNorma"),
+          { class: "spro-form" },
+          grade(
+            "duas",
+            campoSelect("Tipo de legislação", "legis_tipoNorma", SELECT_TIPO_FEDERAL),
+            campoTexto("Número", "legis_numeroNorma", "number"),
+            campoSelect("Período da publicação", "legis_periodoNorma", SELECT_PERIODO),
+            campoTexto("Ano da publicação", "legis_anoNorma", "number"),
+            campoTexto("Palavras-chave do conteúdo", "legis_termoNorma", "text", true),
+          ),
           h(
             "div",
-            { style: "text-align:right;margin-top:6px;" },
+            { class: "spro-barra fim" },
+            carga,
             h(
               "button",
               {
@@ -406,59 +361,29 @@ export const recurso: Recurso = {
               },
               "Pesquisar",
             ),
-            carga,
           ),
-          h("div", { id: "searchLegis_result", style: "display:none;max-height:250px;overflow-y:auto;margin-top:15px;" }),
+          h("div", { id: "searchLegis_result", class: "spro-resultados", style: "display:none;" }),
         ),
         infra: h(
           "div",
-          {},
-          campoSelect("Autoridade Signatária", "legis_orgaoInfraNorma", SELECT_ORGAO),
-          campoSelect("Tipo de Legislação", "legis_tipoInfraNorma", SELECT_TIPO_INFRA),
-          campoTexto("Número da Norma", "legis_numeroInfraNorma", "number"),
-        ),
-        lista: h("div", {}, campoSelect("Nome da Legislação", "legis_nomeNorma", SELECT_LISTA)),
-      };
-      const lista = h("div", { role: "tablist", style: "display:flex;gap:4px;border-bottom:1px solid #ccc;margin-bottom:10px;" });
-      abas.forEach(([id, rotulo], i) => {
-        const b = h(
-          "button",
-          {
-            type: "button",
-            role: "tab",
-            id: `legisTab_${id}`,
-            "aria-controls": `legisPainel_${id}`,
-            "aria-selected": "false",
-            class: "spro-botao",
-            onclick: () => selecionar(id),
-            // setas movem entre as abas (a inativa tem tabindex -1: so por aqui o teclado a alcanca)
-            onkeydown: (evento: Event) => {
-              const passo = (evento as KeyboardEvent).key === "ArrowRight" ? 1 : (evento as KeyboardEvent).key === "ArrowLeft" ? -1 : 0;
-              const destino = abas[(i + passo + abas.length) % abas.length]?.[0];
-              if (!passo || !destino) return;
-              selecionar(destino);
-              botoes.get(destino)?.focus();
-            },
-          },
-          rotulo,
-        );
-        botoes.set(id, b);
-        lista.append(b);
-        paineis.set(
-          id,
-          h(
-            "div",
-            { role: "tabpanel", id: `legisPainel_${id}`, "aria-labelledby": `legisTab_${id}`, hidden: "" },
-            conteudo[id] as HTMLElement,
+          { class: "spro-form" },
+          grade(
+            "duas",
+            campoSelect("Autoridade signatária", "legis_orgaoInfraNorma", SELECT_ORGAO),
+            campoSelect("Tipo de legislação", "legis_tipoInfraNorma", SELECT_TIPO_INFRA),
+            campoTexto("Número da norma", "legis_numeroInfraNorma", "number"),
           ),
-        );
-      });
+        ),
+        lista: h("div", { class: "spro-form" }, campoSelect("Nome da legislação", "legis_nomeNorma", SELECT_LISTA)),
+      };
+      const controleAbas = criarAbas("legis", abas, conteudo);
+      const selecionar = controleAbas.selecionar;
 
       const raiz = h(
         "div",
-        { class: "dialogBoxDiv", style: "min-width:480px;font-size:13px;" },
-        lista,
-        ...paineis.values(),
+        { class: "spro-form spro-legis" },
+        controleAbas.barra,
+        h("div", {}, ...controleAbas.paineis),
         h(
           "div",
           { class: "spro-dialogo-rodape" },
@@ -489,7 +414,8 @@ export const recurso: Recurso = {
       );
       edDoDialogo = ed;
       const dialogo = abrirDialogo(c.doc, {
-        titulo: "Adicionar Link de Legislação",
+        titulo: "Adicionar link de legislação",
+        largura: 640,
         conteudo: raiz,
         // fechar (X, Esc) invalida a busca em andamento: a resposta que chegar depois nao insere nada
         aoFechar: () => {
@@ -499,6 +425,7 @@ export const recurso: Recurso = {
       });
       fecharDialogo = () => dialogo.fechar();
       selecionar("federal");
+      raiz.querySelector<HTMLElement>("#legis_tipoNorma")?.focus({ preventScroll: true });
 
       // pre-seleciona tipo/numero/ano pelo texto selecionado no editor
       const selecionado = A.getSelectedText(ed) || "";

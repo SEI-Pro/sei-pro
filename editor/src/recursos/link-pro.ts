@@ -139,15 +139,15 @@ function criar(c: Contexto) {
   function openDialogLinkPro(): void {
     const link = linkAtual();
     if (!link) return;
-    const campoNome = h("input", { type: "text", id: "linkProNome" });
-    const campoUrl = h("input", { type: "text", id: "linkProUrl" });
+    const campoNome = h("input", { type: "text", id: "linkProNome", autocomplete: "off" });
+    const campoUrl = h("input", { type: "text", id: "linkProUrl", placeholder: "https://", autocomplete: "off", spellcheck: "false" });
     campoNome.value = link.textContent ?? "";
     campoUrl.value = link.getAttribute("href") ?? "";
     const dialogo = abrirDialogo(c.doc, {
       titulo: "Editar link",
       conteudo: colunaDeFormulario(
-        linhaDeCampo("Texto visível:", campoNome),
-        linhaDeCampo("URL:", campoUrl),
+        linhaDeCampo("Texto do link", campoNome),
+        linhaDeCampo("Endereço (URL)", campoUrl),
         h(
           "div",
           { class: "spro-dialogo-rodape" },

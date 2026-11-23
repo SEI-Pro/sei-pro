@@ -46,6 +46,16 @@ export function verificarUi(): void {
   igual("segundo dialogo nao injeta o estilo de novo", doc.querySelectorAll('style[data-seipro-editor="base"]').length, 1);
   m2.fechar();
 
+  // Tema: sem `data-tema` o CSS base segue o modo escuro do SISTEMA; o dialogo tem de seguir o Estilo Avancado.
+  igual("tema claro por padrao: html data-tema=claro", doc.documentElement.getAttribute("data-tema"), "claro");
+  doc.documentElement.setAttribute("data-spro-tema", "escuro");
+  abrir(doc, { titulo: "Escuro", conteudo: h("div", {}, "x") }).fechar();
+  igual("Estilo Avancado escuro: html data-tema=escuro", doc.documentElement.getAttribute("data-tema"), "escuro");
+  doc.documentElement.setAttribute("data-spro-tema", "claro");
+  abrir(doc, { titulo: "Claro", conteudo: h("div", {}, "x") }).fechar();
+  igual("volta ao claro quando o tema muda", doc.documentElement.getAttribute("data-tema"), "claro");
+  doc.documentElement.removeAttribute("data-spro-tema");
+
   const rotulos = [...dlg.querySelectorAll("button")].map((b) => (b.textContent ?? "").trim() || b.getAttribute("aria-label"));
   checar("nao ha botao Cancelar", !rotulos.some((r) => /cancelar/i.test(String(r))));
   checar("ha o X (Fechar)", rotulos.includes("Fechar"));
