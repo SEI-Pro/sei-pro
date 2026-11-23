@@ -121,6 +121,8 @@ export interface DepsApp {
 
 const novaAba = (): string => globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
+/** Prazo da leitura da árvore do processo (a árvore completa e o histórico); as demais chamadas usam o padrão de 15 s. */
+const PRAZO_ARVORE_MS = 120_000;
 const mensagem = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 export class AppAcoesLote {
@@ -310,7 +312,8 @@ export class AppAcoesLote {
 
   private async carregar(forcar: boolean, limpar = false): Promise<void> {
     try {
-      const a = await this.d.rpc.chamar<RespostaArvore>("arvore", forcar ? { forcar: true } : undefined);
+      // Processo grande em servidor lento: a árvore (com as pastas abertas) e o histórico levam bem mais que os 15 s das demais chamadas.
+      const a = await this.d.rpc.chamar<RespostaArvore>("arvore", forcar ? { forcar: true } : undefined, PRAZO_ARVORE_MS);
       this.estado = criarEstado(this.d.ctx, a, limpar ? undefined : (this.estado ?? undefined));
       this.subtitulo.textContent = this.estado.protocolo;
       this.mostrar("selecao");
