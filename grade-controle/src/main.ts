@@ -208,10 +208,14 @@ function alternar() {
     ligada = true;
     gravarDica(localStorage, true);
     ativarCedo(document, escuro());
-    if (app) {
+    if (app && app.host.isConnected && app.host.shadowRoot) {
       app.mostrar(true);
       marcarPronta(document);
     } else {
+      if (app) {
+        app.fechar();
+        app = null;
+      }
       vigia = vigiar(voltarNativa);
       vigia.iniciarContagem();
       montar();

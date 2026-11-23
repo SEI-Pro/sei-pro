@@ -211,6 +211,39 @@ await teste('app: mover que o SEI recusa reverte e avisa', async () => {
   assert.match(q(app, '.spro-aviso').textContent!, /sem permissão/);
   app.fechar();
 });
+await teste('app: quadro reordena colunas por drag/drop, ajusta largura e exibe anotacao e especificacao nos cartoes', async () => {
+  const local = areaMemoria();
+  const sync = areaMemoria();
+  const armazem = criarArmazem({ local, sync }, 'u-quadro');
+  const { app } = await montar({ armazem });
+  app.definirVisao({ modo: 'quadro' });
+  const chavesAntes = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
+  assert.ok(chavesAntes.length >= 2);
+  // Drag ultima coluna para a primeira posicao
+  const origem = chavesAntes[chavesAntes.length - 1]!;
+  const destino = chavesAntes[0]!;
+  const colDestino = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === destino)!;
+  const Ev = (colDestino.ownerDocument.defaultView as any).Event;
+  const transferCol = { types: ['application/x-spro-coluna'], setData: () => undefined, getData: (t: string) => (t === 'application/x-spro-coluna' ? origem : '') };
+  colDestino.dispatchEvent(Object.assign(new Ev('drop', { bubbles: true, cancelable: true }), { dataTransfer: transferCol }));
+  await tick();
+  const chavesDepois = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
+  assert.equal(chavesDepois[0], origem);
+  // Aumentar largura das colunas via botao '+'
+  const btnMais = qa(app, '.spro-largura-bt')[1]!;
+  btnMais.click();
+  await tick();
+  assert.equal(app.estado().visao.quadro.larguraColuna, 300);
+  assert.equal(q<HTMLElement>(app, '.spro-quadro').style.getPropertyValue('--spro-col-largura'), '300px');
+  // Cartoes exibem especificacao e anotacao quando presentes
+  assert.ok(qa(app, '.spro-cartao-espec').length > 0);
+  assert.ok(qa(app, '.spro-cartao-anotacao').length > 0);
+  // Persistencia no armazem para proximos acessos
+  const salvo = await armazem.lerEstado();
+  assert.equal(salvo.visao.quadro.ordemColunas?.[0], origem);
+  assert.equal(salvo.visao.quadro.larguraColuna, 300);
+  app.fechar();
+});
 await teste('app: visão salva persiste e reaplica (visões no sync)', async () => {
   const sync = areaMemoria();
   const local = areaMemoria();

@@ -20,7 +20,7 @@ import { agrupar, ROTULO_AGRUPAR } from '../modelo/grupos';
 import { abrirVisita, comIdade, type EstadoIdade, registrarVistos } from '../modelo/idade';
 import { achatar, type LinhaLista } from '../modelo/linhas';
 import { alternarOrdem, ordenar } from '../modelo/ordem';
-import { aplicarMovimento, type ExtrasQuadro, planejarMovimento } from '../modelo/quadro';
+import { aplicarMovimento, type ExtrasQuadro, planejarMovimento, reordenarColunas } from '../modelo/quadro';
 import { type AgruparPor, type CampoOrdem, COLUNAS, type Coluna, type LeituraTabela, type Processo, ROTULO_COLUNA, type Visao } from '../modelo/tipos';
 import { excluirVisao, mudouDe, salvarVisao, visaoPadrao } from '../modelo/visoes';
 import type { Grupo, SelecaoDaPagina } from '../modelo/tipos';
@@ -382,7 +382,17 @@ export function criarApp(d: DepsApp) {
   function renderConteudo() {
     const lista = ordenados();
     if (visao.modo === 'quadro') {
-      conteudo.replaceChildren(desenharQuadro({ processos: lista, cfg: visao.quadro, ctx: ctx(), extras, selecionados, aoMover: (i, a, b) => void mover(i, a, b), aoSelecionar: (i, m) => selecionar([i], m), aoAbrirPrazo: (i) => d.abrirPrazo(i) }));
+      conteudo.replaceChildren(desenharQuadro({
+        processos: lista,
+        cfg: visao.quadro,
+        ctx: ctx(),
+        extras,
+        selecionados,
+        aoMover: (i, a, b) => void mover(i, a, b),
+        aoSelecionar: (i, m) => selecionar([i], m),
+        aoAbrirPrazo: (i) => d.abrirPrazo(i),
+        aoReordenarColuna: (de, para, chaves) => alterar({ quadro: { ...visao.quadro, ordemColunas: reordenarColunas(chaves, de, para) } }),
+      }));
       return;
     }
     const grupos = agrupar(lista, visao.agrupar, ctx());
@@ -475,8 +485,54 @@ export function criarApp(d: DepsApp) {
     const lim = h('input', { type: 'number', min: '0', max: '99', class: 'spro-num', value: String(q.limite), 'aria-label': 'Limite de cartões por coluna (0 = sem limite)', title: 'Limite de cartões por coluna (0 = sem limite)', onchange: (ev: Event) => alterar({ quadro: { ...q, limite: Math.max(0, Math.min(99, Number((ev.target as HTMLInputElement).value) || 0)) } }) });
     const raia = h('input', { type: 'checkbox', onchange: (ev: Event) => alterar({ quadro: { ...q, raiasPorResponsavel: (ev.target as HTMLInputElement).checked } }) });
     raia.checked = q.raiasPorResponsavel;
-    opcoesQuadro.replaceChildren(sel.el, h('label', { class: 'spro-rotulo-inline' }, 'Limite ', lim), h('label', { class: 'spro-rotulo-inline' }, raia, ' Raias por responsável'),
-      h('span', { class: 'spro-suave' }, q.colunas === 'marcador' || q.colunas === 'responsavel' ? 'Arraste os cartões entre as colunas.' : 'Esta divisão é só de leitura.'));
+    const larguraAtual = q.larguraColuna ?? 280;
+    const definirLargura = (nova: number) => {
+      const l = Math.max(200, Math.min(500, Math.round(nova)));
+      alterar({ quadro: { ...visao.quadro, larguraColuna: l } });
+    };
+    const valLargura = h('span', { class: 'spro-largura-val' }, `${larguraAtual}px`);
+    const rangeLargura = h('input', {
+      type: 'range',
+      min: '200',
+      max: '500',
+      step: '20',
+      value: String(larguraAtual),
+      class: 'spro-largura-range',
+      'aria-label': 'Largura das colunas',
+      title: 'Ajustar largura das colunas e cartões',
+      oninput: (ev: Event) => {
+        const l = Number((ev.target as HTMLInputElement).value) || 280;
+        valLargura.textContent = `${l}px`;
+        conteudo.querySelector<HTMLElement>('.spro-quadro')?.style.setProperty('--spro-col-largura', `${l}px`);
+      },
+      onchange: (ev: Event) => definirLargura(Number((ev.target as HTMLInputElement).value) || 280),
+    });
+    const ctrlLargura = h('div', { class: 'spro-largura-ctrl' },
+      h('span', {}, 'Largura'),
+      h('button', { type: 'button', class: 'spro-largura-bt', 'aria-label': 'Diminuir largura das colunas', title: 'Diminuir largura das colunas', onclick: () => definirLargura(larguraAtual - 20) }, '−'),
+      rangeLargura,
+      h('button', { type: 'button', class: 'spro-largura-bt', 'aria-label': 'Aumentar largura das colunas', title: 'Aumentar largura das colunas', onclick: () => definirLargura(larguraAtual + 20) }, '+'),
+      valLargura,
+    );
+    const btnRestaurarOrdem = q.ordemColunas?.length
+      ? h('button', {
+          type: 'button',
+          class: 'spro-link',
+          title: 'Voltar à ordenação automática das colunas',
+          onclick: () => {
+            const { ordemColunas: _, ...resto } = visao.quadro;
+            alterar({ quadro: resto });
+          },
+        }, 'Restaurar ordem')
+      : null;
+    opcoesQuadro.replaceChildren(
+      sel.el,
+      h('label', { class: 'spro-rotulo-inline' }, 'Limite ', lim),
+      ctrlLargura,
+      h('label', { class: 'spro-rotulo-inline' }, raia, ' Raias por responsável'),
+      ...(btnRestaurarOrdem ? [btnRestaurarOrdem] : []),
+      h('span', { class: 'spro-suave' }, q.colunas === 'marcador' || q.colunas === 'responsavel' ? 'Arraste cartões ou cabeçalhos das colunas.' : 'Arraste os cabeçalhos para reordenar as colunas.'),
+    );
   }
 
   // ---------- painéis (colunas e visões) ----------

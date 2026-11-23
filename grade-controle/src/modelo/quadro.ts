@@ -40,8 +40,6 @@ export function montarQuadro(processos: Processo[], cfg: ConfigQuadro, ctx: Ctx,
   };
 
   if (cfg.colunas === 'marcador') {
-    coluna(SEM, 'Sem marcador', true);
-    for (const nome of [...(extras.marcadores ?? [])].sort(colador.compare)) coluna(`m:${nome}`, nome, true);
     for (const p of processos) {
       if (!p.marcadores.length) coluna(SEM, 'Sem marcador', true).itens.push(p);
       for (const m of p.marcadores) coluna(`m:${m.nome}`, m.nome, true).itens.push(p);
@@ -65,13 +63,45 @@ export function montarQuadro(processos: Processo[], cfg: ConfigQuadro, ctx: Ctx,
 
   let lista = [...colunas.values()];
   if (cfg.colunas === 'prazo') lista = lista.filter((c) => c.itens.length || c.titulo);
-  if (cfg.colunas === 'marcador' || cfg.colunas === 'responsavel') {
+  if (cfg.colunas === 'marcador') {
+    lista = lista.filter((c) => c.itens.length > 0);
+    lista.sort((a, b) => {
+      const diff = b.itens.length - a.itens.length;
+      if (diff !== 0) return diff;
+      if (a.chave === SEM) return 1;
+      if (b.chave === SEM) return -1;
+      return colador.compare(a.titulo, b.titulo);
+    });
+  } else if (cfg.colunas === 'responsavel') {
     lista.sort((a, b) => (a.chave === SEM ? -1 : b.chave === SEM ? 1 : colador.compare(a.titulo, b.titulo)));
   } else if (cfg.colunas === 'tipo') {
     lista.sort((a, b) => colador.compare(a.titulo, b.titulo));
   }
+  if (cfg.ordemColunas?.length) {
+    const pos = new Map(cfg.ordemColunas.map((k, i) => [k, i]));
+    lista.sort((a, b) => {
+      const pa = pos.get(a.chave);
+      const pb = pos.get(b.chave);
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return 0;
+    });
+  }
   if (cfg.limite > 0) for (const c of lista) c.excedeu = c.itens.length > cfg.limite;
   return lista;
+}
+
+/** Reordena a lista de chaves movendo `de` para a posição de `para`. */
+export function reordenarColunas(chaves: string[], de: string, para: string): string[] {
+  if (de === para) return [...chaves];
+  const iDe = chaves.indexOf(de);
+  const iPara = chaves.indexOf(para);
+  if (iDe < 0 || iPara < 0) return [...chaves];
+  const nova = [...chaves];
+  nova.splice(iDe, 1);
+  nova.splice(iPara, 0, de);
+  return nova;
 }
 
 export type Movimento =

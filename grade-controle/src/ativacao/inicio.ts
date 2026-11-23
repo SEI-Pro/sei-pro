@@ -22,7 +22,7 @@ export function cssPrimeiraPintura(): string {
   const esqueleto = `html[${ATRIBUTO}]:not([${PRONTA}]) #divTabelaProcesso::before,
 html[${ATRIBUTO}]:not([${PRONTA}]) #frmProcedimentoControlar:not(:has(#divTabelaProcesso))::before`;
   // Controles da visao antiga (links nativos "Ver por...", seletores e Tabela/Quadro do legado): a grade os substitui.
-  const antigos = ['#divFiltro', '#newFiltro', '#processosProActions'].map((t) => `html[${ATRIBUTO}] ${t}`).join(',\n');
+  const antigos = ['#divFiltro', '#newFiltro', '#processosProActions', '#processosKanban'].map((t) => `html[${ATRIBUTO}] ${t}`).join(',\n');
   return `${tabelas} { display: none !important; }
 /* Com a grade pronta, o container nativo das tabelas (min-height: 200px) so deixaria um vazio entre a grade e o painel de baixo. */
 html[${ATRIBUTO}][${PRONTA}] #divTabelaProcesso { display: none !important; }

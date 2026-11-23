@@ -8,7 +8,7 @@ import { abrirVisita, comIdade, estadoVazio, JANELA_VISITA, MAX_REGISTROS, norma
 import { calcularJanela } from '../src/modelo/janela';
 import { achatar } from '../src/modelo/linhas';
 import { alternarOrdem, chaveProtocolo, ordenar } from '../src/modelo/ordem';
-import { aplicarMovimento, montarQuadro, planejarMovimento } from '../src/modelo/quadro';
+import { aplicarMovimento, montarQuadro, planejarMovimento, reordenarColunas } from '../src/modelo/quadro';
 import { excluirVisao, mudouDe, normalizarLista, normalizarVisao, renomearVisao, salvarVisao, visaoPadrao, MAX_VISOES } from '../src/modelo/visoes';
 import { AGORA, CTX, prazoEm, proc, teste } from './util';
 
@@ -243,10 +243,19 @@ await teste('visões: salvar, atualizar, renomear, excluir e teto', () => {
 });
 
 // ---------------- quadro ----------------
-await teste('quadro: por marcador inclui colunas vazias e "Sem marcador" primeiro', () => {
-  const cols = montarQuadro([proc({ marcadores: [mk('B')] }), proc()], { colunas: 'marcador', limite: 0, raiasPorResponsavel: false }, CTX, { marcadores: ['A', 'B'] });
-  assert.deepEqual(cols.map((c) => [c.chave, c.itens.length]), [['sem', 1], ['m:A', 0], ['m:B', 1]]);
+await teste('quadro: por marcador oculta colunas vazias, ordena por quantidade decrescente e respeita ordemColunas', () => {
+  const ps = [
+    proc({ marcadores: [mk('B')] }),
+    proc({ marcadores: [mk('B')] }),
+    proc({ marcadores: [mk('C')] }),
+    proc(),
+  ];
+  const cols = montarQuadro(ps, { colunas: 'marcador', limite: 0, raiasPorResponsavel: false }, CTX, { marcadores: ['A', 'B', 'C', 'Vazio'] });
+  assert.deepEqual(cols.map((c) => [c.chave, c.itens.length]), [['m:B', 2], ['m:C', 1], ['sem', 1]]);
   assert.ok(cols.every((c) => c.aceitaSoltar));
+  const reordenadas = montarQuadro(ps, { colunas: 'marcador', limite: 0, raiasPorResponsavel: false, ordemColunas: ['sem', 'm:C'] }, CTX, { marcadores: ['A', 'B', 'C'] });
+  assert.deepEqual(reordenadas.map((c) => c.chave), ['sem', 'm:C', 'm:B']);
+  assert.deepEqual(reordenarColunas(['m:B', 'm:C', 'sem'], 'sem', 'm:B'), ['sem', 'm:B', 'm:C']);
 });
 await teste('quadro: limite marca coluna excedida; prazo e tipo são só leitura', () => {
   const ps = [proc({ marcadores: [mk('A')] }), proc({ marcadores: [mk('A')] }), proc({ marcadores: [mk('A')] })];

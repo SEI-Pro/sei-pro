@@ -132,6 +132,10 @@ export interface ConfigQuadro {
   /** Limite de cartões por coluna (0 = sem limite). */
   limite: number;
   raiasPorResponsavel: boolean;
+  /** Ordem manual das colunas (chaves, ex.: ['m:Urgente', 'sem']), salva entre acessos. */
+  ordemColunas?: string[];
+  /** Largura das colunas/cartões em pixels (200 a 500; padrão 280). */
+  larguraColuna?: number;
 }
 
 export interface Visao {
