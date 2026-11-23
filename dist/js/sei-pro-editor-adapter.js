@@ -297,16 +297,11 @@
     var MODULES = [
         // O GHS (window.SeiProGhs) e os recursos ja portados para TS vem do bundle
         // js/editor/pagina.js (pacote editor/), que roda ANTES deste adapter.
-        'citacao.js',
         'sigilo.js',
-        'dados-processo.js',
         'escrita-interativa.js',
         'link-sei-lote.js',
-        'importar-doc.js',
         'minuta-watermark.js',
-        'processo-publico.js',
         'image-base64.js',
-        'image-quality.js',
         'image-background.js',
         'image-editor.js',
         'context-menu.js',

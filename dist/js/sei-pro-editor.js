@@ -1984,28 +1984,7 @@ function insertProtocoloOnBox(idEditor) {
 // getGoogleDocs() -> js/modules/editor/ (extraido para modulo)
 // getGoogleSheets() -> js/modules/editor/ (extraido para modulo)
 // handleFileImport() -> js/modules/editor/ (extraido para modulo)
-async function converterDocxParaHtml(inputFile) {
-    try {
-      const file = inputFile[0];
-      if (!file) throw new Error("Nenhum arquivo .docx selecionado.");
-  
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-  
-        var r = (!$('#replaceText').is(':checked')) 
-            ? true
-            : confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
-        if (r == true) { 
-            loadFileImportEditor(result.value);
-        }
-  
-      if (result.messages.length > 0) {
-        console.warn("Mensagens da convers\u00E3o:", result.messages);
-      }
-    } catch (erro) {
-      console.error("Erro ao converter .docx:", erro);
-    }
-}
+// converterDocxParaHtml() -> editor/ (TS)
 // loadFileImportHTML() -> js/modules/editor/ (extraido para modulo)
 // loadFileImportEditor() -> js/modules/editor/ (extraido para modulo)
 // wordToSEI() -> js/modules/editor/ (extraido para modulo)

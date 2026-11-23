@@ -131,5 +131,52 @@
       "getDialogLegisSEI"
     ],
     "necessarios": ["resolverNormasLegisPro", "getLegisSEI", "getDialogLegisSEI"]
+  },
+  "dados-processo": {
+    "exportados": [
+      "getDadosEditor",
+      "getDialogDadosEditor",
+      "getDialogDadosEditor_htmlListTag",
+      "insertDadosEditor",
+      "removeDynamicField",
+      "editDynamicField",
+      "newDynamicField",
+      "updateDynamicField"
+    ],
+    "necessarios": ["getDadosEditor", "getDialogDadosEditor"]
+  },
+  "importar-doc": {
+    "exportados": [
+      "importDocPro",
+      "getGoogleDocs",
+      "getGoogleSheets",
+      "importGoogleByUrl",
+      "handleFileImport",
+      "converterDocxParaHtml",
+      "loadFileImportHTML",
+      "loadFileImportEditor",
+      "wordToSEI"
+    ],
+    "necessarios": ["importDocPro"]
+  },
+  "citacao": {
+    "exportados": ["getCitacaoDocumento", "getDialogCitacaoDocumento", "insertCitacaoDocumento"],
+    "necessarios": ["getCitacaoDocumento"]
+  },
+  "image-quality": {
+    "exportados": ["openDialogBatchImgQuality", "getDialogBatchImgQuality"],
+    "necessarios": ["openDialogBatchImgQuality", "getDialogBatchImgQuality"]
+  },
+  "processo-publico": {
+    "exportados": [
+      "getCheckerProcessoPublicoPro",
+      "openDialogProcessoPublicoPro",
+      "getDadosIframeProcessoPublicoPro",
+      "checkDadosIframeProcessoPublicoPro",
+      "loadListaProcessoPublicoPro",
+      "getListaProcessoPublicoPro",
+      "getLinksProcessoPublicoPro"
+    ],
+    "necessarios": ["openDialogProcessoPublicoPro"]
   }
 }
