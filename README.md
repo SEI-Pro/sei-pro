@@ -120,6 +120,8 @@ Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo
 - ![Enumerar Normas (Legística)](/img/icon-legistica.png) [Enumerar Normas (Legística)](./pages/LEGISTICA.md)
 - ![Adicionar estilo à tabela, duplicar e ordenar tabelas](/img/icon-estilotabela.png) [Adicionar estilo à tabela, duplicar e ordenar tabelas](./pages/ESTILOTABELA.md)
 - ![Tabela rápida](/img/icon-tabelarapida.png) [Tabela rápida](./pages/TABELARAPIDA.md)
+- [Tabela com colunas em %](./pages/TABELACOLUNAS.md)
+- [Gerar documento com modelo limpo](./pages/MODELOLIMPO.md)
 - ![Alinhar o texto à esquerda, ao centro, à direita ou justificado](/img/icon-alinhartexto.png) [Alinhar o texto à esquerda, ao centro, à direita ou justificado](./pages/ALINHARTEXTO.md)
 - ![Aumentar ou reduzir o tamanho da fonte](/img/icon-aumentarfonte.png) [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
 - ![Primeira letra maiúscula (exceto artigos e preposições)](/img/icon-letramaiusc.png) [Primeira letra maiúscula (exceto artigos e preposições)](./pages/LETRAMAIUSC.md)
@@ -185,6 +187,10 @@ Inscreva-se na lista de e-mail: [novidades.seipro.app](https://novidades.seipro.
 ## Histórico de versões
 
 Confira nosso [Histórico de versões](./pages/HISTORICO.md)
+
+## Créditos
+
+O SEI Pro é criado e mantido por Pedro Soares e colaboradores. As funções [Tabela com colunas em %](./pages/TABELACOLUNAS.md) e [Gerar documento com modelo limpo](./pages/MODELOLIMPO.md) são contribuição do IPPLAM (Instituto de Pesquisa e Planejamento Urbano de Maringá), autarquia do Município de Maringá/PR. Veja os [Créditos](./CREDITOS.md).
 
 ## Licença
 

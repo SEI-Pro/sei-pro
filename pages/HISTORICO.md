@@ -5,6 +5,10 @@
 ### Versão 3.9.5
 Em preparação
 
+- **Novo — [Tabela com colunas em %](../pages/TABELACOLUNAS.md)** (SEI 5). Um botão novo no grupo de tabelas do editor cria ou ajusta a tabela com a largura de cada coluna em porcentagem, para sair igual na tela, na impressão e no "Gerar PDF". Tem posição na página (esquerda, centro ou direita), temas do SEI com zebra pela 1ª coluna, cores e bordas personalizadas, bordas que aparecem no "Gerar PDF", limpeza de tabela colada e texto pelos estilos do órgão. Contribuição do IPPLAM (Maringá/PR), veja os [Créditos](../CREDITOS.md).
+- **Novo — [Gerar documento com modelo limpo](../pages/MODELOLIMPO.md)** (SEI 5, desligado de fábrica). Na tela Gerar Documento, com Documento Modelo, o botão "Salvar com modelo limpo" gera o documento sem herdar a formatação do Google Docs e do editor antigo: o texto fica, e os estilos passam a ser os do órgão. Contribuição do IPPLAM (Maringá/PR).
+- **Corrigido — no SEI 5.0.5 o editor não achava nenhum estilo do órgão**, porque a lista chega em `infra.estilo` e não na raiz da configuração. As funções que dependem dos estilos voltam a enxergá-los.
+- **Corrigido — os botões de tabela do SEI Pro se sobrepunham na barra do editor do SEI 5** quando ela quebrava de linha, e só "Adicionar estilo à tabela" aparecia. Agora eles ficam num grupo próprio, logo depois do "Inserir tabela".
 - **Corrigido — notas de rodapé apareciam como "[?]" no SEI 5.** Se o cursor estava fora do corpo do documento (por exemplo, no Cabeçalho), a marca da nota ficava como [?] e o texto do rodapé era descartado. O mesmo acontecia na segunda nota inserida em seguida, porque o editor devolvia o cursor ao Cabeçalho depois de numerar a primeira. Agora a nota é sempre inserida no corpo, o cursor é preservado e as notas são numeradas corretamente.
 
 ### Versão 3.9.4
