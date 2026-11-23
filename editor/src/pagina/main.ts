@@ -11,12 +11,15 @@ import { RECURSOS } from "../recursos/indice";
 import { iniciarRecursos, instalarRecursos } from "../recursos/instalar";
 import type { Contexto } from "../recursos/tipos";
 import { avisarEditor } from "../ui"; // importar entrega o CSS base ao dialogo
+import { abrirHtml, type DefLegado, ligar } from "../ui/legado";
 
 const marca = "__seiProEditorTs";
 const janela = window as unknown as Record<string, unknown>;
 
 if (!janela[marca]) {
   janela[marca] = true;
+  // ponte para os modulos legados: `SeiProEditorAdapter.openDialog` delega aqui (moldura e kit novos)
+  janela.SeiProUi = { abrirHtml: (def: DefLegado) => abrirHtml(window, document, def), ligar };
   const adaptador = criarAdaptador(window);
   adaptador.aoRecusarEscrita(() => avisarEditor(document, "Esta se\u00E7\u00E3o do documento \u00E9 somente leitura."));
   const c: Contexto = {

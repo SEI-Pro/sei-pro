@@ -58,7 +58,8 @@
         if (!editor) return;
 
         var fsupport = fileSupportBase64();
-        var defaultQuality = (typeof qualidadeImagens !== 'undefined') ? qualidadeImagens : 60;
+        var defaultQuality = parseInt((typeof qualidadeImagens !== 'undefined') ? qualidadeImagens : 60, 10);
+        if (isNaN(defaultQuality) || defaultQuality < 1 || defaultQuality > 100) defaultQuality = 60;
         var dark = (typeof isDarkMode !== 'undefined') ? isDarkMode : false;
 
         // Imagem atualmente selecionada (se houver). No CK4/CK5 usamos o
@@ -68,80 +69,66 @@
         // Estado por instancia do dialogo (substitui as closures do CK4).
         var state = { imgScal: 1, lock: true };
 
+        // Pecas do kit de formulario (markup de classes; ver sei-comum/ui/formulario.css).
+        function kitGrupo(rotulo, id, controle) {
+            return '<div class="spro-grupo"><label class="spro-rotulo" for="' + id + '">' + rotulo + '</label>' + controle + '</div>';
+        }
+        function kitCampo(id, extra) { return '<input type="text" class="spro-campo" id="' + id + '" autocomplete="off"' + (extra || '') + '>'; }
+        function kitSeletor(id, opcoes) {
+            return '<div class="spro-seletor"><select id="' + id + '" class="spro-campo">' + opcoes.map(function (o) {
+                return '<option value="' + o[0] + '">' + o[1] + '</option>';
+            }).join('') + '</select></div>';
+        }
+        var ALINHAMENTOS = [['none', 'N\u00E3o definido'], ['top', 'Superior'], ['bottom', 'Inferior'], ['left', 'Esquerda'], ['right', 'Direita']];
+        var FILTROS = [['none', 'N\u00E3o definido'], ['grayscale', 'Escala de cinza'], ['blur', 'Borrado'], ['shadow', 'Caixa sombreada'], ['invert', 'Cores invertidas'], ['sepia', 'Envelhecido']];
+
         var sourceHtml = fsupport
-            ? '<div style="margin-bottom:8px;">'
-                + '  <label style="display:block;margin-bottom:4px;"><input type="checkbox" id="b64_filecheckbox" checked> Navegar neste computador:</label>'
-                + '  <div class="dropFilePro" id="b64_dropzone" style="border:1px dashed #ccc;border-radius:10px;background:#f2f2f2;padding:24px 12px;text-align:center;color:#999;font-size:13pt;cursor:pointer;'
-                + (dark ? 'filter:invert(1) brightness(1.5);' : '') + '">'
-                + '    Arraste arquivos para c\u00E1 ou clique para selecionar'
-                + '    <input type="file" id="b64_file" accept="image/*" multiple style="display:none;">'
+            ? '<div class="spro-grupo">'
+                + '  <label class="spro-caixa"><input type="checkbox" id="b64_filecheckbox" checked><span>Escolher arquivos neste computador</span></label>'
+                + '  <div class="spro-zona" id="b64_dropzone"><span><strong>Arraste as imagens para c\u00E1</strong> ou clique para escolher</span>'
+                + '    <input type="file" id="b64_file" accept="image/*" multiple hidden>'
                 + '  </div>'
                 + '</div>'
-                + '<div style="margin-bottom:8px;">'
-                + '  <label style="display:block;margin-bottom:4px;"><input type="checkbox" id="b64_urlcheckbox"> URL da Imagem:</label>'
-                + '  <input type="text" id="b64_url" style="width:100%;box-sizing:border-box;">'
+                + '<div class="spro-grupo">'
+                + '  <label class="spro-caixa"><input type="checkbox" id="b64_urlcheckbox"><span>Usar o endere\u00E7o (URL) de uma imagem</span></label>'
+                + kitCampo('b64_url', ' placeholder="https://"')
                 + '</div>'
-            : '<div style="margin-bottom:8px;">'
-                + '  <label style="display:block;margin-bottom:4px;">URL da Imagem:</label>'
-                + '  <input type="text" id="b64_url" style="width:100%;box-sizing:border-box;">'
-                + '</div>';
+            : kitGrupo('Endere\u00E7o (URL) da imagem', 'b64_url', kitCampo('b64_url', ' placeholder="https://"'));
 
         var htmlBox =
-            '<div class="dialogBoxDiv seipro-b64-dialog" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">'
-            + '<style>'
-            + '.seipro-b64-dialog, .seipro-b64-dialog * { box-sizing:border-box; }'
-            + '.seipro-b64-dialog .seiProTabs .ui-tabs-anchor { padding:6px 12px; font-size:12px; }'
-            + '.seipro-b64-dialog label { font-size:12px; color:#555; }'
-            + '.seipro-b64-dialog input[type="text"], .seipro-b64-dialog input[type="number"], .seipro-b64-dialog select { font-size:13px; padding:4px 6px; border:1px solid #ccc; border-radius:3px; }'
-            + '.seipro-b64-dialog .b64-grid { display:flex; gap:8px; margin-bottom:8px; }'
-            + '.seipro-b64-dialog .b64-grid > div { flex:1; }'
-            + '.seipro-b64-dialog .previewImage { cursor:move; max-width:400px; max-height:100px; float:left; margin:5px; }'
-            + '</style>'
-            + '<div id="b64Tabs" class="seiProTabs">'
-            + '  <ul>'
-            + '    <li><a href="#b64TabSource">Imagem</a></li>'
-            + '    <li><a href="#b64TabProps">Propriedades</a></li>'
-            + '  </ul>'
-            + '  <div id="b64TabSource">'
-            + sourceHtml
-            + '    <div id="b64_loading" style="text-align:center;color:#999;"></div>'
-            + '    <div id="b64_preview" class="dropFilePro" style="text-align:center;max-width:700px;min-height:20px;"></div>'
+            '<div class="spro-form">'
+            + '<div data-spro-abas>'
+            + '  <div class="spro-segmentado largo" role="tablist">'
+            + '    <button type="button" role="tab" data-aba="imagem" aria-selected="true">Imagem</button>'
+            + '    <button type="button" role="tab" data-aba="props" aria-selected="false">Propriedades</button>'
             + '  </div>'
-            + '  <div id="b64TabProps">'
-            + '    <div style="margin-bottom:8px;"><label>Texto Alternativo</label><br><input type="text" id="b64_alt" style="width:100%;"></div>'
-            + '    <div class="b64-grid">'
-            + '      <div><label>Largura</label><br><input type="text" id="b64_width" style="width:100%;"></div>'
-            + '      <div><label>Altura</label><br><input type="text" id="b64_height" style="width:100%;"></div>'
-            + '      <div style="display:flex;align-items:flex-end;"><label><input type="checkbox" id="b64_lock" checked> Travar Propor\u00E7\u00F5es</label></div>'
+            + '  <div role="tabpanel" data-painel="imagem" id="b64TabSource">'
+            + sourceHtml
+            + '    <p id="b64_loading" class="spro-dica"></p>'
+            + '    <div id="b64_preview" class="dropFilePro spro-previa lista xadrez" data-vazio="A pr\u00E9via das imagens aparece aqui"></div>'
+            + '  </div>'
+            + '  <div role="tabpanel" data-painel="props" id="b64TabProps" hidden>'
+            + kitGrupo('Texto alternativo', 'b64_alt', kitCampo('b64_alt', ' placeholder="Descreva a imagem para quem n\u00E3o consegue v\u00EA-la"'))
+            + '    <div class="spro-grade tres">'
+            + kitGrupo('Largura', 'b64_width', kitCampo('b64_width'))
+            + kitGrupo('Altura', 'b64_height', kitCampo('b64_height'))
+            + '      <div class="spro-grupo"><span class="spro-rotulo">Propor\u00E7\u00E3o</span><label class="spro-caixa"><input type="checkbox" id="b64_lock" checked><span>Travar propor\u00E7\u00F5es</span></label></div>'
             + '    </div>'
-            + '    <div class="b64-grid">'
-            + '      <div><label>Margem Vertical</label><br><input type="text" id="b64_vmargin" value="0" style="width:100%;"></div>'
-            + '      <div><label>Margem Horizontal</label><br><input type="text" id="b64_hmargin" value="0" style="width:100%;"></div>'
-            + '      <div><label>Borda</label><br><input type="text" id="b64_border" value="0" style="width:100%;"></div>'
+            + '    <div class="spro-grade tres">'
+            + kitGrupo('Margem vertical', 'b64_vmargin', kitCampo('b64_vmargin', ' value="0"'))
+            + kitGrupo('Margem horizontal', 'b64_hmargin', kitCampo('b64_hmargin', ' value="0"'))
+            + kitGrupo('Borda', 'b64_border', kitCampo('b64_border', ' value="0"'))
             + '    </div>'
-            + '    <div class="b64-grid">'
-            + '      <div><label>Largura M\u00E1xima</label><br><input type="text" id="b64_maxwidth" value="0" style="width:100%;"></div>'
-            + '      <div><label>Altura M\u00E1xima</label><br><input type="text" id="b64_maxheight" value="0" style="width:100%;"></div>'
-            + '      <div><label>Alinhamento</label><br><select id="b64_align" style="width:100%;">'
-            + '        <option value="none">N\u00E3o definido</option>'
-            + '        <option value="top">Superior</option>'
-            + '        <option value="bottom">Inferior</option>'
-            + '        <option value="left">Esquerda</option>'
-            + '        <option value="right">Direita</option>'
-            + '      </select></div>'
+            + '    <div class="spro-grade tres">'
+            + kitGrupo('Largura m\u00E1xima', 'b64_maxwidth', kitCampo('b64_maxwidth', ' value="0"'))
+            + kitGrupo('Altura m\u00E1xima', 'b64_maxheight', kitCampo('b64_maxheight', ' value="0"'))
+            + kitGrupo('Alinhamento', 'b64_align', kitSeletor('b64_align', ALINHAMENTOS))
             + '    </div>'
-            + '    <div class="b64-grid">'
-            + '      <div><label>Qualidade da Imagem (1 = baixa / 100 = alta)</label><br><input type="number" id="b64_quality" min="1" max="100" value="' + defaultQuality + '" style="width:100%;"></div>'
-            + '      <div><label>Filtro</label><br><select id="b64_filter" style="width:100%;">'
-            + '        <option value="none">N\u00E3o definido</option>'
-            + '        <option value="grayscale">Escala de Cinza</option>'
-            + '        <option value="blur">Borrado</option>'
-            + '        <option value="shadow">Caixa Sombreada</option>'
-            + '        <option value="invert">Cores Invertidas</option>'
-            + '        <option value="sepia">Envelhecido</option>'
-            + '      </select></div>'
-            + '      <div id="b64_imglength" style="text-align:left;font-size:12px;align-self:flex-end;"></div>'
+            + '    <div class="spro-grade duas">'
+            + kitGrupo('Qualidade da imagem (1 = baixa, 100 = alta)', 'b64_quality', '<input type="number" class="spro-campo" id="b64_quality" min="1" max="100" value="' + defaultQuality + '">')
+            + kitGrupo('Filtro', 'b64_filter', kitSeletor('b64_filter', FILTROS))
             + '    </div>'
+            + '    <p id="b64_imglength" class="spro-dica"></p>'
             + '  </div>'
             + '</div>'
             + '</div>';
@@ -150,12 +137,8 @@
             id: 'dialogUploadImgBase64Pro',
             title: 'Imagem',
             html: htmlBox,
-            width: 760,
-            height: 'auto',
+            width: 720,
             onOpen: function ($box) {
-                var $tabs = $box.find('#b64Tabs');
-                if ($tabs.tabs) $tabs.tabs();
-
                 // Dropzone: clique abre o seletor de arquivos.
                 $box.find('#b64_dropzone').on('click', function (e) {
                     if (e.target && e.target.id === 'b64_file') return;
@@ -191,7 +174,7 @@
                 if (selectedImg) {
                     prefillFromImage($box, selectedImg, state);
                     if (SeiProEditorAdapter.version === 5) prefillEstilosCK5($box, selectedImg);
-                    $tabs.tabs && $tabs.tabs('option', 'active', 1);
+                    $box.find('[data-aba="props"]').trigger('click');
                 }
             },
             buttons: [{

@@ -507,25 +507,15 @@
             return html;
         }
 
-        // O <style> do dialogo vai por DOM API: dentro do html do dialogo o portao o cortaria.
-        estiloPro(document, 'seipro-dialog-compact',
-            '.seipro-dialog-compact, .seipro-dialog-compact * { box-sizing:border-box; font-size:13px; }'
-            + '.seipro-dialog-compact label { display:block; font-size:12px; color:#555; margin-bottom:2px; }'
-            + '.seipro-dialog-compact select { font-size:13px; padding:4px 6px; border:1px solid #ccc; border-radius:3px; width:100%; }'
-            + '.seipro-dialog-compact .ds-row { margin-bottom:10px; }');
         var htmlBox =
-            '<div class="dialogBoxDiv seipro-dialog-compact" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">'
-            + '<div class="ds-row">'
-            + '<label for="wslanguages">Idioma</label>'
-            + '<select id="wslanguages">' + langHtml + '</select>'
+            '<div class="spro-form">'
+            + '<div class="spro-grade duas">'
+            + '<div class="spro-grupo"><label class="spro-rotulo" for="wslanguages">Idioma</label>'
+            + '<div class="spro-seletor"><select id="wslanguages" class="spro-campo">' + langHtml + '</select></div></div>'
+            + '<div class="spro-grupo"><label class="spro-rotulo" for="wscultures">Variante</label>'
+            + '<div class="spro-seletor"><select id="wscultures" class="spro-campo">' + culturesHtmlFor(curLangVal, curVal) + '</select></div></div>'
             + '</div>'
-            + '<div class="ds-row">'
-            + '<label for="wscultures">Cultura</label>'
-            + '<select id="wscultures">' + culturesHtmlFor(curLangVal, curVal) + '</select>'
-            + '</div>'
-            + '<div style="font-style:italic;color:#616161;margin-top:6px;">'
-            + '<i class="fas fa-info-circle" style="color:#007fff;"></i> Atalho: <strong>Ctrl + Shift + Espa\u00E7o</strong> liga/desliga o ditado.'
-            + '</div>'
+            + '<p class="spro-dica">Atalho: <strong>Ctrl + Shift + Espa\u00E7o</strong> liga ou desliga o ditado.</p>'
             + '</div>';
 
         // selectCulture acompanha a escolha do usuario (equivalente ao onChange
@@ -536,8 +526,7 @@
             id: 'dialogDitadoPro',
             title: 'Configura\u00E7\u00F5es do Ditado',
             html: htmlBox,
-            width: 420,
-            height: 260,
+            width: 560,
             onOpen: function ($box) {
                 // Ao trocar de idioma, recarrega as culturas (equivale ao onChange
                 // de wslanguages, que repovoava o <select> de cultura).
@@ -553,7 +542,7 @@
                 });
             },
             buttons: [{
-                text: 'OK',
+                text: 'Salvar',
                 primary: true,
                 click: function ($box) {
                     // Equivale ao onOk do dialogo CK4.

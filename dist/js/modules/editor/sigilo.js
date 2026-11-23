@@ -203,70 +203,46 @@
         var textSelected = SeiProEditorAdapter.getSelectedText(editor) || '';
 
         var htmlBox =
-            '<div class="dialogBoxDiv seipro-dialog-compact" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">' +
-                '<style>' +
-                    '.seipro-dialog-compact, .seipro-dialog-compact * { box-sizing:border-box; font-size:13px; }' +
-                    '.seipro-dialog-compact label { font-size:12px; color:#555; }' +
-                    '.seipro-dialog-compact input { font-size:13px; padding:4px 6px; border:1px solid #ccc; border-radius:3px; line-height:1.3; }' +
-                    '.seipro-dialog-compact .ui-tabs-nav .ui-tabs-anchor { padding:6px 12px; font-size:12px; }' +
-                    '.seipro-dialog-compact .ui-tabs .ui-tabs-panel { padding:10px 12px; font-size:13px; }' +
-                    '.seipro-dialog-compact button.ui-button { font-size:12px; padding:4px 10px; cursor:pointer; }' +
-                    '.seipro-dialog-compact table.seiProForm td { padding:6px 4px; vertical-align:top; }' +
-                    '.seipro-dialog-compact .tabSigilo_result { margin-top:15px; }' +
-                '</style>' +
-                '<div id="sigiloTabs" class="seiProTabs">' +
-                    '<ul>' +
-                        '<li><a href="#sigiloTabLocalizar">1. Localizar texto e dados pessoais</a></li>' +
-                        '<li><a href="#sigiloTabTarjar">2. Tarjar marcas de sigilo</a></li>' +
-                        '<li><a href="#sigiloTabRemover">Remover marcas</a></li>' +
-                        '<li><a href="#sigiloTabGuia">Guia r\u00E1pido</a></li>' +
-                    '</ul>' +
-                    // --- Aba 1: localizar ---
-                    '<div id="sigiloTabLocalizar">' +
-                        '<table role="presentation" class="seiProForm" style="width:100%">' +
-                            '<tr>' +
-                                '<td style="width:55%"><label>Localizar texto e adicionar marca<br>de sigilo em todo o documento</label></td>' +
-                                '<td style="width:45%">' +
-                                    '<input type="text" id="inputSigiloTexto" style="width:200px;max-width:100%">' +
-                                    '<div style="margin-top:6px;"><button type="button" id="btnSigiloReplace" class="ui-button ui-state-default ui-corner-all">Adicionar</button></div>' +
-                                '</td>' +
-                            '</tr>' +
-                            '<tr>' +
-                                '<td><label>Localizar dados pessoais como<br>e-mails e CPFs em todo o documento</label></td>' +
-                                '<td><button type="button" id="btnSigiloEmailCpf" class="ui-button ui-state-default ui-corner-all">Localizar dados pessoais</button></td>' +
-                            '</tr>' +
-                        '</table>' +
-                        '<div id="tabSigilo2_result" class="tabSigilo_result" style="display:none;"></div>' +
-                    '</div>' +
-                    // --- Aba 2: tarjar ---
-                    '<div id="sigiloTabTarjar">' +
-                        '<table role="presentation" class="seiProForm" style="width:100%">' +
-                            '<tr>' +
-                                '<td style="width:55%"><label>Aplicar tarja de sigilo<br>no documento</label></td>' +
-                                '<td style="width:45%"><button type="button" id="btnSigiloApply" class="ui-button ui-state-default ui-corner-all">Aplicar</button></td>' +
-                            '</tr>' +
-                        '</table>' +
-                        '<div id="tabSigilo1_result" class="tabSigilo_result" style="display:none;"></div>' +
-                    '</div>' +
-                    // --- Aba 3: remover ---
-                    '<div id="sigiloTabRemover">' +
-                        '<table role="presentation" class="seiProForm" style="width:100%">' +
-                            '<tr>' +
-                                '<td style="width:55%"><label>Remover todas as marcas<br>de sigilo no documento</label></td>' +
-                                '<td style="width:45%"><button type="button" id="btnSigiloRemove" class="ui-button ui-state-default ui-corner-all">Remover</button></td>' +
-                            '</tr>' +
-                        '</table>' +
-                        '<div id="tabSigilo3_result" class="tabSigilo_result" style="display:none;"></div>' +
-                        '<div id="tabSigilo3_info" style="margin-top:15px;">' +
-                            '<label style="font-style:italic;color:#616161;">' +
-                                '<i class="fas fa-exclamation-triangle laranjaColor"></i> Marcas de sigilo j\u00E1 tarjadas n\u00E3o poder\u00E3o ser revertidas ap\u00F3s salvar e abandonar <br>este editor de documentos.' +
-                            '</label>' +
+            '<div data-spro-abas>' +
+                '<div class="spro-segmentado largo" role="tablist">' +
+                    '<button type="button" role="tab" data-aba="localizar" aria-selected="true">Localizar</button>' +
+                    '<button type="button" role="tab" data-aba="tarjar" aria-selected="false">Tarjar</button>' +
+                    '<button type="button" role="tab" data-aba="remover" aria-selected="false">Remover</button>' +
+                    '<button type="button" role="tab" data-aba="guia" aria-selected="false">Guia r\u00E1pido</button>' +
+                '</div>' +
+                // --- Aba 1: localizar ---
+                '<div role="tabpanel" data-painel="localizar">' +
+                    '<p class="spro-dica">Marque em todo o documento as ocorr\u00EAncias de um texto ou deixe o SEI Pro procurar e-mails e CPFs.</p>' +
+                    '<div class="spro-grupo">' +
+                        '<label class="spro-rotulo" for="inputSigiloTexto">Texto a marcar</label>' +
+                        '<div class="spro-linha">' +
+                            '<input type="text" id="inputSigiloTexto" class="spro-campo" autocomplete="off" placeholder="Nome, palavra ou n\u00FAmero">' +
+                            '<button type="button" id="btnSigiloReplace" class="spro-botao primario">Adicionar marca</button>' +
                         '</div>' +
                     '</div>' +
-                    // --- Aba 4: guia ---
-                    '<div id="sigiloTabGuia">' +
-                        '<label>Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://seipro.app/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt bLink" style="font-size:90%;text-decoration:underline;"></i></a></label>' +
+                    '<div class="spro-grupo">' +
+                        '<span class="spro-rotulo">Dados pessoais</span>' +
+                        '<div class="spro-linha"><button type="button" id="btnSigiloEmailCpf" class="spro-botao">Localizar e-mails e CPFs</button></div>' +
                     '</div>' +
+                    '<div id="tabSigilo2_result" class="tabSigilo_result spro-nota" style="display:none;"></div>' +
+                '</div>' +
+                // --- Aba 2: tarjar ---
+                '<div role="tabpanel" data-painel="tarjar" hidden>' +
+                    '<p class="spro-dica">Troca cada trecho marcado por uma tarja preta de confidencialidade.</p>' +
+                    '<div class="spro-linha"><button type="button" id="btnSigiloApply" class="spro-botao primario">Aplicar tarja</button></div>' +
+                    '<div id="tabSigilo1_result" class="tabSigilo_result spro-nota" style="display:none;"></div>' +
+                '</div>' +
+                // --- Aba 3: remover ---
+                '<div role="tabpanel" data-painel="remover" hidden>' +
+                    '<p class="spro-dica">Tira todas as marcas de sigilo do documento.</p>' +
+                    '<div class="spro-linha"><button type="button" id="btnSigiloRemove" class="spro-botao perigo">Remover todas as marcas</button></div>' +
+                    '<div id="tabSigilo3_result" class="tabSigilo_result spro-nota" style="display:none;"></div>' +
+                    '<div id="tabSigilo3_info" class="spro-aviso-inline"><span>Marcas de sigilo j\u00E1 tarjadas n\u00E3o poder\u00E3o ser revertidas depois de salvar e sair deste editor.</span></div>' +
+                '</div>' +
+                // --- Aba 4: guia ---
+                '<div role="tabpanel" data-painel="guia" hidden>' +
+                    '<p class="spro-dica">Acesse o guia r\u00E1pido sobre como adicionar marca de sigilo e tarjas pretas de confidencialidade.</p>' +
+                    '<div class="spro-linha"><a target="_blank" rel="noopener noreferrer" href="https://seipro.app/pages/SIGILODOC.html" class="spro-botao">Abrir o guia</a></div>' +
                 '</div>' +
             '</div>';
 
@@ -277,8 +253,6 @@
             width: 720,
             height: 'auto',
             onOpen: function ($box) {
-                var $tabs = $box.find('#sigiloTabs');
-                if ($tabs.tabs) $tabs.tabs();
                 $box.find('.tabSigilo_result').empty().hide();
                 $box.find('#inputSigiloTexto').val(textSelected);
                 htmlTabSigiloResult($box, editor);

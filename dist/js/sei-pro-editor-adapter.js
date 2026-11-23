@@ -223,6 +223,8 @@
      * cobre linhas inseridas no dialogo depois de aberto).
      */
     function openDialog(def) {
+        // Bundle TS (js/editor/pagina.js): moldura e kit de formulario novos, mesmo contrato ($box nos ganchos).
+        if (window.SeiProUi && typeof window.SeiProUi.abrirHtml === 'function') return window.SeiProUi.abrirHtml(def || {});
         if (!window.$ || !$.fn || !$.fn.dialog) {
             if (typeof console !== 'undefined') console.warn('[SEIPro/Adapter] jQuery UI dialog ausente');
             return null;

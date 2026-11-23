@@ -437,7 +437,7 @@
         SeiProEditorAdapter.openDialog({
             id: 'dialogReviewPro',
             title: 'Gerenciar Revis\u00F5es',
-            html: '<div style="padding-bottom: 10px;overflow: auto;max-height: 400px;text-align: center;" id="boxReviews"></div>',
+            html: '<div id="boxReviews" class="spro-form"></div>',
             width: 700,
             height: 'auto',
             onOpen: function () {
@@ -454,7 +454,7 @@
     // trecho do paragrafo destacado.
     window.contentDialogReview = function (alertText) {
         alertText = (typeof alertText === 'undefined')
-            ? '<span style="font-size: 12pt;"><i class="fas fa-info-circle laranjaColor" style="margin-right: 5px;"></i>Nenhuma revis\u00E3o identificada</span>'
+            ? '<div class="spro-aviso-inline"><span>Nenhuma revis\u00E3o identificada neste documento.</span></div>'
             : alertText;
 
         var editor = SeiProEditorAdapter.getInstance();
@@ -483,9 +483,9 @@
             });
         }
 
-        var btnControlReject = '<div style="margin: 10px 0 !important;display: inline-block;width: 95%;">' +
-            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" data-spro-click="parent.removeReviewPro" data-mode="acceptAll" title="Aceitar todas as revis\u00F5es"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>' +
-            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" data-spro-click="parent.removeReviewPro" data-mode="rejectAll" title="Rejeitar todas as revis\u00F5es"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>' +
+        var btnControlReject = '<div class="spro-barra">' +
+            '   <button type="button" class="spro-botao" data-spro-click="parent.removeReviewPro" data-mode="rejectAll" title="Rejeitar todas as revis\u00F5es">Rejeitar todas</button>' +
+            '   <button type="button" class="spro-botao primario" data-spro-click="parent.removeReviewPro" data-mode="acceptAll" title="Aceitar todas as revis\u00F5es">Aceitar todas</button>' +
             '</div>';
 
         htmlPro($('#boxReviews'), listReviews === '' ? alertText : btnControlReject + listReviews);

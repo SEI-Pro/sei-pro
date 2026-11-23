@@ -232,11 +232,6 @@
                     }
                     try { $box.dialog('close'); } catch (e) {}
                 }
-            }, {
-                text: 'Cancelar',
-                click: function ($box) {
-                    try { $box.dialog('close'); } catch (e) {}
-                }
             }]
         });
     };

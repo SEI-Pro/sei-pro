@@ -148,54 +148,57 @@
             '<option value="background" selected>Imagem de fundo</option>'
             + '<option value="page_cover">Imagem como capa de livro</option>';
 
+        // Pecas do kit de formulario (markup de classes; ver sei-comum/ui/formulario.css).
+        function kitGrupo(rotulo, id, controle) {
+            return '<div class="spro-grupo"><label class="spro-rotulo" for="' + id + '">' + rotulo + '</label>' + controle + '</div>';
+        }
+        function kitSeletor(id, classe, opcoes) {
+            return '<div class="spro-seletor"><select id="' + id + '" class="spro-campo ' + classe + '">' + opcoes + '</select></div>';
+        }
+        function kitCaixa(id, classe, rotulo, marcado) {
+            return '<label class="spro-caixa"><input type="checkbox" id="' + id + '" class="' + classe + '"' + (marcado ? ' checked' : '') + '><span>' + rotulo + '</span></label>';
+        }
+
         var rawHtml =
-            '<div class="dialogBoxDiv seipro-imgbg" style="font-size:13px;line-height:1.4;color:#333;font-family:Arial,sans-serif;">'
-            + '<style>'
-            + '.seipro-imgbg, .seipro-imgbg * { box-sizing:border-box; font-size:13px; }'
-            + '.seipro-imgbg label.fld { display:block; font-size:12px; color:#555; margin-bottom:2px; }'
-            + '.seipro-imgbg input[type="text"], .seipro-imgbg input[type="number"], .seipro-imgbg select { width:100%; font-size:13px; padding:4px 6px; border:1px solid #ccc; border-radius:3px; }'
-            + '.seipro-imgbg .row { display:flex; gap:10px; margin-top:8px; }'
-            + '.seipro-imgbg .row > div { flex:1; }'
-            + '.seipro-imgbg .chkrow { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }'
-            + '.seipro-imgbg .chkrow label { font-size:12px; color:#444; }'
-            + '.seipro-imgbg .linkDialog { float:right; margin-right:10px; cursor:pointer; color:#0000ee; text-decoration:underline; font-size:12px; }'
-            + '</style>'
-            + '<div class="row" style="margin-top:0;">'
-            + '<div>'
-            + '<label class="fld">Importar imagem (PNG, JPG ou SVG)</label>'
-            + '<input type="file" id="fileInputImportImage" accept="image/*" style="width:100%;">'
+            '<div class="spro-lateral-imgbg">'
+            + '<div class="spro-form">'
+            + kitGrupo('Imagem (PNG, JPG ou SVG)', 'fileInputImportImage', '<input type="file" id="fileInputImportImage" class="spro-campo" accept="image/*">')
+            + '<p class="spro-subtitulo">P\u00E1gina</p>'
+            + '<div class="spro-grade duas">'
+            + kitGrupo('Layout', 'tipoLayout', kitSeletor('tipoLayout', 'tipoLayout', optsLayout))
+            + kitGrupo('Tamanho do papel', 'tipoPapel', kitSeletor('tipoPapel', 'tipoPapel', optsPapel))
+            + kitGrupo('Escala (%)', 'tipoEscala', '<input type="number" step="10" id="tipoEscala" class="spro-campo tipoEscala" value="100">')
+            + kitGrupo('Fonte', 'tipoFonte', kitSeletor('tipoFonte', 'tipoFonte', optsFonte))
+            + kitGrupo('Margens externas', 'tipoMargem', kitSeletor('tipoMargem', 'tipoMargem', optsMargem))
+            + kitGrupo('Margens internas', 'tipoPadding', kitSeletor('tipoPadding', 'tipoPadding', optsPadding))
+            + '</div>'
+            + '<p class="spro-subtitulo">Imagem</p>'
+            + '<div class="spro-grade duas">'
+            + kitGrupo('Posi\u00E7\u00E3o', 'tipoPosicao', kitSeletor('tipoPosicao', 'tipoPosicao', optsPosicao))
+            + kitGrupo('Disposi\u00E7\u00E3o', 'tipoDisposicao', kitSeletor('tipoDisposicao', 'tipoDisposicao', optsDisposicao))
+            + kitGrupo('Repeti\u00E7\u00E3o', 'tipoRepeticao', kitSeletor('tipoRepeticao', 'tipoRepeticao', optsRepeticao))
+            + kitGrupo('Utiliza\u00E7\u00E3o', 'tipoUtilizacao', kitSeletor('tipoUtilizacao', 'tipoUtilizacao', optsUtilizacao))
+            + '</div>'
+            + '<p class="spro-subtitulo">Textos</p>'
+            + '<div class="spro-grade duas">'
+            + kitGrupo('Texto do cabe\u00E7alho', 'textoCabecalho', '<input type="text" id="textoCabecalho" class="spro-campo textoCabecalho" value="" autocomplete="off">')
+            + kitGrupo('Texto do rodap\u00E9', 'textoRodape', '<input type="text" id="textoRodape" class="spro-campo textoRodape" value="" autocomplete="off">')
+            + '</div>'
+            + '<div class="spro-grupo">'
+            + kitCaixa('visibleOnPrint', 'visibleOnPrint', 'Vis\u00EDvel apenas ao imprimir', true)
+            + kitCaixa('onlyFirst', 'onlyFirst', 'Aplicar apenas na primeira p\u00E1gina', false)
+            + kitCaixa('reduceQualityImg', 'reduceQualityImg', 'Reduzir a qualidade da imagem', true)
             + '</div>'
             + '</div>'
-            + '<div class="row">'
-            + '<div><label class="fld">Layout</label><select id="tipoLayout" class="tipoLayout">' + optsLayout + '</select></div>'
-            + '<div><label class="fld">Tamanho do Papel</label><select id="tipoPapel" class="tipoPapel">' + optsPapel + '</select></div>'
-            + '<div><label class="fld">Escala (%)</label><input type="number" step="10" id="tipoEscala" class="tipoEscala" value="100"></div>'
-            + '</div>'
-            + '<div class="row">'
-            + '<div><label class="fld">Margens Externas</label><select id="tipoMargem" class="tipoMargem">' + optsMargem + '</select></div>'
-            + '<div><label class="fld">Margens Internas</label><select id="tipoPadding" class="tipoPadding">' + optsPadding + '</select></div>'
-            + '<div><label class="fld">Fonte</label><select id="tipoFonte" class="tipoFonte">' + optsFonte + '</select></div>'
-            + '</div>'
-            + '<div class="row">'
-            + '<div><label class="fld">Posi\u00E7\u00E3o da Imagem</label><select id="tipoPosicao" class="tipoPosicao">' + optsPosicao + '</select></div>'
-            + '<div><label class="fld">Disposi\u00E7\u00E3o da Imagem</label><select id="tipoDisposicao" class="tipoDisposicao">' + optsDisposicao + '</select></div>'
-            + '<div><label class="fld">Repeti\u00E7\u00E3o da Imagem</label><select id="tipoRepeticao" class="tipoRepeticao">' + optsRepeticao + '</select></div>'
-            + '</div>'
-            + '<div class="row">'
-            + '<div><label class="fld">Utiliza\u00E7\u00E3o da Imagem</label><select id="tipoUtilizacao" class="tipoUtilizacao">' + optsUtilizacao + '</select></div>'
-            + '<div><label class="fld">Texto do Cabe\u00E7alho</label><input type="text" id="textoCabecalho" class="textoCabecalho" value=""></div>'
-            + '<div><label class="fld">Texto do Rodap\u00E9</label><input type="text" id="textoRodape" class="textoRodape" value=""></div>'
-            + '</div>'
-            + '<div class="chkrow">'
-            + '<label><input type="checkbox" id="visibleOnPrint" class="visibleOnPrint" checked> Vis\u00EDvel apenas ao imprimir</label>'
-            + '<label><input type="checkbox" id="onlyFirst" class="onlyFirst"> Aplicar apenas na primeira p\u00E1gina</label>'
-            + '<label><input type="checkbox" id="reduceQualityImg" class="reduceQualityImg" checked> Reduzir qualidade da imagem</label>'
-            + '</div>'
-            + '<div id="boxBgPreview" style="text-align:left;width:210px;height:297px;margin:18px auto;border:1px solid rgb(204,204,204);border-radius:5px;box-shadow:rgb(219,219,219) 0px 6px 5px -5px;overflow:hidden;font-size:100%;">'
+            + '<div class="spro-grupo spro-pagina-previa">'
+            + '<span class="spro-rotulo">Pr\u00E9via da p\u00E1gina</span>'
+            + '<div class="spro-previa papel">'
+            + '<div id="boxBgPreview" style="text-align:left;width:210px;height:297px;margin:0 auto;border:1px solid rgb(204,204,204);border-radius:5px;box-shadow:rgb(219,219,219) 0px 6px 5px -5px;overflow:hidden;font-size:100%;background:#fff;">'
             + '<div id="imgBgPreview" style="padding:30px 20px;"><p style="font-family:Calibri;color:rgb(119,119,119);font-size:100%;white-space:pre-line;">' + LOREM_PREVIEW + '</p></div>'
             + '</div>'
-            + '<a class="linkDialog" id="resetImgBgLink">Resetar configura\u00E7\u00F5es</a>'
-            + '<div style="clear:both;"></div>'
+            + '</div>'
+            + '<button type="button" class="spro-botao-texto" id="resetImgBgLink">Restaurar padr\u00F5es</button>'
+            + '</div>'
             + '</div>';
 
         var htmlBox = (typeof sanitizeHTML === 'function') ? sanitizeHTML(rawHtml) : rawHtml;
@@ -204,8 +207,7 @@
             id: 'dialogPageImageBackground',
             title: 'Adicionar Imagem de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
             html: htmlBox,
-            width: 680,
-            height: 620,
+            width: 900,
             onOpen: function ($box) {
                 // Cada alteracao recalcula o preview e o quadro de pagina.
                 $box.find('#fileInputImportImage, input, select').on('change', function () {
@@ -222,7 +224,7 @@
                 setTimeout(function () { resetOptionsImgBg($box, editor); }, 100);
             },
             buttons: [{
-                text: 'OK',
+                text: 'Aplicar',
                 primary: true,
                 click: function ($box) {
                     getImagePageBackground($box, editor, true, function (src, config) {
@@ -230,9 +232,6 @@
                     });
                     try { $box.dialog('close'); } catch (e) {}
                 }
-            }, {
-                text: 'Cancelar',
-                click: function ($box) { try { $box.dialog('close'); } catch (e) {} }
             }]
         });
     };

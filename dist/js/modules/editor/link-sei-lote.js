@@ -486,62 +486,60 @@
         var temProprio = achados.some(function (oc) { return oc.proprio; });
         var linhas = achados.map(function (oc, i) {
             var rotulo = oc.proprio
-                ? '<span style="color:#d9822b;">este processo</span>'
-                : oc.tipo;
-            return '<tr>' +
-                '  <td style="width:26px; vertical-align:top; padding:4px 2px;"><input type="checkbox" class="linkSeiLoteItem" data-i="' + i + '"' + (oc.proprio ? '' : ' checked') + '></td>' +
-                '  <td style="padding:4px 2px; white-space:nowrap; vertical-align:top;"><strong>' + sanitizeHTML(oc.numero) + '</strong>' +
-                '    <div style="font-size:8pt; color:#888;">' + rotulo + '</div></td>' +
-                '  <td style="padding:4px 6px; font-size:9pt; color:#555;">' + sanitizeHTML(oc.trecho) + '</td>' +
-                '</tr>';
+                ? '<span class="spro-selo aviso">este processo</span>'
+                : sanitizeHTML(oc.tipo);
+            return '<label class="spro-caixa">' +
+                '<input type="checkbox" class="linkSeiLoteItem" data-i="' + i + '"' + (oc.proprio ? '' : ' checked') + '>' +
+                '<span class="spro-item-corpo"><b>' + sanitizeHTML(oc.numero) + '</b>' +
+                '<small>' + rotulo + '</small>' +
+                '<span class="spro-trecho">' + sanitizeHTML(oc.trecho) + '</span></span>' +
+                '</label>';
         }).join('');
 
         var html =
-            '<div id="linkSeiLoteBox">' +
-            '  <p style="font-size:10pt; margin:0 0 8px 0;">' +
-            '    <i class="fas fa-link azulColor" style="margin-right:6px;"></i>' +
-            '    Encontrei <strong>' + achados.length + '</strong> ' + (achados.length === 1 ? 'n\u00FAmero' : 'n\u00FAmeros') +
-            '    neste texto: ' + descreverAchadosPro(achados, padroes) + '.' +
-            '  </p>' +
-            '  <p style="font-size:9pt; color:#777; margin:0 0 8px 0;">Desmarque o que n\u00E3o for documento ou processo do SEI.' +
+            '<div id="linkSeiLoteBox" class="spro-form">' +
+            '  <p class="spro-dica">Encontrei <strong>' + achados.length + '</strong> ' + (achados.length === 1 ? 'n\u00FAmero' : 'n\u00FAmeros') +
+            '    neste texto: ' + descreverAchadosPro(achados, padroes) + '. Desmarque o que n\u00E3o for documento ou processo do SEI.' +
             (temProprio ? ' O n\u00FAmero deste pr\u00F3prio processo vem desmarcado.' : '') +
             ' Cada n\u00FAmero marcado \u00E9 uma consulta ao servidor.</p>' +
-            '  <p style="font-size:9pt; margin:0 0 6px 0;"><a href="javascript:void(0)" id="linkSeiLoteTodos">marcar todos</a> &middot; <a href="javascript:void(0)" id="linkSeiLoteNenhum">desmarcar todos</a></p>' +
-            '  <div style="max-height:280px; overflow:auto; border:1px solid #ddd; border-radius:4px;">' +
-            '    <table style="width:100%; border-collapse:collapse;">' + linhas + '</table>' +
+            '  <div class="spro-barra">' +
+            '    <span class="spro-dica">Marque o que ser\u00E1 convertido em link</span>' +
+            '    <span><button type="button" class="spro-botao-texto" id="linkSeiLoteTodos">Marcar todos</button>' +
+            '    <button type="button" class="spro-botao-texto" id="linkSeiLoteNenhum">Desmarcar todos</button></span>' +
             '  </div>' +
+            '  <div class="spro-checklist">' + linhas + '</div>' +
             '</div>';
 
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = htmlPro($('#dialogBoxPro'), html)
-            .dialog({
-                title: 'Converter n\u00FAmeros SEI em links',
-                width: 620,
-                open: function () {
-                    $('#linkSeiLoteTodos').on('click', function () { $('.linkSeiLoteItem').prop('checked', true); });
-                    $('#linkSeiLoteNenhum').on('click', function () { $('.linkSeiLoteItem').prop('checked', false); });
-                },
-                buttons: [{
-                    text: 'Converter',
-                    'class': 'confirm ui-state-active',
-                    click: function () {
-                        var escolhidas = [];
-                        $('.linkSeiLoteItem:checked').each(function () {
-                            escolhidas.push(achados[parseInt($(this).data('i'), 10)]);
-                        });
-                        resetDialogBoxPro('dialogBoxPro');
-                        if (!escolhidas.length) return;
-                        var porEscolha = contarPorNumero(escolhidas);
-                        var ignoradas = {};
-                        Object.keys(contagem).forEach(function (n) { ignoradas[n] = contagem[n] - (porEscolha[n] || 0); });
-                        alertaBoxPro('Sucess', 'spinner fa-spin', 'Convertendo ' + escolhidas.length + ' ' + (escolhidas.length === 1 ? 'n\u00FAmero' : 'n\u00FAmeros') + '...');
-                        executarLote(editor, escolhidas, ignoradas, function (resumo) {
-                            resetDialogBoxPro('alertBoxPro');
-                            mostrarResumo(resumo);
-                        });
-                    }
-                }]
-            });
+        SeiProEditorAdapter.openDialog({
+            id: 'dialogBoxPro',
+            title: 'Converter n\u00FAmeros SEI em links',
+            width: 640,
+            html: html,
+            onOpen: function ($box) {
+                $box.find('#linkSeiLoteTodos').on('click', function () { $box.find('.linkSeiLoteItem').prop('checked', true); });
+                $box.find('#linkSeiLoteNenhum').on('click', function () { $box.find('.linkSeiLoteItem').prop('checked', false); });
+            },
+            buttons: [{
+                text: 'Converter',
+                primary: true,
+                click: function ($box) {
+                    var escolhidas = [];
+                    $box.find('.linkSeiLoteItem:checked').each(function () {
+                        escolhidas.push(achados[parseInt($(this).data('i'), 10)]);
+                    });
+                    $box.dialog('close');
+                    if (!escolhidas.length) return;
+                    var porEscolha = contarPorNumero(escolhidas);
+                    var ignoradas = {};
+                    Object.keys(contagem).forEach(function (n) { ignoradas[n] = contagem[n] - (porEscolha[n] || 0); });
+                    alertaBoxPro('Sucess', 'spinner fa-spin', 'Convertendo ' + escolhidas.length + ' ' + (escolhidas.length === 1 ? 'n\u00FAmero' : 'n\u00FAmeros') + '...');
+                    executarLote(editor, escolhidas, ignoradas, function (resumo) {
+                        resetDialogBoxPro('alertBoxPro');
+                        mostrarResumo(resumo);
+                    });
+                }
+            }]
+        });
     }
 
     function mostrarResumo(resumo) {
