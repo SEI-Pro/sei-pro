@@ -73,6 +73,21 @@ function fixos(mapa: Map<string, GrupoLista>, tabela: ReadonlyArray<readonly [st
   return tabela.map((t) => mapa.get(t[0])).filter((g): g is GrupoLista => !!g);
 }
 
+/**
+ * Último marcador atribuído ao processo: usa a maior `dataHora` quando informada; caso contrário, o primeiro
+ * da lista (o SEI ordena os marcadores da linha por `Execucao DESC`, mais recente primeiro).
+ */
+export function ultimoMarcador(p: Processo) {
+  if (!p.marcadores.length) return undefined;
+  if (p.marcadores.length === 1) return p.marcadores[0];
+  let melhor = p.marcadores[0]!;
+  for (let i = 1; i < p.marcadores.length; i++) {
+    const atual = p.marcadores[i]!;
+    if (atual.dataHora !== undefined && (melhor.dataHora === undefined || atual.dataHora > melhor.dataHora)) melhor = atual;
+  }
+  return melhor;
+}
+
 export function agrupar(processos: Processo[], por: AgruparPor, ctx: Ctx): GrupoLista[] {
   if (por === 'nenhum') return [{ chave: 'todos', rotulo: 'Todos', itens: processos }];
   const m = new Map<string, GrupoLista>();
@@ -85,10 +100,12 @@ export function agrupar(processos: Processo[], por: AgruparPor, ctx: Ctx): Grupo
       case 'tipo':
         pegar(m, `t:${p.tipo || '-'}`, p.tipo || 'Sem tipo').itens.push(p);
         break;
-      case 'marcador':
-        if (p.marcadores.length) for (const mk of p.marcadores) pegar(m, `m:${mk.nome}`, mk.nome).itens.push(p);
+      case 'marcador': {
+        const mk = ultimoMarcador(p);
+        if (mk) pegar(m, `m:${mk.nome}`, mk.nome).itens.push(p);
         else pegar(m, 'sem', 'Sem marcador').itens.push(p);
         break;
+      }
       case 'prazo': {
         const f = faixaDoPrazo(p, ctx);
         const def = FAIXAS_PRAZO.find((x) => x[0] === f)!;

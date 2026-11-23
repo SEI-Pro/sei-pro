@@ -1,5 +1,6 @@
 /** O quadro: colunas por marcador, responsável, prazo ou tipo; arrastar e soltar chama `aoMover`. */
 import { h } from '../../../sei-comum/src/ui/dom';
+import { lerNota } from '../modelo/checklist';
 import type { Ctx } from '../modelo/contexto';
 import { resumoDoPrazo } from '../modelo/derivados';
 import { agrupar } from '../modelo/grupos';
@@ -17,10 +18,46 @@ export interface PropsQuadro {
   aoSelecionar(id: string, marcado: boolean): void;
   aoAbrirPrazo?(id: string): void;
   aoReordenarColuna?(de: string, para: string, chaves: string[]): void;
+  aoEditarAnotacao?(id: string): void;
+  aoAlternarTarefa?(id: string, indiceLinha: number): void;
+  aoAlternarColuna?(chave: string): void;
 }
 
 const TIPO_DND = 'application/x-spro-cartao';
 const TIPO_DND_COL = 'application/x-spro-coluna';
+
+function anotacaoEl(p: Processo, props: PropsQuadro): HTMLElement | null {
+  const texto = p.anotacao?.texto?.trim();
+  if (!texto) return null;
+  const podeEditar = !p.sigiloso && !!props.aoEditarAnotacao;
+  const linhas = lerNota(p.anotacao!.texto);
+  const filhos = linhas.map((l, idx) => {
+    if (l.marca === null) return h('div', { class: 'spro-anot-linha' }, l.texto || '\u00A0');
+    const chk = h('button', {
+      type: 'button',
+      role: 'checkbox',
+      class: `spro-anot-check${l.marca ? ' spro-anot-check-on' : ''}`,
+      'aria-checked': String(l.marca),
+      'aria-label': l.marca ? `Desmarcar ${l.texto}` : `Marcar ${l.texto}`,
+      title: l.marca ? 'Desmarcar tarefa' : 'Marcar tarefa como concluída',
+      draggable: 'false',
+      onmousedown: (ev: Event) => ev.stopPropagation(),
+      onclick: (ev: Event) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        props.aoAlternarTarefa?.(p.id, idx);
+      },
+    }, l.marca ? '\u2713' : '');
+    return h('div', { class: `spro-anot-linha spro-anot-tarefa${l.marca ? ' spro-anot-feita' : ''}` }, chk, h('span', { class: 'spro-anot-txt' }, l.texto));
+  });
+  const dica = [p.anotacao?.autor ? `Última edição: ${p.anotacao.autor}` : '', podeEditar ? 'Clique para editar a anotação' : ''].filter(Boolean).join('\n');
+  const box = h('div', {
+    class: `spro-cartao-anotacao${p.anotacao?.prioridade ? ' spro-cartao-anotacao-prio' : ''}${podeEditar ? ' spro-cartao-anotacao-editavel' : ''}`,
+    title: dica || undefined,
+    ...(podeEditar ? { onclick: (ev: Event) => { ev.stopPropagation(); props.aoEditarAnotacao?.(p.id); } } : {}),
+  }, ...filhos);
+  return box;
+}
 
 function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
   const r = resumoDoPrazo(p, props.ctx);
@@ -37,14 +74,23 @@ function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
         onclick: (ev: Event) => { ev.preventDefault(); ev.stopPropagation(); props.aoAbrirPrazo?.(p.id); },
       }, r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}` }, r.texto) : h('span', { class: 'spro-prazo-vazio' }, 'definir'))
     : (r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}`, title: r.dica }, r.texto) : null);
-  const anotacaoTexto = p.anotacao?.texto?.trim();
+  const boxAnotacao = anotacaoEl(p, props);
+  const btnNovaAnotacao = !boxAnotacao && !p.sigiloso && props.aoEditarAnotacao
+    ? h('button', {
+        type: 'button',
+        class: 'spro-anot-vazia',
+        title: 'Adicionar anotação',
+        'aria-label': 'Adicionar anotação',
+        onclick: (ev: Event) => { ev.preventDefault(); ev.stopPropagation(); props.aoEditarAnotacao?.(p.id); },
+      }, '+ anotação')
+    : null;
   const c = h('div', { class: `spro-cartao${cb.checked ? ' spro-sel' : ''}`, draggable: 'true', 'data-id': p.id, 'data-de': de },
     h('div', { class: 'spro-cartao-topo' }, cb, h('a', { class: `spro-proc${p.naoVisualizado ? ' spro-novo' : ''}`, href: p.link ?? '#', draggable: 'false' }, p.protocolo)),
     p.tipo ? h('div', { class: 'spro-cartao-tipo' }, p.tipo) : null,
     p.especificacao ? h('div', { class: 'spro-cartao-espec', title: p.especificacao }, p.especificacao) : null,
-    anotacaoTexto ? h('div', { class: `spro-cartao-anotacao${p.anotacao?.prioridade ? ' spro-cartao-anotacao-prio' : ''}`, title: p.anotacao?.autor ? `${anotacaoTexto}\n— ${p.anotacao.autor}` : anotacaoTexto }, anotacaoTexto) : null,
+    boxAnotacao,
     h('div', { class: 'spro-cartao-rodape' },
-      btnPrazo,
+      h('div', { class: 'spro-cartao-acoes' }, btnPrazo, btnNovaAnotacao),
       p.atribuicao ? h('span', { class: 'spro-avatar', title: p.atribuicao.nome }, p.atribuicao.sigla.slice(0, 2).toUpperCase()) : null));
   c.addEventListener('dragstart', (ev) => {
     ev.stopPropagation();
@@ -58,10 +104,27 @@ function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
 }
 
 function colunaEl(col: ColunaQuadro, chaves: string[], props: PropsQuadro): HTMLElement {
+  const recolhida = props.cfg.colunasRecolhidas?.includes(col.chave) ?? false;
   const corpo = h('div', { class: 'spro-col-corpo' }, ...col.itens.map((p) => cartao(p, col.chave, props)));
   if (!col.itens.length) corpo.append(h('div', { class: 'spro-col-vazia' }, col.aceitaSoltar ? 'Solte aqui' : 'Vazia'));
   const lim = props.cfg.limite;
   const podeOrdenar = !!props.aoReordenarColuna;
+  const btnRecolher = props.aoAlternarColuna
+    ? h('button', {
+        type: 'button',
+        class: 'spro-col-recolher',
+        'aria-expanded': String(!recolhida),
+        'aria-label': recolhida ? `Expandir coluna ${col.titulo}` : `Recolher coluna ${col.titulo}`,
+        title: recolhida ? 'Expandir coluna' : 'Recolher coluna',
+        draggable: 'false',
+        onmousedown: (ev: Event) => ev.stopPropagation(),
+        onclick: (ev: Event) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          props.aoAlternarColuna?.(col.chave);
+        },
+      }, recolhida ? '+' : '−')
+    : null;
   const topo = h('div', {
     class: `spro-col-topo${podeOrdenar ? ' spro-col-arrastavel' : ''}`,
     ...(podeOrdenar ? { draggable: 'true', title: 'Arraste para reordenar a coluna' } : {}),
@@ -69,8 +132,9 @@ function colunaEl(col: ColunaQuadro, chaves: string[], props: PropsQuadro): HTML
     podeOrdenar ? h('span', { class: 'spro-col-alca', 'aria-hidden': 'true' }, '\u22EE\u22EE') : null,
     h('span', { class: 'spro-col-titulo', title: col.titulo }, col.titulo),
     h('span', { class: `spro-col-n${col.excedeu ? ' spro-excedeu' : ''}`, title: col.excedeu ? `Passou do limite de ${lim}` : undefined }, lim > 0 ? `${col.itens.length}/${lim}` : String(col.itens.length)),
+    btnRecolher,
     col.aceitaSoltar ? null : h('span', { class: 'spro-col-trava', title: col.motivoSomenteLeitura }, iconeGrade('bloquear', 13)));
-  const raiz = h('section', { class: `spro-col${col.tom ? ` spro-tom-${col.tom}` : ''}${col.excedeu ? ' spro-col-cheia' : ''}`, 'data-chave': col.chave }, topo, corpo);
+  const raiz = h('section', { class: `spro-col${col.tom ? ` spro-tom-${col.tom}` : ''}${col.excedeu ? ' spro-col-cheia' : ''}${recolhida ? ' spro-col-recolhida' : ''}`, 'data-chave': col.chave }, topo, corpo);
   if (podeOrdenar) {
     topo.addEventListener('dragstart', (ev) => {
       ev.stopPropagation();

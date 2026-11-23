@@ -3,7 +3,7 @@
  * precisaria fazer, e `acoes/mover.ts` executa. Assim o plano é testável sem rede.
  */
 import type { Ctx } from './contexto';
-import { FAIXAS_PRAZO, faixaDoPrazo } from './grupos';
+import { FAIXAS_PRAZO, faixaDoPrazo, ultimoMarcador } from './grupos';
 import type { ConfigQuadro, Processo } from './tipos';
 
 export interface ColunaQuadro {
@@ -41,8 +41,9 @@ export function montarQuadro(processos: Processo[], cfg: ConfigQuadro, ctx: Ctx,
 
   if (cfg.colunas === 'marcador') {
     for (const p of processos) {
-      if (!p.marcadores.length) coluna(SEM, 'Sem marcador', true).itens.push(p);
-      for (const m of p.marcadores) coluna(`m:${m.nome}`, m.nome, true).itens.push(p);
+      const m = ultimoMarcador(p);
+      if (!m) coluna(SEM, 'Sem marcador', true).itens.push(p);
+      else coluna(`m:${m.nome}`, m.nome, true).itens.push(p);
     }
   } else if (cfg.colunas === 'responsavel') {
     coluna(SEM, 'Sem responsável', true);
@@ -149,6 +150,6 @@ export function aplicarMovimento(p: Processo, mov: Movimento, nomes: Record<stri
   }
   let marcadores = p.marcadores;
   if (mov.remover) marcadores = marcadores.filter((m) => m.nome !== mov.remover);
-  if (mov.adicionar) marcadores = [...marcadores, { nome: mov.adicionar, cor: '', texto: mov.texto ?? '' }];
+  if (mov.adicionar) marcadores = [...marcadores, { nome: mov.adicionar, cor: '', texto: mov.texto ?? '', dataHora: Date.now() }];
   return { ...p, marcadores };
 }

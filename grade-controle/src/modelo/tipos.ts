@@ -12,6 +12,8 @@ export interface MarcadorLinha {
   /** Do nome do SVG do ícone (`marcador_azul_marinho.svg` -> `azul_marinho`). */
   cor: string;
   texto: string;
+  /** Instante (ms) em que o marcador foi atribuído, quando informado no HTML/tooltip. */
+  dataHora?: number;
 }
 
 export interface AnotacaoLinha {
@@ -134,6 +136,8 @@ export interface ConfigQuadro {
   raiasPorResponsavel: boolean;
   /** Ordem manual das colunas (chaves, ex.: ['m:Urgente', 'sem']), salva entre acessos. */
   ordemColunas?: string[];
+  /** Colunas recolhidas (chaves), salvas entre acessos. */
+  colunasRecolhidas?: string[];
   /** Largura das colunas/cartões em pixels (200 a 500; padrão 280). */
   larguraColuna?: number;
 }

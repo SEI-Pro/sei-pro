@@ -49,6 +49,9 @@ export function normalizarVisao(bruto: unknown): Visao {
   const ordemColunas = Array.isArray(q.ordemColunas)
     ? [...new Set(q.ordemColunas.filter((x): x is string => typeof x === 'string' && x.length > 0))].slice(0, 200)
     : undefined;
+  const colunasRecolhidas = Array.isArray(q.colunasRecolhidas)
+    ? [...new Set(q.colunasRecolhidas.filter((x): x is string => typeof x === 'string' && x.length > 0))].slice(0, 200)
+    : undefined;
   const larguraColuna = typeof q.larguraColuna === 'number' && Number.isFinite(q.larguraColuna)
     ? Math.max(200, Math.min(500, Math.round(q.larguraColuna)))
     : undefined;
@@ -67,6 +70,7 @@ export function normalizarVisao(bruto: unknown): Visao {
       limite: typeof q.limite === 'number' && q.limite > 0 ? Math.min(99, Math.floor(q.limite)) : 0,
       raiasPorResponsavel: q.raiasPorResponsavel === true,
       ...(ordemColunas?.length ? { ordemColunas } : {}),
+      ...(colunasRecolhidas?.length ? { colunasRecolhidas } : {}),
       ...(larguraColuna !== undefined ? { larguraColuna } : {}),
     },
   };

@@ -149,10 +149,17 @@ await teste('grupos: por responsável, sem responsável por último', () => {
   const g = agrupar([proc(), proc({ atribuicao: beto }), proc({ atribuicao: ana })], 'responsavel', CTX);
   assert.deepEqual(g.map((x) => x.chave), ['u:ana', 'u:beto', 'sem']);
 });
-await teste('grupos: processo com 2 marcadores aparece nos dois grupos', () => {
+await teste('grupos: processo com 2 marcadores aparece apenas no último marcador (dataHora ou ordem do SEI)', () => {
   const p = proc({ marcadores: [mk('A'), mk('B')] });
   const g = agrupar([p, proc()], 'marcador', CTX);
-  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:A', 1], ['m:B', 1], ['sem', 1]]);
+  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:A', 1], ['sem', 1]]);
+  const comData = proc({
+    marcadores: [
+      { nome: 'Antigo', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-01T10:00:00Z') },
+      { nome: 'Recente', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-14T15:30:00Z') },
+    ],
+  });
+  assert.deepEqual(agrupar([comData], 'marcador', CTX).map((x) => x.chave), ['m:Recente']);
 });
 await teste('grupos: faixas de prazo na ordem fixa, só as que têm itens', () => {
   const ps = [proc(), proc({ prazo: prazoEm('1', '2026-10-01') }), proc({ prazo: prazoEm('2', '2026-10-11') }), proc({ prazo: prazoEm('3', '2026-10-15') }), proc({ prazo: prazoEm('4', '2026-10-30') }), proc({ prazo: prazoEm('5', '2027-03-01') })];

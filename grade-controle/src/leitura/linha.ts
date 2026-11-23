@@ -20,17 +20,30 @@ export interface ContextoLinha {
 
 const COR = /marcador_([a-z0-9_]+)\.svg/i;
 
+const DATA_HORA_RE = /\b(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?\b/;
+
+function extrairDataHora(textoBruto: string): number | undefined {
+  const m = DATA_HORA_RE.exec(textoBruto);
+  if (!m) return undefined;
+  const dt = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4] ?? 0), Number(m[5] ?? 0), Number(m[6] ?? 0)).getTime();
+  return Number.isFinite(dt) ? dt : undefined;
+}
+
 function lerMarcadores(tr: Element): MarcadorLinha[] {
   const saida: MarcadorLinha[] = [];
   for (const a of tr.querySelectorAll('a[href*="acao=andamento_marcador_gerenciar"]')) {
     const args = chamadas(a.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
-    const rotulo = /^Marcador\s*\/\s*(.*)$/s.exec(decodificarEntidades(a.getAttribute('aria-label') ?? '').trim());
+    const aria = decodificarEntidades(a.getAttribute('aria-label') ?? '').trim();
+    const rotulo = /^Marcador\s*\/\s*(.*)$/s.exec(aria);
     const nome = (typeof args?.[1] === 'string' && args[1] ? texto(args[1]) : (rotulo?.[1] ?? '')).trim();
     if (!nome) continue;
+    const textoMarcador = typeof args?.[0] === 'string' ? texto(args[0]).trim() : '';
+    const dataHora = extrairDataHora(aria) ?? extrairDataHora(textoMarcador);
     saida.push({
       nome,
       cor: COR.exec(a.querySelector('img')?.getAttribute('src') ?? '')?.[1] ?? '',
-      texto: typeof args?.[0] === 'string' ? texto(args[0]).trim() : '',
+      texto: textoMarcador,
+      ...(dataHora !== undefined ? { dataHora } : {}),
     });
   }
   return saida;

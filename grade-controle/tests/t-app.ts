@@ -169,18 +169,19 @@ await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o a
   const { app, chamadas } = await montar();
   app.definirVisao({ modo: 'quadro' });
   const col = (chave: string) => qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === chave)!;
-  assert.ok(col('sem') && col('m:teste'));
-  const cartao = [...col('m:teste').querySelectorAll<HTMLElement>('.spro-cartao')][0]!;
+  // Processo 148265 tem [Para Pessoa assinar, teste] -> aparece apenas no ultimo marcador (Para Pessoa assinar), sem duplicar.
+  assert.ok(col('sem') && col('m:Para Pessoa assinar'));
+  assert.equal(col('m:teste'), undefined);
+  const cartao = [...col('m:Para Pessoa assinar').querySelectorAll<HTMLElement>('.spro-cartao')][0]!;
   const id = cartao.getAttribute('data-id')!;
   const dt = new Map<string, string>();
   const transfer = { types: ['application/x-spro-cartao'], setData: (k: string, v: string) => dt.set(k, v), getData: (k: string) => dt.get(k) ?? '', effectAllowed: '' };
   const Ev = (cartao.ownerDocument.defaultView as any).Event;
   const ev = (tipo: string) => Object.assign(new Ev(tipo, { bubbles: true, cancelable: true }), { dataTransfer: transfer });
   cartao.dispatchEvent(ev('dragstart'));
-  col('m:Para Pessoa assinar').dispatchEvent(ev('drop'));
+  col('sem').dispatchEvent(ev('drop'));
   await tick(); await tick();
-  // O processo já tinha "Para Pessoa assinar": mover só retira o marcador de origem.
-  assert.deepEqual(chamadas, ['99906.713-630.000032/2025-82 -teste']);
+  assert.deepEqual(chamadas, ['99906.713-630.000032/2025-82 -Para Pessoa assinar']);
   assert.equal(id, '148265');
   assert.ok(qa(app, '.spro-aviso').length >= 1);
   app.fechar();
@@ -202,20 +203,27 @@ await teste('app: mover que o SEI recusa reverte e avisa', async () => {
   app.definirVisao({ modo: 'quadro' });
   const ids = () => qa(app, '.spro-col').map((c) => `${c.getAttribute('data-chave')}:${c.querySelectorAll('.spro-cartao').length}`).join();
   const antes = ids();
-  const cartao = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'm:teste')!.querySelector<HTMLElement>('.spro-cartao')!;
+  const cartao = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'm:Para Pessoa assinar')!.querySelector<HTMLElement>('.spro-cartao')!;
   const Ev = (cartao.ownerDocument.defaultView as any).Event;
-  const transfer = { types: ['application/x-spro-cartao'], setData: () => undefined, getData: () => JSON.stringify({ id: cartao.getAttribute('data-id'), de: 'm:teste' }) };
+  const transfer = { types: ['application/x-spro-cartao'], setData: () => undefined, getData: () => JSON.stringify({ id: cartao.getAttribute('data-id'), de: 'm:Para Pessoa assinar' }) };
   qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === 'sem')!.dispatchEvent(Object.assign(new Ev('drop', { bubbles: true, cancelable: true }), { dataTransfer: transfer }));
   await tick(); await tick(); await tick();
   assert.equal(ids(), antes);
   assert.match(q(app, '.spro-aviso').textContent!, /sem permissão/);
   app.fechar();
 });
-await teste('app: quadro reordena colunas por drag/drop, ajusta largura e exibe anotacao e especificacao nos cartoes', async () => {
+await teste('app: quadro reordena colunas por drag/drop, recolhe/expande coluna, ajusta largura e exibe anotacao e especificacao nos cartoes', async () => {
   const local = areaMemoria();
   const sync = areaMemoria();
   const armazem = criarArmazem({ local, sync }, 'u-quadro');
-  const { app } = await montar({ armazem });
+  const anotacoesSalvas: Array<{ protocolo: string; texto: string; prioridade: boolean }> = [];
+  const { app } = await montar({
+    armazem,
+    anotar: async (protocolo, a) => { anotacoesSalvas.push({ protocolo, ...a }); },
+  });
+  // Injeta anotacao com checklist no processo 148265 para validar renderizacao e marcacao direta no card
+  const p = app.estado().todos.find((x) => x.id === '148265')!;
+  p.anotacao = { texto: 'Em Assinatura:\n[X] Everton\n[ ] Ricardo', autor: 'usr', prioridade: false };
   app.definirVisao({ modo: 'quadro' });
   const chavesAntes = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
   assert.ok(chavesAntes.length >= 2);
@@ -229,15 +237,39 @@ await teste('app: quadro reordena colunas por drag/drop, ajusta largura e exibe 
   await tick();
   const chavesDepois = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
   assert.equal(chavesDepois[0], origem);
+  // Recolher e expandir a primeira coluna
+  const btnRecolher = qa(app, '.spro-col')[0]!.querySelector<HTMLButtonElement>('.spro-col-recolher')!;
+  btnRecolher.click();
+  await tick();
+  assert.ok(qa(app, '.spro-col')[0]!.classList.contains('spro-col-recolhida'));
+  assert.deepEqual(app.estado().visao.quadro.colunasRecolhidas, [origem]);
+  // Expandir novamente para testar o checklist dentro do card
+  qa(app, '.spro-col')[0]!.querySelector<HTMLButtonElement>('.spro-col-recolher')!.click();
+  await tick();
+  assert.ok(!qa(app, '.spro-col')[0]!.classList.contains('spro-col-recolhida'));
   // Aumentar largura das colunas via botao '+'
   const btnMais = qa(app, '.spro-largura-bt')[1]!;
   btnMais.click();
   await tick();
   assert.equal(app.estado().visao.quadro.larguraColuna, 300);
   assert.equal(q<HTMLElement>(app, '.spro-quadro').style.getPropertyValue('--spro-col-largura'), '300px');
-  // Cartoes exibem especificacao e anotacao quando presentes
+  // Cartoes exibem especificacao e anotacao com checklist interativo
   assert.ok(qa(app, '.spro-cartao-espec').length > 0);
   assert.ok(qa(app, '.spro-cartao-anotacao').length > 0);
+  const checks = qa(app, '.spro-anot-check');
+  assert.equal(checks.length, 2);
+  assert.equal(checks[0]!.getAttribute('aria-checked'), 'true');
+  assert.equal(checks[1]!.getAttribute('aria-checked'), 'false');
+  // Marcar o segundo item do checklist diretamente no card
+  (checks[1] as HTMLButtonElement).click();
+  await tick(); await tick();
+  assert.equal(anotacoesSalvas.length, 1);
+  assert.equal(anotacoesSalvas[0]!.texto, 'Em Assinatura:\n[X] Everton\n[X] Ricardo');
+  assert.equal(qa(app, '.spro-anot-check')[1]!.getAttribute('aria-checked'), 'true');
+  // Clicar no conteiner da anotacao abre o modal de edicao sem sair da tela
+  q<HTMLElement>(app, '.spro-cartao-anotacao').click();
+  await tick();
+  assert.ok(app.host.shadowRoot!.querySelector('.spro-pi-editor'), 'modal de edicao de anotacao aberto');
   // Persistencia no armazem para proximos acessos
   const salvo = await armazem.lerEstado();
   assert.equal(salvo.visao.quadro.ordemColunas?.[0], origem);

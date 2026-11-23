@@ -20,6 +20,8 @@ import { agrupar, ROTULO_AGRUPAR } from '../modelo/grupos';
 import { abrirVisita, comIdade, type EstadoIdade, registrarVistos } from '../modelo/idade';
 import { achatar, type LinhaLista } from '../modelo/linhas';
 import { alternarOrdem, ordenar } from '../modelo/ordem';
+import { alternarFeito, escreverNota, lerNota } from '../modelo/checklist';
+import { aplicarAnotacao } from '../modelo/edicoes';
 import { aplicarMovimento, type ExtrasQuadro, planejarMovimento, reordenarColunas } from '../modelo/quadro';
 import { type AgruparPor, type CampoOrdem, COLUNAS, type Coluna, type LeituraTabela, type Processo, ROTULO_COLUNA, type Visao } from '../modelo/tipos';
 import { excluirVisao, mudouDe, salvarVisao, visaoPadrao } from '../modelo/visoes';
@@ -379,6 +381,31 @@ export function criarApp(d: DepsApp) {
     }
   }
 
+  async function alternarTarefa(id: string, indiceLinha: number) {
+    const original = todos.find((p) => p.id === id);
+    if (!original?.anotacao || original.sigiloso) return;
+    const linhas = lerNota(original.anotacao.texto);
+    if (linhas[indiceLinha]?.marca == null) return;
+    const novoTexto = escreverNota(alternarFeito(linhas, indiceLinha));
+    const prioridade = original.anotacao.prioridade;
+    substituir(id, aplicarAnotacao(original, novoTexto, prioridade, d.eu ?? ''));
+    render();
+    try {
+      await gravarEmSerie(() => d.anotar(original.protocolo, { texto: novoTexto, prioridade }));
+    } catch (e) {
+      substituir(id, original);
+      render();
+      aviso(`Não foi possível atualizar a anotação: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  function alternarColunaQuadro(chave: string) {
+    const atuais = visao.quadro.colunasRecolhidas ?? [];
+    const prox = atuais.includes(chave) ? atuais.filter((c) => c !== chave) : [...atuais, chave];
+    const { colunasRecolhidas: _, ...resto } = visao.quadro;
+    alterar({ quadro: prox.length ? { ...resto, colunasRecolhidas: prox } : resto });
+  }
+
   function renderConteudo() {
     const lista = ordenados();
     if (visao.modo === 'quadro') {
@@ -392,6 +419,9 @@ export function criarApp(d: DepsApp) {
         aoSelecionar: (i, m) => selecionar([i], m),
         aoAbrirPrazo: (i) => d.abrirPrazo(i),
         aoReordenarColuna: (de, para, chaves) => alterar({ quadro: { ...visao.quadro, ordemColunas: reordenarColunas(chaves, de, para) } }),
+        aoEditarAnotacao: (i) => { const p = todos.find((x) => x.id === i); if (p && !p.sigiloso) editarAnotacao(edicao, p); },
+        aoAlternarTarefa: (i, idx) => void alternarTarefa(i, idx),
+        aoAlternarColuna: (chave) => alternarColunaQuadro(chave),
       }));
       return;
     }
