@@ -14,6 +14,7 @@ import { aplicarTema } from "./aplicar";
 import { gravarCache, lerCache } from "./cache";
 import { iniciarDicas } from "./dicas";
 import { iniciarRemapeamento } from "./documentos";
+import { sincronizarEditorComEstilo } from "./editorSincronia";
 import { iniciarBotaoLargura, iniciarLarguraDoPapel } from "./largura";
 import { abrirModalAparencia } from "./modal";
 import { iniciarNavbarCompacta } from "./navbar";
@@ -56,6 +57,7 @@ if (!global.__seiProEstilo2) {
 
   const reaplicar = () => {
     if (!cfg) return;
+    sincronizarEditorComEstilo(localStorage, cfg.ativo);
     sincronizarInterruptor();
     const sistemaEscuro = consulta?.matches ?? false;
     aplicarTema(document, cfg, sistemaEscuro, `${baseCss}\n${cascaCss}\n${controlesCss}\n${iconesCss}`);
