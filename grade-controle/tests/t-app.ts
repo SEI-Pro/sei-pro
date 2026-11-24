@@ -156,13 +156,18 @@ await teste('app: o botão de ação do lote repassa o clique ao link nativo', a
   assert.equal(cliques, 1);
   app.fechar();
 });
-await teste('app: exportar CSV baixa a visão filtrada', async () => {
+await teste('app: exportar CSV baixa a visão filtrada no formato ListaProcessos_SEIPro (21 colunas)', async () => {
   const { app, baixados } = await montar();
   app.definirVisao({ busca: 'resp:teste01' });
   qa(app, '.spro-bt').find((b) => dicaDe(b) === 'Exportar CSV')!.click();
   assert.equal(baixados.length, 1);
-  assert.equal(baixados[0]![0], 'processos-2026-10-11.csv');
-  assert.equal(baixados[0]![1].split('\r\n').length, 5);
+  assert.match(baixados[0]![0], /^ListaProcessos_SEIPro_\d{8}_\d{2}_\d{2}_\d{2}\.csv$/);
+  const linhas = baixados[0]![1].replace(/^\uFEFF/, '').split('\r\n');
+  assert.equal(linhas.length, 5);
+  assert.equal(
+    linhas[0],
+    'ID;Protocolo;Link_Permanente;Atribuicao;Etiqueta;Etiqueta_Descricao;Anotacao;Anotacao_Responsavel;Ponto_Controle;Especificacao;Tipo;Data_Autuacao;Data_Autuacao_Descricao;Data_Recebimento;Data_Recebimento_Descricao;Data_Envio;Data_Envio_Descricao;Unidade_Envio;Documento_Incluido;Observacoes;Acompanhamento_Especial',
+  );
   app.fechar();
 });
 await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o aviso oferece desfazer', async () => {
@@ -240,9 +245,11 @@ await teste('app: quadro reordena colunas por drag/drop, recolhe/expande coluna,
     armazem,
     anotar: async (protocolo, a) => { anotacoesSalvas.push({ protocolo, ...a }); },
   });
-  // Injeta anotacao com checklist no processo 148265 para validar renderizacao e marcacao direta no card
+  // Injeta anotacao com checklist e documentoNovo no processo 148265 para validar renderizacao e marcacao direta no card
   const p = app.estado().todos.find((x) => x.id === '148265')!;
   p.anotacao = { texto: 'Em Assinatura:\n[X] Everton\n[ ] Ricardo', autor: 'usr', prioridade: false };
+  p.documentoNovo = true;
+  p.documentoNovoDica = 'Um documento foi incluído ou assinado neste processo';
   app.definirVisao({ modo: 'quadro' });
   const chavesAntes = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
   assert.ok(chavesAntes.length >= 2);
@@ -272,9 +279,14 @@ await teste('app: quadro reordena colunas por drag/drop, recolhe/expande coluna,
   await tick();
   assert.equal(app.estado().visao.quadro.larguraColuna, 300);
   assert.equal(q<HTMLElement>(app, '.spro-quadro').style.getPropertyValue('--spro-col-largura'), '300px');
-  // Cartoes exibem especificacao e anotacao com checklist interativo
+  // Cartoes exibem especificacao, anotacao com checklist, exclamacao de documento novo e outros marcadores
   assert.ok(qa(app, '.spro-cartao-espec').length > 0);
   assert.ok(qa(app, '.spro-cartao-anotacao').length > 0);
+  const excl = q(app, '.spro-cartao-excl');
+  assert.match(dicaDe(excl), /documento foi incluído ou assinado/i);
+  const outrosMarc = qa(app, '.spro-cartao-marc-ic');
+  assert.equal(outrosMarc.length, 1);
+  assert.match(dicaDe(outrosMarc[0]!), /Para Pessoa assinar/);
   const checks = qa(app, '.spro-anot-check');
   assert.equal(checks.length, 2);
   assert.equal(checks[0]!.getAttribute('aria-checked'), 'true');

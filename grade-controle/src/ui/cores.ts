@@ -12,6 +12,7 @@ const CORES: Array<[RegExp, string]> = [
   [/roxo|violeta|lilas/, '#7048c6'],
   [/marrom/, '#8a5a3c'],
   [/preto/, '#222831'],
+  [/branco/, '#ffffff'],
   [/cinza/, '#7b838c'],
 ];
 

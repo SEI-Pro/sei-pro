@@ -6,7 +6,43 @@ import { resumoDoPrazo } from '../modelo/derivados';
 import { agrupar } from '../modelo/grupos';
 import { type ColunaQuadro, type ExtrasQuadro, montarQuadro } from '../modelo/quadro';
 import type { ConfigQuadro, Processo } from '../modelo/tipos';
+import { corDoMarcador } from './cores';
 import { iconeGrade } from './icones';
+
+const NS_SVG = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag: string, attrs: Record<string, string>, doc: Document = document): SVGElement {
+  const el = doc.createElementNS(NS_SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function svgExclamacao(): SVGElement {
+  const svg = svgEl('svg', { viewBox: '0 0 24 24', width: '17', height: '17', 'aria-hidden': 'true', focusable: 'false' });
+  svg.append(
+    svgEl('path', { d: 'M12 3L2.2 20h19.6L12 3z', fill: '#facc15', stroke: '#9ca3af', 'stroke-width': '1.4', 'stroke-linejoin': 'round' }),
+    svgEl('path', { d: 'M12 9.2v5.2', stroke: '#111827', 'stroke-width': '2.1', 'stroke-linecap': 'round' }),
+    svgEl('circle', { cx: '12', cy: '17.3', r: '1.2', fill: '#111827' }),
+  );
+  return svg;
+}
+
+function svgMarcador(cor: string): SVGElement {
+  const fill = corDoMarcador(cor);
+  const claro = fill === '#ffffff' || fill === '#e0b000';
+  const svg = svgEl('svg', { viewBox: '0 0 24 24', width: '16', height: '16', 'aria-hidden': 'true', focusable: 'false' });
+  svg.append(
+    svgEl('path', {
+      d: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z',
+      fill,
+      stroke: claro ? '#9ca3af' : 'none',
+      'stroke-width': claro ? '1.5' : '0',
+      'stroke-linejoin': 'round',
+    }),
+    svgEl('circle', { cx: '7.2', cy: '7.2', r: '1.7', fill: claro ? '#9ca3af' : '#ffffff' }),
+  );
+  return svg;
+}
 
 export interface PropsQuadro {
   processos: Processo[];
@@ -59,6 +95,22 @@ function anotacaoEl(p: Processo, props: PropsQuadro): HTMLElement | null {
   return box;
 }
 
+function sinaisCartaoEl(p: Processo, de: string, props: PropsQuadro): HTMLElement | null {
+  const itens: HTMLElement[] = [];
+  if (p.documentoNovo) {
+    const dica = p.documentoNovoDica || 'Um documento foi incluído ou assinado neste processo';
+    itens.push(h('span', { class: 'spro-cartao-excl', title: dica, 'aria-label': dica }, svgExclamacao()));
+  }
+  const outrosMarcadores = props.cfg.colunas === 'marcador'
+    ? p.marcadores.filter((m) => `m:${m.nome}` !== de)
+    : p.marcadores;
+  for (const m of outrosMarcadores) {
+    const dica = m.texto ? `${m.nome}\n${m.texto}` : m.nome;
+    itens.push(h('span', { class: 'spro-cartao-marc-ic', title: dica, 'aria-label': dica }, svgMarcador(m.cor)));
+  }
+  return itens.length ? h('div', { class: 'spro-cartao-sinais' }, ...itens) : null;
+}
+
 function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
   const r = resumoDoPrazo(p, props.ctx);
   const cb = h('input', { type: 'checkbox', class: 'spro-cb', 'aria-label': `Marcar ${p.protocolo}` });
@@ -75,6 +127,7 @@ function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
       }, r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}` }, r.texto) : h('span', { class: 'spro-prazo-vazio' }, 'definir'))
     : (r ? h('span', { class: `spro-prazo spro-prazo-${r.situacao}`, title: r.dica }, r.texto) : null);
   const boxAnotacao = anotacaoEl(p, props);
+  const boxSinais = sinaisCartaoEl(p, de, props);
   const btnNovaAnotacao = !boxAnotacao && !p.sigiloso && props.aoEditarAnotacao
     ? h('button', {
         type: 'button',
@@ -89,6 +142,7 @@ function cartao(p: Processo, de: string, props: PropsQuadro): HTMLElement {
     p.tipo ? h('div', { class: 'spro-cartao-tipo' }, p.tipo) : null,
     p.especificacao ? h('div', { class: 'spro-cartao-espec', title: p.especificacao }, p.especificacao) : null,
     boxAnotacao,
+    boxSinais,
     h('div', { class: 'spro-cartao-rodape' },
       h('div', { class: 'spro-cartao-acoes' }, btnPrazo, btnNovaAnotacao),
       p.atribuicao ? h('span', { class: 'spro-avatar', title: p.atribuicao.nome }, p.atribuicao.sigla.slice(0, 2).toUpperCase()) : null));

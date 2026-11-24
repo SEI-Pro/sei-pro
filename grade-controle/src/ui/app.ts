@@ -2,7 +2,6 @@
  * A grade: estado, barra de ferramentas, tabela/quadro, lote e atalhos, num Shadow DOM. Só lê o modelo e emite
  * intenções; quem fala com o SEI são as dependências recebidas (`DepsApp`), que os testes substituem.
  */
-import { gerarCsv } from '../../../sei-comum/src/csv';
 import { normalizarTexto } from '../../../sei-comum/src/texto';
 import { type Combo, criarCombo } from '../../../sei-comum/src/ui/combobox';
 import { h, icone as iconeComum, type NomeIcone } from '../../../sei-comum/src/ui/dom';
@@ -16,7 +15,7 @@ import { lerTabelas } from '../leitura/tabela';
 import { acrescentar, interpretar, filtrarPorBusca, remover } from '../modelo/busca';
 import type { Ctx } from '../modelo/contexto';
 import { facetasDe } from '../modelo/facetas';
-import { linhasCsv, nomeArquivo } from '../modelo/exportar';
+import { gerarCsvLegado, lerCacheRecebimentoPro, linhasCsvLegado, nomeArquivoLegado } from '../modelo/exportar';
 import { agrupar, ROTULO_AGRUPAR } from '../modelo/grupos';
 import { abrirVisita, comIdade, type EstadoIdade, registrarVistos } from '../modelo/idade';
 import { achatar, type LinhaLista } from '../modelo/linhas';
@@ -649,8 +648,11 @@ export function criarApp(d: DepsApp) {
   }
 
   function exportar() {
-    const linhas = linhasCsv(ordenados(), visao.modo === 'quadro' ? [...COLUNAS] : visao.colunas, ctx());
-    d.baixar(nomeArquivo(d.hoje()), gerarCsv(linhas), 'text/csv;charset=utf-8');
+    const loc = doc.defaultView?.location;
+    const urlBase = loc && /^https?:$/i.test(loc.protocol) ? `${loc.origin}${loc.pathname}` : '';
+    const recebimentos = lerCacheRecebimentoPro(doc.defaultView?.localStorage);
+    const linhas = linhasCsvLegado(ordenados(), ctx(), { urlBase, recebimentos });
+    d.baixar(nomeArquivoLegado(d.agora()), gerarCsvLegado(linhas), 'text/csv;charset=utf-8');
     aviso(`${linhas.length - 1} processos exportados.`);
   }
 

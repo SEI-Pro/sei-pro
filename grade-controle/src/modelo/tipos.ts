@@ -58,6 +58,10 @@ export interface Processo {
   urgente?: boolean;
   trancado?: boolean;
   documentoNovo: boolean;
+  /** Texto do tooltip do ícone de exclamação (novo documento ou assinatura). */
+  documentoNovoDica?: string;
+  /** Ponto de controle da linha, quando presente. */
+  pontoControle?: string;
   /** Número da página do SEI (0 = a que o usuário está vendo). */
   pagina: number;
   /** A linha existe na tabela nativa da tela: só então há checkbox para espelhar. */

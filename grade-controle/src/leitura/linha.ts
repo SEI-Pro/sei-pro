@@ -109,6 +109,28 @@ export function lerProcessoDaLinha(tr: Element, ctx: ContextoLinha): Processo | 
   if (href) processo.link = decodificarEntidades(href);
   const hrefMarc = tr.querySelector('a[href*="acao=andamento_marcador_gerenciar"]')?.getAttribute('href');
   if (hrefMarc && !base.sigiloso) processo.linkMarcadores = decodificarEntidades(hrefMarc);
+  const exclImg = tr.querySelector('img[src*="exclamacao"]');
+  const excl = exclImg?.closest('a') ?? exclImg;
+  if (excl) {
+    const argsExcl = chamadas(excl.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
+    const dicaExcl = (
+      (typeof argsExcl?.[0] === 'string' && argsExcl[0] ? texto(argsExcl[0]) : '') ||
+      decodificarEntidades(excl.getAttribute('aria-label') ?? '') ||
+      decodificarEntidades(excl.getAttribute('title') ?? '') ||
+      decodificarEntidades(exclImg?.getAttribute('title') ?? '') ||
+      decodificarEntidades(exclImg?.getAttribute('alt') ?? '')
+    ).trim();
+    if (dicaExcl) processo.documentoNovoDica = dicaExcl;
+  }
+  const pc = tr.querySelector('a[href*="andamento_situacao_gerenciar"]');
+  if (pc && !base.sigiloso) {
+    const argsPc = chamadas(pc.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
+    const txtPc = (
+      (typeof argsPc?.[0] === 'string' && argsPc[0] ? texto(argsPc[0]) : '') ||
+      decodificarEntidades(pc.getAttribute('aria-label') ?? '')
+    ).trim();
+    if (txtPc) processo.pontoControle = txtPc;
+  }
   const atribuicao = lerAtribuicao(tr);
   if (atribuicao) processo.atribuicao = atribuicao;
   if (!base.sigiloso) {
