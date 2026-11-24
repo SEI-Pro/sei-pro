@@ -178,5 +178,90 @@
       "getLinksProcessoPublicoPro"
     ],
     "necessarios": ["openDialogProcessoPublicoPro"]
-  }
+  },
+  "ditado": {
+    "exportados": ["instanceDitadoPro", "getBoxDitado", "getBoxCtrDitado", "getDialogDitado", "initDitadoPro"],
+    "necessarios": ["instanceDitadoPro", "getBoxDitado", "getBoxCtrDitado", "getDialogDitado"]
+  },
+  "image-editor": {
+    "exportados": ["imgEditor", "openImageEditorPro", "initDialogImageEditorPro", "getDialogImageEditorPro", "menuImagemCK5Pro"],
+    "necessarios": ["imgEditor", "openImageEditorPro", "initDialogImageEditorPro", "menuImagemCK5Pro"]
+  },
+  "sigilo": {
+    "exportados": [
+      "getMarkSigilo",
+      "getTarjaSigilo",
+      "getBoxSigilo",
+      "getDialogSigilo",
+      "openDialogSigilo",
+      "actionsMarkSigilo",
+      "registrarSaidaSigiloCK4Pro",
+      "registrarSaidaSigiloCK5Pro",
+      "rodapeSigiloMark",
+      "htmlTabSigiloResult"
+    ],
+    "necessarios": ["getMarkSigilo", "getTarjaSigilo", "getBoxSigilo", "getDialogSigilo", "actionsMarkSigilo", "registrarSaidaSigiloCK4Pro"]
+  },
+  "link-sei-lote": { "exportados": ["converterNumerosSeiEmLotePro"], "necessarios": ["converterNumerosSeiEmLotePro"] },
+  "review": {
+    "exportados": [
+      "setStyleReview",
+      "showReviewTips",
+      "hideReviewTips",
+      "scroolToReview",
+      "getHtmlReviewDisplayPro",
+      "addCommentReviewPro",
+      "removeReviewPro",
+      "setRemoveReviewPro",
+      "getBoxCtrReview",
+      "getDialogReview",
+      "contentDialogReview",
+      "getBoxReview",
+      "initStyleReview",
+      "loadedStyleReview",
+      "getStyleReview",
+      "__seiProReviewCK5Warned"
+    ],
+    "necessarios": ["showReviewTips", "hideReviewTips", "getBoxCtrReview", "getDialogReview", "getBoxReview"]
+  },
+  "image-base64": {
+    "exportados": ["initDialogUploadImgBase64", "getDialogUploadImgBase64", "openDialogUploadImgBase64"],
+    "necessarios": ["initDialogUploadImgBase64", "openDialogUploadImgBase64"]
+  },
+  "image-background": {
+    "exportados": [
+      "pageImageBackground",
+      "getDialogPageImageBackground",
+      "openDialogPageImageBackground",
+      "getImagemBgOnEditor",
+      "resetOptionsImgBg",
+      "getPreviewImagePageBackground",
+      "getImagePageBackground",
+      "loadImagePageBackground",
+      "templateImagePageBackground",
+      "normalizeImgBgAncora"
+    ],
+    "necessarios": ["pageImageBackground", "getDialogPageImageBackground"]
+  },
+  "minuta-watermark": {
+    "exportados": ["insertMinutaWatermark", "getMinutaWatermark", "insertAutomaticMinutaWatermark"],
+    "necessarios": ["getMinutaWatermark", "insertAutomaticMinutaWatermark"]
+  },
+  "context-menu": { "exportados": ["menuBlockEdition", "tableSorterPro", "initContextMenuPro"], "necessarios": ["initContextMenuPro"] },
+  "auto-cleanup": {
+    "exportados": [
+      "ATRIBUTOS_LIXO_PRO",
+      "PREFIXOS_ATRIBUTO_LIXO_PRO",
+      "PREFIXOS_CLASSE_LIXO_PRO",
+      "ATRIBUTOS_PRESERVADOS_CK4_PRO",
+      "precisaLimparEditorPro",
+      "rgbParaHexPro",
+      "limparRaizEditorPro",
+      "limparHtmlEditorPro",
+      "limparEditorPro",
+      "registrarLimpezaAutomaticaPro"
+    ],
+    "necessarios": ["registrarLimpezaAutomaticaPro"]
+  },
+  "escrita-interativa": { "exportados": ["SeiProEscritaInterativa"], "necessarios": ["SeiProEscritaInterativa"] }
 }

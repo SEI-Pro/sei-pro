@@ -299,17 +299,6 @@
     var MODULES = [
         // O GHS (window.SeiProGhs) e os recursos ja portados para TS vem do bundle
         // js/editor/pagina.js (pacote editor/), que roda ANTES deste adapter.
-        'sigilo.js',
-        'escrita-interativa.js',
-        'link-sei-lote.js',
-        'minuta-watermark.js',
-        'image-base64.js',
-        'image-background.js',
-        'image-editor.js',
-        'context-menu.js',
-        'auto-cleanup.js',
-        'review.js',
-        'ditado.js',
         // Gerado por tabela-colunas/ (TypeScript): tabela com colunas em %, so no CK5.
         'tabela-colunas.js'
     ];
