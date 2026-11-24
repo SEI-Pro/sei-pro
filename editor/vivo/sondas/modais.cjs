@@ -199,7 +199,7 @@ const CENARIOS = {
   },
 };
 
-(async () => {
+async function principal() {
   const [amb, qual, tema, pasta, variante] = process.argv.slice(2);
   if (!amb || !qual || !tema || !pasta) {
     console.error('uso: modais.cjs <sp|antaq> <modal|todos> <claro|escuro> <pasta> [variante]');
@@ -259,7 +259,13 @@ const CENARIOS = {
     if (cdp) await cdp.send('Fetch.disable').catch(() => {});
   }
   await b.disconnect();
-})().catch((e) => {
-  console.error('ERRO', e.message);
-  process.exit(1);
-});
+}
+
+module.exports = { CENARIOS };
+
+if (require.main === module) {
+  principal().catch((e) => {
+    console.error('ERRO', e.message);
+    process.exit(1);
+  });
+}

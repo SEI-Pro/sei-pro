@@ -58,21 +58,25 @@ async function abrirEditorSp(browser) {
   const processo = process.env.SEI_SP_PROCESSO || '000032/2025';
   const doc = process.env.SEI_SP_DOC || '162824';
   if (!/procedimento_trabalhar/.test(p.url())) {
-    for (const a of await p.$$('a[href*="acao=procedimento_trabalhar"]')) {
-      const t = await a.evaluate((x) => x.textContent.trim());
-      if (t.includes(processo)) {
-        await Promise.all([p.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}), a.click()]);
-        break;
-      }
+    if (!/procedimento_controlar/.test(p.url())) {
+      const menu = await p.$('a[href*="acao=procedimento_controlar"]');
+      if (menu) await Promise.all([p.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}), menu.click()]);
+      await esperar(4000);
     }
+    // A tabela do Controle de Processos so abre por clique de DOM (o do puppeteer devolve "nao clicavel").
+    await p.evaluate((alvo) => {
+      const a = [...document.querySelectorAll('a[href*="acao=procedimento_trabalhar"]')].find((x) => x.textContent.includes(alvo));
+      if (a) a.click();
+    }, processo);
     await esperar(8000);
   }
-  const arvore = p.frames().find((f) => f.name() === 'ifrArvore');
+  // Frame da arvore do documento principal (ha outra ifrArvore dentro do iframe oculto frmCheckerProcessoPro).
+  const arvore = p.mainFrame().childFrames().find((f) => f.name() === 'ifrArvore');
   if (!arvore) throw new Error('Arvore do processo nao abriu (a sessao do SP cai com facilidade: tente de novo).');
-  await arvore.evaluate((d) => {
-    const a = document.getElementById(`anchor${d}`);
-    if (a) a.click();
-  }, doc);
+  // No SEI 4.1 o clique por DOM (`a.click()`) nao seleciona o documento: precisa do clique real do puppeteer.
+  const ancora = await arvore.$(`#anchor${doc}`);
+  if (!ancora) throw new Error(`Documento ${doc} nao esta na arvore do processo (confira SEI_SP_DOC).`);
+  await ancora.click();
   await esperar(5000);
   let alvo = null;
   for (const f of p.frames()) {
