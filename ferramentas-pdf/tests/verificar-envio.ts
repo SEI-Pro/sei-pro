@@ -1047,6 +1047,65 @@ checar(
     `<a href="controlador.php?acao=documento_escolher_tipo&amp;id_procedimento=9&amp;infra_hash=Z">x</a>`,
   ) === "controlador.php?acao=documento_escolher_tipo&id_procedimento=9&infra_hash=Z",
 );
+checar(
+  "href com aspas duplas escapadas tambem e encontrado",
+  acharLinkDeIncluirDocumento(
+    `Nos[0].acoes = "<a href=\\"controlador.php?acao=documento_escolher_tipo&id_procedimento=9&infra_hash=Z\\">x</a>";`,
+  ) === "controlador.php?acao=documento_escolher_tipo&id_procedimento=9&infra_hash=Z",
+);
+
+/* --- filtro de series "U" (Mais usados) sem Externo tenta "T" (Todos) --- */
+{
+  const ESCOLHA_MAIS_USADOS = `<html><body>
+  <form id="frmDocumentoEscolherTipo" method="post" action="controlador.php?acao=documento_escolher_tipo&amp;infra_hash=ggg">
+    <input type="hidden" id="hdnFiltroSerie" name="hdnFiltroSerie" value="U" />
+    <input type="hidden" id="hdnIdSerie" name="hdnIdSerie" value="" />
+    <table id="tblSeries"><tbody>
+      <tr><td><input type="checkbox" value="12" /><a href="#" onclick="escolher(12)">Despacho</a></td></tr>
+    </tbody></table>
+  </form></body></html>`;
+
+  const ESCOLHA_TODOS_SO_ONCLICK = `<html><body>
+  <form id="frmDocumentoEscolherTipo" method="post" action="controlador.php?acao=documento_escolher_tipo&amp;infra_hash=ggg">
+    <input type="hidden" id="hdnFiltroSerie" name="hdnFiltroSerie" value="T" />
+    <input type="hidden" id="hdnIdSerie" name="hdnIdSerie" value="" />
+    <table id="tblSeries"><tbody>
+      <tr><td><a href="#" onclick="escolher(-1)"> Externo</a></td></tr>
+    </tbody></table>
+  </form></body></html>`;
+
+  const { amb, chamadas } = ambienteFalso((c) => {
+    if (c.url.includes("infra_hash=ASSINADO123")) return respostaFalsa(ESCOLHA_MAIS_USADOS);
+    if (c.metodo === "POST" && c.corpo?.includes("hdnFiltroSerie=T") && !c.corpo?.includes("hdnIdSerie=-1"))
+      return respostaFalsa(ESCOLHA_TODOS_SO_ONCLICK);
+    if (c.metodo === "POST" && c.corpo?.includes("hdnIdSerie=-1"))
+      return respostaFalsa(TELA_EXTERNO);
+    if (c.url.includes("acao=documento_receber"))
+      return respostaFalsa("", URL_SUCESSO);
+    throw new Error(`rota inesperada: ${c.metodo} ${c.url}`);
+  });
+
+  const r = await enviarDocumentoExterno(pedido(), amb);
+  checar("filtro U sem Externo pede todos (T) e conclui o envio", r.id === "3009576", r.id);
+  checar(
+    "Externo apenas com onclick=escolher(-1) foi aceito",
+    chamadas.some((c) => c.metodo === "POST" && c.corpo?.includes("hdnIdSerie=-1")),
+  );
+}
+
+/* --- infraUpload com aspas duplas e espacamento alternativo --- */
+{
+  const telaAspasDuplas = TELA_EXTERNO.replace(
+    /objUpload = new infraUpload\([^)]+\)/,
+    `var objUpload=new infraUpload("frmAnexos","controlador.php?acao=documento_upload_anexo&amp;infra_hash=dup", true)`,
+  );
+  const f = lerFormularioExterno(telaAspasDuplas);
+  checar(
+    "infraUpload com aspas duplas e &amp; e lido corretamente",
+    f?.urlUpload === "controlador.php?acao=documento_upload_anexo&infra_hash=dup",
+    f?.urlUpload,
+  );
+}
 
 /* ------------------------------------------------------------------ *
  * Guarda: nenhuma URL de ação montada à mão

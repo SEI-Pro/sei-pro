@@ -74,8 +74,13 @@ export function lerFormularioExterno(html: string): FormularioExterno | null {
   let unidade = "";
 
   for (const linha of html.split("\n")) {
-    if (urlUpload === "" && linha.includes("objUpload = new infraUpload")) {
-      urlUpload = linha.split("'")[3] ?? "";
+    if (urlUpload === "" && /new\s+infraUpload\s*\(/i.test(linha)) {
+      const chamada = /new\s+infraUpload\s*\(([^)]+)\)/i.exec(linha);
+      if (chamada) {
+        const args = [...chamada[1].matchAll(/(['"])([^'"]*)\1/g)].map((a) => a[2]);
+        const candidato = args.find((a) => a.includes("acao=documento_upload")) ?? args[1];
+        if (candidato) urlUpload = semEntidades(candidato);
+      }
     }
     if (linha.includes("arrExt")) {
       const ext = linha.split('"')[1];
@@ -89,7 +94,7 @@ export function lerFormularioExterno(html: string): FormularioExterno | null {
       //
       // O casamento ancora no `'])` final justamente por isso, e tolera o
       // espaço antes da vírgula, que varia entre as versões.
-      const achado = /'([^']*)'\s*,\s*'([^']*)'\s*\]\s*\)/.exec(linha);
+      const achado = /['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*\]\s*\)/.exec(linha);
       if (achado) {
         usuario = achado[1];
         unidade = achado[2];
@@ -537,9 +542,34 @@ export async function enviarDocumentoExterno(
  */
 export function acharLinkDeIncluirDocumento(htmlArvore: string): string | null {
   const achado =
-    /href="([^"]*acao=documento_escolher_tipo[^"]*)"/i.exec(htmlArvore) ??
-    /href=\\?'([^']*acao=documento_escolher_tipo[^']*)\\?'/i.exec(htmlArvore);
+    /href=\\?"([^"\\]*acao=documento_escolher_tipo[^"\\]*)\\?"/i.exec(htmlArvore) ??
+    /href=\\?'([^'\\]*acao=documento_escolher_tipo[^'\\]*)\\?'/i.exec(htmlArvore);
   return achado ? semEntidades(achado[1]) : null;
+}
+
+function coletarOcultos(form: HTMLFormElement): URLSearchParams {
+  const corpo = new URLSearchParams();
+  for (const i of form.querySelectorAll<HTMLInputElement>('input[type="hidden"]')) {
+    if (i.name) corpo.set(i.name, i.value);
+  }
+  return corpo;
+}
+
+function temOpcaoExterno(doc: Document): {
+  direto: HTMLAnchorElement | null;
+  temExterno: boolean;
+  formEscolha: HTMLFormElement | null;
+} {
+  const tabela = doc.querySelector("#tblSeries");
+  const escopo = tabela ?? doc;
+  const direto = escopo.querySelector<HTMLAnchorElement>('a[href*="acao=documento_receber"]');
+  const temExterno = Boolean(
+    escopo.querySelector(
+      'input[value="-1"], [onclick*="escolher(-1)"], [onclick*="escolher(\'-1\')"]',
+    ),
+  );
+  const formEscolha = doc.querySelector<HTMLFormElement>("#frmDocumentoEscolherTipo");
+  return { direto, temExterno, formEscolha };
 }
 
 /**
@@ -561,36 +591,55 @@ async function abrirTelaDeDocumentoExterno(amb: AmbienteDeEnvio): Promise<string
   const escolha = await amb.buscar(entrada, { credentials: "same-origin" });
   if (!escolha.ok) throw new ErroEnvio("SEI_SEM_PERMISSAO", String(escolha.status));
 
-  const html = await amb.lerTexto(escolha);
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const tabela = doc.querySelector("#tblSeries");
+  let html = await amb.lerTexto(escolha);
+  let doc = new DOMParser().parseFromString(html, "text/html");
+  let estado = temOpcaoExterno(doc);
 
-  const direto = tabela?.querySelector<HTMLAnchorElement>(
-    'a[href*="acao=documento_receber"]',
-  );
-  if (direto) {
+  // A tela de escolha pode abrir filtrada em "Mais usados" (`hdnFiltroSerie=U`).
+  // Se "Externo" não estiver listado ali, pedimos todos os tipos (`T`) antes de
+  // concluir que o usuário não tem permissão.
+  if (!estado.direto && !estado.temExterno && estado.formEscolha) {
+    const filtro = estado.formEscolha.querySelector<HTMLInputElement>(
+      'input[name="hdnFiltroSerie"]',
+    );
+    if (filtro && filtro.value !== "T") {
+      const corpoTodos = coletarOcultos(estado.formEscolha);
+      corpoTodos.set("hdnFiltroSerie", "T");
+      const respTodos = await amb.buscar(
+        semEntidades(estado.formEscolha.getAttribute("action") ?? ""),
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: corpoTodos.toString(),
+        },
+      );
+      if (respTodos.ok) {
+        html = await amb.lerTexto(respTodos);
+        doc = new DOMParser().parseFromString(html, "text/html");
+        estado = temOpcaoExterno(doc);
+      }
+    }
+  }
+
+  if (estado.direto) {
     return amb.lerTexto(
-      await amb.buscar(semEntidades(direto.getAttribute("href") ?? ""), {
+      await amb.buscar(semEntidades(estado.direto.getAttribute("href") ?? ""), {
         credentials: "same-origin",
       }),
     );
   }
 
-  const temExterno = Boolean(tabela?.querySelector('input[value="-1"]'));
-  const formEscolha = doc.querySelector<HTMLFormElement>("#frmDocumentoEscolherTipo");
-  if (!temExterno || !formEscolha) {
+  if (!estado.temExterno || !estado.formEscolha) {
     if (/frmLogin|sei_login/i.test(html)) throw new ErroEnvio("SEI_SESSAO_EXPIRADA");
     throw new ErroEnvio("SEI_SEM_PERMISSAO", "opção Externo ausente");
   }
 
-  const corpo = new URLSearchParams();
-  for (const i of formEscolha.querySelectorAll<HTMLInputElement>('input[type="hidden"]')) {
-    if (i.name && i.id?.includes("hdn")) corpo.set(i.name, i.value);
-  }
+  const corpo = coletarOcultos(estado.formEscolha);
   corpo.set("hdnIdSerie", "-1");
 
   return amb.lerTexto(
-    await amb.buscar(semEntidades(formEscolha.getAttribute("action") ?? ""), {
+    await amb.buscar(semEntidades(estado.formEscolha.getAttribute("action") ?? ""), {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },

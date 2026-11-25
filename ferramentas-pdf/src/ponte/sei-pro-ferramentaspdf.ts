@@ -72,6 +72,17 @@ const MARCA_INTERNA = "seipro-fpdf-interno";
 /** Identifica esta aba do SEI, para a página distinguir quando há várias. */
 const ORIGEM = `${location.host}#${Math.random().toString(36).slice(2, 8)}`;
 
+/** Momento em que esta aba esteve ativa por último (para desempate entre várias abas). */
+let ultimaAtividade = Date.now();
+const registrarAtividade = () => {
+  ultimaAtividade = Date.now();
+};
+window.addEventListener("focus", registrarAtividade);
+window.addEventListener("pointerdown", registrarAtividade, { passive: true });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) registrarAtividade();
+});
+
 // ---- conversa com o mundo isolado ----
 
 window.addEventListener("message", (ev: MessageEvent) => {
@@ -104,6 +115,7 @@ function montarApresentacao(): Apresentacao {
     idProcedimento: ctx.idProcedimento,
     unidade: ctx.unidade,
     versaoSei: ctx.versaoSei,
+    ativoEm: ultimaAtividade,
   };
 }
 
@@ -192,7 +204,7 @@ function processoAberto(): ProcessoAberto | null {
 
 function lerContexto() {
   const numero = document
-    .querySelector("#divArvoreInformacao, .infraArvoreNoSelecionado")
+    .querySelector("#divArvoreInformacao, .infraArvoreNoSelecionado, #divInfraBarraLocalizacao")
     ?.textContent?.trim();
   return {
     protocolo: numero || undefined,
@@ -225,7 +237,7 @@ async function lerParametrosUpload(): Promise<{
     const processo = processoAberto();
     if (!processo) return null;
 
-    const entrada = acharLinkDeIncluirDocumento(await lerHtmlDaArvore(processo));
+    const entrada = acharLinkDeIncluirDocumento(await lerHtmlDaArvore(processo, false));
     if (!entrada) return null;
 
     const resposta = await fetch(noControlador(entrada, processo), { credentials: "same-origin" });
@@ -319,22 +331,53 @@ async function lerDocumentosDaArvore(): Promise<DocumentoDaArvore[]> {
  * O endereço vem do processo localizado, e não de `location.pathname`: com a
  * URL amigável o topo está em "/sei/", e "/sei/?acao=..." cai no index.php.
  */
-async function lerHtmlDaArvore(processo: ProcessoAberto): Promise<string> {
+async function lerHtmlDaArvore(processo: ProcessoAberto, expandir = true): Promise<string> {
   const { controlador, idProcedimento } = processo;
-  const htmlProcesso = await lerTexto(
-    await fetch(`${controlador}?acao=procedimento_trabalhar&id_procedimento=${idProcedimento}`, {
-      credentials: "same-origin",
-    }),
-  );
+  let html = "";
 
-  const srcArvore =
-    htmlProcesso.match(/id="ifrArvore"[^>]*src="([^"]+)"/i)?.[1] ??
-    htmlProcesso.match(/src="([^"]*acao=arvore_visualizar[^"]*)"/i)?.[1];
-  if (!srcArvore) throw new ErroSei("SEI_SESSAO_EXPIRADA", "árvore não encontrada");
+  // Se o quadro da árvore já está carregado nesta aba com link assinado do mesmo
+  // processo, buscamos dele direto — evita depender de `procedimento_trabalhar`
+  // sem assinatura e poupa uma ida à rede.
+  const srcAtual = document.querySelector<HTMLIFrameElement>("#ifrArvore")?.getAttribute("src");
+  if (srcAtual) {
+    try {
+      const u = new URL(limparHtml(srcAtual), controlador);
+      if (
+        u.searchParams.get("acao") === "procedimento_visualizar" &&
+        u.searchParams.get("id_procedimento") === idProcedimento
+      ) {
+        const resp = await fetch(noControlador(srcAtual, processo), { credentials: "same-origin" });
+        if (resp.ok) {
+          const candidato = await lerTexto(resp);
+          if (candidato.includes("infraArvoreNo")) html = candidato;
+        }
+      }
+    } catch {
+      // Cai para a busca via procedimento_trabalhar abaixo.
+    }
+  }
 
-  const html = await lerTexto(
-    await fetch(noControlador(srcArvore, processo), { credentials: "same-origin" }),
-  );
+  if (!html) {
+    const htmlProcesso = await lerTexto(
+      await fetch(`${controlador}?acao=procedimento_trabalhar&id_procedimento=${idProcedimento}`, {
+        credentials: "same-origin",
+      }),
+    );
+
+    const docProcesso = new DOMParser().parseFromString(htmlProcesso, "text/html");
+    const srcArvore =
+      docProcesso.querySelector<HTMLIFrameElement>("#ifrArvore")?.getAttribute("src") ??
+      docProcesso
+        .querySelector<HTMLIFrameElement>('iframe[src*="acao=procedimento_visualizar"]')
+        ?.getAttribute("src");
+    if (!srcArvore) throw new ErroSei("SEI_SESSAO_EXPIRADA", "árvore não encontrada");
+
+    html = await lerTexto(
+      await fetch(noControlador(srcArvore, processo), { credentials: "same-origin" }),
+    );
+  }
+
+  if (!expandir) return html;
 
   const linkExpandir = acharLinkDeExpansao(html);
   if (!linkExpandir) return html;
@@ -514,7 +557,7 @@ async function enviarAoProcesso(
       postarArquivo: (url, anexo, progresso) =>
         postarArquivo(noControlador(url, processo), anexo, progresso),
       lerTexto,
-      htmlDaArvore: () => lerHtmlDaArvore(processo),
+      htmlDaArvore: () => lerHtmlDaArvore(processo, false),
       formatarTamanho: (b) => window.infraFormatarTamanhoBytes?.(b) ?? String(b),
       codificadores: codificadoresDoSeiPro(),
       config: {

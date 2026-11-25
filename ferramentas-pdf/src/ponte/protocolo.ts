@@ -59,6 +59,8 @@ export interface Apresentacao {
   idProcedimento?: string;
   unidade?: string;
   versaoSei?: string;
+  /** Momento da última interação/foco na aba do SEI, para desempate entre várias abas. */
+  ativoEm?: number;
 }
 
 export function ehDoCanal(m: unknown): boolean {
