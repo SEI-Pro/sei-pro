@@ -1,3 +1,4 @@
+import { gerarCsvLegado } from '../src/modelo/exportar';
 import assert from 'node:assert/strict';
 import { acrescentar, casa, filtrarPorBusca, interpretar, remover } from '../src/modelo/busca';
 import { DIA_MS } from '../src/modelo/contexto';
@@ -8,7 +9,7 @@ import { abrirVisita, comIdade, estadoVazio, JANELA_VISITA, MAX_REGISTROS, norma
 import { calcularJanela } from '../src/modelo/janela';
 import { achatar } from '../src/modelo/linhas';
 import { alternarOrdem, chaveProtocolo, ordenar } from '../src/modelo/ordem';
-import { aplicarMovimento, montarQuadro, planejarMovimento } from '../src/modelo/quadro';
+import { aplicarMovimento, montarQuadro, planejarMovimento, reordenarColunas } from '../src/modelo/quadro';
 import { excluirVisao, mudouDe, normalizarLista, normalizarVisao, renomearVisao, salvarVisao, visaoPadrao, MAX_VISOES } from '../src/modelo/visoes';
 import { AGORA, CTX, prazoEm, proc, teste } from './util';
 
@@ -149,10 +150,17 @@ await teste('grupos: por responsável, sem responsável por último', () => {
   const g = agrupar([proc(), proc({ atribuicao: beto }), proc({ atribuicao: ana })], 'responsavel', CTX);
   assert.deepEqual(g.map((x) => x.chave), ['u:ana', 'u:beto', 'sem']);
 });
-await teste('grupos: processo com 2 marcadores aparece nos dois grupos', () => {
+await teste('grupos: processo com 2 marcadores aparece apenas no último marcador (dataHora ou último da lista)', () => {
   const p = proc({ marcadores: [mk('A'), mk('B')] });
   const g = agrupar([p, proc()], 'marcador', CTX);
-  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:A', 1], ['m:B', 1], ['sem', 1]]);
+  assert.deepEqual(g.map((x) => [x.chave, x.itens.length]), [['m:B', 1], ['sem', 1]]);
+  const comData = proc({
+    marcadores: [
+      { nome: 'Recente', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-14T15:30:00Z') },
+      { nome: 'Antigo', cor: 'preto', texto: '', dataHora: Date.parse('2026-09-01T10:00:00Z') },
+    ],
+  });
+  assert.deepEqual(agrupar([comData], 'marcador', CTX).map((x) => x.chave), ['m:Recente']);
 });
 await teste('grupos: faixas de prazo na ordem fixa, só as que têm itens', () => {
   const ps = [proc(), proc({ prazo: prazoEm('1', '2026-10-01') }), proc({ prazo: prazoEm('2', '2026-10-11') }), proc({ prazo: prazoEm('3', '2026-10-15') }), proc({ prazo: prazoEm('4', '2026-10-30') }), proc({ prazo: prazoEm('5', '2027-03-01') })];
@@ -243,10 +251,19 @@ await teste('visões: salvar, atualizar, renomear, excluir e teto', () => {
 });
 
 // ---------------- quadro ----------------
-await teste('quadro: por marcador inclui colunas vazias e "Sem marcador" primeiro', () => {
-  const cols = montarQuadro([proc({ marcadores: [mk('B')] }), proc()], { colunas: 'marcador', limite: 0, raiasPorResponsavel: false }, CTX, { marcadores: ['A', 'B'] });
-  assert.deepEqual(cols.map((c) => [c.chave, c.itens.length]), [['sem', 1], ['m:A', 0], ['m:B', 1]]);
+await teste('quadro: por marcador oculta colunas vazias, ordena por quantidade decrescente e respeita ordemColunas', () => {
+  const ps = [
+    proc({ marcadores: [mk('B')] }),
+    proc({ marcadores: [mk('B')] }),
+    proc({ marcadores: [mk('C')] }),
+    proc(),
+  ];
+  const cols = montarQuadro(ps, { colunas: 'marcador', limite: 0, raiasPorResponsavel: false }, CTX, { marcadores: ['A', 'B', 'C', 'Vazio'] });
+  assert.deepEqual(cols.map((c) => [c.chave, c.itens.length]), [['m:B', 2], ['m:C', 1], ['sem', 1]]);
   assert.ok(cols.every((c) => c.aceitaSoltar));
+  const reordenadas = montarQuadro(ps, { colunas: 'marcador', limite: 0, raiasPorResponsavel: false, ordemColunas: ['sem', 'm:C'] }, CTX, { marcadores: ['A', 'B', 'C'] });
+  assert.deepEqual(reordenadas.map((c) => c.chave), ['sem', 'm:C', 'm:B']);
+  assert.deepEqual(reordenarColunas(['m:B', 'm:C', 'sem'], 'sem', 'm:B'), ['sem', 'm:B', 'm:C']);
 });
 await teste('quadro: limite marca coluna excedida; prazo e tipo são só leitura', () => {
   const ps = [proc({ marcadores: [mk('A')] }), proc({ marcadores: [mk('A')] }), proc({ marcadores: [mk('A')] })];
@@ -256,6 +273,18 @@ await teste('quadro: limite marca coluna excedida; prazo e tipo são só leitura
   assert.ok(porPrazo.every((c) => !c.aceitaSoltar && c.motivoSomenteLeitura));
   assert.ok(montarQuadro(ps, { colunas: 'tipo', limite: 0, raiasPorResponsavel: false }, CTX).every((c) => !c.aceitaSoltar));
 });
+await teste('quadro: colunasVazias traz de volta os marcadores sem processos como destinos de soltar', () => {
+  const ps = [proc({ marcadores: [mk('B')] }), proc()];
+  const cols = montarQuadro(ps, { colunas: 'marcador', limite: 0, raiasPorResponsavel: false, colunasVazias: true }, CTX, { marcadores: ['A', 'B', 'Vazio'] });
+  assert.deepEqual(cols.map((c) => [c.chave, c.itens.length]).sort(), [['m:A', 0], ['m:B', 1], ['m:Vazio', 0], ['sem', 1]]);
+  assert.ok(cols.every((c) => c.aceitaSoltar));
+});
+
+await teste('csv completo: neutraliza fórmula (inclusive iniciada por -) e mantém o "-" das células vazias', () => {
+  const saida = gerarCsvLegado([['-', '=1+1', '-2+3', '@x', 'a;b']]);
+  assert.equal(saida, "\uFEFF-;'=1+1;'-2+3;'@x;ab");
+});
+
 await teste('quadro: mover marcador A -> B remove A, põe B e leva o texto', () => {
   const p = proc({ marcadores: [mk('A', 'Até 20/10/2026'), mk('Z')] });
   const r = planejarMovimento('marcador', p, 'm:A', 'm:B');

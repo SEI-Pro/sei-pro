@@ -36,21 +36,35 @@ function traduzirMudancas(m: Record<string, chrome.storage.StorageChange>): Muda
 
 export function areaChrome(area: chrome.storage.StorageArea, nome: "local" | "sync" | "session"): Area {
   return {
-    obter: (chaves = null) => area.get(chaves) as Promise<Record<string, unknown>>,
-    gravar: (itens) => area.set(itens),
-    remover: (chaves) => area.remove(chaves),
+    obter: async (chaves = null) => (await area.get(chaves)) as Record<string, unknown>,
+    gravar: async (itens) => {
+      await area.set(itens);
+    },
+    remover: async (chaves) => {
+      await area.remove(chaves);
+    },
     // getKeys (Chrome 130+, Firefox 143+) evita transferir os valores de todo o storage, que o
     // Agente também usa, só para descobrir quais chaves são de uma coleção.
     chaves:
       typeof (area as { getKeys?: unknown }).getKeys === "function"
-        ? () => (area as unknown as { getKeys(): Promise<string[]> }).getKeys()
+        ? async () => await (area as unknown as { getKeys(): Promise<string[]> }).getKeys()
         : undefined,
     aoMudar(cb) {
       const ouvinte = (m: Record<string, chrome.storage.StorageChange>, n: string) => {
         if (n === nome) cb(traduzirMudancas(m));
       };
-      chrome.storage.onChanged.addListener(ouvinte);
-      return () => chrome.storage.onChanged.removeListener(ouvinte);
+      try {
+        chrome.storage.onChanged.addListener(ouvinte);
+      } catch {
+        /* contexto da extensao invalidado */
+      }
+      return () => {
+        try {
+          chrome.storage.onChanged.removeListener(ouvinte);
+        } catch {
+          /* contexto da extensao invalidado */
+        }
+      };
     },
   };
 }

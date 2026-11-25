@@ -3,6 +3,7 @@
  * intenções; quem fala com o SEI são as dependências recebidas (`DepsApp`), que os testes substituem.
  */
 import { gerarCsv } from '../../../sei-comum/src/csv';
+import { normalizarTexto } from '../../../sei-comum/src/texto';
 import { type Combo, criarCombo } from '../../../sei-comum/src/ui/combobox';
 import { h, icone as iconeComum, type NomeIcone } from '../../../sei-comum/src/ui/dom';
 import { aplicarSelecao, lerSelecao, observarSelecao } from '../acoes/selecao';
@@ -15,12 +16,14 @@ import { lerTabelas } from '../leitura/tabela';
 import { acrescentar, interpretar, filtrarPorBusca, remover } from '../modelo/busca';
 import type { Ctx } from '../modelo/contexto';
 import { facetasDe } from '../modelo/facetas';
-import { linhasCsv, nomeArquivo } from '../modelo/exportar';
+import { gerarCsvLegado, lerCacheRecebimentoPro, linhasCsv, linhasCsvLegado, nomeArquivo, nomeArquivoLegado } from '../modelo/exportar';
 import { agrupar, ROTULO_AGRUPAR } from '../modelo/grupos';
 import { abrirVisita, comIdade, type EstadoIdade, registrarVistos } from '../modelo/idade';
 import { achatar, type LinhaLista } from '../modelo/linhas';
 import { alternarOrdem, ordenar } from '../modelo/ordem';
-import { aplicarMovimento, type ExtrasQuadro, planejarMovimento } from '../modelo/quadro';
+import { alternarFeito, escreverNota, lerNota } from '../modelo/checklist';
+import { aplicarAnotacao } from '../modelo/edicoes';
+import { aplicarMovimento, type ExtrasQuadro, planejarMovimento, reordenarColunas } from '../modelo/quadro';
 import { type AgruparPor, type CampoOrdem, COLUNAS, type Coluna, type LeituraTabela, type Processo, ROTULO_COLUNA, type Visao } from '../modelo/tipos';
 import { excluirVisao, mudouDe, salvarVisao, visaoPadrao } from '../modelo/visoes';
 import type { Grupo, SelecaoDaPagina } from '../modelo/tipos';
@@ -61,6 +64,8 @@ export interface DepsApp {
   anotar(protocolo: string, a: { texto: string; prioridade: boolean }): Promise<void>;
   /** Consulta o andamento de um processo (datas e unidade de envio). Sem isso, os agrupamentos por andamento não existem. */
   consultarAndamento?(p: Processo, sinal: AbortSignal): Promise<DadosColeta | null>;
+  /** Consulta a data/hora de atribuição dos marcadores de um processo (só usado quando há 2+ marcadores). */
+  consultarDatasMarcadores?(p: Processo, sinal: AbortSignal): Promise<Record<string, number> | null>;
   /** Para os testes. */
   andamentoSimultaneas?: number;
   andamentoPausaMs?: number;
@@ -195,6 +200,8 @@ export function criarApp(d: DepsApp) {
   const btnColunas = btn('colunas', 'Colunas', () => abrirPainel('colunas'));
   const btnVisoes = btn('disquete', 'Visões', () => abrirPainel('visoes'));
   const btnCsv = btn('lista', 'Exportar CSV', () => exportar());
+  const btnCsvCompleto = btn('lista', 'CSV completo', () => exportarCompleto());
+  btnCsvCompleto.title = 'CSV completo (ListaProcessos_SEIPro, 21 colunas)';
   const btnAjuda = h('button', { type: 'button', class: 'spro-bt spro-bt-icone', title: 'Atalhos de teclado (?)', 'aria-label': 'Atalhos de teclado', onclick: () => { ajuda.hidden = !ajuda.hidden; } }, '?');
   const btnDensidade = btn('densidade', 'Densidade', () => alterar({ densidade: visao.densidade === 'compacta' ? 'confortavel' : 'compacta' }));
   const opcoesQuadro = h('div', { class: 'spro-quadro-cfg', hidden: true });
@@ -204,7 +211,7 @@ export function criarApp(d: DepsApp) {
       segmentado,
       h('div', { class: 'spro-busca-caixa' }, busca),
       comboAgrupar.el, comboOrdem.el,
-      btnColunas, btnDensidade, btnVisoes, btnCsv, btnAjuda),
+      btnColunas, btnDensidade, btnVisoes, btnCsv, btnCsvCompleto, btnAjuda),
     chips,
     h('div', { class: 'spro-faixa' }, rapidos, fResp.el, fTipo.el, fMarc.el),
     opcoesQuadro, ajuda, painel, status, ...(andamentos ? [andamentos.faixa] : []), lote, conteudo, avisos);
@@ -379,10 +386,48 @@ export function criarApp(d: DepsApp) {
     }
   }
 
+  async function alternarTarefa(id: string, indiceLinha: number) {
+    const original = todos.find((p) => p.id === id);
+    if (!original?.anotacao || original.sigiloso) return;
+    const linhas = lerNota(original.anotacao.texto);
+    if (linhas[indiceLinha]?.marca == null) return;
+    const novoTexto = escreverNota(alternarFeito(linhas, indiceLinha));
+    const prioridade = original.anotacao.prioridade;
+    substituir(id, aplicarAnotacao(original, novoTexto, prioridade, d.eu ?? ''));
+    render();
+    try {
+      await gravarEmSerie(() => d.anotar(original.protocolo, { texto: novoTexto, prioridade }));
+    } catch (e) {
+      substituir(id, original);
+      render();
+      aviso(`Não foi possível atualizar a anotação: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  function alternarColunaQuadro(chave: string) {
+    const atuais = visao.quadro.colunasRecolhidas ?? [];
+    const prox = atuais.includes(chave) ? atuais.filter((c) => c !== chave) : [...atuais, chave];
+    const { colunasRecolhidas: _, ...resto } = visao.quadro;
+    alterar({ quadro: prox.length ? { ...resto, colunasRecolhidas: prox } : resto });
+  }
+
   function renderConteudo() {
     const lista = ordenados();
     if (visao.modo === 'quadro') {
-      conteudo.replaceChildren(desenharQuadro({ processos: lista, cfg: visao.quadro, ctx: ctx(), extras, selecionados, aoMover: (i, a, b) => void mover(i, a, b), aoSelecionar: (i, m) => selecionar([i], m) }));
+      conteudo.replaceChildren(desenharQuadro({
+        processos: lista,
+        cfg: visao.quadro,
+        ctx: ctx(),
+        extras,
+        selecionados,
+        aoMover: (i, a, b) => void mover(i, a, b),
+        aoSelecionar: (i, m) => selecionar([i], m),
+        aoAbrirPrazo: (i) => d.abrirPrazo(i),
+        aoReordenarColuna: (de, para, chaves) => alterar({ quadro: { ...visao.quadro, ordemColunas: reordenarColunas(chaves, de, para) } }),
+        aoEditarAnotacao: (i) => { const p = todos.find((x) => x.id === i); if (p && !p.sigiloso) editarAnotacao(edicao, p); },
+        aoAlternarTarefa: (i, idx) => void alternarTarefa(i, idx),
+        aoAlternarColuna: (chave) => alternarColunaQuadro(chave),
+      }));
       return;
     }
     const grupos = agrupar(lista, visao.agrupar, ctx());
@@ -440,6 +485,45 @@ export function criarApp(d: DepsApp) {
   const observadorTamanho = ObsTamanho ? new ObsTamanho(() => ajustarFaixa()) : null;
   observadorTamanho?.observe(faixa);
 
+  const datasMarcadoresCache = new Map<string, Record<string, number>>();
+  const datasMarcadoresConsultados = new Set<string>();
+  const assinaturaMarcadores = (p: Processo) => `${p.id}|${p.marcadores.map((m) => m.nome).join('|')}`;
+  function aplicarDatasMarcadores(p: Processo): Processo {
+    if (p.marcadores.length <= 1) return p;
+    const datas = datasMarcadoresCache.get(p.id);
+    if (!datas) return p;
+    let mudou = false;
+    const marcadores = p.marcadores.map((m) => {
+      if (m.dataHora !== undefined) return m;
+      const dt = datas[normalizarTexto(m.nome)];
+      if (dt === undefined) return m;
+      mudou = true;
+      return { ...m, dataHora: dt };
+    });
+    return mudou ? { ...p, marcadores } : p;
+  }
+  function enriquecerDatasMarcadores() {
+    if (!d.consultarDatasMarcadores || encerrado) return;
+    const precisa = (visao.modo === 'quadro' && visao.quadro.colunas === 'marcador') || (visao.modo === 'tabela' && visao.agrupar === 'marcador');
+    if (!precisa) return;
+    const pendentes = todos.filter((p) => p.marcadores.length > 1 && p.linkMarcadores && !datasMarcadoresConsultados.has(assinaturaMarcadores(p)));
+    if (!pendentes.length) return;
+    for (const p of pendentes) datasMarcadoresConsultados.add(assinaturaMarcadores(p));
+    const filaPendentes = [...pendentes];
+    const trabalhadores = Math.min(4, filaPendentes.length);
+    const rodar = async () => {
+      while (filaPendentes.length && !encerrado && !ctl.signal.aborted) {
+        const p = filaPendentes.shift()!;
+        const datas = await d.consultarDatasMarcadores!(p, ctl.signal).catch(() => null);
+        if (!datas || encerrado) continue;
+        datasMarcadoresCache.set(p.id, datas);
+        todos = todos.map((x) => (x.id === p.id ? aplicarDatasMarcadores(x) : x));
+        render();
+      }
+    };
+    for (let i = 0; i < trabalhadores; i++) void rodar();
+  }
+
   function render() {
     if (encerrado) return;
     const f = facetasDe(comId(), ctx());
@@ -457,6 +541,7 @@ export function criarApp(d: DepsApp) {
     renderConteudo();
     renderStatus(filtrados().length);
     renderLote();
+    enriquecerDatasMarcadores();
     if (visao.modo === 'quadro' && !extrasPedido && d.extras) {
       extrasPedido = true;
       void d.extras().then((e) => { extras = e; if (!encerrado) renderConteudo(); }).catch(() => undefined);
@@ -473,10 +558,62 @@ export function criarApp(d: DepsApp) {
       valor: [q.colunas], aoMudar: ([v]) => { extrasPedido = false; alterar({ quadro: { ...q, colunas: (v ?? 'marcador') as typeof q.colunas } }); },
     });
     const lim = h('input', { type: 'number', min: '0', max: '99', class: 'spro-num', value: String(q.limite), 'aria-label': 'Limite de cartões por coluna (0 = sem limite)', title: 'Limite de cartões por coluna (0 = sem limite)', onchange: (ev: Event) => alterar({ quadro: { ...q, limite: Math.max(0, Math.min(99, Number((ev.target as HTMLInputElement).value) || 0)) } }) });
+    const vazias = h('input', { type: 'checkbox', onchange: (ev: Event) => {
+      const { colunasVazias: _, ...resto } = visao.quadro;
+      alterar({ quadro: (ev.target as HTMLInputElement).checked ? { ...resto, colunasVazias: true } : resto });
+    } });
+    vazias.checked = q.colunasVazias === true;
     const raia = h('input', { type: 'checkbox', onchange: (ev: Event) => alterar({ quadro: { ...q, raiasPorResponsavel: (ev.target as HTMLInputElement).checked } }) });
     raia.checked = q.raiasPorResponsavel;
-    opcoesQuadro.replaceChildren(sel.el, h('label', { class: 'spro-rotulo-inline' }, 'Limite ', lim), h('label', { class: 'spro-rotulo-inline' }, raia, ' Raias por responsável'),
-      h('span', { class: 'spro-suave' }, q.colunas === 'marcador' || q.colunas === 'responsavel' ? 'Arraste os cartões entre as colunas.' : 'Esta divisão é só de leitura.'));
+    const larguraAtual = q.larguraColuna ?? 280;
+    const definirLargura = (nova: number) => {
+      const l = Math.max(200, Math.min(500, Math.round(nova)));
+      alterar({ quadro: { ...visao.quadro, larguraColuna: l } });
+    };
+    const valLargura = h('span', { class: 'spro-largura-val' }, `${larguraAtual}px`);
+    const rangeLargura = h('input', {
+      type: 'range',
+      min: '200',
+      max: '500',
+      step: '20',
+      value: String(larguraAtual),
+      class: 'spro-largura-range',
+      'aria-label': 'Largura das colunas',
+      title: 'Ajustar largura das colunas e cartões',
+      oninput: (ev: Event) => {
+        const l = Number((ev.target as HTMLInputElement).value) || 280;
+        valLargura.textContent = `${l}px`;
+        conteudo.querySelector<HTMLElement>('.spro-quadro')?.style.setProperty('--spro-col-largura', `${l}px`);
+      },
+      onchange: (ev: Event) => definirLargura(Number((ev.target as HTMLInputElement).value) || 280),
+    });
+    const ctrlLargura = h('div', { class: 'spro-largura-ctrl' },
+      h('span', {}, 'Largura'),
+      h('button', { type: 'button', class: 'spro-largura-bt', 'aria-label': 'Diminuir largura das colunas', title: 'Diminuir largura das colunas', onclick: () => definirLargura(larguraAtual - 20) }, '−'),
+      rangeLargura,
+      h('button', { type: 'button', class: 'spro-largura-bt', 'aria-label': 'Aumentar largura das colunas', title: 'Aumentar largura das colunas', onclick: () => definirLargura(larguraAtual + 20) }, '+'),
+      valLargura,
+    );
+    const btnRestaurarOrdem = q.ordemColunas?.length
+      ? h('button', {
+          type: 'button',
+          class: 'spro-link',
+          title: 'Voltar à ordenação automática das colunas',
+          onclick: () => {
+            const { ordemColunas: _, ...resto } = visao.quadro;
+            alterar({ quadro: resto });
+          },
+        }, 'Restaurar ordem')
+      : null;
+    opcoesQuadro.replaceChildren(
+      sel.el,
+      h('label', { class: 'spro-rotulo-inline' }, 'Limite ', lim),
+      ctrlLargura,
+      h('label', { class: 'spro-rotulo-inline' }, raia, ' Raias por responsável'),
+      ...(q.colunas === 'marcador' ? [h('label', { class: 'spro-rotulo-inline', title: 'Mostra marcadores sem processos, para arrastar cartões até eles' }, vazias, ' Colunas vazias')] : []),
+      ...(btnRestaurarOrdem ? [btnRestaurarOrdem] : []),
+      h('span', { class: 'spro-suave' }, q.colunas === 'marcador' || q.colunas === 'responsavel' ? 'Arraste cartões ou cabeçalhos das colunas.' : 'Arraste os cabeçalhos para reordenar as colunas.'),
+    );
   }
 
   // ---------- painéis (colunas e visões) ----------
@@ -522,6 +659,16 @@ export function criarApp(d: DepsApp) {
   function exportar() {
     const linhas = linhasCsv(ordenados(), visao.modo === 'quadro' ? [...COLUNAS] : visao.colunas, ctx());
     d.baixar(nomeArquivo(d.hoje()), gerarCsv(linhas), 'text/csv;charset=utf-8');
+    aviso(`${linhas.length - 1} processos exportados.`);
+  }
+
+  /** As 21 colunas fixas da visão nativa, para quem alimenta painéis com o `ListaProcessos_SEIPro`. */
+  function exportarCompleto() {
+    const loc = doc.defaultView?.location;
+    const urlBase = loc && /^https?:$/i.test(loc.protocol) ? `${loc.origin}${loc.pathname}` : '';
+    const recebimentos = lerCacheRecebimentoPro(doc.defaultView?.localStorage);
+    const linhas = linhasCsvLegado(ordenados(), ctx(), { urlBase, recebimentos });
+    d.baixar(nomeArquivoLegado(d.agora()), gerarCsvLegado(linhas), 'text/csv;charset=utf-8');
     aviso(`${linhas.length - 1} processos exportados.`);
   }
 
@@ -588,7 +735,7 @@ export function criarApp(d: DepsApp) {
       const assinatura = assinaturaIcones(doc, p.id);
       const assinaturaAntes = assinaturas.get(p.id);
       assinaturas.set(p.id, assinatura);
-      let resultado = n;
+      let resultado = aplicarDatasMarcadores(n);
       if (local) {
         // A linha nativa ja concorda com o que a grade mudou? Entao o registro local cumpriu o papel.
         for (const k of Object.keys(local)) if (JSON.stringify((n as unknown as Record<string, unknown>)[k]) === JSON.stringify(local[k])) delete local[k];

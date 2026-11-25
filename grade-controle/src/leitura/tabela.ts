@@ -96,7 +96,10 @@ export function lerTabelas(doc: Document, o: OpcoesLeitura = {}): LeituraTabela 
     const { total, porPagina: pp } = totalDoCaption(tabela);
     totais[grupo] = total;
     porPagina[grupo] = pp;
-    for (const tr of tabela?.querySelectorAll('tr[id^="P"]') ?? []) juntar(lerProcessoDaLinha(tr, { grupo, pagina, naPaginaAtual }));
+    for (const tr of tabela?.querySelectorAll('tr[id^="P"]') ?? []) {
+      const g = tr.classList.contains('typeGerados') ? 'gerados' : grupo;
+      juntar(lerProcessoDaLinha(tr, { grupo: g, pagina, naPaginaAtual }));
+    }
   }
   if (detalhada) {
     const mapa = mapearCabecalho(detalhada);

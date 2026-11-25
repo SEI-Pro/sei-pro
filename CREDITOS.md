@@ -23,3 +23,7 @@ mantenedor quiser.
 | Gerar documento com modelo limpo | [pages/MODELOLIMPO.md](./pages/MODELOLIMPO.md) | [modelo-limpo/](./modelo-limpo/) |
 | Núcleo: estilos do editor lidos de `infra.estilo`, como chegam no SEI 5.0.5 | n/a | [sei-nucleo/src/dominio/editor.ts](./sei-nucleo/src/dominio/editor.ts) |
 | Botões de tabela do SEI Pro num grupo próprio da barra do CK5, para não se sobreporem | n/a | `inserirGrupoTabelaCK5` em [dist/js/sei-pro-editor.js](./dist/js/sei-pro-editor.js) |
+
+### Contribuição de @willmedina87
+
+Melhorias no Quadro da Grade do Controle (colunas reordenáveis e recolhíveis, largura ajustável, último marcador, cartões com anotação e checklist), prazos nos cartões do Quadro, correção do botão "Exibir Menu do Sistema" do Estilo Avançado e tratamento de contexto de extensão invalidado, CSV completo na Grade do Controle, correções no envio de PDF ao processo, enviadas no PR [#193](https://github.com/SEI-Pro/sei-pro/pull/193) por [willmedina87](https://github.com/willmedina87).

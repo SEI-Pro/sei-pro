@@ -29,10 +29,15 @@ const ATRASO_MS = 250;
 /** O tooltip do SEI costuma morar no <a> e o title na <img> de dentro: vale o elemento ou qualquer ancestral. */
 export const temTooltipDoSei = (el: Element): boolean => el.closest('[onmouseover*="infraTooltipMostrar"]') !== null;
 
+/** Botões cujo `title` o próprio SEI lê no clique para alternar estado (ex.: Exibir/Ocultar Menu do Sistema no SEI 4.1 e 5). */
+const SELETOR_PRESERVADO =
+  '#divInfraMenuSistema, #lnkInfraMenuSistema, #lnkInfraMenuSistemaMovel, [onclick*="MenuSistema"], [onclick*="MenuBootstrap"]';
+
 /** O botão da casca sob o ponteiro (com `title`, ou já suspenso), ou null se estiver fora dos escopos. */
 export function alvoDaDica(el: Element | null): Element | null {
   const alvo = el?.closest?.(SELETOR_ALVO) ?? null;
-  return alvo?.closest(SELETOR_ESCOPO) ? alvo : null;
+  if (!alvo || alvo.closest(SELETOR_PRESERVADO)) return null;
+  return alvo.closest(SELETOR_ESCOPO) ? alvo : null;
 }
 
 /** Liga os tooltips no documento. Devolve o desligador (devolve o `title` suspenso e remove a caixa). */
@@ -106,13 +111,13 @@ export function iniciarDicas(doc: Document): () => void {
 
   doc.addEventListener("mouseover", aoEntrar, true);
   doc.addEventListener("mouseout", aoSair, true);
-  doc.addEventListener("mousedown", esconder, true);
+  doc.addEventListener("mousedown", devolver, true);
   doc.addEventListener("scroll", esconder, true);
 
   return () => {
     doc.removeEventListener("mouseover", aoEntrar, true);
     doc.removeEventListener("mouseout", aoSair, true);
-    doc.removeEventListener("mousedown", esconder, true);
+    doc.removeEventListener("mousedown", devolver, true);
     doc.removeEventListener("scroll", esconder, true);
     devolver();
   };

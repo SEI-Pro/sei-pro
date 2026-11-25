@@ -189,6 +189,10 @@
   color: var(--spro-texto);
   border-right: 1px solid var(--spro-borda);
 }
+:root[data-spro-tema-ativo] .divInfraAreaTelaE.infraAreaTelaEEscondeGrande,
+:root[data-spro-tema-ativo] #divInfraAreaTelaE.infraAreaTelaEEscondeGrande {
+  border-right: 0;
+}
 :root[data-spro-tema-ativo] #divInfraPesquisarMenu {
   background-color: var(--spro-fundo);
   /* respiro antes e depois do campo: ele não cola na barra nem no primeiro item.

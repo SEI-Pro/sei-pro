@@ -12,6 +12,8 @@ export interface MarcadorLinha {
   /** Do nome do SVG do ícone (`marcador_azul_marinho.svg` -> `azul_marinho`). */
   cor: string;
   texto: string;
+  /** Instante (ms) em que o marcador foi atribuído, quando informado no HTML/tooltip. */
+  dataHora?: number;
 }
 
 export interface AnotacaoLinha {
@@ -43,6 +45,8 @@ export interface Processo {
   atribuicao?: { sigla: string; nome: string };
   /** Endereço (relativo ao SEI, assinado) que abre o processo. */
   link?: string;
+  /** Endereço assinado da tela de gerenciar marcadores (para consultar data/hora quando há mais de um). */
+  linkMarcadores?: string;
   marcadores: MarcadorLinha[];
   anotacao?: AnotacaoLinha;
   prazo?: PrazoProcesso;
@@ -54,6 +58,10 @@ export interface Processo {
   urgente?: boolean;
   trancado?: boolean;
   documentoNovo: boolean;
+  /** Texto do tooltip do ícone de exclamação (novo documento ou assinatura). */
+  documentoNovoDica?: string;
+  /** Ponto de controle da linha, quando presente. */
+  pontoControle?: string;
   /** Número da página do SEI (0 = a que o usuário está vendo). */
   pagina: number;
   /** A linha existe na tabela nativa da tela: só então há checkbox para espelhar. */
@@ -132,6 +140,14 @@ export interface ConfigQuadro {
   /** Limite de cartões por coluna (0 = sem limite). */
   limite: number;
   raiasPorResponsavel: boolean;
+  /** Ordem manual das colunas (chaves, ex.: ['m:Urgente', 'sem']), salva entre acessos. */
+  ordemColunas?: string[];
+  /** Colunas recolhidas (chaves), salvas entre acessos. */
+  colunasRecolhidas?: string[];
+  /** Mostra também as colunas de marcador sem processos (destinos para soltar). Padrão: ocultas. */
+  colunasVazias?: boolean;
+  /** Largura das colunas/cartões em pixels (200 a 500; padrão 280). */
+  larguraColuna?: number;
 }
 
 export interface Visao {

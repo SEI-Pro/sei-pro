@@ -50,8 +50,15 @@ export async function enviarAoProcesso(
   try {
     return await daPonte().enviarAoProcesso(saida, aoProgredir);
   } catch (e) {
-    const { codigo, tipos } = e as { codigo?: string; tipos?: TipoDocumentoSei[] };
-    if (codigo !== "SEI_TIPO_INDEFINIDO" || !tipos?.length) throw e;
+    const { codigo, detalhe, tipos } = e as {
+      codigo?: string;
+      detalhe?: string;
+      tipos?: TipoDocumentoSei[];
+    };
+    if (codigo !== "SEI_TIPO_INDEFINIDO" || !tipos?.length) {
+      console.warn("[SEI Pro][Ferramentas PDF] Falha ao enviar ao processo:", codigo, detalhe ?? e);
+      throw e;
+    }
 
     const escolhido = await perguntar(saida.nome, tipos, ultimoTipo);
     if (!escolhido) throw new ErroPonte("SEI_ENVIO_CANCELADO");

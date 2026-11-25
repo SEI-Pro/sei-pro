@@ -46,6 +46,15 @@ export function normalizarVisao(bruto: unknown): Visao {
     colunas = [...colunas.slice(0, i + 1), 'especificacao', ...colunas.slice(i + 1)];
   }
   const q = (b.quadro && typeof b.quadro === 'object' ? b.quadro : {}) as Record<string, unknown>;
+  const ordemColunas = Array.isArray(q.ordemColunas)
+    ? [...new Set(q.ordemColunas.filter((x): x is string => typeof x === 'string' && x.length > 0))].slice(0, 200)
+    : undefined;
+  const colunasRecolhidas = Array.isArray(q.colunasRecolhidas)
+    ? [...new Set(q.colunasRecolhidas.filter((x): x is string => typeof x === 'string' && x.length > 0))].slice(0, 200)
+    : undefined;
+  const larguraColuna = typeof q.larguraColuna === 'number' && Number.isFinite(q.larguraColuna)
+    ? Math.max(200, Math.min(500, Math.round(q.larguraColuna)))
+    : undefined;
   return {
     id: typeof b.id === 'string' ? b.id : '',
     colv: VERSAO_COLUNAS,
@@ -60,6 +69,10 @@ export function normalizarVisao(bruto: unknown): Visao {
       colunas: COLUNAS_QUADRO.includes(q.colunas as never) ? (q.colunas as ConfigQuadro['colunas']) : 'marcador',
       limite: typeof q.limite === 'number' && q.limite > 0 ? Math.min(99, Math.floor(q.limite)) : 0,
       raiasPorResponsavel: q.raiasPorResponsavel === true,
+      ...(ordemColunas?.length ? { ordemColunas } : {}),
+      ...(colunasRecolhidas?.length ? { colunasRecolhidas } : {}),
+      ...(larguraColuna !== undefined ? { larguraColuna } : {}),
+      ...(q.colunasVazias === true ? { colunasVazias: true } : {}),
     },
   };
 }

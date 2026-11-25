@@ -165,11 +165,27 @@ await teste('app: exportar CSV baixa a visão filtrada', async () => {
   assert.equal(baixados[0]![1].split('\r\n').length, 5);
   app.fechar();
 });
+await teste('app: CSV completo baixa a visão filtrada no formato ListaProcessos_SEIPro (21 colunas)', async () => {
+  const { app, baixados } = await montar();
+  app.definirVisao({ busca: 'resp:teste01' });
+  qa(app, '.spro-bt').find((b) => dicaDe(b).startsWith('CSV completo'))!.click();
+  assert.equal(baixados.length, 1);
+  assert.match(baixados[0]![0], /^ListaProcessos_SEIPro_\d{8}_\d{2}_\d{2}_\d{2}\.csv$/);
+  const linhas = baixados[0]![1].replace(/^\uFEFF/, '').split('\r\n');
+  assert.equal(linhas.length, 5);
+  assert.equal(
+    linhas[0],
+    'ID;Protocolo;Link_Permanente;Atribuicao;Etiqueta;Etiqueta_Descricao;Anotacao;Anotacao_Responsavel;Ponto_Controle;Especificacao;Tipo;Data_Autuacao;Data_Autuacao_Descricao;Data_Recebimento;Data_Recebimento_Descricao;Data_Envio;Data_Envio_Descricao;Unidade_Envio;Documento_Incluido;Observacoes;Acompanhamento_Especial',
+  );
+  app.fechar();
+});
 await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o aviso oferece desfazer', async () => {
   const { app, chamadas } = await montar();
   app.definirVisao({ modo: 'quadro' });
   const col = (chave: string) => qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === chave)!;
+  // Processo 148265 tem [Para Pessoa assinar, teste]; sem consultarDatasMarcadores usa o ultimo da lista (teste), sem duplicar.
   assert.ok(col('sem') && col('m:teste'));
+  assert.equal(col('m:Para Pessoa assinar'), undefined);
   const cartao = [...col('m:teste').querySelectorAll<HTMLElement>('.spro-cartao')][0]!;
   const id = cartao.getAttribute('data-id')!;
   const dt = new Map<string, string>();
@@ -177,12 +193,30 @@ await teste('app: quadro por marcador; arrastar move (acrescenta e remove) e o a
   const Ev = (cartao.ownerDocument.defaultView as any).Event;
   const ev = (tipo: string) => Object.assign(new Ev(tipo, { bubbles: true, cancelable: true }), { dataTransfer: transfer });
   cartao.dispatchEvent(ev('dragstart'));
-  col('m:Para Pessoa assinar').dispatchEvent(ev('drop'));
+  col('sem').dispatchEvent(ev('drop'));
   await tick(); await tick();
-  // O processo já tinha "Para Pessoa assinar": mover só retira o marcador de origem.
   assert.deepEqual(chamadas, ['99906.713-630.000032/2025-82 -teste']);
   assert.equal(id, '148265');
   assert.ok(qa(app, '.spro-aviso').length >= 1);
+  app.fechar();
+});
+await teste('app: quadro consulta data/hora real dos marcadores quando processo tem 2+ marcadores e posiciona no mais recente', async () => {
+  const consultados: string[] = [];
+  const { app } = await montar({
+    consultarDatasMarcadores: async (p) => {
+      consultados.push(p.id);
+      return {
+        'para pessoa assinar': Date.parse('2026-09-14T04:32:00Z'),
+        teste: Date.parse('2026-09-14T03:53:00Z'),
+      };
+    },
+  });
+  app.definirVisao({ modo: 'quadro' });
+  await tick(); await tick();
+  assert.deepEqual(consultados, ['148265']);
+  const col = (chave: string) => qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === chave);
+  assert.ok(col('m:Para Pessoa assinar'), 'moveu para o marcador com data/hora mais recente');
+  assert.equal(col('m:teste'), undefined, 'nao duplica no marcador mais antigo');
   app.fechar();
 });
 await teste('app: coluna só de leitura (prazo) não aceita soltar', async () => {
@@ -209,6 +243,77 @@ await teste('app: mover que o SEI recusa reverte e avisa', async () => {
   await tick(); await tick(); await tick();
   assert.equal(ids(), antes);
   assert.match(q(app, '.spro-aviso').textContent!, /sem permissão/);
+  app.fechar();
+});
+await teste('app: quadro reordena colunas por drag/drop, recolhe/expande coluna, ajusta largura e exibe anotacao e especificacao nos cartoes', async () => {
+  const local = areaMemoria();
+  const sync = areaMemoria();
+  const armazem = criarArmazem({ local, sync }, 'u-quadro');
+  const anotacoesSalvas: Array<{ protocolo: string; texto: string; prioridade: boolean }> = [];
+  const { app } = await montar({
+    armazem,
+    anotar: async (protocolo, a) => { anotacoesSalvas.push({ protocolo, ...a }); },
+  });
+  // Injeta anotacao com checklist e documentoNovo no processo 148265 para validar renderizacao e marcacao direta no card
+  const p = app.estado().todos.find((x) => x.id === '148265')!;
+  p.anotacao = { texto: 'Em Assinatura:\n[X] Everton\n[ ] Ricardo', autor: 'usr', prioridade: false };
+  p.documentoNovo = true;
+  p.documentoNovoDica = 'Um documento foi incluído ou assinado neste processo';
+  app.definirVisao({ modo: 'quadro' });
+  const chavesAntes = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
+  assert.ok(chavesAntes.length >= 2);
+  // Drag ultima coluna para a primeira posicao
+  const origem = chavesAntes[chavesAntes.length - 1]!;
+  const destino = chavesAntes[0]!;
+  const colDestino = qa(app, '.spro-col').find((c) => c.getAttribute('data-chave') === destino)!;
+  const Ev = (colDestino.ownerDocument.defaultView as any).Event;
+  const transferCol = { types: ['application/x-spro-coluna'], setData: () => undefined, getData: (t: string) => (t === 'application/x-spro-coluna' ? origem : '') };
+  colDestino.dispatchEvent(Object.assign(new Ev('drop', { bubbles: true, cancelable: true }), { dataTransfer: transferCol }));
+  await tick();
+  const chavesDepois = qa(app, '.spro-col').map((c) => c.getAttribute('data-chave')!);
+  assert.equal(chavesDepois[0], origem);
+  // Recolher e expandir a primeira coluna
+  const btnRecolher = qa(app, '.spro-col')[0]!.querySelector<HTMLButtonElement>('.spro-col-recolher')!;
+  btnRecolher.click();
+  await tick();
+  assert.ok(qa(app, '.spro-col')[0]!.classList.contains('spro-col-recolhida'));
+  assert.deepEqual(app.estado().visao.quadro.colunasRecolhidas, [origem]);
+  // Expandir novamente para testar o checklist dentro do card
+  qa(app, '.spro-col')[0]!.querySelector<HTMLButtonElement>('.spro-col-recolher')!.click();
+  await tick();
+  assert.ok(!qa(app, '.spro-col')[0]!.classList.contains('spro-col-recolhida'));
+  // Aumentar largura das colunas via botao '+'
+  const btnMais = qa(app, '.spro-largura-bt')[1]!;
+  btnMais.click();
+  await tick();
+  assert.equal(app.estado().visao.quadro.larguraColuna, 300);
+  assert.equal(q<HTMLElement>(app, '.spro-quadro').style.getPropertyValue('--spro-col-largura'), '300px');
+  // Cartoes exibem especificacao, anotacao com checklist, exclamacao de documento novo e outros marcadores
+  assert.ok(qa(app, '.spro-cartao-espec').length > 0);
+  assert.ok(qa(app, '.spro-cartao-anotacao').length > 0);
+  const excl = q(app, '.spro-cartao-excl');
+  assert.match(dicaDe(excl), /documento foi incluído ou assinado/i);
+  const outrosMarc = qa(app, '.spro-cartao-marc-ic');
+  assert.equal(outrosMarc.length, 1);
+  assert.match(dicaDe(outrosMarc[0]!), /Para Pessoa assinar/);
+  const checks = qa(app, '.spro-anot-check');
+  assert.equal(checks.length, 2);
+  assert.equal(checks[0]!.getAttribute('aria-checked'), 'true');
+  assert.equal(checks[1]!.getAttribute('aria-checked'), 'false');
+  // Marcar o segundo item do checklist diretamente no card
+  (checks[1] as HTMLButtonElement).click();
+  await tick(); await tick();
+  assert.equal(anotacoesSalvas.length, 1);
+  assert.equal(anotacoesSalvas[0]!.texto, 'Em Assinatura:\n[X] Everton\n[X] Ricardo');
+  assert.equal(qa(app, '.spro-anot-check')[1]!.getAttribute('aria-checked'), 'true');
+  // Clicar no conteiner da anotacao abre o modal de edicao sem sair da tela
+  q<HTMLElement>(app, '.spro-cartao-anotacao').click();
+  await tick();
+  assert.ok(app.host.shadowRoot!.querySelector('.spro-pi-editor'), 'modal de edicao de anotacao aberto');
+  // Persistencia no armazem para proximos acessos
+  const salvo = await armazem.lerEstado();
+  assert.equal(salvo.visao.quadro.ordemColunas?.[0], origem);
+  assert.equal(salvo.visao.quadro.larguraColuna, 300);
   app.fechar();
 });
 await teste('app: visão salva persiste e reaplica (visões no sync)', async () => {
@@ -365,6 +470,16 @@ await teste('app: sem prazo ainda ha botao "definir prazo" (a celula vazia tambe
   const { app } = await montar();
   const l = qa(app, '.spro-linha').find((x) => x.getAttribute('data-id') === '157584')!;
   assert.ok(l.querySelector('.spro-prazo-b .spro-prazo-vazio') || l.querySelector('.spro-prazo-b'));
+  app.fechar();
+});
+await teste('app: no Quadro, clicar no prazo ou em "definir" abre o menu do modulo de prazos', async () => {
+  prazosAbertos.length = 0;
+  const { app } = await montar();
+  qa(app, '.spro-seg-b').find((b) => b.getAttribute('data-modo') === 'quadro')!.click();
+  const card = qa(app, '.spro-cartao').find((c) => c.getAttribute('data-id') === '150098');
+  assert.ok(card, 'cartao presente no quadro');
+  card!.querySelector<HTMLElement>('.spro-prazo-b')!.click();
+  assert.deepEqual(prazosAbertos, ['150098']);
   app.fechar();
 });
 await teste('app: sincroniza com a linha nativa — a estrela clicada em outro modulo aparece na grade', async () => {

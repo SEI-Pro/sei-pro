@@ -77,7 +77,14 @@ export function conectarAoSei(): void {
    */
   function escolher() {
     const anterior = escolhida;
-    escolhida = abas.find((a) => a.info.idProcedimento) ?? abas[0] ?? null;
+    const comProcesso = abas.filter((a) => a.info.idProcedimento);
+    const candidatas = comProcesso.length ? comProcesso : abas;
+    escolhida =
+      candidatas.reduce<AbaSei | null>(
+        (melhor, atual) =>
+          !melhor || (atual.info.ativoEm ?? 0) > (melhor.info.ativoEm ?? 0) ? atual : melhor,
+        null,
+      ) ?? null;
     if (escolhida !== anterior) avisar();
   }
 

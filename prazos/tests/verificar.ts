@@ -159,6 +159,10 @@ await teste('nativo: o grupo (hdn*) vem da tabela da linha', () => {
   assert.equal(grupoDaLinha(d, '150098'), 'Recebidos');
   assert.equal(grupoDaLinha(d, '7318'), 'Gerados');
   assert.equal(grupoDaLinha(d, '999'), null);
+  const clone = d.querySelector('tr#P7318')!.cloneNode(true) as Element;
+  clone.classList.add('typeGerados');
+  d.querySelector('#tblProcessosRecebidos tbody')!.append(clone);
+  assert.equal(grupoDaLinha(d, '7318'), 'Gerados');
 });
 await teste('resposta: sucesso é sair do formulário; erro vem de #divInfraMensagens', () => {
   assert.deepEqual(interpretarResposta(pagina(`${SEI}controlador.php?acao=procedimento_controlar&acao_origem=controle_prazo_definir`, fx('caixa_prazos.html'))).ok, true);
@@ -447,6 +451,32 @@ await teste('células: clique na célula abre o modal da linha; o link do legado
   assert.deepEqual(aberturas, [['150098']]);
   c.desligar();
   assert.equal(doc.querySelector('td.prazoBoxDisplay[data-spro-prazo]'), null);
+});
+await teste('células: no Quadro (#processosKanban), clique no prazo abre o modal e desenharCelula sincroniza o cartão', () => {
+  const doc = caixaComCelulas();
+  const kanban = doc.createElement('div');
+  kanban.id = 'processosKanban';
+  const item = doc.createElement('div');
+  item.className = 'kanban-item';
+  item.setAttribute('data-eid', '150098');
+  const prazoSpan = doc.createElement('span');
+  prazoSpan.setAttribute('data-type', 'prazo');
+  item.append(prazoSpan);
+  kanban.append(item);
+  doc.body.append(kanban);
+
+  const s = servicoDe();
+  const servico = new ServicoPrazos({ doc, url: SEI, http: s.servico['d'].http, hoje: () => H, escreverMarcador: async () => {} });
+  const aberturas: string[][] = [];
+  const c = iniciarCelulas(doc, servico, () => H, ids => aberturas.push(ids));
+  c.ligar();
+  const alvo = doc.querySelector('#processosKanban .kanban-item[data-eid="150098"] [data-type="prazo"] .dateboxDisplay');
+  assert.ok(alvo, 'cartão do Kanban sincronizado com o prazo da linha');
+  const Ev = (doc.defaultView as unknown as { Event: typeof Event }).Event;
+  alvo!.dispatchEvent(new Ev('click', { bubbles: true, cancelable: true }));
+  assert.deepEqual(aberturas, [['150098']]);
+  c.desligar();
+  assert.equal(doc.querySelector('#processosKanban [data-type="prazo"][data-spro-prazo]'), null);
 });
 
 // ---------------- Fase 3: modal ----------------

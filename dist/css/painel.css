@@ -845,6 +845,7 @@ dialog.spro-dialogo > header h2 {
   flex: 1;
   min-width: 0;
   margin: 0;
+  text-align: left;
   font-size: 15.5px;
   font-weight: 650;
   letter-spacing: -0.005em;

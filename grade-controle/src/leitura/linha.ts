@@ -20,17 +20,30 @@ export interface ContextoLinha {
 
 const COR = /marcador_([a-z0-9_]+)\.svg/i;
 
+const DATA_HORA_RE = /\b(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?\b/;
+
+function extrairDataHora(textoBruto: string): number | undefined {
+  const m = DATA_HORA_RE.exec(textoBruto);
+  if (!m) return undefined;
+  const dt = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4] ?? 0), Number(m[5] ?? 0), Number(m[6] ?? 0)).getTime();
+  return Number.isFinite(dt) ? dt : undefined;
+}
+
 function lerMarcadores(tr: Element): MarcadorLinha[] {
   const saida: MarcadorLinha[] = [];
   for (const a of tr.querySelectorAll('a[href*="acao=andamento_marcador_gerenciar"]')) {
     const args = chamadas(a.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
-    const rotulo = /^Marcador\s*\/\s*(.*)$/s.exec(decodificarEntidades(a.getAttribute('aria-label') ?? '').trim());
+    const aria = decodificarEntidades(a.getAttribute('aria-label') ?? '').trim();
+    const rotulo = /^Marcador\s*\/\s*(.*)$/s.exec(aria);
     const nome = (typeof args?.[1] === 'string' && args[1] ? texto(args[1]) : (rotulo?.[1] ?? '')).trim();
     if (!nome) continue;
+    const textoMarcador = typeof args?.[0] === 'string' ? texto(args[0]).trim() : '';
+    const dataHora = extrairDataHora(aria) ?? extrairDataHora(textoMarcador);
     saida.push({
       nome,
       cor: COR.exec(a.querySelector('img')?.getAttribute('src') ?? '')?.[1] ?? '',
-      texto: typeof args?.[0] === 'string' ? texto(args[0]).trim() : '',
+      texto: textoMarcador,
+      ...(dataHora !== undefined ? { dataHora } : {}),
     });
   }
   return saida;
@@ -94,6 +107,30 @@ export function lerProcessoDaLinha(tr: Element, ctx: ContextoLinha): Processo | 
   }
   const href = tr.querySelector('a[href*="acao=procedimento_trabalhar"]')?.getAttribute('href');
   if (href) processo.link = decodificarEntidades(href);
+  const hrefMarc = tr.querySelector('a[href*="acao=andamento_marcador_gerenciar"]')?.getAttribute('href');
+  if (hrefMarc && !base.sigiloso) processo.linkMarcadores = decodificarEntidades(hrefMarc);
+  const exclImg = tr.querySelector('img[src*="exclamacao"]');
+  const excl = exclImg?.closest('a') ?? exclImg;
+  if (excl) {
+    const argsExcl = chamadas(excl.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
+    const dicaExcl = (
+      (typeof argsExcl?.[0] === 'string' && argsExcl[0] ? texto(argsExcl[0]) : '') ||
+      decodificarEntidades(excl.getAttribute('aria-label') ?? '') ||
+      decodificarEntidades(excl.getAttribute('title') ?? '') ||
+      decodificarEntidades(exclImg?.getAttribute('title') ?? '') ||
+      decodificarEntidades(exclImg?.getAttribute('alt') ?? '')
+    ).trim();
+    if (dicaExcl) processo.documentoNovoDica = dicaExcl;
+  }
+  const pc = tr.querySelector('a[href*="andamento_situacao_gerenciar"]');
+  if (pc && !base.sigiloso) {
+    const argsPc = chamadas(pc.getAttribute('onmouseover') ?? '', 'infraTooltipMostrar')[0];
+    const txtPc = (
+      (typeof argsPc?.[0] === 'string' && argsPc[0] ? texto(argsPc[0]) : '') ||
+      decodificarEntidades(pc.getAttribute('aria-label') ?? '')
+    ).trim();
+    if (txtPc) processo.pontoControle = txtPc;
+  }
   const atribuicao = lerAtribuicao(tr);
   if (atribuicao) processo.atribuicao = atribuicao;
   if (!base.sigiloso) {

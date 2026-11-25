@@ -28,7 +28,10 @@ export function hrefDaBarra(doc: Document, acao: string): string | null {
 
 /** "Recebidos", "Gerados" ou "Detalhado": a tabela da linha dá o nome do grupo dos `hdn*`. */
 export function grupoDaLinha(doc: Document, idProcedimento: string): string | null {
-  const id = doc.querySelector(`tr#P${idProcedimento}`)?.closest('table')?.id ?? '';
+  const tr = doc.querySelector(`tr#P${idProcedimento}:not(.typeGerados)`) ?? doc.querySelector(`tr#P${idProcedimento}`);
+  if (!tr) return null;
+  if (tr.classList.contains('typeGerados')) return 'Gerados';
+  const id = tr.closest('table')?.id ?? '';
   const m = /^tblProcessos(Recebidos|Gerados|Detalhado)$/.exec(id);
   return m ? m[1]! : null;
 }

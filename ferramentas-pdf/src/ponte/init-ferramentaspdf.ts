@@ -117,8 +117,12 @@ try {
   /* sem storage */
 }
 
-// O contexto muda quando o usuário abre um processo sem trocar de aba.
+// O contexto muda quando o usuário abre um processo sem trocar de aba ou alterna entre abas do SEI.
 window.addEventListener("hashchange", apresentar);
+window.addEventListener("focus", apresentar);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) apresentar();
+});
 
 /**
  * Batida de manutenção.

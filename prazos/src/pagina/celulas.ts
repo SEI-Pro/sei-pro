@@ -35,6 +35,16 @@ function linhas(doc: Document): Element[] {
   return [...doc.querySelectorAll(TABELAS)].flatMap((t) => [...t.querySelectorAll('tr[id^="P"]')]).filter((tr) => tr.querySelector(SELETOR_CELULA));
 }
 
+function sincronizarCartao(doc: Document, id: string, celula: HTMLElement): void {
+  const destino = doc.querySelector(`#processosKanban .kanban-item[data-eid="${id}"] [data-type="prazo"]`);
+  if (!destino) return;
+  const chave = celula.getAttribute('data-spro-prazo') ?? '';
+  if (destino.getAttribute('data-spro-prazo') !== chave) {
+    destino.setAttribute('data-spro-prazo', chave);
+    destino.replaceChildren(...[...celula.childNodes].map((n) => n.cloneNode(true)));
+  }
+}
+
 export function desenharCelula(doc: Document, tr: Element, servico: ServicoPrazos, hoje: DataISO): void {
   const celula = tr.querySelector(SELETOR_CELULA) as HTMLElement | null;
   if (!celula) return;
@@ -57,6 +67,7 @@ export function desenharCelula(doc: Document, tr: Element, servico: ServicoPrazo
       }
     }
     tr.classList.remove('infraTrAtrasada', 'infraTrAlerta');
+    sincronizarCartao(doc, id, celula);
     return;
   }
   const r = resumir(prazo, hoje);
@@ -78,6 +89,7 @@ export function desenharCelula(doc: Document, tr: Element, servico: ServicoPrazo
   }
   tr.classList.toggle('infraTrAtrasada', r.situacao === 'atrasado');
   tr.classList.toggle('infraTrAlerta', r.situacao === 'hoje');
+  sincronizarCartao(doc, id, celula);
 }
 
 export function iniciarCelulas(doc: Document, servico: ServicoPrazos, hoje: () => DataISO, abrir: (ids: string[]) => void) {
@@ -114,13 +126,23 @@ export function iniciarCelulas(doc: Document, servico: ServicoPrazos, hoje: () =
   function aoClicar(ev: Event) {
     const alvo = ev.target as Element | null;
     const celula = alvo?.closest?.(SELETOR_CELULA);
-    if (!celula?.closest(TABELAS)) return;
-    const tr = celula.closest('tr[id^="P"]');
-    if (!tr) return;
-    // Em captura e parando aqui: o link "Adicionar prazo" que o legado deixou (com onclick) não abre outro modal.
-    ev.preventDefault();
-    ev.stopPropagation();
-    abrir([tr.id.replace(/^P/, '')]);
+    if (celula?.closest(TABELAS)) {
+      const tr = celula.closest('tr[id^="P"]');
+      if (!tr) return;
+      // Em captura e parando aqui: o link "Adicionar prazo" que o legado deixou (com onclick) não abre outro modal.
+      ev.preventDefault();
+      ev.stopPropagation();
+      abrir([tr.id.replace(/^P/, '')]);
+      return;
+    }
+    const item = alvo?.closest?.('#processosKanban .kanban-item');
+    if (item && alvo?.closest?.('[data-type="prazo"] .addControlePrazo, [data-type="prazo"] .dateboxDisplay')) {
+      const id = item.getAttribute('data-eid');
+      if (!id) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      abrir([id]);
+    }
   }
   function aoTeclar(ev: Event) {
     const k = (ev as KeyboardEvent).key;
@@ -143,7 +165,7 @@ export function iniciarCelulas(doc: Document, servico: ServicoPrazos, hoje: () =
       observador?.disconnect();
       doc.removeEventListener('click', aoClicar, true);
       doc.removeEventListener('keydown', aoTeclar, true);
-      for (const celula of doc.querySelectorAll(`${SELETOR_CELULA}[data-spro-prazo]`)) {
+      for (const celula of doc.querySelectorAll(`${SELETOR_CELULA}[data-spro-prazo], #processosKanban [data-type="prazo"][data-spro-prazo]`)) {
         celula.removeAttribute('data-spro-prazo');
         celula.replaceChildren();
       }

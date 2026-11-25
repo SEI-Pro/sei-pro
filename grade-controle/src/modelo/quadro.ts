@@ -3,7 +3,7 @@
  * precisaria fazer, e `acoes/mover.ts` executa. Assim o plano é testável sem rede.
  */
 import type { Ctx } from './contexto';
-import { FAIXAS_PRAZO, faixaDoPrazo } from './grupos';
+import { FAIXAS_PRAZO, faixaDoPrazo, ultimoMarcador } from './grupos';
 import type { ConfigQuadro, Processo } from './tipos';
 
 export interface ColunaQuadro {
@@ -40,11 +40,16 @@ export function montarQuadro(processos: Processo[], cfg: ConfigQuadro, ctx: Ctx,
   };
 
   if (cfg.colunas === 'marcador') {
-    coluna(SEM, 'Sem marcador', true);
-    for (const nome of [...(extras.marcadores ?? [])].sort(colador.compare)) coluna(`m:${nome}`, nome, true);
+    // Colunas vazias são os únicos destinos para marcar um processo com um marcador que ninguém tem ainda:
+    // por padrão ficam ocultas (sem rolagem à toa), mas quem quer arrastar para elas as liga na barra do quadro.
+    if (cfg.colunasVazias) {
+      coluna(SEM, 'Sem marcador', true);
+      for (const nome of [...(extras.marcadores ?? [])].sort(colador.compare)) coluna(`m:${nome}`, nome, true);
+    }
     for (const p of processos) {
-      if (!p.marcadores.length) coluna(SEM, 'Sem marcador', true).itens.push(p);
-      for (const m of p.marcadores) coluna(`m:${m.nome}`, m.nome, true).itens.push(p);
+      const m = ultimoMarcador(p);
+      if (!m) coluna(SEM, 'Sem marcador', true).itens.push(p);
+      else coluna(`m:${m.nome}`, m.nome, true).itens.push(p);
     }
   } else if (cfg.colunas === 'responsavel') {
     coluna(SEM, 'Sem responsável', true);
@@ -65,13 +70,45 @@ export function montarQuadro(processos: Processo[], cfg: ConfigQuadro, ctx: Ctx,
 
   let lista = [...colunas.values()];
   if (cfg.colunas === 'prazo') lista = lista.filter((c) => c.itens.length || c.titulo);
-  if (cfg.colunas === 'marcador' || cfg.colunas === 'responsavel') {
+  if (cfg.colunas === 'marcador') {
+    if (!cfg.colunasVazias) lista = lista.filter((c) => c.itens.length > 0);
+    lista.sort((a, b) => {
+      const diff = b.itens.length - a.itens.length;
+      if (diff !== 0) return diff;
+      if (a.chave === SEM) return 1;
+      if (b.chave === SEM) return -1;
+      return colador.compare(a.titulo, b.titulo);
+    });
+  } else if (cfg.colunas === 'responsavel') {
     lista.sort((a, b) => (a.chave === SEM ? -1 : b.chave === SEM ? 1 : colador.compare(a.titulo, b.titulo)));
   } else if (cfg.colunas === 'tipo') {
     lista.sort((a, b) => colador.compare(a.titulo, b.titulo));
   }
+  if (cfg.ordemColunas?.length) {
+    const pos = new Map(cfg.ordemColunas.map((k, i) => [k, i]));
+    lista.sort((a, b) => {
+      const pa = pos.get(a.chave);
+      const pb = pos.get(b.chave);
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return 0;
+    });
+  }
   if (cfg.limite > 0) for (const c of lista) c.excedeu = c.itens.length > cfg.limite;
   return lista;
+}
+
+/** Reordena a lista de chaves movendo `de` para a posição de `para`. */
+export function reordenarColunas(chaves: string[], de: string, para: string): string[] {
+  if (de === para) return [...chaves];
+  const iDe = chaves.indexOf(de);
+  const iPara = chaves.indexOf(para);
+  if (iDe < 0 || iPara < 0) return [...chaves];
+  const nova = [...chaves];
+  nova.splice(iDe, 1);
+  nova.splice(iPara, 0, de);
+  return nova;
 }
 
 export type Movimento =
@@ -119,6 +156,6 @@ export function aplicarMovimento(p: Processo, mov: Movimento, nomes: Record<stri
   }
   let marcadores = p.marcadores;
   if (mov.remover) marcadores = marcadores.filter((m) => m.nome !== mov.remover);
-  if (mov.adicionar) marcadores = [...marcadores, { nome: mov.adicionar, cor: '', texto: mov.texto ?? '' }];
+  if (mov.adicionar) marcadores = [...marcadores, { nome: mov.adicionar, cor: '', texto: mov.texto ?? '', dataHora: Date.now() }];
   return { ...p, marcadores };
 }
