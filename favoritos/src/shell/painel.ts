@@ -9,7 +9,7 @@ import { CHAVE_CONTADOR_DEMANDAS, CHAVE_CONTADOR_PROJETOS, TETO_CONTADOR_DEMANDA
 import { CHAVE_ABA, type DefAba, montarAbas } from "@comum/painel/shell";
 
 export { CHAVE_ABA };
-export type AbaPainel = "favoritos" | "historico" | "projetos" | "demandas" | "agente";
+export type AbaPainel = "favoritos" | "historico" | "projetos" | "demandas" | "conhecimento" | "agente";
 
 export interface DepsShell {
   sessao: Area;
@@ -22,6 +22,8 @@ export interface DepsShell {
   temProjetos?: boolean;
   /** O Gestor de Demandas está no manifest (js/init_demandas.js). Padrão: false. */
   temDemandas?: boolean;
+  /** A Base de Conhecimento em pastas está no manifest (js/init_base_conhecimento.js). Padrão: false. */
+  temConhecimento?: boolean;
   url(caminho: string): string;
   /** Aba pedida pelo endereço (`#aba=agente`), quando o painel abre numa janela comum (Firefox). */
   abaDoEndereco?: AbaPainel | null;
@@ -44,7 +46,7 @@ export interface ManifestoDoPacote {
  */
 export function ferramentasDoPacote(
   m: ManifestoDoPacote,
-): Required<Pick<DepsShell, "temAgente" | "temFavoritos" | "temHistorico" | "temProjetos" | "temDemandas">> {
+): Required<Pick<DepsShell, "temAgente" | "temFavoritos" | "temHistorico" | "temProjetos" | "temDemandas" | "temConhecimento">> {
   const tem = (arquivo: string) => (m.content_scripts ?? []).some((c) => c.js?.includes(arquivo) === true);
   return {
     temAgente: tem("js/init_agente.js"),
@@ -52,10 +54,11 @@ export function ferramentasDoPacote(
     temHistorico: tem("js/init_historico.js"),
     temProjetos: tem("js/init_projetos.js"),
     temDemandas: tem("js/init_demandas.js"),
+    temConhecimento: tem("js/init_base_conhecimento.js"),
   };
 }
 
-const ABAS: readonly AbaPainel[] = ["favoritos", "historico", "projetos", "demandas", "agente"];
+const ABAS: readonly AbaPainel[] = ["favoritos", "historico", "projetos", "demandas", "conhecimento", "agente"];
 
 /** A aba pedida pelo endereço (`#aba=projetos`), quando o painel abre numa janela comum (Firefox); outra coisa: nenhuma. */
 export function abaPedidaNoEndereco(hash: string): AbaPainel | null {
@@ -120,6 +123,17 @@ export async function montarShell(raiz: HTMLElement, d: DepsShell): Promise<{ mo
               dica: (n: number) => `${n} ${n === 1 ? "demanda sua atrasada" : "demandas suas atrasadas"} na unidade`,
               teto: TETO_CONTADOR_DEMANDAS,
             },
+          } satisfies DefAba,
+        ]
+      : []),
+    ...(d.temConhecimento === true
+      ? [
+          {
+            id: "conhecimento",
+            rotulo: "Conhecimento",
+            icone: "pasta",
+            caminho: "html/base-conhecimento.html#modo=lateral",
+            titulo: "Base de Conhecimento em pastas",
           } satisfies DefAba,
         ]
       : []),

@@ -74,7 +74,7 @@ export function verificarRender(): void {
   checar("3 secoes na ordem", secoes.map((s) => s.getAttribute("data-secao")).join() === "controle,editor,arvore");
   checar("so a primeira abre", secoes.map((s) => s.hasAttribute("open")).join() === "true,false,false");
   checar("titulo na summary", (secoes[0].querySelector("summary .secao-titulo") as Element).textContent === SECOES_GERAL[0].titulo);
-  checar("71 linhas em Geral", geral.querySelectorAll(".opcao").length === 71);
+  checar("72 linhas em Geral", geral.querySelectorAll(".opcao").length === 72);
   checar(
     "ajuda vira title do rotulo",
     ((geral.querySelector('[data-opcao="gerenciardemandas"] label.rotulo') as Element | null)?.getAttribute("title") ?? "").includes(
