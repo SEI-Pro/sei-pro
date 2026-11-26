@@ -1,5 +1,5 @@
 import type { ConfigTema } from "./config";
-import { derivarBarra, type Esquema } from "./paleta";
+import { contraste, deOklch, derivarBarra, type Esquema, FUNDOS, paraOklch } from "./paleta";
 
 /** Superfícies em camadas (pagina < fundo < fundo-2 < fundo-3); as do escuro são as de ui/base.css. */
 const SUPERFICIES: Record<Esquema, Record<string, string>> = {
@@ -55,14 +55,60 @@ const SUPERFICIES: Record<Esquema, Record<string, string>> = {
   },
 };
 
+/** Camadas que acompanham o tom do fundo (as demais, como os tons semânticos e as sombras, ficam como estão). */
+const CAMADAS = ["--spro-pagina", "--spro-fundo-2", "--spro-fundo-3", "--spro-borda", "--spro-borda-forte"] as const;
+/** Contraste mínimo de cada texto com a camada mais próxima dele (fundo-3): o que o tema original já tem nos dois esquemas. */
+const TEXTOS = [
+  ["--spro-texto", 10.5],
+  ["--spro-suave", 4.8],
+  ["--spro-fraco", 2.7],
+] as const;
+
+/**
+ * SEI Pro Lab: superfícies e textos a partir de um tom de fundo. As camadas mantêm a mesma distância de
+ * luminosidade (OKLCH) que têm no tema original, com o matiz do tom escolhido; o texto ganha um pouco do
+ * matiz e anda na luminosidade até ter contraste. O tom padrão devolve a tabela original, sem cálculo.
+ */
+export function superficiesDoFundo(esquema: Esquema, fundo: string | undefined): Record<string, string> {
+  const original = SUPERFICIES[esquema];
+  if (!fundo || fundo.toLowerCase() === FUNDOS[esquema][0]!.cor) return original;
+  const ref = paraOklch(original["--spro-fundo"]!);
+  const base = paraOklch(fundo);
+  // O tom não pode ir para o lado errado do esquema (fundo claro no modo escuro e vice-versa).
+  const l = esquema === "escuro" ? Math.min(base.l, 0.27) : Math.max(base.l, 0.88);
+  // Fundo escuro muito saturado (vermelho puro, verde-limão) cansa a vista e não deixa o texto chegar ao contraste.
+  if (esquema === "escuro") base.c = Math.min(base.c, 0.05);
+  const lim = (x: number) => Math.min(1, Math.max(0, x));
+  const saida: Record<string, string> = { ...original, "--spro-fundo": deOklch({ l, c: base.c, h: base.h }) };
+  for (const k of CAMADAS) {
+    const o = paraOklch(original[k]!);
+    saida[k] = deOklch({ l: lim(l + (o.l - ref.l)), c: base.c, h: base.h });
+  }
+  const camada = saida["--spro-fundo-3"]!;
+  const passo = esquema === "escuro" ? 0.01 : -0.01;
+  for (const [k, minimo] of TEXTOS) {
+    const o = paraOklch(original[k]!);
+    const c = Math.min(base.c * 0.6, 0.035);
+    let lt = o.l;
+    let cor = deOklch({ l: lt, c, h: base.h });
+    for (let i = 0; i < 100 && contraste(cor, camada) < minimo; i++) {
+      lt = lim(lt + passo);
+      cor = deOklch({ l: lt, c, h: base.h });
+    }
+    saida[k] = cor;
+  }
+  return saida;
+}
+
 /** Texto de um destaque: branco, ou quase-preto no escuro (onde o destaque é claro). */
 const TEXTO_DO_DESTAQUE: Record<Esquema, string> = { claro: "#ffffff", escuro: "#0a1526" };
 
 /** Tokens do tema como pares nome/valor (sem seletor). */
 export function gerarTokens(cfg: ConfigTema, esquema: Esquema): Record<string, string> {
-  const b = derivarBarra(cfg.corBarra, esquema);
+  const sup = superficiesDoFundo(esquema, esquema === "escuro" ? cfg.fundoEscuro : cfg.fundoClaro);
+  const b = derivarBarra(cfg.corBarra, esquema, sup["--spro-fundo"]);
   return {
-    ...SUPERFICIES[esquema],
+    ...sup,
     "--spro-barra": b.barra,
     "--spro-barra-texto": b.texto,
     "--spro-barra-hover": b.hover,
@@ -90,6 +136,33 @@ export function gerarTokens(cfg: ConfigTema, esquema: Esquema): Record<string, s
  * e, depois, a folha base (quem a escreve usa só `var(--spro-*)`).
  */
 export function gerarFolha(cfg: ConfigTema, esquema: Esquema, baseCss = ""): string {
-  const linhas = Object.entries(gerarTokens(cfg, esquema)).map(([k, v]) => `  ${k}: ${v};`);
-  return `:root[data-spro-tema-ativo] {\n${linhas.join("\n")}\n  color-scheme: ${esquema === "escuro" ? "dark" : "light"};\n}\n${baseCss}`;
+  const tokens = gerarTokens(cfg, esquema);
+  const linhas = Object.entries(tokens).map(([k, v]) => `  ${k}: ${v};`);
+  return `:root[data-spro-tema-ativo] {\n${linhas.join("\n")}\n  color-scheme: ${esquema === "escuro" ? "dark" : "light"};\n}\n${cssDosHospedeiros(cfg, esquema, tokens)}${baseCss}`;
+}
+
+/**
+ * SEI Pro Lab: componentes do SEI Pro que vivem em Shadow DOM (o Controle de Processos novo, as janelas de prazos,
+ * blocos de assinatura e ordem dos painéis, o balão de projetos) definem as próprias cores no `:host` e não herdam
+ * as da página. Uma regra de fora, no elemento hospedeiro, vence a do `:host`: é por ela que o tom de fundo chega
+ * lá dentro. Só as superfícies, os textos e o destaque; e só com um tom escolhido (no padrão, nada muda).
+ */
+export const HOSPEDEIROS = "#spro-grade, #spro-dica-host, .spro-pnl-host, .spro-blk-host, .spro-prz-host, .spro-prj-balao";
+const DO_TOM = [
+  "--spro-fundo",
+  "--spro-fundo-2",
+  "--spro-fundo-3",
+  "--spro-pagina",
+  "--spro-borda",
+  "--spro-borda-forte",
+  "--spro-texto",
+  "--spro-suave",
+  "--spro-fraco",
+  "--spro-destaque",
+];
+function cssDosHospedeiros(cfg: ConfigTema, esquema: Esquema, tokens: Record<string, string>): string {
+  const fundo = esquema === "escuro" ? cfg.fundoEscuro : cfg.fundoClaro;
+  if (!fundo || fundo.toLowerCase() === FUNDOS[esquema][0]!.cor) return "";
+  const linhas = DO_TOM.filter((k) => tokens[k]).map((k) => `  ${k}: ${tokens[k]};`);
+  return `:root[data-spro-tema-ativo] :is(${HOSPEDEIROS}) {\n${linhas.join("\n")}\n}\n`;
 }

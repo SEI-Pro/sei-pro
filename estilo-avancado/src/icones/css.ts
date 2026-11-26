@@ -1,6 +1,7 @@
 import { type Forma, ICONES } from "@comum/ui/dom";
 import { ICONES_EXTRAS } from "./extras";
 import { type ContextoIcone, type EntradaIcone, MAPA_ICONES, MAPA_MENU_PRO } from "./mapa";
+import { gerarCssPastilhas } from "./pastilhas";
 import { ICONES_PROPRIOS } from "./proprios";
 
 const TODOS: Record<string, Forma[]> = { ...(ICONES as Record<string, Forma[]>), ...ICONES_EXTRAS };
@@ -39,8 +40,8 @@ export function nomesDeIcones(): string[] {
  * essa opacidade e o contorno continua cheio por cima: o resultado é um ícone preenchido na cor do tom,
  * com os detalhes (linhas, pontos) ainda legíveis. Sem `preenchido`, é só traço.
  */
-export function svgDoIcone(nome: string, preenchido = 0): string {
-  const formas = TODOS[nome];
+export function svgDoIcone(nome: string, preenchido = 0, traco = 1.8): string {
+  const formas = TODOS[nome] ?? DESENHOS_DUOTOM[nome];
   if (!formas) throw new Error(`Ícone desconhecido: ${nome}`);
   const corpo = formas
     .map(([tag, attrs]) => {
@@ -54,7 +55,7 @@ export function svgDoIcone(nome: string, preenchido = 0): string {
       return `<${tag} ${a}${extra}/>`;
     })
     .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${corpo}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="${traco}" stroke-linecap="round" stroke-linejoin="round">${corpo}</svg>`;
 }
 
 /** Opacidade do preenchimento por contexto: as barras de ações são preenchidas, o resto é só traço. */
@@ -70,7 +71,36 @@ const seletor = (e: EntradaIcone) =>
     : `:root[data-spro-tema-ativo] ${ESCOPO[e.contexto]} img${e.daExtensao ? '[src^="chrome-extension"]' : ""}[src*="${e.src}"]`;
 
 /** CSS gerado: uma regra base por contexto (mesma mecânica para todos) e uma regra por ícone (só a máscara). */
-export function gerarCssIcones(mapa: EntradaIcone[] = MAPA_ICONES): string {
+/** SEI Pro Lab: variação de desenho do conjunto (o "Duotom" usa traço mais fino e um preenchimento suave em tudo). */
+export interface EstiloIcones {
+  preenchido?: number;
+  traco?: number;
+  /** Desenho que entra no lugar de outro só neste conjunto (nome do mapa -> nome em TODOS). */
+  trocar?: Record<string, string>;
+}
+
+/** SEI Pro Lab: desenhos que só o conjunto Duotom usa (mais próximos do que o item faz). */
+const DESENHOS_DUOTOM: Record<string, Forma[]> = {
+  megafoneDuo: [
+    ["path", { d: "M3.5 10.5v3a1 1 0 0 0 1 1H7l7.5 4.5V5L7 9.5H4.5a1 1 0 0 0-1 1z" }],
+    ["path", { d: "M7.5 14.5l1.2 4.6a1 1 0 0 0 1 .7h1.2" }],
+    ["path", { d: "M18 9.3c1.3.6 2.2 1.6 2.2 2.7s-.9 2.1-2.2 2.7" }],
+  ],
+  painelDuo: [
+    ["rect", { x: "3.5", y: "3.5", width: "7", height: "8", rx: "1.6" }],
+    ["rect", { x: "13.5", y: "3.5", width: "7", height: "5", rx: "1.6" }],
+    ["rect", { x: "13.5", y: "11.5", width: "7", height: "9", rx: "1.6" }],
+    ["rect", { x: "3.5", y: "14.5", width: "7", height: "6", rx: "1.6" }],
+  ],
+  graficoDuo: [
+    ["path", { d: "M4 20.5h16" }],
+    ["rect", { x: "5.5", y: "11", width: "3.2", height: "6.5", rx: "1" }],
+    ["rect", { x: "10.4", y: "5.5", width: "3.2", height: "12", rx: "1" }],
+    ["rect", { x: "15.3", y: "13.5", width: "3.2", height: "4", rx: "1" }],
+  ],
+};
+
+export function gerarCssIcones(mapa: EntradaIcone[] = MAPA_ICONES, estilo: EstiloIcones = {}): string {
   const partes: string[] = [];
   const proprios = mapa.filter((e) => e.proprio);
   if (proprios.length > 0) {
@@ -90,14 +120,14 @@ export function gerarCssIcones(mapa: EntradaIcone[] = MAPA_ICONES): string {
   }
   for (const e of mapa.filter((x) => !x.proprio)) {
     partes.push(
-      `${seletor(e)} {\n  -webkit-mask-image: ${uri(svgDoIcone(e.icone, PREENCHIMENTO[e.contexto] ?? 0))};${e.tom ? `\n  color: var(--${e.tom === "perigo" ? "spro-perigo" : `spro-tom-${e.tom}`});` : ""}\n}`,
+      `${seletor(e)} {\n  -webkit-mask-image: ${uri(svgDoIcone(estilo.trocar?.[e.icone] ?? e.icone, estilo.preenchido ?? PREENCHIMENTO[e.contexto] ?? 0, estilo.traco))};${e.tom ? `\n  color: var(--${e.tom === "perigo" ? "spro-perigo" : `spro-tom-${e.tom}`});` : ""}\n}`,
     );
   }
   return partes.join("\n");
 }
 
 /** Itens do SEI Pro no menu: esconde o glifo inline e pinta o desenho novo por máscara no próprio <svg>. */
-export function gerarCssMenuPro(mapa = MAPA_MENU_PRO): string {
+export function gerarCssMenuPro(mapa = MAPA_MENU_PRO, estilo: EstiloIcones = {}): string {
   const base = `:root[data-spro-tema-ativo] #infraMenu a.newLinksMenuPro > svg.iconMenuPro`;
   const partes = [
     `${base} {\n  box-sizing: border-box;\n  flex: none;\n  margin: 0 5px 0 6px !important;\n  background-color: currentColor;\n  -webkit-mask-repeat: no-repeat;\n  -webkit-mask-position: center;\n  -webkit-mask-size: contain;\n}`,
@@ -105,8 +135,27 @@ export function gerarCssMenuPro(mapa = MAPA_MENU_PRO): string {
   ];
   for (const e of mapa) {
     partes.push(
-      `:root[data-spro-tema-ativo] #infraMenu a#${e.id} > svg.iconMenuPro {\n  -webkit-mask-image: ${uri(svgDoIcone(e.icone))};\n}`,
+      `:root[data-spro-tema-ativo] #infraMenu a#${e.id} > svg.iconMenuPro {\n  -webkit-mask-image: ${uri(svgDoIcone(estilo.trocar?.[e.icone] ?? e.icone, estilo.preenchido ?? 0, estilo.traco))};\n}`,
     );
   }
   return partes.join("\n");
+}
+
+/**
+ * SEI Pro Lab: conjunto "Duotom". Os mesmos desenhos vetoriais, em traço mais fino (1,5) e com um preenchimento
+ * suave (30%) da própria cor em cada forma fechada: o contorno continua nítido e o ícone ganha corpo, no estilo
+ * da lupa da barra. Segue a cor do tema, como o moderno.
+ */
+export const DUOTOM: EstiloIcones = {
+  preenchido: 0.3,
+  traco: 1.5,
+  trocar: { megafone: "megafoneDuo", painel: "painelDuo", planilha: "graficoDuo", retorno: "calendario" },
+};
+
+/** SEI Pro Lab: o CSS de ícones conforme o conjunto escolhido ("originais" não troca nada). */
+export function cssDosIcones(conjunto: "moderno" | "duotom" | "pastilhas" | "originais"): string {
+  if (conjunto === "originais") return "";
+  if (conjunto === "pastilhas") return gerarCssPastilhas();
+  if (conjunto === "duotom") return `${gerarCssIcones(MAPA_ICONES, DUOTOM)}\n${gerarCssMenuPro(MAPA_MENU_PRO, DUOTOM)}`;
+  return `${gerarCssIcones()}\n${gerarCssMenuPro()}`;
 }

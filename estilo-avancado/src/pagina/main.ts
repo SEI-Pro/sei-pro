@@ -4,11 +4,13 @@
  * e acompanha mudanças (opções, esquema do sistema) sem recarregar a página.
  */
 
+import { definirFundoEscuro } from "@comum/tema/adaptar";
 import { CHAVE_TEMA, type ConfigTema, esquemaResolvido, normalizarConfig } from "@comum/tema/config";
+import { superficiesDoFundo } from "@comum/tema/tokens";
 import baseCss from "../../estatico/base.css";
 import cascaCss from "../../estatico/casca.css";
 import controlesCss from "../../estatico/controles.css";
-import { gerarCssIcones, gerarCssMenuPro } from "../icones/css";
+import { cssDosIcones } from "../icones/css";
 import { gravarTema } from "../opcoes/gravar";
 import { aplicarTema } from "./aplicar";
 import { gravarCache, lerCache } from "./cache";
@@ -21,7 +23,6 @@ import { iniciarNavbarCompacta } from "./navbar";
 import { ativarNovoControleNaAba } from "./novoControle";
 import { iniciarRespiro } from "./respiro";
 
-const iconesCss = `${gerarCssIcones()}\n${gerarCssMenuPro()}`;
 const global = window as unknown as { __seiProEstilo2?: boolean };
 
 if (!global.__seiProEstilo2) {
@@ -60,7 +61,10 @@ if (!global.__seiProEstilo2) {
     sincronizarEditorComEstilo(localStorage, cfg.ativo);
     sincronizarInterruptor();
     const sistemaEscuro = consulta?.matches ?? false;
-    aplicarTema(document, cfg, sistemaEscuro, `${baseCss}\n${cascaCss}\n${controlesCss}\n${iconesCss}`);
+    // SEI Pro Lab: o remapeamento dos documentos no escuro usa o tom de fundo escolhido; os ícones seguem o conjunto escolhido.
+    const supEscuro = superficiesDoFundo("escuro", cfg.fundoEscuro);
+    definirFundoEscuro(supEscuro["--spro-fundo"]!, supEscuro["--spro-texto"]!);
+    aplicarTema(document, cfg, sistemaEscuro, `${baseCss}\n${cascaCss}\n${controlesCss}\n${cssDosIcones(cfg.icones)}`);
     // O documento de leitura ganha o visual de papel sobre uma tela cinza (o CSS fica em controles.css).
     if (ehDocumentoDeLeitura && cfg.ativo) document.documentElement.setAttribute("data-spro-papel", "");
     else document.documentElement.removeAttribute("data-spro-papel");
@@ -124,6 +128,16 @@ if (!global.__seiProEstilo2) {
 
   cfg = lerCache(localStorage);
   reaplicar();
+
+  // SEI Pro Lab 19/11/2026: em alguns carregamentos de quadro (ex.: Enviar Processo dentro da tela do processo), a
+  // marca do tema (data-spro-tema-ativo / data-spro-tema) sumia do <html> e o quadro ficava sem o Estilo Avançado,
+  // com a folha ainda na página. Se a marca sumir com o tema ligado, ela volta na hora.
+  if (typeof MutationObserver === "function" && document.documentElement) {
+    new MutationObserver(() => {
+      const raiz = document.documentElement;
+      if (cfg?.ativo && raiz && !raiz.hasAttribute("data-spro-tema-ativo")) reaplicar();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-spro-tema-ativo", "data-spro-tema"] });
+  }
 
   consulta?.addEventListener("change", reaplicar);
 

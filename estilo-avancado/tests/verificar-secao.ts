@@ -5,11 +5,12 @@ import { checar, disparar, instalarDom, secao, tique } from "./util";
 export async function verificarSecao(): Promise<void> {
   secao("secao Aparencia");
   const doc = instalarDom("<html><head></head><body></body></html>");
-  const g: { salvo: ConfigTema | null } = { salvo: null };
+  const g: { salvo: ConfigTema | null; vezes?: number } = { salvo: null, vezes: 0 };
   const deps = {
     ler: async () => ({ versao: 1, ativo: false, modo: "auto", paleta: "sei-pro", corBarra: "#1f5fbf", escurecerDocumentos: true }),
     gravar: async (c: ConfigTema) => {
       g.salvo = c;
+      g.vezes = (g.vezes ?? 0) + 1;
     },
     sistemaEscuro: () => false,
   };
@@ -36,10 +37,20 @@ export async function verificarSecao(): Promise<void> {
   );
 
   const livre = el.querySelector('input[type="color"]') as HTMLInputElement;
-  livre.value = "#aa3366";
-  disparar(livre, "input");
+  // SEI Pro Lab: arrastar o seletor (varios "input") nao grava a cada movimento; grava uma vez ao soltar ("change").
+  const antes = g.vezes ?? 0;
+  for (const c of ["#aa0000", "#aa1111", "#aa2222", "#aa3366"]) {
+    livre.value = c;
+    disparar(livre, "input");
+  }
   await tique();
-  checar("cor livre grava paleta livre", g.salvo?.paleta === "livre" && g.salvo?.corBarra === "#aa3366");
+  checar("arrastar o seletor nao grava a cada movimento", (g.vezes ?? 0) === antes);
+  disparar(livre, "change");
+  await tique();
+  checar(
+    "cor livre grava paleta livre (uma vez, ao soltar)",
+    g.salvo?.paleta === "livre" && g.salvo?.corBarra === "#aa3366" && (g.vezes ?? 0) === antes + 1,
+  );
 
   (el.querySelector('[data-modo="escuro"]') as HTMLElement).click();
   await tique();
