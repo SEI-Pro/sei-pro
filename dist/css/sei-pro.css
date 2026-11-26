@@ -3214,10 +3214,14 @@ div.infraTooltipTexto i.far {
     padding: 5px;
     border-radius: 5px;
 }
+/* Limite de altura removido: com o editor atual do SEI 5 (CKEditor 5), a area editavel cresce com o conteudo e a
+   rolagem passou a ser da pagina. Com o limite de 640px, o texto que passava dele era desenhado por cima do rodape
+   (camada cinza fora da pagina), so na tela de edicao.
 .ck-editor__editable_inline {
     max-height: 640px;
     overflow-y: scroll;
 }
+*/
 #printBoxPro,
 #view_doc.readOnly {
     border: none;
