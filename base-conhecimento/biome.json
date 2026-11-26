@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": { "includes": ["src/**/*.ts", "tests/**/*.ts"] },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 140 },
+  "javascript": { "formatter": { "quoteStyle": "double", "trailingCommas": "all" } },
+  "linter": {
+    "enabled": true,
+    "rules": { "preset": "recommended", "style": { "noNonNullAssertion": "off" } }
+  }
+}

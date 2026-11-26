@@ -49,6 +49,17 @@ export const SECOES_GERAL: Secao[] = [
         visivelEm: "lab",
       },
       {
+        nome: "baseconhecimento",
+        rotulo: "Base de Conhecimento em pastas (árvore de pastas e coluna 'Pasta' na lista)",
+        ajuda:
+          "Organiza a Base de Conhecimento da unidade em pastas hierárquicas e acrescenta a coluna 'Pasta' na lista nativa, com filtro por pasta. A organização fica num Texto Padrão da unidade (consentimento na primeira gravação). Só organiza: os itens continuam sendo criados e editados nas telas do SEI. Disponível no Chrome e no Edge.",
+        tipo: "chave",
+        icone: "fa fa-folder-open",
+        manual: "BASECONHECIMENTO",
+        padrao: true,
+        visivelEm: "lab",
+      },
+      {
         nome: "gerenciarprazos",
         rotulo: "Controlar Prazos",
         tipo: "chave",

@@ -222,24 +222,74 @@ export async function verificarShell(): Promise<void> {
     checar("sem init_demandas no manifest, nao ha aba Demandas", !botao(raizS, "Demandas"));
   }
 
+  secao("painel lateral: aba Conhecimento (numeracao das pastas)");
+  {
+    const docC = instalarDom('<html><body><div id="painel"></div></body></html>');
+    const raizC = docC.getElementById("painel")!;
+    const shellC = await montarShell(raizC, {
+      sessao: areaMemoria({ painelAba: "conhecimento" }),
+      temAgente: true,
+      temConhecimento: true,
+      url,
+    });
+    const rotulosC = [...raizC.querySelectorAll('[role="tab"]')].map((b) => b.getAttribute("aria-label"));
+    checar(
+      "ordem com a aba Conhecimento",
+      JSON.stringify(rotulosC) === JSON.stringify(["Monitorados", "Conhecimento", "Agente de IA"]),
+      rotulosC,
+    );
+    checar("abre na aba conhecimento pedida", shellC.atual() === "conhecimento");
+    const fC = raizC.querySelector("iframe") as HTMLIFrameElement;
+    checar("iframe da BC em modo lateral", fC.src.endsWith("html/base-conhecimento.html#modo=lateral"));
+    const docS = instalarDom('<html><body><div id="painel"></div></body></html>');
+    const raizS = docS.getElementById("painel")!;
+    await montarShell(raizS, { sessao: areaMemoria({ painelAba: "conhecimento" }), temAgente: true, url });
+    checar("sem init_base_conhecimento no manifest, nao ha aba Conhecimento", !botao(raizS, "Conhecimento"));
+
+    const docT = instalarDom('<html><body><div id="painel"></div></body></html>');
+    const raizT = docT.getElementById("painel")!;
+    await montarShell(raizT, {
+      sessao: areaMemoria(),
+      temAgente: true,
+      temHistorico: true,
+      temProjetos: true,
+      temDemandas: true,
+      temConhecimento: true,
+      url,
+    });
+    const rotulosT = [...raizT.querySelectorAll('[role="tab"]')].map((b) => b.getAttribute("aria-label"));
+    checar(
+      "ordem completa das abas",
+      JSON.stringify(rotulosT) ===
+        JSON.stringify(["Monitorados", "Hist\u00f3rico", "Projetos", "Demandas", "Conhecimento", "Agente de IA"]),
+      rotulosT,
+    );
+  }
+
   secao("painel lateral: as abas saem do manifest do pacote (o oficial ainda nao tem os modulos novos)");
   {
     const lab = JSON.parse(readFileSync(join(AQUI, "..", "..", "dist", "manifest.json"), "utf8")) as ManifestoDoPacote;
     const l = ferramentasDoPacote(lab);
     checar(
-      "Lab (dist/manifest.json): Favoritos, Historico, Projetos, Demandas e Agente",
-      l.temAgente && l.temFavoritos && l.temHistorico && l.temProjetos && l.temDemandas,
+      "Lab (dist/manifest.json): Favoritos, Historico, Projetos, Demandas, Conhecimento e Agente",
+      l.temAgente && l.temFavoritos && l.temHistorico && l.temProjetos && l.temDemandas && l.temConhecimento,
       l,
     );
-    // O oficial (dist/manifest_seipro.json, fora do git) e o manifest do Lab sem estes tres content scripts.
-    const novos = ["js/init_favoritos.js", "js/init_historico.js", "js/init_projetos.js", "js/init_demandas.js"];
+    // O oficial (dist/manifest_seipro.json, fora do git) e o manifest do Lab sem estes content scripts.
+    const novos = [
+      "js/init_favoritos.js",
+      "js/init_historico.js",
+      "js/init_projetos.js",
+      "js/init_demandas.js",
+      "js/init_base_conhecimento.js",
+    ];
     const oficial: ManifestoDoPacote = {
       content_scripts: (lab.content_scripts ?? []).filter((c) => !c.js?.some((j) => novos.includes(j))),
     };
     const o = ferramentasDoPacote(oficial);
     checar(
-      "oficial: so o Agente, sem as abas Projetos e Demandas",
-      o.temAgente && !o.temFavoritos && !o.temHistorico && !o.temProjetos && !o.temDemandas,
+      "oficial: so o Agente, sem as abas Projetos, Demandas e Conhecimento",
+      o.temAgente && !o.temFavoritos && !o.temHistorico && !o.temProjetos && !o.temDemandas && !o.temConhecimento,
       o,
     );
     checar("manifest sem content_scripts: nenhuma ferramenta", !Object.values(ferramentasDoPacote({})).some(Boolean));
@@ -257,6 +307,7 @@ export async function verificarShell(): Promise<void> {
   checar("#aba=projetos", abaPedidaNoEndereco("#aba=projetos") === "projetos");
   checar("#aba=historico", abaPedidaNoEndereco("#aba=historico") === "historico");
   checar("#aba=demandas", abaPedidaNoEndereco("#aba=demandas") === "demandas");
+  checar("#aba=conhecimento", abaPedidaNoEndereco("#aba=conhecimento") === "conhecimento");
   checar("aba desconhecida: nenhuma", abaPedidaNoEndereco("#aba=qualquer") === null);
   checar("nome herdado de objeto nao vale", abaPedidaNoEndereco("#aba=constructor") === null);
   checar("sem endereco: nenhuma", abaPedidaNoEndereco("") === null);

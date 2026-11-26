@@ -1,0 +1,231 @@
+/*
+ * Painel de pastas da Base de Conhecimento (Shadow DOM).
+ * Tokens aprovados na inspeção de acessibilidade: texto #212529 (15,4:1),
+ * secundários #495057 (8,2:1), pasta ativa #155f9b sobre #e7f0f8 (5,8:1).
+ * Linhas e botões com 44 px de altura; chevron com 28x44 (AA 2.5.8; alvo denso).
+ */
+:host {
+  display: block;
+}
+* {
+  box-sizing: border-box;
+}
+.painel {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  color: #212529;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 240px;
+}
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.titulo {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #495057;
+  font-weight: 600;
+  margin-right: auto;
+}
+.numerar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: #495057;
+  font-size: 12px;
+  cursor: pointer;
+}
+.numerar input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+.numerar input:focus-visible {
+  outline: 2px solid #155f9b;
+  outline-offset: 2px;
+}
+button {
+  font: inherit;
+  color: #212529;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid #155f9b;
+  outline-offset: -2px;
+}
+.nova {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #155f9b;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 6px;
+  border-radius: 4px;
+}
+.nova:hover {
+  background: #f0f3f8;
+}
+.busca {
+  flex: 1 1 100%;
+  min-width: 0;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  min-height: 32px;
+}
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.linha {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 4px;
+}
+.linha.alvo,
+.item.alvo {
+  outline: 2px dashed #155f9b;
+  background: #e7f0f8;
+}
+.chevron {
+  min-width: 28px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 4px;
+  color: #495057;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.chevron:hover {
+  background: #f0f3f8;
+}
+.chevron.vazio {
+  visibility: hidden;
+}
+.pasta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  text-align: left;
+  min-height: 44px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.pasta:hover {
+  background: #f0f3f8;
+}
+.pasta[aria-current="true"] {
+  background: #e7f0f8;
+  color: #155f9b;
+  font-weight: 600;
+}
+.contagem {
+  margin-left: auto;
+  color: #495057;
+  font-size: 11px;
+}
+.filhas {
+  margin-left: 16px;
+}
+.menu {
+  min-height: 44px;
+  min-width: 32px;
+  border-radius: 4px;
+  color: #495057;
+  flex-shrink: 0;
+}
+.menu:hover {
+  background: #e9ecef;
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 4px 6px 24px;
+}
+.acoes button {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: #fff;
+}
+.acoes button:hover {
+  background: #f0f3f8;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 4px;
+  color: #212529;
+}
+.item .rotulo {
+  flex: 1;
+  text-align: left;
+  color: #212529;
+  text-decoration: none;
+}
+a.rotulo:hover,
+a.rotulo:focus-visible {
+  text-decoration: underline;
+}
+.item.orfao .rotulo {
+  text-decoration: line-through;
+  color: #495057;
+}
+.acao-item {
+  color: #155f9b;
+  font-size: 11px;
+  min-height: 44px;
+  padding: 0 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.acao-item:hover {
+  background: #f0f3f8;
+}
+.nota {
+  color: #495057;
+  font-size: 11px;
+  padding: 6px 4px;
+  border-top: 1px solid #e9ecef;
+  margin-top: 6px;
+}
+.aviso {
+  background: #fdf0dc;
+  color: #7a4b00;
+  border: 1px solid #f0d9b0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 0 0 6px;
+  font-size: 11px;
+}
+.aviso[hidden] {
+  display: none;
+}
+.oculto {
+  display: none;
+}
