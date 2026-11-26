@@ -5012,3 +5012,18 @@ strong.title-reviewtip {
 .seiSlim .ck-body-wrapper .ck.ck-powered-by-balloon {
     display: none !important;
 }
+
+/* Texto branco nos campos do SEI (ex.: Unidades, em Enviar Processo). Os modulos da 3.9 (processo, favoritos, prazos,
+   grade do controle, ordem dos paineis, blocos de assinatura) poem na pagina do SEI a folha base das telas do SEI Pro,
+   que declara color-scheme: dark no :root quando o sistema esta no modo escuro. O navegador passa a desenhar os campos
+   com texto branco, mas o SEI mantem o fundo claro. O esquema do navegador passa a seguir o visual real da pagina:
+   o normal do SEI sem o Estilo Avancado, e o tema do Estilo Avancado quando ele esta ligado. */
+:root:not([data-spro-tema-ativo]) {
+    color-scheme: normal !important;
+}
+:root[data-spro-tema-ativo][data-spro-tema="claro"] {
+    color-scheme: light !important;
+}
+:root[data-spro-tema-ativo][data-spro-tema="escuro"] {
+    color-scheme: dark !important;
+}
