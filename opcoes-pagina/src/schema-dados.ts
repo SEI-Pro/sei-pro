@@ -245,6 +245,15 @@ export const SECOES_GERAL: Secao[] = [
         manual: "AUTOPREENCHERSENHA",
         padrao: false,
       },
+      {
+        nome: "protegersessao",
+        rotulo: 'Proteger a sessão contra abas antigas do SEI (evita a queda por "Hash inválido")',
+        ajuda:
+          "Quando você entra no SEI de novo, as abas e janelas abertas antes desse login ganham um aviso que bloqueia o uso. Isso impede que um link antigo derrube o seu login atual.",
+        tipo: "chave",
+        icone: "fas fa-shield-alt",
+        padrao: true,
+      },
     ],
   },
   {
