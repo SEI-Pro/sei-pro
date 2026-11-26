@@ -4378,3 +4378,11 @@ label.infraAreaDados {
     float: initial !important;
     padding: 5px 6px !important;
 }
+
+/* Icones dos botoes do SEI Pro na barra do editor (CKEditor 5). Os botoes usam a classe "fab" (fonte Font Awesome 5
+   Brands, que nao tem esses desenhos) e so apareciam pela regra ".newSEI button.ck-button i" do sei-slim.css. Desde o
+   Estilo Avancado (3.9), que desliga o estilo antigo (localStorage.seiSlim), a regra deixa de valer na janela do
+   editor e os botoes ficam vazios. Aqui a fonte certa vale sempre. */
+button.ck-button.cke_iconPro > i[class*="fa-"] {
+    font-family: "Font Awesome 5 Pro" !important;
+}
