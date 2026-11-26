@@ -21,7 +21,6 @@ Instale a extensão para seu navegador preferido:
 > [https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/](https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/)
 
 Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo pacote publicado no GitHub](./pages/INSTALACAO.md), sem passar pela loja.
-
 ## Funcionalidades disponíveis
 
 ### Tela Controle de Processos
@@ -84,6 +83,7 @@ Loja de extensões bloqueada no computador de trabalho? Veja [como instalar pelo
 - ![Ações em Lote: assinar, dar ciência, excluir e alterar sigilo de vários documentos](/img/icon-acoeslote.png) [Ações em Lote: assinar, dar ciência, excluir e alterar sigilo de vários documentos](./pages/ACOESEMLOTE.md)
 - ![Documentos em Lote: criar vários documentos a partir de um modelo e uma planilha](/img/icon-acoeslote.png) [Documentos em Lote: criar vários documentos a partir de um modelo e uma planilha](./pages/DOCUMENTOSEMLOTE.md)
 - ![Comparador de Documentos](/img/icon-comparardocumentos.png) [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
+- ![Base de Conhecimento em pastas](/img/icon-agruparlista.png) [Base de Conhecimento em pastas](./pages/BASECONHECIMENTO.md)
 - ![Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](/img/icon-ferramentaspdf.png) [Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](./pages/FERRAMENTASPDF.md)
 - ![Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](/img/icon-agenteia.png) [Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](./pages/AGENTEIA.md)
 - ![Estúdio de Fluxo: mapeie o rito da sua unidade e veja em que etapa cada processo está](/img/icon-fluxos.png) [Estúdio de Fluxo: mapeie o rito da sua unidade e veja em que etapa cada processo está](./pages/FLUXOS.md)

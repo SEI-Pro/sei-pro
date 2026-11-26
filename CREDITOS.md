@@ -27,3 +27,15 @@ mantenedor quiser.
 ### Contribuição de @willmedina87
 
 Melhorias no Quadro da Grade do Controle (colunas reordenáveis e recolhíveis, largura ajustável, último marcador, cartões com anotação e checklist), prazos nos cartões do Quadro, correção do botão "Exibir Menu do Sistema" do Estilo Avançado e tratamento de contexto de extensão invalidado, CSV completo na Grade do Controle, correções no envio de PDF ao processo, enviadas no PR [#193](https://github.com/SEI-Pro/sei-pro/pull/193) por [willmedina87](https://github.com/willmedina87).
+
+### Contribuição do SINST-INMETRO (INMETRO)
+
+A **Base de Conhecimento em pastas** nasceu de uma dor real da unidade **Sinst**, do **INMETRO**: a
+lista nativa da Base de Conhecimento, sem hierarquia, virava um amontoado de notas técnicas e
+procedimentos, e achar o item certo dependia de lembrar o título exato. A função foi desenvolvida para
+o uso diário da unidade e é oferecida ao projeto original, para ser incorporada às versões oficiais se
+o mantenedor quiser.
+
+| Função | Manual | Código |
+| ------ | ------ | ------ |
+| Base de Conhecimento em pastas: árvore hierárquica por unidade, coluna "Pasta" com filtro, busca, arrastar e soltar, criar na pasta selecionada (com desfazer) e numeração opcional | [pages/BASECONHECIMENTO.md](./pages/BASECONHECIMENTO.md) | [base-conhecimento/](./base-conhecimento/) |
