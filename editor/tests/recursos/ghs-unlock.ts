@@ -1,5 +1,12 @@
 import { criarAdaptador } from "../../src/adaptador";
-import { REGRA_TAGS, REGRAS_ATRIBUTOS_PROIBIDOS, recurso, URL_EXECUTAVEL } from "../../src/recursos/ghs-unlock";
+import {
+  REGRA_TAGS,
+  REGRAS_ATRIBUTOS_PROIBIDOS,
+  raizDoCursor,
+  recurso,
+  restaurarCursor,
+  URL_EXECUTAVEL,
+} from "../../src/recursos/ghs-unlock";
 import type { Contexto } from "../../src/recursos/tipos";
 import { criarCk4, criarCk5, type FalsoCk5 } from "../falsos";
 import { checar, igual, secao } from "../util";
@@ -174,5 +181,50 @@ export async function verificarGhsUnlock(): Promise<void> {
       lancou = true;
     }
     checar("CK4: iniciar e no-op e nao lanca", !lancou);
+  }
+
+  secao("ghs-unlock: cursor depois do data.set (Cabecalho somente leitura)");
+  {
+    // Editor falso com quatro secoes; a primeira (Cabecalho) e somente leitura. data.set leva o cursor para ela.
+    const classes: Record<string, string[]> = {
+      cab: ["ck-read-only", "infra-editor__readonly"],
+      titulo: [],
+      corpo: ["infra-editor__secao-principal"],
+      rodape: [],
+    };
+    let cursor = "cab";
+    let selecionouConteudo = false;
+    const ed = {
+      model: {
+        document: {
+          selection: { getFirstPosition: () => ({ root: { rootName: cursor } }) },
+          getRootNames: () => Object.keys(classes),
+          getRoot: (n: string) => ({ rootName: n }),
+        },
+        change: (fn: (w: unknown) => void) =>
+          fn({
+            createPositionAt: (raiz: { rootName: string }, off: number) => ({ raiz, off }),
+            setSelection: (alvo: { raiz?: { rootName: string } }, modo?: string) => {
+              if (modo === "in" || !alvo.raiz) selecionouConteudo = true;
+              cursor = alvo.raiz ? alvo.raiz.rootName : cursor;
+            },
+          }),
+      },
+      ui: {
+        getEditableElement: (n: string) => ({
+          classList: { contains: (c: string) => (classes[n] ?? []).includes(c) },
+          getAttribute: () => null,
+        }),
+      },
+    };
+    cursor = "cab";
+    restaurarCursor(ed, "cab");
+    checar("cursor antes no Cabecalho (somente leitura): vai para o Corpo do Texto", cursor === "corpo");
+    cursor = "cab";
+    restaurarCursor(ed, "titulo");
+    checar("cursor antes numa secao editavel: volta para ela", cursor === "titulo");
+    checar("so posiciona o cursor, sem selecionar o conteudo da secao", !selecionouConteudo);
+    checar("raizDoCursor le a secao do cursor", raizDoCursor(ed) === "titulo");
+    checar("editor sem model nao quebra", (restaurarCursor({}, "cab"), raizDoCursor({}) === null));
   }
 }

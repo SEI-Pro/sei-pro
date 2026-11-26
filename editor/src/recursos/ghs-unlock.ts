@@ -140,6 +140,55 @@ function temComentarios(editor: Qualquer): boolean {
 }
 
 /** Executa `fn` e devolve o documento ao estado "alterado" de antes: sem isso o Salvar do SEI comeca piscando sozinho. */
+/**
+ * O `data.set` completo leva a selecao do model para o inicio da PRIMEIRA secao do documento. Quando o editor
+ * comeca por uma secao somente leitura (o Cabecalho, no SEI 5 da Prefeitura de Porto Alegre), o CK5 passa a
+ * devolver o foco para ela a cada clique e o Corpo do Texto nao recebe digitacao (Tab tambem nao entra).
+ * Guarda a secao do cursor antes do `data.set` e depois devolve um cursor RECOLHIDO ao inicio dela (nao seleciona
+ * o conteudo: digitar com a secao inteira selecionada a substituiria); se ela nao for editavel, ao Corpo do Texto.
+ */
+export function raizDoCursor(ed: Qualquer): string | null {
+  try {
+    return ed.model.document.selection.getFirstPosition()?.root?.rootName ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function raizEditavel(ed: Qualquer, nome: string | null): boolean {
+  try {
+    const el = nome ? ed.ui.getEditableElement(nome) : null;
+    return !!el && !el.classList.contains("ck-read-only") && !el.classList.contains("infra-editor__readonly");
+  } catch {
+    return false;
+  }
+}
+
+function raizDoCorpo(ed: Qualquer): string | null {
+  try {
+    const nomes: string[] = ed.model.document.getRootNames();
+    return (
+      nomes.find((n) => {
+        const el = ed.ui.getEditableElement(n);
+        return !!el && (el.classList.contains("infra-editor__secao-principal") || el.getAttribute("aria-label") === "Corpo do Texto");
+      }) ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+
+export function restaurarCursor(ed: Qualquer, raizAntes: string | null): void {
+  try {
+    const alvo = raizEditavel(ed, raizAntes) ? raizAntes : raizDoCorpo(ed);
+    if (!alvo || raizDoCursor(ed) === alvo) return;
+    const raiz = ed.model.document.getRoot(alvo);
+    if (raiz) ed.model.change((w: Qualquer) => w.setSelection(w.createPositionAt(raiz, 0)));
+  } catch {
+    /* sem cursor restaurado: comportamento anterior */
+  }
+}
+
 function semSujar(fn: () => void, editor: Qualquer): void {
   const salvar = plugin(editor, "Salvar");
   const sujoAntes = salvar ? !!salvar.isDirty : false;
@@ -228,9 +277,11 @@ function criarGhs(c: Contexto) {
     const ed = instancia(editor);
     if (!liberar(ed) || typeof ed.getFullData !== "function") return false;
     let ok = true;
+    const raizAntes = raizDoCursor(ed);
     semSujar(() => {
       try {
         ed.data.set(conteudoParaReprocessar(ed, c.win));
+        restaurarCursor(ed, raizAntes);
       } catch (e) {
         log("falha ao reprocessar o conteudo", e);
         ok = false;
