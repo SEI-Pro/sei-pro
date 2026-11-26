@@ -12778,7 +12778,9 @@ function setNewDocDefault() {
     var now = moment().format('DD/MM/YYYY');
     if (form.length > 0 && ifrVisualizacao.find('#txtNumero').length ) {
         ifrVisualizacao.find('div.urgentePro').remove();
-        htmlPro(ifrVisualizacao.find('#txtNumero').css('width','46%').attr('data-oldtext',ifrVisualizacao.find('#txtNumero').val()), '<div class="urgentePro" style="right: 48%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
+        // No SEI 5.0.6 o campo "Nome na Arvore" fica ao lado do Numero: alargar o Numero para 46% o escondia embaixo dele
+        // (o texto digitado sumia). So alarga quando o "Nome na Arvore" nao existe (layout antigo).
+        htmlPro(ifrVisualizacao.find('#txtNumero').css('width', ifrVisualizacao.find('#txtNomeArvore').length ? '' : '46%').attr('data-oldtext',ifrVisualizacao.find('#txtNumero').val()), '<div class="urgentePro" style="right: 48%;top: 10px;" data-spro-click="parent.addUrgentPro" data-spro-tip="Adicionar/remover marca de Urg\u00EAncia"></div>', 'after');
         formControlerAlterarDocumento(ifrVisualizacao);
     }
     if (form.length > 0 && typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocdefault') ) {
