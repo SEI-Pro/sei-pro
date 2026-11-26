@@ -16,8 +16,6 @@ function loadRepairPwdNewSei() {
     if (verifyConfigValue('autopreenchersenha') && window.location.href.indexOf('sip/login.php') !== -1 && $('#divIdentificacaoSistema').length) {
         $('#pwdSenha').hide();
         $('input[type="password"]').show().attr('autocomplete','current-password').css({
-            fontSize: '2em',
-            height: 'calc(1em + .75rem)',
             borderTopLeftRadius: '0',
             borderBottomLeftRadius: '0'
         }).addClass('form-control masked').focus().on('change',function(){ $('#pwdSenha').val($(this).val()).trigger('change'); });
@@ -25,8 +23,6 @@ function loadRepairPwdNewSei() {
     } else if (verifyConfigValue('autopreenchersenha') && window.location.href.indexOf('acao=documento_assinar') !== -1 && $('#frmAssinaturas').length) {
         $('#pwdSenha').hide();
         $('input[type="password"]').show().attr('autocomplete','current-password').css({
-            fontSize: '2em',
-            height: 'calc(.8em + .75rem)',
             width: '25%'
         }).addClass('infraText masked').focus().on('change',function(){ $('#pwdSenha').val($(this).val()).trigger('change'); });
     }
