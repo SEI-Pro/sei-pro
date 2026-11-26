@@ -51,6 +51,26 @@ export const PALETAS: readonly { id: string; nome: string; cor: string }[] = [
   { id: "azul-petroleo", nome: "Azul-petróleo", cor: "#1b4f72" },
 ];
 
+/**
+ * Tons de fundo prontos por esquema (SEI Pro Lab). A cor é a da superfície principal (--spro-fundo); as demais
+ * camadas, as bordas e o texto saem dela (tokens.ts), com o contraste do texto garantido. "padrao" é o tom original.
+ */
+export const FUNDOS: Record<Esquema, readonly { id: string; nome: string; cor: string }[]> = {
+  claro: [
+    { id: "padrao", nome: "Branco (padrão)", cor: "#ffffff" },
+    { id: "gelo", nome: "Gelo", cor: "#f3f6fa" },
+    { id: "creme", nome: "Creme", cor: "#fbf6ea" },
+    { id: "sepia", nome: "Sépia", cor: "#f1e5cc" },
+  ],
+  escuro: [
+    { id: "padrao", nome: "Grafite (padrão)", cor: "#1a1d21" },
+    { id: "azul-noite", nome: "Azul-noite", cor: "#172030" },
+    { id: "preto", nome: "Preto", cor: "#0c0c0d" },
+    { id: "sepia", nome: "Sépia escuro", cor: "#262017" },
+    { id: "musgo", nome: "Musgo", cor: "#1a221d" },
+  ],
+};
+
 const limitar = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 
 /** `#rgb` ou `#rrggbb` -> [0..255]; qualquer outra coisa -> null. */
@@ -143,7 +163,7 @@ export function contraste(a: string, b: string): number {
  * se nem esse chega a 4,5:1, o tom da barra anda (matiz e croma preservados) até chegar.
  * No escuro a barra perde luminosidade e croma para não ofuscar.
  */
-export function derivarBarra(corBase: string, esquema: Esquema): BarraDerivada {
+export function derivarBarra(corBase: string, esquema: Esquema, fundoDoTema?: string): BarraDerivada {
   const base = lerHex(corBase) ? corBase : AZUL_PADRAO;
   let { l, c, h } = paraOklch(base);
   const semCroma = c < 0.03;
@@ -164,7 +184,8 @@ export function derivarBarra(corBase: string, esquema: Esquema): BarraDerivada {
   const borda = deOklch({ l: l - 0.08, c, h });
   const menu = deOklch({ l: Math.min(l, 0.26), c: c * 0.55, h });
 
-  const fundo = FUNDO_DO_ESQUEMA[esquema];
+  // O destaque (links, botões) precisa de contraste com o fundo em uso, que pode ser um tom escolhido (SEI Pro Lab).
+  const fundo = fundoDoTema && lerHex(fundoDoTema) ? fundoDoTema : FUNDO_DO_ESQUEMA[esquema];
   const origem = paraOklch(semCroma ? (esquema === "escuro" ? AZUL_ESCURO : AZUL_PADRAO) : base);
   let dl = esquema === "escuro" ? Math.max(origem.l, 0.7) : Math.min(origem.l, 0.55);
   let destaque = deOklch({ l: dl, c: origem.c, h: origem.h });

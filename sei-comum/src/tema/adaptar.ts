@@ -6,9 +6,17 @@ import { contraste, deOklch, lerHex, paraHex, paraOklch } from "./paleta";
  * Só exibição: quem chama nunca grava o resultado no documento.
  */
 
-const FUNDO_ESCURO = "#1a1d21";
-const TEXTO_CLARO = "#e7e9ec";
-const PAGINA_L = paraOklch(FUNDO_ESCURO).l;
+let FUNDO_ESCURO = "#1a1d21";
+let TEXTO_CLARO = "#e7e9ec";
+let PAGINA_L = paraOklch(FUNDO_ESCURO).l;
+
+/** SEI Pro Lab: o tom de fundo escuro escolhido (e o texto dele) passa a ser a referência do remapeamento. */
+export function definirFundoEscuro(fundo: string, texto: string): void {
+  if (!lerHex(fundo) || !lerHex(texto)) return;
+  FUNDO_ESCURO = fundo;
+  TEXTO_CLARO = texto;
+  PAGINA_L = paraOklch(fundo).l;
+}
 
 const NOMES: Record<string, string> = {
   black: "#000000",

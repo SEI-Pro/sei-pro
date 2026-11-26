@@ -1,5 +1,6 @@
 import { CHAVE_TEMA, type ConfigTema, esquemaResolvido, normalizarConfig } from "./config";
-import { derivarBarra } from "./paleta";
+import { derivarBarra, FUNDOS } from "./paleta";
+import { superficiesDoFundo } from "./tokens";
 
 /**
  * Tema nos painéis que são páginas da extensão (iframe embutido no Controle, painel lateral,
@@ -16,7 +17,22 @@ export interface DepsTemaPainel {
   aoMudarSistema: (cb: () => void) => () => void;
 }
 
-const PROPRIEDADES = ["--spro-destaque", "--spro-destaque-texto"] as const;
+/**
+ * SEI Pro Lab: além do destaque, as superfícies e os textos acompanham o tom de fundo escolhido no Estilo
+ * Avançado. Com o tom padrão nada disso é posto (o painel fica exatamente como antes).
+ */
+const SUPERFICIES_DO_TOM = [
+  "--spro-fundo",
+  "--spro-fundo-2",
+  "--spro-fundo-3",
+  "--spro-pagina",
+  "--spro-borda",
+  "--spro-borda-forte",
+  "--spro-texto",
+  "--spro-suave",
+  "--spro-fraco",
+] as const;
+const PROPRIEDADES = ["--spro-destaque", "--spro-destaque-texto", ...SUPERFICIES_DO_TOM] as const;
 const TEXTO_DO_DESTAQUE = { claro: "#ffffff", escuro: "#0a1526" } as const;
 
 export interface OpcoesTemaPainel {
@@ -64,8 +80,7 @@ export function acompanharTemaEstilo2(doc: Document, deps: DepsTemaPainel, opcoe
     if (!cfg.ativo) {
       if (aplicadoAntes && opcoes.aoDesligar) {
         // Tira o que este módulo pôs e deixa a página dizer o que vale agora (ela atualiza o contexto na hora).
-        raiz.style.removeProperty("--spro-destaque");
-        raiz.style.removeProperty("--spro-destaque-texto");
+        for (const p of PROPRIEDADES) raiz.style.removeProperty(p);
         const refazer = opcoes.aoDesligar;
         setTimeout(() => {
           if (!parado) void Promise.resolve(refazer()).catch(() => {});
@@ -77,7 +92,14 @@ export function acompanharTemaEstilo2(doc: Document, deps: DepsTemaPainel, opcoe
     aplicadoAntes = true;
     const esquema = esquemaResolvido(cfg, deps.sistemaEscuro());
     raiz.dataset.tema = esquema;
-    raiz.style.setProperty("--spro-destaque", derivarBarra(cfg.corBarra, esquema).destaque);
+    const fundo = esquema === "escuro" ? cfg.fundoEscuro : cfg.fundoClaro;
+    const comTom = !!fundo && fundo.toLowerCase() !== FUNDOS[esquema][0]!.cor;
+    const sup = superficiesDoFundo(esquema, fundo);
+    for (const p of SUPERFICIES_DO_TOM) {
+      if (comTom && sup[p]) raiz.style.setProperty(p, sup[p]);
+      else raiz.style.removeProperty(p);
+    }
+    raiz.style.setProperty("--spro-destaque", derivarBarra(cfg.corBarra, esquema, comTom ? sup["--spro-fundo"] : undefined).destaque);
     raiz.style.setProperty("--spro-destaque-texto", TEXTO_DO_DESTAQUE[esquema]);
   };
 
